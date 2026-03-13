@@ -4,13 +4,13 @@ export type ErrorType =
   | "validation"
   | "not_found"
   | "unauthorized"
-  | "forbeden"
+  | "forbidden"
   | "canceled"
   | "timeout"
   | "econnaborted"
   | "bad_request"
   | "unknown";
-export interface AppError {
+export  interface AppError {
   type: ErrorType;
   message: string;
   status?: number;
