@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { AppError } from "./AppError";
+import { createError } from "./errorFactory";
 
 export const errorNormalizer = (error: unknown): AppError => {
   if (axios.isAxiosError(error)) {
@@ -7,27 +8,23 @@ export const errorNormalizer = (error: unknown): AppError => {
 
     switch (code) {
       case "ERR_CANCELED":
-        return { type: "canceled", message: "Request canceled" };
+        return createError("canceled", "Request was canceled");
       case "ERR_NETWORK":
-        return { type: "network", message: "Network error occurred" };
+        return createError("network", "Network error occurred");
       case "ECONNABORTED":
-        return { type: "timeout", message: "Request timeout" };
+        return createError("timeout", "Request timeout");
       default:
         if (response) {
           const { status } = response;
           if (status === 401)
-            return {
-              type: "unauthorized",
-              message: "Unauthorized access",
-              status,
-            };
+            return createError("unauthorized", "Unauthorized access", status);
 
           if (status >= 500)
-            return { type: "server", message: "Server error occurred", status };
+            return createError("server", "Server error occurred", status);
         }
     }
   }
   if (error instanceof Error)
-    return { type: "unknown", message: error.message };
-  return { type: "unknown", message: "An unknown error occurred" };
+    return createError("unknown", error.message, undefined, error);
+  return createError("unknown", "An unknown error occurred");
 };
