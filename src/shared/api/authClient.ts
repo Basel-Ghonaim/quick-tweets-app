@@ -1,6 +1,5 @@
 import { apiClient } from "./client";
-import { attachTokenInterceptor } from "./interceptors/request";
-import { responseInterceptor } from "./interceptors/response";
+import { attachTokenInterceptor, responseInterceptor } from "./interceptors";
 
 export const authClient = apiClient;
 
