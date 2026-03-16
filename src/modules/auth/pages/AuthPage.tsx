@@ -1,7 +1,11 @@
+import { LeftPanel, RightPanel } from "../components";
+import styles from "./AuthPage.module.css";
+
 export const AuthPage = () => {
   return (
-    <div>
-      <h1>Auth Page</h1>
+    <div className={styles.page}>
+      <LeftPanel />
+      <RightPanel />
     </div>
   );
 };
