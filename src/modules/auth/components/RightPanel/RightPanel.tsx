@@ -1,5 +1,6 @@
 import { AuthTabs } from "./AuthTabs/AuthTabs";
-import { AuthForm } from "./AuthForm/AuthForm";
+import { RegisterForm } from "./AuthForm/RegisterForm";
+import { LoginForm } from "./AuthForm/Loginform";
 
 import styles from "./RightPanel.module.css";
 
@@ -11,6 +12,7 @@ interface RightPanelProps {
 }
 
 export function RightPanel({ activeTab, onTabChange }: RightPanelProps) {
+  const isSignIn = activeTab === "signin";
   return (
     <div className={styles.panel}>
       <div className={styles.card}>
@@ -26,7 +28,8 @@ export function RightPanel({ activeTab, onTabChange }: RightPanelProps) {
         </div>
 
         <AuthTabs activeTab={activeTab} onTabChange={onTabChange} />
-        <AuthForm activeTab={activeTab} />
+
+        {isSignIn ? <LoginForm /> : <RegisterForm />}
       </div>
     </div>
   );
