@@ -1,5 +1,5 @@
 import type { AuthRepository } from "./AuthRepository";
-import { apiClient } from "../../../shared/api";
+import { apiClient, authClient } from "../../../shared/api";
 import { authMapper } from "../mapper";
 
 export const restAuth = (): AuthRepository => {
@@ -21,6 +21,9 @@ export const restAuth = (): AuthRepository => {
         { headers: { "Content-Type": "multipart/form-data" } },
       );
       return toAuthResponse(res.data);
+    },
+    logout: async () => {
+      await authClient.post("/logout");
     },
   };
 };
