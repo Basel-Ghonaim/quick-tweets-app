@@ -8,5 +8,5 @@ export interface RegisterRequestDto {
   name: string;
   email: string;
   password: string;
-  image: File;
+  image: File | null;
 }

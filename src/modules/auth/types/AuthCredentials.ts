@@ -6,7 +6,7 @@ export interface LoginCredentials {
 export interface RegisterCredentials extends LoginCredentials {
   name: string;
   email: string;
-  profileImage: File;
+  profileImage: File | null;
   confirmPassword: string;
   privacy: boolean;
 }
