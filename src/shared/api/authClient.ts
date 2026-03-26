@@ -1,8 +1,13 @@
-import { apiClient } from "./client";
+import axios from "axios";
 import { attachTokenInterceptor, responseInterceptor } from "./interceptors";
 
-export const authClient = apiClient;
+export const authClient = axios.create({
+  baseURL: "https://tarmeezacademy.com/api/v1",
+  headers: {
+    Accept: "application/json",
+  },
+  timeout: 10000,
+});
 
-const token = localStorage.getItem("token");
-if (token) attachTokenInterceptor(authClient, token);
+attachTokenInterceptor(authClient);
 responseInterceptor(authClient);
