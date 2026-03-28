@@ -1,6 +1,6 @@
 import type { AppError, ErrorType } from "./AppError";
 
-export const createError = (
+export const createAppError = (
   type: ErrorType,
   message: string,
   status?: number,
@@ -12,4 +12,8 @@ export const createError = (
     status,
     errors,
   };
+};
+
+export const createUnknownError = (error: unknown): AppError => {
+  return createAppError("unknown", "something went wrong", undefined, error);
 };
