@@ -1,18 +1,31 @@
-export type ErrorType =
-  | "network"
-  | "server"
-  | "validation"
-  | "not_found"
-  | "unauthorized"
-  | "forbidden"
-  | "canceled"
-  | "timeout"
-  | "econnaborted"
-  | "bad_request"
-  | "unknown";
-export  interface AppError {
-  type: ErrorType;
-  message: string;
-  status?: number;
-  errors?: unknown;
+import { httpStatusMap, type ErrorType, type ErrorPayload } from "./types";
+
+export class AppError<T extends ErrorType = ErrorType> extends Error {
+  public readonly type: T;
+  public readonly status: number;
+  public readonly errors?: ErrorPayload<T>;
+
+  constructor(type: T, message: string, errors?: ErrorPayload<T>) {
+    super(message);
+
+    this.name = this.constructor.name;
+
+    this.type = type;
+    this.status = httpStatusMap[type];
+    this.errors = errors;
+
+    if ("captureStackTrace" in Error) {
+      (
+        Error as {
+          captureStackTrace?: (
+            target: object,
+            constructorOpt?: (...args: never[]) => unknown,
+          ) => void;
+        }
+      ).captureStackTrace?.(
+        this,
+        this.constructor as (...args: never[]) => unknown,
+      );
+    }
+  }
 }
