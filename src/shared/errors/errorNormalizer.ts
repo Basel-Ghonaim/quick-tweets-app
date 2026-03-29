@@ -1,31 +1,16 @@
 import axios from "axios";
-import type { AppError } from "./AppError";
-import { createAppError, createUnknownError } from "./errorFactory";
+import { AppError } from "./AppError";
+import { createUnknownError } from "./errorFactory";
+import { parseAxiosError, type BackendErrorResponse } from "./parsers/axiosParser";
 
 export const errorNormalizer = (error: unknown): AppError => {
-  if (axios.isAxiosError(error)) {
-    const { response, code } = error;
-
-    switch (code) {
-      case "ERR_CANCELED":
-        return createAppError("canceled", "Request was canceled");
-      case "ERR_NETWORK":
-        return createAppError("network", "Network error occurred");
-      case "ECONNABORTED":
-        return createAppError("timeout", "Request timeout");
-      default:
-        if (response) {
-          const { status } = response;
-          if (status === 401)
-            return createAppError(
-              "unauthorized",
-              "Unauthorized access",
-              status,
-            );
-
-          if (status >= 500)
-            return createAppError("server", "Server error occurred", status);
-        }
+  if (error instanceof AppError) {
+    return error;
+  }
+  if (axios.isAxiosError<BackendErrorResponse>(error)) {
+    const parsedError = parseAxiosError(error);
+    if (parsedError) {
+      return parsedError;
     }
   }
 

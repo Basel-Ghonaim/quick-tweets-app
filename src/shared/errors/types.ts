@@ -11,7 +11,10 @@ export type ErrorType =
   | "too_many_requests"
   | "econnaborted"
   | "bad_request"
-  | "unknown";
+  | "unknown"
+  | "payload_too_large"
+  | "unsupported_media_type"
+  | "service_unavailable";
 
 export const httpStatusMap: Record<ErrorType, number> = {
   bad_request: 400,
@@ -21,12 +24,15 @@ export const httpStatusMap: Record<ErrorType, number> = {
   timeout: 408,
   econnaborted: 408,
   conflict: 409,
-  too_many_requests: 429,
+  payload_too_large: 413,
+  unsupported_media_type: 415,
   validation: 422,
+  too_many_requests: 429,
   canceled: 499,
   server: 500,
   unknown: 500,
-  network: 502,
+  service_unavailable: 503,
+  network: 0,
 };
 
 export type ValidationErrorsPayload = Record<string, string[]>;
