@@ -1,19 +1,16 @@
-import type { AppError, ErrorType } from "./AppError";
+import { AppError } from "./AppError";
+import type { ErrorPayload, ErrorType } from "./types";
 
-export const createAppError = (
-  type: ErrorType,
+export const createAppError = <T extends ErrorType = ErrorType>(
+  type: T,
   message: string,
-  status?: number,
-  errors?: unknown,
-): AppError => {
-  return {
-    type,
-    message,
-    status,
-    errors,
-  };
+  errors?: ErrorPayload<T>,
+): AppError<T> => {
+  return new AppError(type, message, errors);
 };
 
-export const createUnknownError = (error: unknown): AppError => {
-  return createAppError("unknown", "something went wrong", undefined, error);
+export const createUnknownError = (error?: unknown): AppError<"unknown"> => {
+  const message =
+    error instanceof Error ? error.message : "An unexpected error occurred";
+  return createAppError("unknown", message, error);
 };
