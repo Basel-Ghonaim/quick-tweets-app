@@ -1,1 +1,1 @@
-export { authActions, authReducer } from "./authSlice";
+export { authReducer, authActions } from "./authSlice";
