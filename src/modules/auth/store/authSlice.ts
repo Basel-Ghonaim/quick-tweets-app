@@ -58,12 +58,5 @@ export const authSlice = createSlice({
   },
 });
 
-export const {
-  authRequestPending,
-  authRequestFulfilled,
-  authRequestRejected,
-  clearAuthError,
-  authLogout,
-} = authSlice.actions;
-
-export default authSlice.reducer;
+export const authActions = authSlice.actions;
+export const authReducer = authSlice.reducer;
