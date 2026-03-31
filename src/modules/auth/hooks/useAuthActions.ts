@@ -4,11 +4,13 @@ import { restAuth } from "../repository/restAuth";
 import type { AuthResponse } from "../entity";
 import type { LoginCredentials, RegisterCredentials } from "../types";
 import type { AuthRequestType } from "../store/types/AuthPayloads";
+import { authSessionService } from "../services/authSessionService";
 
 export const useAuthActions = () => {
   const dispatch = useAppDispatch();
   const { login, register } = restAuth();
   const { authRequestFulfilled, authRequestPending } = authActions;
+  const { saveAuthSession } = authSessionService();
 
   const executeAuthFlow = async (
     apiCall: () => Promise<AuthResponse>,
@@ -17,6 +19,7 @@ export const useAuthActions = () => {
     try {
       dispatch(authRequestPending({ requestType }));
       const res = await apiCall();
+      saveAuthSession(res.token, res.user);
       dispatch(
         authRequestFulfilled({
           requestType,
