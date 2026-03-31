@@ -7,8 +7,9 @@ export const authSessionService = () => {
 
   return {
     saveAuthSession: (token: string, user: User) => {
-      set(TOKEN, token);
-      set(USER, user);
+      const savedToken = set(TOKEN, token);
+      const savedUser = set(USER, user);
+      return savedToken && savedUser;
     },
     clearAuthSession: () => {
       remove(TOKEN);

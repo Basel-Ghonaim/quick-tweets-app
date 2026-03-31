@@ -5,6 +5,7 @@ import type { AuthResponse } from "../entity";
 import type { LoginCredentials, RegisterCredentials } from "../types";
 import type { AuthRequestType } from "../store/types/AuthPayloads";
 import { authSessionService } from "../services/authSessionService";
+import { createAppError } from "@shared/errors";
 
 export const useAuthActions = () => {
   const dispatch = useAppDispatch();
@@ -19,7 +20,10 @@ export const useAuthActions = () => {
     try {
       dispatch(authRequestPending({ requestType }));
       const res = await apiCall();
-      saveAuthSession(res.token, res.user);
+      const isSessionSaved = saveAuthSession(res.token, res.user);
+      if (!isSessionSaved) {
+        throw createAppError("unknown", "Failed to save auth session");
+      }
       dispatch(
         authRequestFulfilled({
           requestType,
