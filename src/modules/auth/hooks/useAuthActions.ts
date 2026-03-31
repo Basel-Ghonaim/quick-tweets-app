@@ -1,12 +1,11 @@
-import { useAppDispatch } from "src/app/store/hooks";
-import { authActions } from "../store";
+import { createAppError, type AppError } from "@shared/errors";
+import { useAppDispatch } from "@app/store/hooks";
+
 import { restAuth } from "../repository/restAuth";
+import { authActions, type AuthRequestType } from "../store";
+import { authErrorHandler, authSessionService } from "../services";
 import type { AuthResponse } from "../entity";
 import type { LoginCredentials, RegisterCredentials } from "../types";
-import type { AuthRequestType } from "../store/types/AuthPayloads";
-import { authSessionService } from "../services/authSessionService";
-import { createAppError, type AppError } from "@shared/errors";
-import { authErrorHandler } from "../services/authErrorHandler";
 
 export const useAuthActions = () => {
   const dispatch = useAppDispatch();
