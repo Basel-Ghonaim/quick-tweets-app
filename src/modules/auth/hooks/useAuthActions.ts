@@ -5,12 +5,14 @@ import type { AuthResponse } from "../entity";
 import type { LoginCredentials, RegisterCredentials } from "../types";
 import type { AuthRequestType } from "../store/types/AuthPayloads";
 import { authSessionService } from "../services/authSessionService";
-import { createAppError } from "@shared/errors";
+import { createAppError, type AppError } from "@shared/errors";
+import { authErrorHandler } from "../services/authErrorHandler";
 
 export const useAuthActions = () => {
   const dispatch = useAppDispatch();
   const { login, register } = restAuth();
-  const { authRequestFulfilled, authRequestPending } = authActions;
+  const { authRequestFulfilled, authRequestPending, authRequestRejected } =
+    authActions;
   const { saveAuthSession } = authSessionService();
 
   const executeAuthFlow = async (
@@ -32,7 +34,8 @@ export const useAuthActions = () => {
         }),
       );
     } catch (error) {
-      console.log(error);
+      const authError = authErrorHandler(error as AppError);
+      dispatch(authRequestRejected({ requestType, error: authError }));
     }
   };
 
