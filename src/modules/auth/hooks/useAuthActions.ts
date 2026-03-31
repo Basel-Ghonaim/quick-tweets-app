@@ -13,7 +13,7 @@ export const useAuthActions = () => {
   const { login, register } = restAuth();
   const { authRequestFulfilled, authRequestPending, authRequestRejected } =
     authActions;
-  const { saveAuthSession } = authSessionService();
+  const { saveAuthSession, clearAuthSession } = authSessionService();
 
   const executeAuthFlow = async (
     apiCall: () => Promise<AuthResponse>,
@@ -39,10 +39,25 @@ export const useAuthActions = () => {
     }
   };
 
+  const logout = () => {
+    const isSessionCleared = clearAuthSession();
+    if (!isSessionCleared) {
+      dispatch(
+        authRequestRejected({
+          requestType: "logout",
+          error: createAppError("unknown", "Failed to clear auth session"),
+        }),
+      );
+      return;
+    }
+    dispatch(authRequestFulfilled({ requestType: "logout" }));
+  };
+
   return {
     login: (credentials: LoginCredentials) =>
       executeAuthFlow(() => login(credentials), "login"),
     register: (credentials: RegisterCredentials) =>
       executeAuthFlow(() => register(credentials), "register"),
+    logout,
   };
 };

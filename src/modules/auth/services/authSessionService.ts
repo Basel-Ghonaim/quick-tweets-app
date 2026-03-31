@@ -12,8 +12,9 @@ export const authSessionService = () => {
       return savedToken && savedUser;
     },
     clearAuthSession: () => {
-      remove(TOKEN);
-      remove(USER);
+      const removedToken = remove(TOKEN);
+      const removedUser = remove(USER);
+      return removedToken && removedUser;
     },
     getToken: () => get<string>(TOKEN),
     getUser: () => get<User>(USER),
