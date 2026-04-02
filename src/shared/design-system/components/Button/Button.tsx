@@ -7,7 +7,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     {
       children,
       variant = "contained",
-      state = "active",
+      state = "idle",
       color = "primary",
       size = "medium",
       fullWidth = false,
@@ -33,14 +33,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       .join(" ");
 
     const dynamicStyles = {
-      "--btn-bg": `var(--color-${color}-primary, #3b82f6)`,
-      "--btn-bg-hover": `var(--color-${color}-secondary, #2563eb)`,
-      "--btn-border": `var(--color-${color}-primary, #3b82f6)`,
+      "--btn-bg": `var(--color-${color}-primary)`,
+      "--btn-bg-hover": `var(--color-${color}-secondary)`,
+      "--btn-border": `var(--color-${color}-primary)`,
       "--btn-text":
         variant === "contained"
           ? "#ffffff"
-          : `var(--color-${color}-primary, #3b82f6)`,
-      "--btn-bg-alpha": `var(--color-${color}-alpha, rgba(59, 130, 246, 0.1))`,
+          : `var(--color-${color}-primary)`,
+      "--btn-bg-alpha": `var(--color-${color}-alpha)`,
       ...style,
     } as React.CSSProperties;
 
@@ -53,7 +53,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={classNames}
         style={dynamicStyles}
         disabled={isButtonDisabled}
-        aria-disabled={isButtonDisabled}
         {...props}
       >
         {isLoading && <span className={styles.spinner} aria-hidden="true" />}

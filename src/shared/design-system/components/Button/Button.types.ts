@@ -1,7 +1,7 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
 
 export type ButtonVariant = "contained" | "outlined" | "ghost";
-export type ButtonState =  "active" | "loading" | "disabled";
+export type ButtonState = "idle" | "active" | "loading" | "disabled";
 export type ButtonColor =
   | "primary"
   | "secondary"

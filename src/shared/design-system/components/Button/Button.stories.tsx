@@ -29,7 +29,7 @@ export const Default: Story = {
     children: "Button",
     variant: "contained",
     color: "primary",
-    state: "active",
+    state: "idle",
     size: "medium",
   },
 };
