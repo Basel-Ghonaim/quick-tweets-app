@@ -21,7 +21,7 @@
 }
 
 .input::placeholder {
-  color: var(--gray-500);
+  color: var(--color-text-muted, var(--gray-500));
 }
 
 /* Scalable sizes mapped to Button without heights */
@@ -98,7 +98,7 @@
 
 .variant-outlined:focus-within .wrapper {
   border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px var(--input-border-alpha, rgba(37, 99, 235, 0.2));
+  box-shadow: 0 0 0 3px var(--input-border-alpha);
 }
 
 .variant-filled .wrapper {
@@ -109,7 +109,7 @@
 .variant-filled:focus-within .wrapper {
   background-color: transparent;
   border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px var(--input-border-alpha, rgba(37, 99, 235, 0.2));
+  box-shadow: 0 0 0 3px var(--input-border-alpha);
 }
 
 .variant-filled.isInvalid .wrapper {
@@ -146,7 +146,7 @@
 .spinner {
   width: 1.25em;
   height: 1.25em;
-  border: var(--border-width-medium) solid var(--gray-500);
+  border: var(--border-width-medium) solid var(--color-text-muted, var(--gray-500));
   border-right-color: transparent;
   border-radius: var(--border-radius-full);
   animation: input-spin 0.75s linear infinite;
