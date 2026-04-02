@@ -1,0 +1,159 @@
+.container {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  font-family: var(--font-family-base);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  font-family: inherit;
+  outline: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  line-height: var(--line-height-base, 1.5);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted, var(--gray-500));
+}
+
+/* Scalable sizes mapped to Button without heights */
+.size-small .input {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--font-size-xs);
+}
+
+.size-medium .input {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+}
+
+.size-large .input {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-size-base);
+}
+
+/* Optical Alignment for Input Icons */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-500);
+  padding: 0 var(--space-2);
+}
+
+.icon > svg {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.size-small.hasLeftIcon .input {
+  padding-left: 0;
+}
+.size-medium.hasLeftIcon .input {
+  padding-left: 0;
+}
+.size-large.hasLeftIcon .input {
+  padding-left: 0;
+}
+
+.size-small.hasRightIcon .input {
+  padding-right: 0;
+}
+.size-medium.hasRightIcon .input {
+  padding-right: 0;
+}
+.size-large.hasRightIcon .input {
+  padding-right: 0;
+}
+
+/* Base Wrapper Styles */
+.wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-radius: var(--border-radius-md);
+  border: var(--border-width-thin) solid transparent;
+  background-color: transparent;
+  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Variants & Glowing Halo Math */
+.variant-outlined .wrapper {
+  background-color: transparent;
+  border-color: var(--gray-200);
+}
+
+.variant-outlined.isInvalid .wrapper {
+  border-color: var(--color-error-primary);
+}
+
+.variant-outlined:focus-within .wrapper {
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px var(--input-border-alpha);
+}
+
+.variant-filled .wrapper {
+  background-color: var(--gray-100);
+  border-color: transparent;
+}
+
+.variant-filled:focus-within .wrapper {
+  background-color: transparent;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px var(--input-border-alpha);
+}
+
+.variant-filled.isInvalid .wrapper {
+  border-color: var(--color-error-primary);
+}
+
+/* Underline variant changes border-bottom, glow might be different or standard */
+.variant-underlined .wrapper {
+  border-radius: 0;
+  border-bottom: var(--border-width-medium) solid var(--gray-200);
+}
+
+.variant-underlined:focus-within .wrapper {
+  border-bottom-color: var(--input-border-focus);
+  box-shadow: 0 1px 0 0 var(--input-border-focus);
+}
+
+.variant-underlined.isInvalid .wrapper {
+  border-bottom-color: var(--color-error-primary);
+}
+
+/* Disabled State */
+.isDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.isDisabled .input {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Spinner */
+.spinner {
+  width: 1.25em;
+  height: 1.25em;
+  border: var(--border-width-medium) solid var(--color-text-muted, var(--gray-500));
+  border-right-color: transparent;
+  border-radius: var(--border-radius-full);
+  animation: input-spin 0.75s linear infinite;
+}
+
+@keyframes input-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
