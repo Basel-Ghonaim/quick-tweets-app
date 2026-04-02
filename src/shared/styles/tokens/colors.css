@@ -5,14 +5,19 @@
   --blue-600: #2563eb;
   --blue-700: #1d4ed8;
   --blue-900: #1e3a8a;
+  --color-primary-primary: var(--blue-700);
+  --color-primary-secondary: var(--blue-900);
+  --color-primary-alpha: rgba(59, 130, 246, 0.1);
 
-  --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
   --gray-200: #e5e7eb;
   --gray-500: #6b7280;
   --gray-600: #4b5563;
   --gray-700: #374151;
   --gray-900: #111827;
+  --color-secondary-primary: var(--gray-500);
+  --color-secondary-secondary: var(--gray-600);
+  --color-secondary-alpha: rgba(114, 114, 114, 0.1);
 
   /* Semantic Colors */
   --color-success-primary: #10b981;
@@ -29,5 +34,5 @@
 
   --color-info-primary: var(--blue-500);
   --color-info-secondary: var(--blue-600);
-  --color-info-alpha: rgba(59, 130, 246, 0.1);
+  --color-info-alpha: var(--color-primary-alpha);
 }
