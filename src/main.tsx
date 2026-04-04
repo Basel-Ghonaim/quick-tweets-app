@@ -5,7 +5,7 @@ import { App } from "./app/routes/App";
 import { Provider as ReduxProvider } from "react-redux";
 import { reduxStore } from "./app/store/store";
 
-import "./shared/styles";
+import "./shared/design-system";
 
 createRoot(document.getElementById("root")!).render(
   <ReduxProvider store={reduxStore}>
