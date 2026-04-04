@@ -4,6 +4,7 @@ import {
   isRequired,
   isEmailFormat,
   isLengthChecked,
+  isMatch,
 } from "../services/validators";
 
 const loginFields: Record<
@@ -81,7 +82,10 @@ const registerFields: Record<
     type: "password",
     label: "Confirm Password",
     placeholder: "Repeat your password",
-    validators: [isRequired("Please confirm your password")],
+    validators: [
+      isRequired("Please confirm your password"),
+      isMatch("password"),
+    ],
   },
   privacy: {
     name: "privacy",
