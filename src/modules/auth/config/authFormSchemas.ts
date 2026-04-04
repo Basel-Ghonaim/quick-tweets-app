@@ -6,6 +6,7 @@ import {
   isLengthChecked,
   isMatch,
 } from "../services/validators";
+import { VALIDATION_MESSAGES } from "./validationMessages";
 
 const loginFields: Record<
   keyof LoginCredentials,
@@ -17,8 +18,11 @@ const loginFields: Record<
     label: "Username",
     placeholder: "johndoe",
     validators: [
-      isRequired("Username is required"),
-      isLengthChecked({ min: 4, message: "Must be at least 4 characters" }),
+      isRequired(VALIDATION_MESSAGES.required("Username")),
+      isLengthChecked(
+        VALIDATION_MESSAGES.minLength(4),
+        VALIDATION_MESSAGES.maxLength(20),
+      ),
     ],
   },
   password: {
@@ -27,10 +31,10 @@ const loginFields: Record<
     label: "Password",
     placeholder: "Min. 8 characters",
     validators: [
-      isRequired("Password is required"),
+      isRequired(VALIDATION_MESSAGES.required("Password")),
       isLengthChecked(
-        { min: 8, message: "Must be at least 8 characters" },
-        { max: 16, message: "Must be at most 16 characters" },
+        VALIDATION_MESSAGES.minLength(8),
+        VALIDATION_MESSAGES.maxLength(16),
       ),
     ],
   },
@@ -45,7 +49,7 @@ const registerFields: Record<
     type: "text",
     label: "Full Name",
     placeholder: "John Doe",
-    validators: [isRequired("Name is required")],
+    validators: [isRequired(VALIDATION_MESSAGES.required("Name"))],
   },
   username: {
     name: "username",
@@ -53,8 +57,11 @@ const registerFields: Record<
     label: "Username",
     placeholder: "johndoe",
     validators: [
-      isRequired("Username is required"),
-      isLengthChecked({ min: 4, message: "Must be at least 4 characters" }),
+      isRequired(VALIDATION_MESSAGES.required("Username")),
+      isLengthChecked(
+        VALIDATION_MESSAGES.minLength(4),
+        VALIDATION_MESSAGES.maxLength(20),
+      ),
     ],
   },
   email: {
@@ -62,7 +69,10 @@ const registerFields: Record<
     type: "email",
     label: "Email Address",
     placeholder: "you@company.com",
-    validators: [isRequired("Email is required"), isEmailFormat()],
+    validators: [
+      isRequired(VALIDATION_MESSAGES.required("Email")),
+      isEmailFormat(),
+    ],
   },
   password: {
     name: "password",
@@ -70,10 +80,10 @@ const registerFields: Record<
     label: "Password",
     placeholder: "Min. 8 characters",
     validators: [
-      isRequired("Password is required"),
+      isRequired(VALIDATION_MESSAGES.required("Password")),
       isLengthChecked(
-        { min: 8, message: "Must be at least 8 characters" },
-        { max: 16, message: "Must be at most 16 characters" },
+        VALIDATION_MESSAGES.minLength(8),
+        VALIDATION_MESSAGES.maxLength(16),
       ),
     ],
   },
@@ -83,7 +93,7 @@ const registerFields: Record<
     label: "Confirm Password",
     placeholder: "Repeat your password",
     validators: [
-      isRequired("Please confirm your password"),
+      isRequired(VALIDATION_MESSAGES.required("Confirm Password")),
       isMatch("password"),
     ],
   },
@@ -91,7 +101,7 @@ const registerFields: Record<
     name: "privacy",
     type: "checkbox",
     label: "I agree to the privacy policy rules",
-    validators: [isRequired("You must accept the privacy policy")],
+    validators: [isRequired(VALIDATION_MESSAGES.privacy)],
   },
   profileImage: {
     name: "profileImage",
