@@ -51,19 +51,7 @@ const registerFields: Record<
     placeholder: "John Doe",
     validators: [isRequired(VALIDATION_MESSAGES.required("Name"))],
   },
-  username: {
-    name: "username",
-    type: "text",
-    label: "Username",
-    placeholder: "johndoe",
-    validators: [
-      isRequired(VALIDATION_MESSAGES.required("Username")),
-      isLengthChecked(
-        VALIDATION_MESSAGES.minLength(4),
-        VALIDATION_MESSAGES.maxLength(20),
-      ),
-    ],
-  },
+  ...loginFields,
   email: {
     name: "email",
     type: "email",
@@ -74,19 +62,7 @@ const registerFields: Record<
       isEmailFormat(),
     ],
   },
-  password: {
-    name: "password",
-    type: "password",
-    label: "Password",
-    placeholder: "Min. 8 characters",
-    validators: [
-      isRequired(VALIDATION_MESSAGES.required("Password")),
-      isLengthChecked(
-        VALIDATION_MESSAGES.minLength(8),
-        VALIDATION_MESSAGES.maxLength(16),
-      ),
-    ],
-  },
+
   confirmPassword: {
     name: "confirmPassword",
     type: "password",
