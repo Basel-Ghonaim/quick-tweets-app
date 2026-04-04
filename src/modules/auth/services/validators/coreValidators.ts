@@ -1,4 +1,4 @@
-import type { FieldType, ValidatorFn } from "@modules/auth/types/schema.types";
+import type { ValidatorFn } from "@modules/auth/types/schema.types";
 
 export const isRequired = (
   message: string = "This field is required",
@@ -49,10 +49,10 @@ export const isLengthChecked = (
   };
 };
 
-export const isMatch = (targetValue: FieldType): ValidatorFn => {
+export const isMatch = (targetField: string, message: string = "Fields do not match"): ValidatorFn => {
   return (value, values) => {
     if (!value || typeof value !== "string") return null;
-    if (value !== values[targetValue]) return "Passwords do not match";
+    if (value !== values[targetField]) return message;
 
     return null;
   };

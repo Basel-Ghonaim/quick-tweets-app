@@ -70,7 +70,7 @@ const registerFields: Record<
     placeholder: "Repeat your password",
     validators: [
       isRequired(VALIDATION_MESSAGES.required("Confirm Password")),
-      isMatch("password"),
+      isMatch("password", VALIDATION_MESSAGES.match("Password")),
     ],
   },
   privacy: {
