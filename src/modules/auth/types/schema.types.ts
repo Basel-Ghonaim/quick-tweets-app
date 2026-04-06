@@ -5,7 +5,10 @@ export type FieldValue<T extends FieldType = FieldType> = T extends "checkbox"
     ? File | null
     : string;
 
-export type ValidatorFn = (value: FieldValue, values: Record<string, FieldValue>) => string | null;
+export type ValidatorFn = (
+  value: FieldValue,
+  values: Record<string, FieldValue>,
+) => string | null;
 
 export interface FormFieldConfig<TPayload> {
   name: keyof TPayload;
@@ -21,8 +24,10 @@ export type FormValue<
   [K in keyof T]: FieldValue<T[K]["type"]>;
 };
 
-export interface FormState<TPayload> {
-  values: Record<keyof TPayload, FieldValue>;
-  errors: Record<keyof TPayload, string | null>;
+export interface FormState<
+  T extends Record<string, FormFieldConfig<Record<string, FieldValue>>>,
+> {
+  values: FormValue<T>;
+  errors: Record<keyof T, string | null>;
   isSubmitting: boolean;
 }
