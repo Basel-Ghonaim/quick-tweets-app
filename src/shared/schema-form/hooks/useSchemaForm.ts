@@ -10,7 +10,7 @@ import {
   executeFieldValidators,
   validateSchemaForm,
 } from "../services";
-import { useLatest } from "../../../shared/hooks/useLatest";
+import { useLatest } from "../../hooks/useLatest";
 
 export const useSchemaForm = <
   TSchema extends Record<string, FormFieldConfig<FormPayload>>,
