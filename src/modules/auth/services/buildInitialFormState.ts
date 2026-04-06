@@ -3,10 +3,11 @@ import type {
   FieldValue,
   FormState,
   FormValue,
+  FormPayload,
 } from "../types/schema.types";
 
 export const buildInitialFormState = <
-  T extends Record<string, FormFieldConfig<Record<string, FieldValue>>>,
+  T extends Record<string, FormFieldConfig<FormPayload>>,
 >(
   schema: T,
 ): FormState<T> => {
