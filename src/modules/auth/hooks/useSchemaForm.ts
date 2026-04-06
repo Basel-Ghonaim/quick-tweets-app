@@ -10,6 +10,7 @@ import {
   executeFieldValidators,
   validateSchemaForm,
 } from "../services";
+import { useLatest } from "../../../shared/hooks/useLatest";
 
 export const useSchemaForm = <
   TSchema extends Record<string, FormFieldConfig<FormPayload>>,
@@ -20,6 +21,7 @@ export const useSchemaForm = <
   const [state, setState] = useState<FormState<TSchema>>(() =>
     buildInitialFormState(schema),
   );
+  const latestValues = useLatest(state.values);
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +68,10 @@ export const useSchemaForm = <
   const handleSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const { isValid, errors } = validateSchemaForm(schema, state.values);
+
+      const currentValues = latestValues.current;
+      const { isValid, errors } = validateSchemaForm(schema, currentValues);
+
       if (!isValid) {
         setState((prev) => ({ ...prev, errors }));
         return;
@@ -78,7 +83,7 @@ export const useSchemaForm = <
       }));
 
       try {
-        await onSubmitAction(state.values);
+        await onSubmitAction(currentValues);
       } catch {
         // We catch here silently because Redux authErrorHandler already handles toast popups
       } finally {
@@ -88,7 +93,7 @@ export const useSchemaForm = <
         }));
       }
     },
-    [schema, onSubmitAction, state.values],
+    [schema, onSubmitAction, latestValues],
   );
 
   return {
