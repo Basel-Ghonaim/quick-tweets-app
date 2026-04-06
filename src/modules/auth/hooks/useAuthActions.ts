@@ -35,6 +35,7 @@ export const useAuthActions = () => {
     } catch (error) {
       const authError = authErrorHandler(error as AppError);
       dispatch(authRequestRejected({ requestType, error: authError }));
+      throw authError;
     }
   };
 

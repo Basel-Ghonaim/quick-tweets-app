@@ -1,4 +1,4 @@
-import type { ValidatorFn } from "@modules/auth/types/schema.types";
+import type { ValidatorFn } from "../types/schema.types";
 
 export const isRequired = (
   message: string = "This field is required",

@@ -1,11 +1,11 @@
-import type { FormFieldConfig } from "../types/schema.types";
+import type { FormFieldConfig } from "../../../shared/schema-form/types/schema.types";
 import type { LoginCredentials, RegisterCredentials } from "../types";
 import {
   isRequired,
   isEmailFormat,
   isLengthChecked,
   isMatch,
-} from "../services/validators";
+} from "../../../shared/schema-form/validators/coreValidators";
 import { VALIDATION_MESSAGES } from "./validationMessages";
 
 const loginFields: Record<
