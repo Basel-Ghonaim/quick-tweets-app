@@ -1,16 +1,21 @@
-import { useState, useCallback, type ChangeEvent } from "react";
+import { useState, useCallback, type ChangeEvent, type FormEvent } from "react";
 import type {
   FormFieldConfig,
   FormState,
   FormPayload,
+  FormValue,
 } from "../types/schema.types";
-import { buildInitialFormState } from "../services";
+import {
+  buildInitialFormState,
+  executeFieldValidators,
+  validateSchemaForm,
+} from "../services";
 
 export const useSchemaForm = <
   TSchema extends Record<string, FormFieldConfig<FormPayload>>,
 >(
   schema: TSchema,
-  // onSubmitAction: (values: FormValue<TSchema>) => Promise<void>,
+  onSubmitAction: (values: FormValue<TSchema>) => Promise<void>,
 ) => {
   const [state, setState] = useState<FormState<TSchema>>(() =>
     buildInitialFormState(schema),
@@ -38,17 +43,12 @@ export const useSchemaForm = <
           [fieldName]: fieldValue,
         };
 
-        let fieldError: string | null = null;
         const validators = schema[fieldName].validators;
-        if (validators && validators.length > 0) {
-          for (const validate of validators) {
-            const errorMsg = validate(fieldValue, nextValues as FormPayload);
-            if (errorMsg) {
-              fieldError = errorMsg;
-              break;
-            }
-          }
-        }
+        const fieldError = executeFieldValidators(
+          fieldValue,
+          nextValues as FormPayload,
+          validators,
+        );
 
         return {
           ...prev,
@@ -63,8 +63,37 @@ export const useSchemaForm = <
     [schema],
   );
 
+  const handleSubmit = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const { isValid, errors } = validateSchemaForm(schema, state.values);
+      if (!isValid) {
+        setState((prev) => ({ ...prev, errors }));
+        return;
+      }
+
+      setState((prev) => ({
+        ...prev,
+        isSubmitting: true,
+      }));
+
+      try {
+        await onSubmitAction(state.values);
+      } catch {
+        // We catch here silently because Redux authErrorHandler already handles toast popups
+      } finally {
+        setState((prev) => ({
+          ...prev,
+          isSubmitting: false,
+        }));
+      }
+    },
+    [schema, onSubmitAction, state.values],
+  );
+
   return {
     ...state,
     handleChange,
+    handleSubmit,
   };
 };
