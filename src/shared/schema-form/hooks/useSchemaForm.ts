@@ -17,6 +17,7 @@ export const useSchemaForm = <
 >(
   schema: TSchema,
   onSubmitAction: (values: FormValue<TSchema>) => Promise<void>,
+  onError?: (err: unknown) => void,
 ) => {
   const [state, setState] = useState<FormState<TSchema>>(() =>
     buildInitialFormState(schema),
@@ -84,8 +85,12 @@ export const useSchemaForm = <
 
       try {
         await onSubmitAction(currentValues);
-      } catch {
-        // We catch here silently because Redux authErrorHandler already handles toast popups
+      } catch (err) {
+        if (onError) {
+          onError(err);
+        } else {
+          console.error("[useSchemaForm] Submit failed:", err);
+        }
       } finally {
         setState((prev) => ({
           ...prev,
@@ -93,7 +98,7 @@ export const useSchemaForm = <
         }));
       }
     },
-    [schema, onSubmitAction, latestValues],
+    [schema, onSubmitAction, onError, latestValues],
   );
 
   return {
