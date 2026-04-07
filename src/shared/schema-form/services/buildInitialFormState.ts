@@ -4,7 +4,22 @@ import type {
   FormState,
   FormValue,
   FormPayload,
+  FieldType,
 } from "../types/schema.types";
+
+const getInitialValue = (type: FieldType): FieldValue => {
+  switch (type) {
+    case "checkbox":
+    case "radio":
+      return false;
+    case "number":
+      return "";
+    case "file":
+      return null;
+    default:
+      return "";
+  }
+};
 
 export const buildInitialFormState = <
   T extends Record<string, FormFieldConfig<FormPayload>>,
@@ -16,8 +31,7 @@ export const buildInitialFormState = <
 
   for (const key in schema) {
     const type = schema[key].type;
-    initialValues[key] =
-      type === "checkbox" ? false : type === "file" ? null : "";
+    initialValues[key] = getInitialValue(type);
     initialErrors[key] = null;
   }
   return {

@@ -4,6 +4,7 @@ import type {
   FormState,
   FormPayload,
   FormValue,
+  FieldValue,
 } from "../types/schema.types";
 import {
   buildInitialFormState,
@@ -17,28 +18,48 @@ export const useSchemaForm = <
 >(
   schema: TSchema,
   onSubmitAction: (values: FormValue<TSchema>) => Promise<void>,
+  onError?: (err: unknown) => void,
 ) => {
   const [state, setState] = useState<FormState<TSchema>>(() =>
     buildInitialFormState(schema),
   );
   const latestValues = useLatest(state.values);
+  const latestOnSubmit = useLatest(onSubmitAction);
 
   const handleChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const { name, value, type, checked, files } = e.target;
+    (
+      e: ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >,
+    ) => {
+      const { name, value } = e.target;
+      const el = e.target;
       const fieldName = name as Extract<keyof TSchema, string>;
 
       if (!schema[fieldName]) return;
 
-      const fieldValue =
-        type === "checkbox"
-          ? checked
-          : type === "file"
-            ? files
-              ? files[0]
-              : null
-            : value;
+      const schemaType = schema[fieldName].type;
 
+      let fieldValue = value as FieldValue;
+      if (el instanceof HTMLInputElement) {
+        switch (schemaType) {
+          case "checkbox":
+            fieldValue = el.checked;
+            break;
+          case "file":
+            if (el.files && el.files.length > 0) {
+              fieldValue = el.multiple ? Array.from(el.files) : el.files[0];
+            } else {
+              fieldValue = null;
+            }
+            break;
+          case "number":
+            fieldValue = el.value === "" ? "" : Number(el.value);
+            break;
+        }
+      }
+
+      // Update errors and values in real time
       setState((prev) => {
         const nextValues = {
           ...prev.values,
@@ -48,7 +69,7 @@ export const useSchemaForm = <
         const validators = schema[fieldName].validators;
         const fieldError = executeFieldValidators(
           fieldValue,
-          nextValues as FormPayload,
+          nextValues,
           validators,
         );
 
@@ -81,11 +102,14 @@ export const useSchemaForm = <
         ...prev,
         isSubmitting: true,
       }));
-
       try {
-        await onSubmitAction(currentValues);
-      } catch {
-        // We catch here silently because Redux authErrorHandler already handles toast popups
+        await latestOnSubmit.current(currentValues);
+      } catch (err) {
+        if (onError) {
+          onError(err);
+        } else {
+          console.error("[useSchemaForm] Submit failed:", err);
+        }
       } finally {
         setState((prev) => ({
           ...prev,
@@ -93,7 +117,7 @@ export const useSchemaForm = <
         }));
       }
     },
-    [schema, onSubmitAction, latestValues],
+    [schema, latestOnSubmit, onError, latestValues],
   );
 
   return {
