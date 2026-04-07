@@ -47,10 +47,11 @@ export const useSchemaForm = <
             fieldValue = el.checked;
             break;
           case "file":
-            if (el.files) {
+            if (el.files && el.files.length > 0) {
               fieldValue = el.multiple ? Array.from(el.files) : el.files[0];
+            } else {
+              fieldValue = null;
             }
-            fieldValue = null;
             break;
           case "number":
             fieldValue = el.value === "" ? "" : Number(el.value);
