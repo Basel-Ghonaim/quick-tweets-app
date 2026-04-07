@@ -1,9 +1,23 @@
-export type FieldType = "text" | "password" | "email" | "checkbox" | "file";
-export type FieldValue<T extends FieldType = FieldType> = T extends "checkbox"
+export type FieldType =
+  | "text"
+  | "password"
+  | "email"
+  | "checkbox"
+  | "radio"
+  | "file"
+  | "number"
+  | "select"
+  | "textarea";
+
+export type FieldValue<T extends FieldType = FieldType> = T extends
+  | "checkbox"
+  | "radio"
   ? boolean
   : T extends "file"
-    ? File | null
-    : string;
+    ? File | File[] | null
+    : T extends "number"
+      ? number | ""
+      : string;
 
 export type FormPayload = Record<string, FieldValue>;
 

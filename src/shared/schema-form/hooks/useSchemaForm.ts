@@ -4,6 +4,7 @@ import type {
   FormState,
   FormPayload,
   FormValue,
+  FieldValue,
 } from "../types/schema.types";
 import {
   buildInitialFormState,
@@ -25,20 +26,42 @@ export const useSchemaForm = <
   const latestValues = useLatest(state.values);
 
   const handleChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const { name, value, type, checked, files } = e.target;
+    (
+      e: ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >,
+    ) => {
+      const { name, value } = e.target;
+      const el = e.target;
       const fieldName = name as Extract<keyof TSchema, string>;
 
       if (!schema[fieldName]) return;
 
-      const fieldValue =
-        type === "checkbox"
-          ? checked
-          : type === "file"
-            ? files
-              ? files[0]
-              : null
-            : value;
+      const schemaType = schema[fieldName].type;
+
+      let fieldValue = value as FieldValue;
+
+      if (el instanceof HTMLInputElement) {
+        switch (schemaType) {
+          case "checkbox":
+          case "radio":
+            fieldValue = el.checked;
+            break;
+          case "file":
+            fieldValue = el.files
+              ? el.files.length > 1
+                ? Array.from(el.files)
+                : el.files[0]
+              : null;
+            break;
+          case "number":
+            fieldValue = el.value === "" ? "" : Number(el.value);
+            break;
+          default:
+            fieldValue = value;
+            break;
+        }
+      }
 
       setState((prev) => {
         const nextValues = {
