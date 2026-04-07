@@ -24,6 +24,7 @@ export const useSchemaForm = <
     buildInitialFormState(schema),
   );
   const latestValues = useLatest(state.values);
+  const latestOnSubmit = useLatest(onSubmitAction);
 
   const handleChange = useCallback(
     (
@@ -40,29 +41,24 @@ export const useSchemaForm = <
       const schemaType = schema[fieldName].type;
 
       let fieldValue = value as FieldValue;
-
       if (el instanceof HTMLInputElement) {
         switch (schemaType) {
           case "checkbox":
-          case "radio":
             fieldValue = el.checked;
             break;
           case "file":
-            fieldValue = el.files
-              ? el.files.length > 1
-                ? Array.from(el.files)
-                : el.files[0]
-              : null;
+            if (el.files) {
+              fieldValue = el.multiple ? Array.from(el.files) : el.files[0];
+            }
+            fieldValue = null;
             break;
           case "number":
             fieldValue = el.value === "" ? "" : Number(el.value);
             break;
-          default:
-            fieldValue = value;
-            break;
         }
       }
 
+      // Update errors and values in real time
       setState((prev) => {
         const nextValues = {
           ...prev.values,
@@ -72,7 +68,7 @@ export const useSchemaForm = <
         const validators = schema[fieldName].validators;
         const fieldError = executeFieldValidators(
           fieldValue,
-          nextValues as FormPayload,
+          nextValues,
           validators,
         );
 
@@ -105,9 +101,8 @@ export const useSchemaForm = <
         ...prev,
         isSubmitting: true,
       }));
-
       try {
-        await onSubmitAction(currentValues);
+        await latestOnSubmit.current(currentValues);
       } catch (err) {
         if (onError) {
           onError(err);
@@ -121,7 +116,7 @@ export const useSchemaForm = <
         }));
       }
     },
-    [schema, onSubmitAction, onError, latestValues],
+    [schema, latestOnSubmit, onError, latestValues],
   );
 
   return {
