@@ -1,6 +1,6 @@
 import { AuthTabs } from "./AuthTabs/AuthTabs";
 import { RegisterForm } from "./AuthForm/RegisterForm";
-import { LoginForm } from "./AuthForm/Loginform";
+import { LoginForm } from "./AuthForm/LoginForm";
 
 import styles from "./RightPanel.module.css";
 
