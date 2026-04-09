@@ -1,4 +1,9 @@
-import { useState, useCallback, type ChangeEvent, type FormEvent } from "react";
+import {
+  useState,
+  useCallback,
+  type ChangeEvent,
+  type SubmitEvent,
+} from "react";
 import type {
   FormFieldConfig,
   FormState,
@@ -87,7 +92,7 @@ export const useSchemaForm = <
   );
 
   const handleSubmit = useCallback(
-    async (e: FormEvent<HTMLFormElement>) => {
+    async (e: SubmitEvent) => {
       e.preventDefault();
 
       const currentValues = latestValues.current;

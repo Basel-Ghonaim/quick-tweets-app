@@ -8,10 +8,7 @@ import {
 } from "../../../shared/schema-form/validators/coreValidators";
 import { VALIDATION_MESSAGES } from "./validationMessages";
 
-const loginFields: Record<
-  keyof LoginCredentials,
-  FormFieldConfig<LoginCredentials>
-> = {
+const loginFields = {
   username: {
     name: "username",
     type: "text",
@@ -38,12 +35,9 @@ const loginFields: Record<
       ),
     ],
   },
-} as const;
+} satisfies Record<keyof LoginCredentials, FormFieldConfig<LoginCredentials>>;
 
-const registerFields: Record<
-  keyof RegisterCredentials,
-  FormFieldConfig<RegisterCredentials>
-> = {
+const registerFields = {
   name: {
     name: "name",
     type: "text",
@@ -86,7 +80,10 @@ const registerFields: Record<
     placeholder: "Upload your profile image",
     validators: [],
   },
-} as const;
+} satisfies Record<
+  keyof RegisterCredentials,
+  FormFieldConfig<RegisterCredentials>
+>;
 
 export const authFormSchemas = {
   loginFields,
