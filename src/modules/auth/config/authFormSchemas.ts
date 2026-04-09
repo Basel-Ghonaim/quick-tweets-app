@@ -5,7 +5,7 @@ import {
   isEmailFormat,
   isLengthChecked,
   isMatch,
-} from "../../../shared/schema-form/validators/coreValidators";
+} from "@shared/schema-form";
 import { VALIDATION_MESSAGES } from "./validationMessages";
 
 const loginFields = {
