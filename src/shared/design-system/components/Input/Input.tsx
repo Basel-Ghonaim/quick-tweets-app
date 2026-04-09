@@ -15,6 +15,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       rightIcon,
       className = "",
       style,
+      label,
       disabled,
       ...props
     },
@@ -28,7 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       isInvalid ? styles.isInvalid : "",
       disabled ? styles.isDisabled : "",
       leftIcon ? styles.hasLeftIcon : "",
-      (rightIcon || isLoading) ? styles.hasRightIcon : "",
+      rightIcon || isLoading ? styles.hasRightIcon : "",
       className,
     ]
       .filter(Boolean)
@@ -42,13 +43,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className={containerClasses} style={dynamicStyles}>
+        {label && <div className={styles.label}>{label}</div>}
         <div className={styles.wrapper}>
           {leftIcon && <span className={styles.icon}>{leftIcon}</span>}
-          
           <input
             ref={ref}
             className={styles.input}
-            disabled={disabled}
+            disabled={disabled} 
             aria-invalid={isInvalid}
             {...props}
           />
