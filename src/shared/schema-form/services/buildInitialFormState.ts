@@ -15,6 +15,7 @@ const getInitialValue = (type: FieldType): FieldValue => {
     case "number":
       return "";
     case "file":
+    case "file-multiple":
       return null;
     default:
       return "";
