@@ -1,5 +1,7 @@
 import { useAppSelector } from "@app/store/hooks";
 import { useSchemaForm } from "@shared/schema-form";
+import { useAuthActions } from "./useAuthActions";
+import { authFormSchemas } from "../config/authFormSchemas";
 import type {
   FormFieldConfig,
   FormPayload,
@@ -48,4 +50,13 @@ const useAuthFormBase = <
 };
 
 // ─── Public Consumer Hooks ────────────────────────────────────────────────────
-// Phase 3 — implemented in the next step
+
+export const useLoginFlow = () => {
+  const { login } = useAuthActions();
+  return useAuthFormBase(authFormSchemas.loginFields, login, "login");
+};
+
+export const useRegisterFlow = () => {
+  const { register } = useAuthActions();
+  return useAuthFormBase(authFormSchemas.registerFields, register, "register");
+};
