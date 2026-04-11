@@ -19,7 +19,7 @@ export type FieldValue<T extends FieldType = FieldType> = T extends
       ? number | ""
       : string;
 
-export type FormPayload = Record<string, FieldValue>;
+export type FormPayload = Record<string, unknown>;
 
 export type ValidatorFn = (
   value: FieldValue,
