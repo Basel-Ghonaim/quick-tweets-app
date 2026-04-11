@@ -165,3 +165,25 @@
     transform: rotate(360deg);
   }
 }
+
+.passwordToggle {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: 0 var(--space-3, 12px);
+  outline: none;
+  user-select: none;
+  transition: opacity var(--transition-fast, 0.2s);
+}
+
+.passwordToggle:hover {
+  opacity: 0.8;
+}
+
+.passwordToggle:focus-visible {
+  text-decoration: underline;
+}
