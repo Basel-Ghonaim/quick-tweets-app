@@ -5,6 +5,7 @@ export type FieldType =
   | "checkbox"
   | "radio"
   | "file"
+  | "file-multiple"
   | "number"
   | "select"
   | "textarea";
@@ -14,10 +15,12 @@ export type FieldValue<T extends FieldType = FieldType> = T extends
   | "radio"
   ? boolean
   : T extends "file"
-    ? File | File[] | null
-    : T extends "number"
-      ? number | ""
-      : string;
+    ? File | null
+    : T extends "file-multiple"
+      ? File[] | null
+      : T extends "number"
+        ? number | ""
+        : string;
 
 export type FormPayload = Record<string, unknown>;
 
