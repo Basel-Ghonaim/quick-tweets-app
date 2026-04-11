@@ -100,7 +100,7 @@ export const useSchemaForm = <
 
       if (!isValid) {
         setState((prev) => ({ ...prev, errors }));
-        return;
+        return; 
       }
 
       setState((prev) => ({
