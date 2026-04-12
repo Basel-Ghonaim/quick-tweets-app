@@ -1,15 +1,11 @@
-import {
-  useState,
-  useCallback,
-  type ChangeEvent,
-  type SubmitEvent,
-} from "react";
+import { useState, useCallback } from "react";
 import type {
   FormFieldConfig,
   FormState,
   FormPayload,
   FormValue,
   FieldValue,
+  FormChangeEvent,
 } from "../types/schema.types";
 import {
   buildInitialFormState,
@@ -32,11 +28,7 @@ export const useSchemaForm = <
   const latestOnSubmit = useLatest(onSubmitAction);
 
   const handleChange = useCallback(
-    (
-      e: ChangeEvent<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >,
-    ) => {
+    (e: FormChangeEvent) => {
       const { name, value } = e.target;
       const el = e.target;
       const fieldName = name as Extract<keyof TSchema, string>;

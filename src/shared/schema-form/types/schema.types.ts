@@ -1,3 +1,5 @@
+import { type ChangeEvent } from "react";
+
 export type FieldType =
   | "text"
   | "password"
@@ -49,3 +51,10 @@ export interface FormState<
   errors: Record<keyof T, string | null>;
   isSubmitting: boolean;
 }
+
+export type FormChangeEvent = ChangeEvent<
+  HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+>;
+
+export type FormChangeHandler = (e: FormChangeEvent) => void;
+export type FormSubmitHandler = (e: SubmitEvent) => Promise<void>;
