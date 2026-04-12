@@ -1,4 +1,4 @@
-import { useAppSelector } from "@app/store/hooks";
+import { useAppSelector } from "@app/store";
 import { useSchemaForm } from "@shared/schema-form";
 import { useRequestState } from "@shared/hooks";
 import { useAuthActions } from "./useAuthActions";

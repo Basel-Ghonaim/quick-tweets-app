@@ -3,7 +3,8 @@ import { createRoot } from "react-dom/client";
 import { App } from "./app/routes/App";
 
 import { Provider as ReduxProvider } from "react-redux";
-import { reduxStore } from "./app/store/store";
+
+import { reduxStore } from "@app/store";
 
 import "./shared/design-system";
 
