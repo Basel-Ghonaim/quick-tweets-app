@@ -1,6 +1,6 @@
 export type RequestStatus = "idle" | "loading" | "success" | "error";
 
-export type RequestState = {
+export type RequestState<TError = Error> = {
   status: RequestStatus;
-  error: Error | null;
+  error: TError | null;
 };
