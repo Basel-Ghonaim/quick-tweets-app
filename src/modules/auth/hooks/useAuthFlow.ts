@@ -3,11 +3,8 @@ import { useSchemaForm } from "@shared/schema-form";
 import { useRequestState } from "@shared/hooks";
 import { useAuthActions } from "./useAuthActions";
 import { authFormSchemas } from "../config/authFormSchemas";
-import type {
-  FormFieldConfig,
-  FormPayload,
-  FormValue,
-} from "@shared/schema-form/types/schema.types";
+import type { FormFieldConfig, FormPayload, FormValue } from "@shared/schema-form";
+import type { AppError } from "@shared/errors";
 import type { AuthRequestType } from "../store";
 
 type AuthFlowType = Extract<AuthRequestType, "login" | "register">;
@@ -18,6 +15,9 @@ export interface AuthFlowReturn<
   values: FormValue<TSchema>;
   errors: Record<keyof TSchema, string | null>;
   isSubmitting: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  serverError: AppError | null;
   handleChange: ReturnType<typeof useSchemaForm<TSchema>>["handleChange"];
   handleSubmit: ReturnType<typeof useSchemaForm<TSchema>>["handleSubmit"];
 }
@@ -32,7 +32,8 @@ const useAuthFormBase = <
   const requestState = useAppSelector(
     (state) => state.auth.requests[requestType],
   );
-  const { isLoading: isServerLoading } = useRequestState(requestState);
+  const { isLoading: isServerLoading, isSuccess, isError, error: serverError } =
+    useRequestState(requestState);
 
   const formAPI = useSchemaForm(schema, action, (err) => {
     // TODO: [Toast Epic] toast.error(formatAuthError(err))
@@ -45,6 +46,9 @@ const useAuthFormBase = <
     values: formAPI.values,
     errors: formAPI.errors,
     isSubmitting: formAPI.isSubmitting || isServerLoading,
+    isSuccess,
+    isError,
+    serverError,
     handleChange: formAPI.handleChange,
     handleSubmit: formAPI.handleSubmit,
   };
