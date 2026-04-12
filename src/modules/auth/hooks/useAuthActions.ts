@@ -1,5 +1,5 @@
 import { createAppError, type AppError } from "@shared/errors";
-import { useAppDispatch } from "@app/store/hooks";
+import { useAppDispatch } from "@app/store";
 
 import { restAuth } from "../repository/restAuth";
 import { authActions, type AuthRequestType } from "../store";
