@@ -1,4 +1,6 @@
+import { useAppSelector } from "@app/store/hooks";
 import { useSchemaForm } from "@shared/schema-form";
+import { useRequestState } from "@shared/hooks";
 import { useAuthActions } from "./useAuthActions";
 import { authFormSchemas } from "../config/authFormSchemas";
 import type {
@@ -27,11 +29,10 @@ const useAuthFormBase = <
   action: (values: FormValue<TSchema>) => Promise<void>,
   requestType: AuthFlowType,
 ): AuthFlowReturn<TSchema> => {
-  // TODO: [useRequestState Epic] Replace with the shared useRequestState hook
-  // from src/shared/hooks/ when it is built. It should return:
-  // { isIdle, isLoading, isSuccess, isError, error }
-  // This will allow reading request status and error in a domain-agnostic,
-  // reusable way across all modules — not just auth.
+  const requestState = useAppSelector(
+    (state) => state.auth.requests[requestType],
+  );
+  const { isLoading: isServerLoading } = useRequestState(requestState);
 
   const formAPI = useSchemaForm(schema, action, (err) => {
     // TODO: [Toast Epic] toast.error(formatAuthError(err))
@@ -43,7 +44,7 @@ const useAuthFormBase = <
   return {
     values: formAPI.values,
     errors: formAPI.errors,
-    isSubmitting: formAPI.isSubmitting,
+    isSubmitting: formAPI.isSubmitting || isServerLoading,
     handleChange: formAPI.handleChange,
     handleSubmit: formAPI.handleSubmit,
   };
