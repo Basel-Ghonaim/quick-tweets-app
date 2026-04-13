@@ -1,0 +1,136 @@
+/* ─── Container ──────────────────────────────────────────────────────────── */
+
+.container {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  font-family: var(--font-family-base);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* ─── Row: box + label side-by-side ─────────────────────────────────────── */
+
+.row {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ─── Hide the native checkbox, keep it accessible ──────────────────────── */
+
+.nativeInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ─── Custom checkbox box ────────────────────────────────────────────────── */
+
+.box {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm, 4px);
+  border: var(--border-width-thin, 1px) solid var(--gray-200);
+  background-color: var(--color-surface);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* color CSS variables injected by the component */
+  --checkbox-color: var(--color-primary-primary);
+  --checkbox-alpha: var(--color-primary-alpha);
+}
+
+/* ─── Sizes ──────────────────────────────────────────────────────────────── */
+
+.size-small  .box { width: 14px; height: 14px; }
+.size-medium .box { width: 18px; height: 18px; }
+.size-large  .box { width: 22px; height: 22px; }
+
+/* ─── Checkmark SVG icon ─────────────────────────────────────────────────── */
+
+.icon {
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #ffffff;
+  display: inline-flex;
+}
+
+.size-small  .icon > svg { width: 10px; height: 10px; }
+.size-medium .icon > svg { width: 12px; height: 12px; }
+.size-large  .icon > svg { width: 15px; height: 15px; }
+
+/* ─── Checked state ──────────────────────────────────────────────────────── */
+
+.nativeInput:checked ~ .box {
+  background-color: var(--checkbox-color);
+  border-color: var(--checkbox-color);
+}
+
+.nativeInput:checked ~ .box .icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ─── Focus-visible ring (keyboard nav) ──────────────────────────────────── */
+
+.nativeInput:focus-visible ~ .box {
+  box-shadow: 0 0 0 3px var(--checkbox-alpha);
+}
+
+/* ─── Hover (when not disabled and not invalid) ──────────────────────────── */
+
+.container:not(.isInvalid) .row:hover .box {
+  border-color: var(--checkbox-color);
+}
+
+/* ─── Invalid state ──────────────────────────────────────────────────────── */
+
+.isInvalid .box {
+  border-color: var(--color-error-primary);
+}
+
+.isInvalid .nativeInput:focus-visible ~ .box {
+  box-shadow: 0 0 0 3px var(--color-error-alpha, rgba(239, 68, 68, 0.15));
+}
+
+/* ─── Disabled state ─────────────────────────────────────────────────────── */
+
+.isDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.isDisabled .row {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ─── Label text ─────────────────────────────────────────────────────────── */
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-base, 1.5);
+}
+
+.size-small  .label { font-size: var(--font-size-xs); }
+.size-medium .label { font-size: var(--font-size-sm); }
+.size-large  .label { font-size: var(--font-size-base); }
+
+/* ─── Error message ──────────────────────────────────────────────────────── */
+
+.errorMessage {
+  font-size: var(--font-size-xs);
+  color: var(--color-error-primary);
+  line-height: var(--line-height-base, 1.5);
+}
