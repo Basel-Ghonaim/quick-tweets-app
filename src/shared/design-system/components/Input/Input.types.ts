@@ -23,4 +23,5 @@ export interface InputProps extends Omit<
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   label?: string;
+  errorMessage?: string;
 }

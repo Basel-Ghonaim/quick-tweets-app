@@ -187,3 +187,10 @@
 .passwordToggle:focus-visible {
   text-decoration: underline;
 }
+
+/* Error Message */
+.errorMessage {
+  font-size: var(--font-size-xs);
+  color: var(--color-error-primary);
+  line-height: var(--line-height-base, 1.5);
+}
