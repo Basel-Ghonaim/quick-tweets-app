@@ -11,4 +11,5 @@ export type {
   FormValue,
   FormChangeHandler,
   FormSubmitHandler,
+  FieldType,
 } from "./types/schema.types";
