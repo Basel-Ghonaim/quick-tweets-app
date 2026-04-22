@@ -1,4 +1,4 @@
-import React, { forwardRef, useState } from "react";
+import React, { forwardRef, useId, useState } from "react";
 import styles from "./Input.module.css";
 import type { InputProps } from "./Input.types";
 
@@ -13,6 +13,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       fullWidth = false,
       leftIcon,
       rightIcon,
+      errorMessage,
       className = "",
       style,
       label,
@@ -22,6 +23,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref,
   ) => {
+    const generatedId = useId();
+    const errorId = `${generatedId}-error`;
     const containerClasses = [
       styles.container,
       styles[`variant-${variant}`],
@@ -57,6 +60,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className={styles.input}
             disabled={disabled}
             aria-invalid={isInvalid}
+            aria-describedby={isInvalid && errorMessage ? errorId : undefined}
             {...props}
           />
 
@@ -79,6 +83,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <span className={styles.icon}>{rightIcon}</span>
           ) : null}
         </div>
+
+        {isInvalid && errorMessage && (
+          <span id={errorId} className={styles.errorMessage} role="alert">
+            {errorMessage}
+          </span>
+        )}
       </div>
     );
   },
