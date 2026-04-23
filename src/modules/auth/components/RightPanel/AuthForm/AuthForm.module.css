@@ -4,50 +4,21 @@
   gap: var(--space-4);
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.label {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.input {
-  width: 100%;
-  height: 44px;
-  padding: 0 var(--space-4);
+.serverError {
+  padding: var(--space-3) var(--space-4);
   font-size: var(--font-size-sm);
   font-family: var(--font-family-base);
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  border: var(--border-width-thin) solid var(--color-border);
+  color: var(--color-error-secondary);
+  background: var(--color-error-alpha);
+  border: var(--border-width-thin) solid var(--color-error-primary);
   border-radius: var(--border-radius-md);
-  outline: none;
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  line-height: 1.5;
 }
-
-.input::placeholder { color: var(--color-text-tertiary); }
-.input:hover        { border-color: var(--color-border-hover); }
-.input:focus        { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-info-alpha); }
 
 .terms {
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
-}
-
-.checkbox {
-  margin-top: 2px;
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  accent-color: var(--color-primary);
-  cursor: pointer;
 }
 
 .termsLabel {
@@ -70,25 +41,6 @@
 }
 
 .submit {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  width: 100%;
-  height: 46px;
   margin-top: var(--space-1);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  font-family: var(--font-family-base);
-  color: #fff;
-  background: var(--color-primary);
-  border: none;
-  border-radius: var(--border-radius-md);
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
-  cursor: pointer;
-  letter-spacing: 0.01em;
-  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.submit:hover  { background: var(--color-primary-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45); }
-.submit:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); }
