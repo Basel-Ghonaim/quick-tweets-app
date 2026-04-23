@@ -1,4 +1,4 @@
-import { type ChangeEvent } from "react";
+import { type ChangeEvent, type FormEvent } from "react";
 
 export type FieldType =
   | "text"
@@ -57,4 +57,4 @@ export type FormChangeEvent = ChangeEvent<
 >;
 
 export type FormChangeHandler = (e: FormChangeEvent) => void;
-export type FormSubmitHandler = (e: SubmitEvent) => Promise<void>;
+export type FormSubmitHandler = (e: FormEvent<HTMLFormElement>) => Promise<void>;
