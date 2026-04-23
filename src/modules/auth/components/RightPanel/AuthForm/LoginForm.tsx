@@ -1,28 +1,54 @@
+import { useLoginFlow } from "../../../hooks";
+import { authFormSchemas } from "../../../config/authFormSchemas";
+import { toFieldEntries } from "@shared/schema-form";
+import { SchemaField, Button } from "@shared/design-system";
 import { OAuthButtons } from "../OAuthButtons/OAuthButtons";
-import { PasswordField } from "../PasswordField/PasswordField";
 import styles from "./AuthForm.module.css";
 
 export const LoginForm = () => {
+  const {
+    values,
+    errors,
+    isSubmitting,
+    isError,
+    serverError,
+    handleChange,
+    handleSubmit,
+  } = useLoginFlow();
+
+  const fields = toFieldEntries(authFormSchemas.loginFields);
+
+
   return (
-    <form className={styles.form}>
-      <div className={styles.field}>
-        <label className={styles.label}>Work email</label>
-        <input
-          className={styles.input}
-          type="email"
-          placeholder="you@company.com"
+    <form className={styles.form} onSubmit={handleSubmit}>
+      {isError && serverError && (
+        <div className={styles.serverError} role="alert">
+          {serverError.message}
+        </div>
+      )}
+
+      {fields.map((field) => (
+        <SchemaField
+          key={field.key}
+          name={field.key}
+          type={field.type}
+          label={field.label}
+          placeholder={field.placeholder}
+          value={values[field.key]}
+          error={errors[field.key]}
+          onChange={handleChange}
         />
-      </div>
+      ))}
 
-      <PasswordField
-        label="Password"
-        placeholder="Min. 8 characters"
-        showForgot={true}
-      />
-
-      <button type="submit" className={styles.submit}>
+      <Button
+        type="submit"
+        fullWidth
+        state={isSubmitting ? "loading" : "idle"}
+        loadingText="Signing in…"
+        className={styles.submit}
+      >
         Sign in
-      </button>
+      </Button>
 
       <OAuthButtons />
     </form>

@@ -1,4 +1,5 @@
 export { useSchemaForm } from "./hooks/useSchemaForm";
+export { toFieldEntries } from "./services/toFieldEntries";
 export {
   isRequired,
   isEmailFormat,

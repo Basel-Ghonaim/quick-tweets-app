@@ -1,5 +1,4 @@
 import { OAuthButtons } from "../OAuthButtons/OAuthButtons";
-import { PasswordField } from "../PasswordField/PasswordField";
 import styles from "./AuthForm.module.css";
 
 export const RegisterForm = () => {
@@ -18,13 +17,6 @@ export const RegisterForm = () => {
           placeholder="you@company.com"
         />
       </div>
-
-      <PasswordField label="Password" placeholder="Min. 8 characters" />
-
-      <PasswordField
-        label="Confirm password"
-        placeholder="Re-enter your password"
-      />
 
       <div className={styles.terms}>
         <input type="checkbox" id="terms" className={styles.checkbox} />
