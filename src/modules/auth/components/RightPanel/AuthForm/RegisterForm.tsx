@@ -1,40 +1,53 @@
+import { useRegisterFlow } from "../../../hooks";
+import { authFormSchemas } from "../../../config/authFormSchemas";
+import { toFieldEntries } from "@shared/schema-form";
+import { SchemaField, Button } from "@shared/design-system";
 import { OAuthButtons } from "../OAuthButtons/OAuthButtons";
 import styles from "./AuthForm.module.css";
 
 export const RegisterForm = () => {
+  const {
+    values,
+    errors,
+    isSubmitting,
+    isError,
+    serverError,
+    handleChange,
+    handleSubmit,
+  } = useRegisterFlow();
+
+  const fields = toFieldEntries(authFormSchemas.registerFields);
+
   return (
-    <form className={styles.form}>
-      <div className={styles.field}>
-        <label className={styles.label}>Full name</label>
-        <input className={styles.input} type="text" placeholder="Jane Smith" />
-      </div>
+    <form className={styles.form} onSubmit={handleSubmit}>
+      {isError && serverError && (
+        <div className={styles.serverError} role="alert">
+          {serverError.message}
+        </div>
+      )}
 
-      <div className={styles.field}>
-        <label className={styles.label}>Work email</label>
-        <input
-          className={styles.input}
-          type="email"
-          placeholder="you@company.com"
+      {fields.map((field) => (
+        <SchemaField
+          key={field.key}
+          name={field.key}
+          type={field.type}
+          label={field.label}
+          placeholder={field.placeholder}
+          value={values[field.key]}
+          error={errors[field.key]}
+          onChange={handleChange}
         />
-      </div>
+      ))}
 
-      <div className={styles.terms}>
-        <input type="checkbox" id="terms" className={styles.checkbox} />
-        <label htmlFor="terms" className={styles.termsLabel}>
-          I agree to the{" "}
-          <a href="#" className={styles.termsLink}>
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a href="#" className={styles.termsLink}>
-            Privacy Policy
-          </a>
-        </label>
-      </div>
-
-      <button type="submit" className={styles.submit}>
+      <Button
+        type="submit"
+        fullWidth
+        state={isSubmitting ? "loading" : "idle"}
+        loadingText="Creating account…"
+        className={styles.submit}
+      >
         Create account
-      </button>
+      </Button>
 
       <OAuthButtons />
     </form>
