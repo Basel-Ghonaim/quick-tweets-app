@@ -57,3 +57,23 @@ Instead of hand-writing `<Input>` for every field in every form, `SchemaField` r
 4. Uses DS `<Button>` with `state="loading"` + `loadingText` during submission
 5. Keeps `<OAuthButtons>` at the bottom
 
+---
+
+## Step 4: Wire RegisterForm to useRegisterFlow
+
+### Modified Files
+
+| File | Change |
+|---|---|
+| `modules/auth/components/RightPanel/AuthForm/RegisterForm.tsx` | Replaced raw HTML with `useRegisterFlow` hook + `SchemaField` mapping + DS `Button` with loading state + server error banner |
+
+### What RegisterForm now does:
+1. Calls `useRegisterFlow()` → gets `values`, `errors`, `isSubmitting`, `handleChange`, `handleSubmit`, `isError`, `serverError`
+2. Maps over `authFormSchemas.registerFields` → renders `<SchemaField>` for each field (name, username, password, email, confirmPassword, privacy, profileImage)
+3. Shows `serverError.message` banner when `isError && serverError`
+4. Uses DS `<Button>` with `state="loading"` + `loadingText="Creating account…"` during submission
+5. Keeps `<OAuthButtons>` at the bottom
+
+### Note:
+- `profileImage` currently renders as a basic `<Input type="file">` via SchemaField's fallback
+- When the `FileInput` DS component is built, update `SchemaField`'s `case "file"` → `<FileInput>` and RegisterForm gets it automatically — zero changes to this file
