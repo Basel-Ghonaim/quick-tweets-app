@@ -1,10 +1,20 @@
 .form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3) var(--space-2);
+}
+
+/* Layout: span control via data attribute from SchemaField */
+.form > [data-span="full"] {
+  grid-column: 1 / -1;
+}
+
+.form > [data-span="half"] {
+  grid-column: span 1;
 }
 
 .serverError {
+  grid-column: 1 / -1;
   padding: var(--space-3) var(--space-4);
   font-size: var(--font-size-sm);
   font-family: var(--font-family-base);
@@ -41,6 +51,7 @@
 }
 
 .submit {
+  grid-column: 1 / -1;
   margin-top: var(--space-1);
 }
 

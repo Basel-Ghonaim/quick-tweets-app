@@ -95,5 +95,5 @@ export const authFormSchemas = {
     password: { ...loginFields.password, span: "half" },
     confirmPassword: { ...registerFields.confirmPassword, span: "half" },
     privacy: { ...registerFields.privacy, span: "full" },
-  },
+  } satisfies Record<string, FormFieldConfig<RegisterCredentials>>,
 };
