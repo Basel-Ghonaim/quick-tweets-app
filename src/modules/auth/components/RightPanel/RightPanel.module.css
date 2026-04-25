@@ -9,16 +9,21 @@
 
 .card {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
+}
+
+.cardCompact {
+  max-width: 420px;
 }
 
 .header {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  text-align: center;
 }
 
 .title {
