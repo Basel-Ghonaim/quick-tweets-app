@@ -31,12 +31,15 @@ export type ValidatorFn = (
   values: FormPayload,
 ) => string | null;
 
+export type FieldSpan = "full" | "half";
+
 export interface FormFieldConfig<TPayload> {
   name: keyof TPayload;
   type: FieldType;
   label: string;
   placeholder?: string;
   validators?: ValidatorFn[];
+  span?: FieldSpan;
 }
 
 export type FormValue<T extends Record<string, FormFieldConfig<FormPayload>>> =

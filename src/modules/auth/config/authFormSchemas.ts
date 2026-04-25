@@ -88,12 +88,12 @@ const registerFields = {
 export const authFormSchemas = {
   loginFields,
   registerFields: {
-    profileImage: registerFields.profileImage,
-    name: registerFields.name,
-    email: registerFields.email,
-    username: loginFields.username,
-    password: loginFields.password,
-    confirmPassword: registerFields.confirmPassword,
-    privacy: registerFields.privacy,
+    profileImage: { ...registerFields.profileImage, span: "full" },
+    name: { ...registerFields.name, span: "half" },
+    username: { ...loginFields.username, span: "half" },
+    email: { ...registerFields.email, span: "full" },
+    password: { ...loginFields.password, span: "half" },
+    confirmPassword: { ...registerFields.confirmPassword, span: "half" },
+    privacy: { ...registerFields.privacy, span: "full" },
   },
 };
