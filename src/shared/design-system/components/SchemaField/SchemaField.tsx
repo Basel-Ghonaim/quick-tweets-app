@@ -52,5 +52,5 @@ export const SchemaField = ({
     }
   };
 
-  return <div data-span={span}>{renderField()}</div>;
+  return <div data-span={span} data-type={type}>{renderField()}</div>;
 };

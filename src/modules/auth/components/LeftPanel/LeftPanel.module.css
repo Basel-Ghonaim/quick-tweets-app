@@ -67,10 +67,22 @@
   letter-spacing: -0.02em;
 }
 
+/* Small tablet: compact banner */
 @media (max-width: 768px) {
   .panel {
     flex: none;
-    min-height: 260px;
+    min-height: auto;
     padding: var(--space-8) var(--space-6);
+  }
+
+  .content {
+    gap: var(--space-4);
+  }
+}
+
+/* Mobile: hide completely */
+@media (max-width: 480px) {
+  .panel {
+    display: none;
   }
 }

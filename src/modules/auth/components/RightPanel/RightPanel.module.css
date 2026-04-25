@@ -41,7 +41,31 @@
   line-height: 1.5;
 }
 
+/* Small tablet: full width panel */
 @media (max-width: 768px) {
-  .panel { flex: none; padding: var(--space-8) var(--space-4); }
-  .card  { max-width: 100%; }
+  .panel {
+    flex: 1;
+    padding: var(--space-8) var(--space-4);
+  }
+
+  .card,
+  .cardCompact {
+    max-width: 480px;
+  }
+}
+
+/* Mobile: tighter layout */
+@media (max-width: 480px) {
+  .panel {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .card,
+  .cardCompact {
+    max-width: 100%;
+  }
+
+  .title {
+    font-size: var(--font-size-xl);
+  }
 }

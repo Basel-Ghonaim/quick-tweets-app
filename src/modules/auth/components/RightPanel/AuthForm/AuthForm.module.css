@@ -55,3 +55,20 @@
   margin-top: var(--space-1);
 }
 
+/* Visual separator before checkbox fields */
+.form > [data-type="checkbox"] {
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: var(--border-width-thin) solid var(--gray-100);
+}
+
+/* Tablet & below: collapse to single column */
+@media (max-width: 1024px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .form > [data-span="half"] {
+    grid-column: 1 / -1;
+  }
+}
