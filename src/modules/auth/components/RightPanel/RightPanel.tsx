@@ -13,9 +13,13 @@ interface RightPanelProps {
 
 export function RightPanel({ activeTab, onTabChange }: RightPanelProps) {
   const isSignIn = activeTab === "signin";
+  const cardClasses = [styles.card, isSignIn ? styles.cardCompact : ""]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className={styles.panel}>
-      <div className={styles.card}>
+      <div className={cardClasses}>
         <div className={styles.header}>
           <h2 className={styles.title}>
             {activeTab === "signin" ? "Welcome back" : "Create your account"}

@@ -10,42 +10,47 @@ export const SchemaField = ({
   value,
   error,
   onChange,
+  span = "full",
 }: SchemaFieldProps) => {
   const isInvalid = !!error;
 
-  switch (type) {
-    case "checkbox":
-      return (
-        <Checkbox
-          name={name}
-          label={label}
-          checked={value as boolean}
-          onChange={onChange}
-          isInvalid={isInvalid}
-          errorMessage={error ?? undefined}
-        />
-      );
+  const renderField = () => {
+    switch (type) {
+      case "checkbox":
+        return (
+          <Checkbox
+            name={name}
+            label={label}
+            checked={value as boolean}
+            onChange={onChange}
+            isInvalid={isInvalid}
+            errorMessage={error ?? undefined}
+          />
+        );
 
-    case "text":
-    case "email":
-    case "password":
-    case "number":
-    case "file":
-      return (
-        <Input
-          name={name}
-          type={type}
-          label={label}
-          placeholder={placeholder}
-          value={type === "file" ? undefined : (value as string)}
-          onChange={onChange}
-          isInvalid={isInvalid}
-          errorMessage={error ?? undefined}
-          fullWidth
-        />
-      );
+      case "text":
+      case "email":
+      case "password":
+      case "number":
+      case "file":
+        return (
+          <Input
+            name={name}
+            type={type}
+            label={label}
+            placeholder={placeholder}
+            value={type === "file" ? undefined : (value as string)}
+            onChange={onChange}
+            isInvalid={isInvalid}
+            errorMessage={error ?? undefined}
+            fullWidth
+          />
+        );
 
-    default:
-      return null;
-  }
+      default:
+        return null;
+    }
+  };
+
+  return <div data-span={span} data-type={type}>{renderField()}</div>;
 };

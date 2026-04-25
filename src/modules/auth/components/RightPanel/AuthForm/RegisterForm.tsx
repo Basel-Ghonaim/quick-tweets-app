@@ -36,6 +36,7 @@ export const RegisterForm = () => {
           value={values[field.key]}
           error={errors[field.key]}
           onChange={handleChange}
+          span={field.span}
         />
       ))}
 

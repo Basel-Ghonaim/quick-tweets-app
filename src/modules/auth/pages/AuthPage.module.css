@@ -7,3 +7,10 @@
   background-color: var(--color-bg);
   color: var(--color-text-primary);
 }
+
+/* Small tablet & below: stack panels vertically */
+@media (max-width: 768px) {
+  .page {
+    flex-direction: column;
+  }
+}

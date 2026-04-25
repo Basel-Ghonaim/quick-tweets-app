@@ -87,5 +87,13 @@ const registerFields = {
 
 export const authFormSchemas = {
   loginFields,
-  registerFields,
+  registerFields: {
+    profileImage: { ...registerFields.profileImage, span: "full" },
+    name: { ...registerFields.name, span: "half" },
+    username: { ...loginFields.username, span: "half" },
+    email: { ...registerFields.email, span: "full" },
+    password: { ...loginFields.password, span: "half" },
+    confirmPassword: { ...registerFields.confirmPassword, span: "half" },
+    privacy: { ...registerFields.privacy, span: "full" },
+  } satisfies Record<string, FormFieldConfig<RegisterCredentials>>,
 };

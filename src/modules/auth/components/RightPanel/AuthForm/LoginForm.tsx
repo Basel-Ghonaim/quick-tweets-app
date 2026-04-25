@@ -37,6 +37,7 @@ export const LoginForm = () => {
           value={values[field.key]}
           error={errors[field.key]}
           onChange={handleChange}
+          span={field.span}
         />
       ))}
 

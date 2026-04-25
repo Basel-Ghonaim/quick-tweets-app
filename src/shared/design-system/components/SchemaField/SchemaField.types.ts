@@ -1,4 +1,4 @@
-import type { FormChangeHandler, FieldType } from "@shared/schema-form";
+import type { FormChangeHandler, FieldType, FieldSpan } from "@shared/schema-form";
 
 export interface SchemaFieldProps {
   name: string;
@@ -8,4 +8,5 @@ export interface SchemaFieldProps {
   value: unknown;
   error: string | null;
   onChange: FormChangeHandler;
+  span?: FieldSpan;
 }
