@@ -68,3 +68,28 @@ export const FullWidth: Story = {
     fullWidth: true,
   },
 };
+
+export const WithMaxSize: Story = {
+  args: {
+    ...Standard.args,
+    label: "Upload (max 2MB)",
+    maxSize: 2 * 1024 * 1024,
+    helperText: "PNG, JPG up to 2MB",
+  },
+};
+
+export const WithHelperText: Story = {
+  args: {
+    ...Standard.args,
+    helperText: "Accepted formats: PNG, JPG, PDF",
+  },
+};
+
+export const ImagesOnly: Story = {
+  args: {
+    ...Standard.args,
+    label: "Upload Image",
+    accept: "image/*",
+    helperText: "Only image files are accepted",
+  },
+};

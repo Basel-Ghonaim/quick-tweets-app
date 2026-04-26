@@ -28,6 +28,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       variant = "standard",
       color = "primary",
       accept,
+      maxSize,
       multiple = false,
       isInvalid = false,
       errorMessage,
@@ -46,11 +47,14 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     const internalRef = useRef<HTMLInputElement>(null);
     const inputRef = (ref as React.RefObject<HTMLInputElement>) ?? internalRef;
     const [displayName, setDisplayName] = useState("");
+    const [validationError, setValidationError] = useState("");
+
+    const hasError = isInvalid || !!validationError;
 
     const containerClasses = [
       styles.container,
       fullWidth ? styles.fullWidth : "",
-      isInvalid ? styles.isInvalid : "",
+      hasError ? styles.isInvalid : "",
       disabled ? styles.isDisabled : "",
       className,
     ]
@@ -69,10 +73,33 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       inputRef.current?.click();
     };
 
-    /** Reads the selected file(s) from the native input and forwards to onChange */
+    /** Formats bytes into a human-readable string */
+    const formatSize = (bytes: number): string => {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    /** Reads the selected file(s), validates size, and forwards to onChange */
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (!files || files.length === 0) return;
+
+      // Validate maxSize — reject if any file exceeds the limit
+      if (maxSize) {
+        const oversized = Array.from(files).find((f) => f.size > maxSize);
+        if (oversized) {
+          setValidationError(
+            `"${oversized.name}" exceeds the ${formatSize(maxSize)} limit`,
+          );
+          // Reset the native input so the same file can be re-selected
+          e.target.value = "";
+          return;
+        }
+      }
+
+      // Clear any previous validation error
+      setValidationError("");
 
       // Update display name from the event (not from ref during render)
       if (files.length === 1) {
@@ -161,13 +188,19 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
 
         {renderVariant()}
 
-        {helperText && !isInvalid && (
+        {helperText && !isInvalid && !validationError && (
           <span id={helperId} className={styles.helperText}>
             {helperText}
           </span>
         )}
 
-        {isInvalid && errorMessage && (
+        {validationError && (
+          <span className={styles.errorMessage} role="alert">
+            {validationError}
+          </span>
+        )}
+
+        {isInvalid && errorMessage && !validationError && (
           <span id={errorId} className={styles.errorMessage} role="alert">
             {errorMessage}
           </span>
