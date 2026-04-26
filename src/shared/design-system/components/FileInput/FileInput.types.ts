@@ -1,0 +1,102 @@
+import type { ReactNode } from "react";
+
+// ─── Variant & Shape ────────────────────────────────────────────────────────
+
+/** Determines which visual form the FileInput renders */
+export type FileInputVariant = "standard" | "dropzone" | "avatar";
+
+/** Avatar shape — only applies when variant="avatar" */
+export type AvatarShape = "circle" | "rectangle";
+
+// ─── File Item (for multi-file list in Phase 4) ─────────────────────────────
+
+/** Status of an individual file in the list */
+export type FileItemStatus = "idle" | "uploading" | "success" | "error";
+
+/** Represents a single file entry with upload state */
+export interface FileItem {
+  id: string;
+  file: File;
+  preview?: string;
+  status: FileItemStatus;
+  progress: number;
+  error?: string;
+}
+
+// ─── Color ──────────────────────────────────────────────────────────────────
+
+export type FileInputColor =
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "error"
+  | "info";
+
+// ─── Component Props ────────────────────────────────────────────────────────
+
+export interface FileInputProps {
+  /** Field name — required for form integration */
+  name: string;
+
+  /** Label rendered above the input */
+  label?: string;
+
+  // ── Variant ──
+
+  /** Visual variant of the file input */
+  variant?: FileInputVariant;
+
+  /** Avatar shape — only used when variant="avatar" */
+  avatarShape?: AvatarShape;
+
+  // ── Value (controlled) ──
+
+  /** Current file(s) value — controlled by parent */
+  value?: File | File[] | null;
+
+  /** Called when file(s) are selected or dropped */
+  onChange?: (files: File | File[] | null) => void;
+
+  /** Called when a file is removed from the list */
+  onRemove?: (file: File) => void;
+
+  // ── Restrictions ──
+
+  /** Accepted file types (e.g. "image/*", ".pdf,.doc") */
+  accept?: string;
+
+  /** Maximum file size in bytes */
+  maxSize?: number;
+
+  /** Allow selecting multiple files */
+  multiple?: boolean;
+
+  // ── States ──
+
+  /** Marks the input as invalid */
+  isInvalid?: boolean;
+
+  /** Error message shown below the input when isInvalid is true */
+  errorMessage?: string;
+
+  /** Disables the input */
+  disabled?: boolean;
+
+  /** Helper text shown below the input (e.g. "PNG, JPG up to 5MB") */
+  helperText?: string;
+
+  // ── Style ──
+
+  /** Color theme */
+  color?: FileInputColor;
+
+  /** Stretches the input to fill its container */
+  fullWidth?: boolean;
+
+  /** Additional CSS class */
+  className?: string;
+
+  /** Custom trigger content — replaces the default button in Standard variant */
+  children?: ReactNode;
+}
