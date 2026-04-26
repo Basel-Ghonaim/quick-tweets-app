@@ -58,6 +58,9 @@ export interface FileInputProps {
   /** Called when file(s) are selected or dropped */
   onChange?: (files: File | File[] | null) => void;
 
+  /** Raw native change event — used by form engines that read e.target.files */
+  onNativeChange?: React.ChangeEventHandler<HTMLInputElement>;
+
   /** Called when a file is removed from the list */
   onRemove?: (file: File) => void;
 

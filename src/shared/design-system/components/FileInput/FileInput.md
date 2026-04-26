@@ -22,6 +22,7 @@ A multi-variant file upload component for the design system. Replaces the native
 | `avatarShape` | `"circle" \| "rectangle"` | `"circle"` | Avatar shape (only for avatar variant) |
 | `value` | `File \| File[] \| null` | — | Controlled file value |
 | `onChange` | `(files) => void` | — | Called when file(s) are selected |
+| `onNativeChange` | `ChangeEventHandler` | — | Raw native event for form engines |
 | `onRemove` | `(file) => void` | — | Called when a file is removed |
 | `accept` | `string` | — | Accepted file types (e.g. `"image/*"`) |
 | `maxSize` | `number` | — | Max file size in bytes |
@@ -73,12 +74,42 @@ Created the component structure:
 
 **Principle:** Build the skeleton first, fill content later — easier to review and debug.
 
-### Step 1.3 — Standard Variant *(next)*
-Replace the Standard placeholder with the real implementation:
-hidden native `<input type="file">`, styled trigger button, and file name display.
+### Step 1.3 — Standard Variant
+**Files:** `FileInput.tsx`, `FileInput.module.css`
 
-### Step 1.4 — Error & Validation States *(upcoming)*
-Client-side maxSize validation, accept prop, error message display.
+Replaced the Standard placeholder with real implementation:
+- Hidden native `<input type="file">` bridged via `inputRef.current.click()`
+- Styled trigger button with upload icon (SVG)
+- File name display with ellipsis truncation ("No file chosen" default)
+- `displayName` tracked in `useState` — not from ref during render (React 19 rule)
+- Dynamic CSS variables for color theming (`--file-input-color`, `--file-input-alpha`)
+- `children` prop for custom trigger content
+- `helperText` support below the input
+- Hover, focus-visible, active, invalid, and disabled interaction states
 
-### Step 1.5 — SchemaField Integration *(upcoming)*
-Update SchemaField `case "file"` to render `<FileInput>` instead of basic `<Input>`.
+**Principle:** Dynamic CSS variables injected at runtime — same pattern as Input/Checkbox.
+
+### Step 1.4 — Error & Validation States
+**Files:** `FileInput.tsx`, `FileInput.stories.tsx`
+
+Added client-side file validation:
+- `maxSize` prop rejects oversized files with readable error ("filename" exceeds the 2.0 MB limit)
+- `formatSize()` converts bytes → human-readable (B / KB / MB)
+- Native input resets after rejection so the same file can be re-selected
+- `validationError` state separate from external `errorMessage`
+- `hasError` flag applies invalid styling on either error source
+- Error priority: `validationError` > `errorMessage` > `helperText`
+- New stories: `WithMaxSize`, `WithHelperText`, `ImagesOnly`
+
+**Principle:** SRP — validation logic inside the component, error display in the template.
+
+### Step 1.5 — SchemaField Integration
+**Files:** `SchemaField.tsx`, `FileInput.types.ts`
+
+Wired FileInput to the schema-driven form system:
+- SchemaField `case "file"` now renders `<FileInput>` instead of `<Input>`
+- Added `onNativeChange` prop to bridge with form engines (`useSchemaForm` reads `e.target.files`)
+- `onNativeChange` fires the raw `ChangeEvent` after maxSize validation passes
+- Register form's `profileImage` field automatically gets DS-styled file input
+
+**Principle:** DIP — FileInput doesn't know about the form engine. The bridge (`onNativeChange`) is an abstraction.

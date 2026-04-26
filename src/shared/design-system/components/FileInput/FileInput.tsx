@@ -38,6 +38,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       className = "",
       children,
       onChange,
+      onNativeChange,
     },
     ref,
   ) => {
@@ -107,6 +108,9 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       } else {
         setDisplayName(`${files.length} files selected`);
       }
+
+      // Forward the raw native event to form engines
+      onNativeChange?.(e);
 
       if (multiple) {
         onChange?.(Array.from(files));
