@@ -93,3 +93,18 @@ export const ImagesOnly: Story = {
     helperText: "Only image files are accepted",
   },
 };
+
+export const DropzoneDisabled: Story = {
+  args: {
+    ...Dropzone.args,
+    disabled: true,
+  },
+};
+
+export const DropzoneWithHelper: Story = {
+  args: {
+    ...Dropzone.args,
+    helperText: "Drag files here or click to browse",
+    maxSize: 5 * 1024 * 1024,
+  },
+};

@@ -1,7 +1,7 @@
 import { forwardRef, useId, useRef, useState } from "react";
 import styles from "./FileInput.module.css";
 import type { FileInputProps } from "./FileInput.types";
-import { StandardInput } from "./variants";
+import { StandardInput, DropzoneInput } from "./variants";
 
 export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
   (
@@ -70,7 +70,26 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           );
 
         case "dropzone":
-          return <div className={styles.placeholder}>Dropzone (Phase 2)</div>;
+          return (
+            <DropzoneInput
+              inputRef={inputRef}
+              generatedId={generatedId}
+              errorId={errorId}
+              helperId={helperId}
+              name={name}
+              accept={accept}
+              maxSize={maxSize}
+              multiple={multiple}
+              disabled={disabled}
+              isInvalid={isInvalid}
+              errorMessage={errorMessage}
+              helperText={helperText}
+              color={color}
+              onChange={onChange}
+              onNativeChange={onNativeChange}
+              onValidationError={setValidationError}
+            />
+          );
 
         case "avatar":
           return <div className={styles.placeholder}>Avatar (Phase 3)</div>;
