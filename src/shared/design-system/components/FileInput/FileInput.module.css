@@ -1,0 +1,134 @@
+/* ─── Container ──────────────────────────────────────────────────────────── */
+
+.container {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  font-family: var(--font-family-base);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* ─── Label ──────────────────────────────────────────────────────────────── */
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* ─── Hidden native file input ───────────────────────────────────────────── */
+
+.nativeInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ─── Standard Variant ───────────────────────────────────────────────────── */
+
+.standardWrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+/* Trigger button — styled like a soft outlined button */
+.triggerButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--file-input-color, var(--color-primary-primary));
+  background-color: var(--color-surface);
+  border: var(--border-width-thin) solid var(--gray-200);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  line-height: var(--line-height-base, 1.5);
+}
+
+.triggerButton:hover:not(:disabled) {
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+}
+
+.triggerButton:focus-visible {
+  outline: none;
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  box-shadow: 0 0 0 3px var(--file-input-alpha, var(--color-primary-alpha));
+}
+
+.triggerButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.triggerButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* File name text */
+.fileName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-base, 1.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ─── Helper text ────────────────────────────────────────────────────────── */
+
+.helperText {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-base, 1.5);
+}
+
+/* ─── Error message ──────────────────────────────────────────────────────── */
+
+.errorMessage {
+  font-size: var(--font-size-xs);
+  color: var(--color-error-primary);
+  line-height: var(--line-height-base, 1.5);
+}
+
+/* ─── Invalid state ──────────────────────────────────────────────────────── */
+
+.isInvalid .triggerButton {
+  border-color: var(--color-error-primary);
+  color: var(--color-error-primary);
+}
+
+.isInvalid .triggerButton:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-error-alpha, rgba(239, 68, 68, 0.15));
+}
+
+/* ─── Disabled state ─────────────────────────────────────────────────────── */
+
+.isDisabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ─── Placeholder (temporary — for future variants) ──────────────────────── */
+
+.placeholder {
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-thin) dashed var(--gray-200);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+}

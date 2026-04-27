@@ -1,5 +1,6 @@
 import { Input } from "../Input";
 import { Checkbox } from "../Checkbox";
+import { FileInput } from "../FileInput";
 import type { SchemaFieldProps } from "./SchemaField.types";
 
 export const SchemaField = ({
@@ -32,15 +33,26 @@ export const SchemaField = ({
       case "email":
       case "password":
       case "number":
-      case "file":
         return (
           <Input
             name={name}
             type={type}
             label={label}
             placeholder={placeholder}
-            value={type === "file" ? undefined : (value as string)}
+            value={value as string}
             onChange={onChange}
+            isInvalid={isInvalid}
+            errorMessage={error ?? undefined}
+            fullWidth
+          />
+        );
+
+      case "file":
+        return (
+          <FileInput
+            name={name}
+            label={label}
+            onNativeChange={onChange}
             isInvalid={isInvalid}
             errorMessage={error ?? undefined}
             fullWidth
