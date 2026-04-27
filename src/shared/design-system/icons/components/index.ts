@@ -1,0 +1,10 @@
+export { UploadIcon } from "./UploadIcon";
+export { TrashIcon } from "./TrashIcon";
+export { XIcon } from "./XIcon";
+export { CheckIcon } from "./CheckIcon";
+export { EyeIcon } from "./EyeIcon";
+export { EyeOffIcon } from "./EyeOffIcon";
+export { SearchIcon } from "./SearchIcon";
+export { ChevronDownIcon } from "./ChevronDownIcon";
+export { UserIcon } from "./UserIcon";
+export { CameraIcon } from "./CameraIcon";
