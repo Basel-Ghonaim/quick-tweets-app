@@ -160,6 +160,14 @@
   box-shadow: 0 0 0 3px var(--file-input-alpha, var(--color-primary-alpha));
 }
 
+/* Active drag-over state — file being dragged over the zone */
+.isDragOver {
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  border-style: solid;
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  transform: scale(1.01);
+}
+
 .dropzoneTitle {
   font-size: var(--font-size-sm);
   font-weight: 500;
