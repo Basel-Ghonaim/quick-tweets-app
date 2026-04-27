@@ -113,3 +113,33 @@ Wired FileInput to the schema-driven form system:
 - Register form's `profileImage` field automatically gets DS-styled file input
 
 **Principle:** DIP — FileInput doesn't know about the form engine. The bridge (`onNativeChange`) is an abstraction.
+
+### Step 1.6 — SRP Refactor
+**Files:** `FileInput.tsx`, `variants/standard/StandardInput.tsx`, `variants/standard/StandardInput.types.ts`, `utils/formatSize.ts`
+
+Refactored to follow Single Responsibility Principle:
+- Extracted hardcoded `UploadIcon` SVG → uses DS icon library (`@shared/design-system/icons`)
+- Extracted `formatSize()` → `utils/formatSize.ts` (reusable utility, one reason to change)
+- Extracted `renderStandard()` → `variants/standard/StandardInput.tsx` (variant owns its own rendering + handlers + state)
+- `FileInput.tsx` reduced from 218 → 110 lines — now a thin shell: container, label, variant switch, error display
+- `StandardInput` reports validation errors to parent via `onValidationError` callback
+- Each variant has its own directory (`variants/standard/`) for future Dropzone and Avatar
+
+**Principle:** SRP — every file has one reason to change. The shell routes, the variant renders, the utility formats.
+
+### File Structure (after refactor)
+
+```
+FileInput/
+├── FileInput.tsx              # Shell: container, label, variant switch, errors
+├── FileInput.types.ts         # Type contract
+├── FileInput.module.css       # Styles (shared by all variants)
+├── FileInput.stories.tsx      # Storybook stories
+├── FileInput.md               # This documentation
+├── index.ts                   # Barrel export
+└── variants/
+    ├── index.ts               # Variants barrel
+    └── standard/
+        ├── StandardInput.tsx       # Standard variant rendering + handlers
+        └── StandardInput.types.ts  # Standard variant props
+```
