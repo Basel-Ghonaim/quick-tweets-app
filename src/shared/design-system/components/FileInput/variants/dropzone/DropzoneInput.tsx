@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { UploadIcon } from "@shared/design-system/icons";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { UploadIcon, TrashIcon, XIcon, PlusIcon } from "@shared/design-system/icons";
 import { formatSize } from "@shared/design-system/utils";
 import styles from "../../FileInput.module.css";
 import type { DropzoneInputProps } from "./DropzoneInput.types";
@@ -7,9 +7,11 @@ import type { DropzoneInputProps } from "./DropzoneInput.types";
 /**
  * Dropzone variant for FileInput.
  *
- * Renders a dashed-border drop zone with upload icon and text.
- * Supports click-to-browse AND drag & drop from the desktop.
- * Visual hover state when dragging a file over the zone.
+ * Two modes based on `accept`:
+ * - **Image-only** (accept="image/*"): Grid of thumbnails with
+ *   add-more button, drag overlay, and X delete per image.
+ * - **General files**: Dashed-border drop zone with text file list
+ *   (first 3 inside, overflow below).
  */
 export const DropzoneInput = ({
   inputRef,
@@ -20,6 +22,8 @@ export const DropzoneInput = ({
   accept,
   maxSize,
   multiple,
+  maxFiles,
+  minFiles,
   disabled,
   isInvalid,
   errorMessage,
@@ -29,63 +33,74 @@ export const DropzoneInput = ({
   onNativeChange,
   onValidationError,
 }: DropzoneInputProps) => {
-  const [displayName, setDisplayName] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
+  const [fileList, setFileList] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
 
-  /**
-   * Counter tracks nested dragenter/dragleave events from child elements.
-   * Without this, dragging over a child (icon, text) fires dragleave
-   * on the parent, causing the hover state to flicker.
-   */
+  /** Detect if this field only accepts images */
+  const isImageOnly = !!accept
+    ?.split(",")
+    .every((t) => t.trim().toLowerCase().startsWith("image/"));
+
+  /** Whether we've hit the file limit */
+  const isAtCapacity = !!(maxFiles && fileList.length >= maxFiles);
+
+  // ── Preview URLs (image-only mode) ──
+
+  useEffect(() => {
+    if (!isImageOnly) return;
+    const urls = fileList.map((file) => URL.createObjectURL(file));
+    setPreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [fileList, isImageOnly]);
+
+  // ── Drag counter (prevents flicker on child elements) ──
+
   const dragCounter = useRef(0);
 
-  /** Dynamic CSS variables injected at runtime based on color prop */
+  // ── CSS variables ──
+
   const dynamicStyles = {
     "--file-input-color": `var(--color-${color}-primary)`,
     "--file-input-alpha": `var(--color-${color}-alpha)`,
   } as React.CSSProperties;
 
-  /** Build zone classes — adds isDragOver when a file is being dragged over */
+  // ── Zone classes (general file mode) ──
+
   const zoneClasses = [
     styles.dropzoneWrapper,
     isDragOver ? styles.isDragOver : "",
+    isAtCapacity ? styles.isDisabled : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  /** Opens the native file picker when the zone is clicked */
-  const handleZoneClick = () => {
-    if (disabled) return;
-    inputRef.current?.click();
-  };
+  // ── Click handler ──
 
-  /**
-   * Validates a FileList against accept and maxSize constraints.
-   * Returns the valid files array, or null if any file fails validation.
-   */
+  const handleZoneClick = useCallback(() => {
+    if (disabled || isAtCapacity) return;
+    inputRef.current?.click();
+  }, [disabled, isAtCapacity, inputRef]);
+
+  // ── Validation ──
+
   const validateFiles = (files: FileList): File[] | null => {
     const fileArray = Array.from(files);
 
-    // Validate accept — browser enforces this for <input>, but NOT for drop
+    // Validate accept — browser enforces for <input>, NOT for drop
     if (accept) {
       const acceptedTypes = accept.split(",").map((t) => t.trim().toLowerCase());
-
       const rejected = fileArray.find((file) => {
         return !acceptedTypes.some((pattern) => {
-          // Wildcard match: "image/*"
           if (pattern.endsWith("/*")) {
-            const category = pattern.slice(0, -2);
-            return file.type.startsWith(category);
+            return file.type.startsWith(pattern.slice(0, -2));
           }
-          // Extension match: ".pdf", ".doc"
           if (pattern.startsWith(".")) {
             return file.name.toLowerCase().endsWith(pattern);
           }
-          // Exact MIME match: "application/pdf"
           return file.type === pattern;
         });
       });
-
       if (rejected) {
         onValidationError(`"${rejected.name}" is not an accepted file type`);
         return null;
@@ -107,28 +122,56 @@ export const DropzoneInput = ({
     return fileArray;
   };
 
-  /** Handles files selected via the native file picker */
+  // ── File accumulation ──
+
+  const accumulateFiles = (newFiles: File[]): File[] | null => {
+    if (multiple) {
+      const merged = [...fileList, ...newFiles];
+      if (maxFiles && merged.length > maxFiles) {
+        onValidationError(`Maximum ${maxFiles} files allowed`);
+        return null;
+      }
+      setFileList(merged);
+      onValidationError("");
+      return merged;
+    } else {
+      setFileList(newFiles);
+      onValidationError("");
+      return newFiles;
+    }
+  };
+
+  const forwardFiles = (files: File[]) => {
+    if (multiple) {
+      onChange?.(files);
+    } else {
+      onChange?.(files[0]);
+    }
+  };
+
+  // ── Input change handler ──
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const valid = validateFiles(files);
-    if (!valid) {
-      e.target.value = "";
-      return;
-    }
+    if (!valid) { e.target.value = ""; return; }
 
-    updateDisplay(valid);
+    const accumulated = accumulateFiles(valid);
+    if (!accumulated) { e.target.value = ""; return; }
+
     onNativeChange?.(e);
-    forwardFiles(valid);
+    forwardFiles(accumulated);
   };
 
-  /** Handles files dropped onto the zone */
+  // ── Drop handler ──
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     dragCounter.current = 0;
     setIsDragOver(false);
-    if (disabled) return;
+    if (disabled || isAtCapacity) return;
 
     const files = e.dataTransfer.files;
     if (!files || files.length === 0) return;
@@ -136,14 +179,15 @@ export const DropzoneInput = ({
     const valid = validateFiles(files);
     if (!valid) return;
 
-    updateDisplay(valid);
-    forwardFiles(valid);
+    const accumulated = accumulateFiles(valid);
+    if (!accumulated) return;
+    forwardFiles(accumulated);
   };
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     dragCounter.current++;
-    if (!disabled) setIsDragOver(true);
+    if (!disabled && !isAtCapacity) setIsDragOver(true);
   };
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -156,78 +200,231 @@ export const DropzoneInput = ({
     if (dragCounter.current === 0) setIsDragOver(false);
   };
 
-  /** Updates the display text based on how many files were selected */
-  const updateDisplay = (files: File[]) => {
-    if (files.length === 1) {
-      setDisplayName(files[0].name);
-    } else {
-      setDisplayName(`${files.length} files selected`);
+  // ── Remove file ──
+
+  const removeFile = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = fileList.filter((_, i) => i !== index);
+
+    if (minFiles && updated.length < minFiles) {
+      onValidationError(`Minimum ${minFiles} files required`);
+      return;
     }
+
+    setFileList(updated);
+    onValidationError("");
+    forwardFiles(updated);
   };
 
-  /** Forwards files to onChange — single File or File[] based on multiple prop */
-  const forwardFiles = (files: File[]) => {
-    if (multiple) {
-      onChange?.(files);
-    } else {
-      onChange?.(files[0]);
+  // ── Helper: render a single file row (non-image mode) ──
+
+  const renderFileItem = (file: File, index: number) => (
+    <li key={`${file.name}-${index}`} className={styles.dropzoneFileItem}>
+      <span className={styles.dropzoneFileName}>{file.name}</span>
+      <span className={styles.dropzoneFileSize}>{formatSize(file.size)}</span>
+      <button
+        type="button"
+        className={styles.dropzoneRemoveBtn}
+        onClick={(e) => removeFile(index, e)}
+        aria-label={`Remove ${file.name}`}
+      >
+        <TrashIcon size={14} />
+      </button>
+    </li>
+  );
+
+  // ── Hidden native input (shared by both modes) ──
+
+  const renderHiddenInput = () => (
+    <input
+      ref={inputRef}
+      id={generatedId}
+      type="file"
+      name={name}
+      accept={accept}
+      multiple={multiple}
+      disabled={disabled}
+      className={styles.nativeInput}
+      onChange={handleFileChange}
+      aria-invalid={isInvalid}
+      aria-describedby={
+        [
+          isInvalid && errorMessage ? errorId : "",
+          helperText ? helperId : "",
+        ]
+          .filter(Boolean)
+          .join(" ") || undefined
+      }
+    />
+  );
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // IMAGE-ONLY MODE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  if (isImageOnly) {
+    // Empty state — show normal dropzone
+    if (fileList.length === 0) {
+      return (
+        <div
+          className={zoneClasses}
+          style={dynamicStyles}
+          onClick={handleZoneClick}
+          onDrop={handleDrop}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleZoneClick();
+            }
+          }}
+        >
+          {renderHiddenInput()}
+
+          {isDragOver ? (
+            <>
+              <UploadIcon size={32} />
+              <span className={styles.dropzoneTitle}>Drop images here</span>
+            </>
+          ) : (
+            <>
+              <UploadIcon size={32} />
+              <span className={styles.dropzoneTitle}>Drag & drop images here</span>
+              <span className={styles.dropzoneSubtext}>or click to browse</span>
+            </>
+          )}
+        </div>
+      );
     }
-  };
+
+    // Images exist — show grid
+    return (
+      <div
+        className={styles.imageGridWrapper}
+        style={dynamicStyles}
+        onDrop={handleDrop}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+      >
+        {renderHiddenInput()}
+
+        {/* Drag overlay — covers the entire grid */}
+        {isDragOver && (
+          <div className={styles.imageGridOverlay}>
+            <UploadIcon size={32} />
+            <span className={styles.dropzoneTitle}>Drop images here</span>
+          </div>
+        )}
+
+        {/* Thumbnail grid */}
+        <div className={styles.imageGrid}>
+          {fileList.map((file, index) => (
+            <div key={`thumb-${index}`} className={styles.thumbnailWrapper}>
+              <img
+                src={previews[index]}
+                alt={file.name}
+                className={styles.thumbnailImg}
+              />
+              <button
+                type="button"
+                className={styles.thumbnailRemoveBtn}
+                onClick={(e) => removeFile(index, e)}
+                aria-label={`Remove ${file.name}`}
+              >
+                <XIcon size={12} />
+              </button>
+            </div>
+          ))}
+
+          {/* "Add more" button — same size as thumbnails */}
+          {!isAtCapacity && (
+            <button
+              type="button"
+              className={styles.addMoreBtn}
+              onClick={handleZoneClick}
+              aria-label="Add more images"
+            >
+              <PlusIcon size={20} />
+              <span>Add more</span>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GENERAL FILE MODE (non-image)
+  // ═══════════════════════════════════════════════════════════════════════════
 
   return (
-    <div
-      className={zoneClasses}
-      style={dynamicStyles}
-      onClick={handleZoneClick}
-      onDrop={handleDrop}
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleZoneClick();
-        }
-      }}
-    >
-      {/* Hidden native file input */}
-      <input
-        ref={inputRef}
-        id={generatedId}
-        type="file"
-        name={name}
-        accept={accept}
-        multiple={multiple}
-        disabled={disabled}
-        className={styles.nativeInput}
-        onChange={handleFileChange}
-        aria-invalid={isInvalid}
-        aria-describedby={
-          [
-            isInvalid && errorMessage ? errorId : "",
-            helperText ? helperId : "",
-          ]
-            .filter(Boolean)
-            .join(" ") || undefined
-        }
-      />
+    <>
+      <div
+        className={zoneClasses}
+        style={dynamicStyles}
+        onClick={handleZoneClick}
+        onDrop={handleDrop}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleZoneClick();
+          }
+        }}
+      >
+        {renderHiddenInput()}
 
-      {/* Upload icon */}
-      <UploadIcon size={32} />
+        {/* Empty state */}
+        {fileList.length === 0 && !isDragOver && (
+          <>
+            <UploadIcon size={32} />
+            <span className={styles.dropzoneTitle}>Drag & drop files here</span>
+            <span className={styles.dropzoneSubtext}>or click to browse</span>
+          </>
+        )}
 
-      {/* Instructional text — changes during drag and after file selection */}
-      <span className={styles.dropzoneTitle}>
-        {isDragOver
-          ? "Drop files here"
-          : displayName || "Drag & drop files here"}
-      </span>
-      {!isDragOver && (
-        <span className={styles.dropzoneSubtext}>
-          or click to browse
-        </span>
+        {/* Drag-over state */}
+        {isDragOver && (
+          <>
+            <UploadIcon size={32} />
+            <span className={styles.dropzoneTitle}>
+              {fileList.length > 0 ? "Drop to add more" : "Drop files here"}
+            </span>
+          </>
+        )}
+
+        {/* First 3 files inside the box */}
+        {fileList.length > 0 && !isDragOver && (
+          <>
+            <ul className={styles.dropzoneFileList}>
+              {fileList.slice(0, 3).map((file, index) => renderFileItem(file, index))}
+            </ul>
+            <span className={styles.dropzoneSubtext}>
+              {isAtCapacity
+                ? "Maximum files reached"
+                : fileList.length > 3
+                  ? `+${fileList.length - 3} more — drop or click to add`
+                  : "Drop or click to add more"}
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Overflow files below the box */}
+      {fileList.length > 3 && !isDragOver && (
+        <ul className={styles.dropzoneFileList}>
+          {fileList.slice(3).map((file, index) => renderFileItem(file, index + 3))}
+        </ul>
       )}
-    </div>
+    </>
   );
 };

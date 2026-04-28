@@ -30,6 +30,12 @@ export interface BaseVariantProps {
   /** Allow multiple files */
   multiple: boolean;
 
+  /** Maximum number of files allowed (only when multiple=true) */
+  maxFiles?: number;
+
+  /** Minimum number of files required (only when multiple=true) */
+  minFiles?: number;
+
   /** Whether the input is disabled */
   disabled: boolean;
 

@@ -108,3 +108,64 @@ export const DropzoneWithHelper: Story = {
     maxSize: 5 * 1024 * 1024,
   },
 };
+
+export const DropzoneMultiFile: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents",
+    multiple: true,
+    helperText: "Drop multiple files — each drop adds to the list",
+  },
+};
+
+export const DropzoneMaxFiles: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents (max 3)",
+    multiple: true,
+    maxFiles: 3,
+    helperText: "Maximum 3 files allowed",
+  },
+};
+
+export const DropzoneMinFiles: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents (min 2)",
+    multiple: true,
+    minFiles: 2,
+    helperText: "Minimum 2 files required — cannot delete below 2",
+  },
+};
+
+export const DropzoneImageGrid: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Images",
+    accept: "image/*",
+    multiple: true,
+    helperText: "Images display as a grid — add, delete, and drag to upload",
+  },
+};
+
+export const DropzoneImageGridMax5: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Images (max 5)",
+    accept: "image/*",
+    multiple: true,
+    maxFiles: 5,
+    helperText: "Maximum 5 images — 'Add more' disappears at limit",
+  },
+};
+
+export const DropzoneImageGridSuccess: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Gallery Upload",
+    accept: "image/*",
+    multiple: true,
+    color: "success",
+    helperText: "Success color theme for image grid",
+  },
+};

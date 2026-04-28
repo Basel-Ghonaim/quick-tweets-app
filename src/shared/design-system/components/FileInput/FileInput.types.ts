@@ -75,6 +75,12 @@ export interface FileInputProps {
   /** Allow selecting multiple files */
   multiple?: boolean;
 
+  /** Maximum number of files allowed (only when multiple=true) */
+  maxFiles?: number;
+
+  /** Minimum number of files required (only when multiple=true) */
+  minFiles?: number;
+
   // ── States ──
 
   /** Marks the input as invalid */

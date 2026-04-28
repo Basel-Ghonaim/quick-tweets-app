@@ -13,6 +13,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       accept,
       maxSize,
       multiple = false,
+      maxFiles,
+      minFiles,
       isInvalid = false,
       errorMessage,
       helperText,
@@ -57,6 +59,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
               accept={accept}
               maxSize={maxSize}
               multiple={multiple}
+              maxFiles={maxFiles}
+              minFiles={minFiles}
               disabled={disabled}
               isInvalid={isInvalid}
               errorMessage={errorMessage}
@@ -80,6 +84,8 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
               accept={accept}
               maxSize={maxSize}
               multiple={multiple}
+              maxFiles={maxFiles}
+              minFiles={minFiles}
               disabled={disabled}
               isInvalid={isInvalid}
               errorMessage={errorMessage}
