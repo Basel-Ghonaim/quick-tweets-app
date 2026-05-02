@@ -43,6 +43,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
     const containerClasses = [
       styles.container,
       fullWidth ? styles.fullWidth : "",
+      variant === "avatar" ? styles.avatarContainer : "",
       hasError ? styles.isInvalid : "",
       disabled ? styles.isDisabled : "",
       className,
