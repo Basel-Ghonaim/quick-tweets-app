@@ -1,15 +1,18 @@
 import styles from "../../FileInput.module.css";
 import type { AvatarInputProps } from "./AvatarInput.types";
+import { useAvatarFile } from "./useAvatarFile";
 import { AvatarEmpty } from "./components/AvatarEmpty";
 
 /**
  * Avatar variant for FileInput.
  *
- * Renders a media upload area in one of four styles:
- * - circle + default:  round, dashed border, upload prompt
- * - circle + outline:  round, gray background, placeholder icon
- * - rectangle + default:  rectangular, dashed border, upload prompt
- * - rectangle + outline:  rectangular, gray background, placeholder icon
+ * Thin orchestrator that delegates:
+ * - **Logic** → `useAvatarFile` hook
+ * - **Empty state** → `AvatarEmpty` sub-component
+ *
+ * Four visual styles based on avatarShape × avatarFill:
+ * - circle + default | circle + outline
+ * - rectangle + default | rectangle + outline
  *
  * Single-file only — accepts one image or one video.
  */
@@ -20,6 +23,7 @@ export const AvatarInput = ({
   helperId,
   name,
   accept,
+  maxSize,
   disabled,
   isInvalid,
   errorMessage,
@@ -27,7 +31,20 @@ export const AvatarInput = ({
   color,
   avatarShape,
   avatarFill,
+  onChange,
+  onNativeChange,
+  onValidationError,
 }: AvatarInputProps) => {
+  const avatar = useAvatarFile({
+    inputRef,
+    accept,
+    maxSize,
+    disabled,
+    onChange,
+    onNativeChange,
+    onValidationError,
+  });
+
   // ── CSS variables ──
 
   const dynamicStyles = {
@@ -40,17 +57,24 @@ export const AvatarInput = ({
   const containerClasses = [
     styles.avatarWrapper,
     avatarShape === "circle" ? styles.avatarCircle : styles.avatarRectangle,
-    avatarFill === "outline" ? styles.avatarOutline : styles.avatarDefault,
+    avatar.file
+      ? styles.avatarFilled
+      : avatarFill === "outline"
+        ? styles.avatarOutline
+        : styles.avatarDefault,
+    avatar.isDragOver ? styles.avatarDragOver : "",
     disabled ? styles.isDisabled : "",
   ]
     .filter(Boolean)
     .join(" ");
 
-  // ── Click handler ──
+  // ── Drag props ──
 
-  const handleClick = () => {
-    if (disabled) return;
-    inputRef.current?.click();
+  const dragProps = {
+    onDrop: avatar.handleDrop,
+    onDragEnter: avatar.handleDragEnter,
+    onDragOver: avatar.handleDragOver,
+    onDragLeave: avatar.handleDragLeave,
   };
 
   // ── Hidden input ──
@@ -65,6 +89,7 @@ export const AvatarInput = ({
       multiple={false}
       disabled={disabled}
       className={styles.nativeInput}
+      onChange={avatar.handleFileChange}
       aria-invalid={isInvalid}
       aria-describedby={
         [isInvalid && errorMessage ? errorId : "", helperText ? helperId : ""]
@@ -74,19 +99,59 @@ export const AvatarInput = ({
     />
   );
 
-  // ── Render ──
+  // ── File exists → show preview ──
+
+  if (avatar.file && avatar.preview) {
+    return (
+      <div
+        className={containerClasses}
+        style={dynamicStyles}
+        {...dragProps}
+      >
+        {hiddenInput}
+        <img
+          src={avatar.preview}
+          alt={avatar.file.name}
+          className={styles.avatarPreviewImg}
+        />
+
+        {/* Hover overlay with Delete / Replace */}
+        <div className={styles.avatarOverlay}>
+          <button
+            type="button"
+            className={styles.avatarOverlayBtn}
+            onClick={avatar.removeFile}
+            aria-label="Delete file"
+          >
+            Delete
+          </button>
+          <button
+            type="button"
+            className={styles.avatarOverlayBtn}
+            onClick={avatar.replaceFile}
+            aria-label="Replace file"
+          >
+            Replace
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Empty state ──
 
   return (
     <div
       className={containerClasses}
       style={dynamicStyles}
-      onClick={handleClick}
+      onClick={avatar.handleClick}
+      {...dragProps}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          handleClick();
+          avatar.handleClick();
         }
       }}
     >

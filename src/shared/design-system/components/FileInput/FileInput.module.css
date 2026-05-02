@@ -472,3 +472,66 @@
   cursor: not-allowed;
 }
 
+/* ── Filled state (file selected) ── */
+
+.avatarFilled {
+  border: none;
+  background-color: transparent;
+  cursor: default;
+}
+
+/* ── Preview image ── */
+
+.avatarPreviewImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Drag-over highlight ── */
+
+.avatarDragOver {
+  border-color: var(--file-input-color, var(--color-primary-primary)) !important;
+  background-color: var(--file-input-alpha, var(--color-primary-alpha)) !important;
+  box-shadow: 0 0 0 3px var(--file-input-alpha, var(--color-primary-alpha));
+}
+
+/* ── Hover overlay (Delete / Replace) ── */
+
+.avatarOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatarWrapper:hover .avatarOverlay {
+  opacity: 1;
+}
+
+.avatarOverlayBtn {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--border-radius-md, 8px);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 80px;
+}
+
+.avatarOverlayBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.8);
+}
