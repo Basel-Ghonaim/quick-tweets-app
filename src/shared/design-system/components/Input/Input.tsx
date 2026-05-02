@@ -1,6 +1,7 @@
 import React, { forwardRef, useId, useState } from "react";
 import styles from "./Input.module.css";
 import type { InputProps } from "./Input.types";
+import { EyeIcon, EyeOffIcon } from "@shared/design-system/icons";
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
@@ -71,7 +72,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               onClick={() => setIsPasswordVisible((prev) => !prev)}
               tabIndex={-1}
             >
-              {isPasswordVisible ? "Hide" : "Show"}
+              {isPasswordVisible ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
             </button>
           )}
 
