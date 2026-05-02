@@ -1,6 +1,6 @@
-import { CameraIcon } from "@shared/design-system/icons";
 import styles from "../../FileInput.module.css";
 import type { AvatarInputProps } from "./AvatarInput.types";
+import { AvatarEmpty } from "./components/AvatarEmpty";
 
 /**
  * Avatar variant for FileInput.
@@ -74,7 +74,7 @@ export const AvatarInput = ({
     />
   );
 
-  // ── Empty state (Phase 3.2 will extract this) ──
+  // ── Render ──
 
   return (
     <div
@@ -91,10 +91,7 @@ export const AvatarInput = ({
       }}
     >
       {hiddenInput}
-      <CameraIcon size={24} />
-      <span className={styles.avatarText}>
-        {avatarFill === "outline" ? "Upload" : "Upload media"}
-      </span>
+      <AvatarEmpty fill={avatarFill} />
     </div>
   );
 };
