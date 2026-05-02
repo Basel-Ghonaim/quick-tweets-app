@@ -3,7 +3,6 @@ import type { AvatarInputProps } from "./AvatarInput.types";
 import { useAvatarFile } from "./useAvatarFile";
 import { AvatarEmpty } from "./components/AvatarEmpty";
 import { AvatarOverlay } from "./components/AvatarOverlay";
-import { CameraIcon } from "@shared/design-system/icons";
 
 /**
  * Avatar variant for FileInput.
@@ -126,17 +125,6 @@ export const AvatarInput = ({
           onDelete={avatar.removeFile}
           onReplace={avatar.replaceFile}
         />
-
-        {/* Floating edit badge at bottom-right */}
-        <button
-          type="button"
-          className={styles.avatarEditBadge}
-          onClick={avatar.replaceFile}
-          aria-label="Edit photo"
-          title="Edit"
-        >
-          <CameraIcon size={14} />
-        </button>
       </div>
     );
   }
