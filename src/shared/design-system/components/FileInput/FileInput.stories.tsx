@@ -260,3 +260,21 @@ export const AvatarDisabled: Story = {
     disabled: true,
   },
 };
+
+export const AvatarVideo: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Video Avatar",
+    accept: "video/*",
+    helperText: "MP4, WebM up to 10MB",
+  },
+};
+
+export const AvatarWithError: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Avatar (Error)",
+    isInvalid: true,
+    errorMessage: "Profile picture is required",
+  },
+};
