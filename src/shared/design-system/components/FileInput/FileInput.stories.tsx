@@ -169,3 +169,43 @@ export const DropzoneImageGridSuccess: Story = {
     helperText: "Success color theme for image grid",
   },
 };
+
+export const DropzoneFileList: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents",
+    multiple: true,
+    helperText: "Files show as a list with type icons — add, delete, drag to upload",
+  },
+};
+
+export const DropzonePdfOnly: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload PDF Files",
+    accept: "application/pdf",
+    multiple: true,
+    helperText: "Only PDF files are accepted",
+  },
+};
+
+export const DropzonePdfMax5: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload PDF (max 5)",
+    accept: "application/pdf",
+    multiple: true,
+    maxFiles: 5,
+    helperText: "Maximum 5 PDF files — 'Add more' disappears at limit",
+  },
+};
+
+export const DropzoneMixed: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents & Images",
+    accept: "image/*,application/pdf,.docx,.xlsx",
+    multiple: true,
+    helperText: "Mixed types: images + documents — uses file list mode",
+  },
+};

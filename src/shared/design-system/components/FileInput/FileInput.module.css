@@ -287,34 +287,60 @@
   background-color: var(--file-input-alpha, var(--color-primary-alpha));
 }
 
-/* ─── Dropzone File List ─────────────────────────────────────────────────── */
+/* ─── File List Mode (non-image) ─────────────────────────────────────────── */
 
-.dropzoneFileList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.fileListWrapper {
+  position: relative;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
+  border: var(--border-width-thin) solid var(--gray-200);
+  border-radius: var(--border-radius-lg, 12px);
   overflow: hidden;
+  background-color: var(--color-surface, white);
 }
 
-.dropzoneFileItem {
+.fileListOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background-color: var(--file-input-alpha, rgba(59, 130, 246, 0.1));
+  border: var(--border-width-medium, 2px) solid var(--file-input-color, var(--color-primary-primary));
+  border-radius: var(--border-radius-lg, 12px);
+  z-index: 2;
+  color: var(--file-input-color, var(--color-primary-primary));
+}
+
+.fileListRow {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--border-radius-sm, 4px);
-  transition: background-color 0.15s ease;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--gray-100);
   min-width: 0;
+  transition: background-color 0.15s ease;
 }
 
-.dropzoneFileItem:hover {
-  background-color: var(--color-surface-hover, rgba(0, 0, 0, 0.04));
+.fileListRow:last-of-type {
+  border-bottom: none;
 }
 
-.dropzoneFileName {
+.fileListRow:hover {
+  background-color: var(--color-surface-hover, rgba(0, 0, 0, 0.02));
+}
+
+.fileListThumb {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--border-radius-sm, 4px);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--gray-200);
+}
+
+.fileListName {
   flex: 1;
   font-size: var(--font-size-xs);
   font-weight: 500;
@@ -325,13 +351,14 @@
   text-align: left;
 }
 
-.dropzoneFileSize {
+.fileListSize {
   font-size: var(--font-size-xs);
   color: var(--color-text-secondary);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.dropzoneRemoveBtn {
+.fileListRemoveBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -341,12 +368,39 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   border-radius: var(--border-radius-sm, 4px);
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
-.dropzoneRemoveBtn:hover {
+.fileListRemoveBtn:hover {
   color: var(--color-error-primary);
   background-color: var(--color-error-alpha, rgba(239, 68, 68, 0.1));
+}
+
+/* ─── "Add more" Row (file list mode) ────────────────────────────────────── */
+
+.addMoreRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: calc(100% - var(--space-2) * 2);
+  margin: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width-medium, 2px) dashed var(--gray-200);
+  border-radius: var(--border-radius-md);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.addMoreRow:hover {
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  color: var(--file-input-color, var(--color-primary-primary));
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
 }
 
 /* ─── Placeholder (temporary — for future variants) ──────────────────────── */

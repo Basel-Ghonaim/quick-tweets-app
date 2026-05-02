@@ -4,6 +4,7 @@ import {
   TrashIcon,
   XIcon,
   PlusIcon,
+  FileTypeIcon,
 } from "@shared/design-system/icons";
 import { formatSize } from "@shared/design-system/utils";
 import styles from "../../FileInput.module.css";
@@ -50,15 +51,16 @@ export const DropzoneInput = ({
   /** Whether we've hit the file limit */
   const isAtCapacity = !!(maxFiles && fileList.length >= maxFiles);
 
-  // ── Preview URLs (image-only mode) ──
+  // ── Preview URLs (for image files in any mode) ──
 
   useEffect(() => {
-    if (!isImageOnly) return;
-    const urls = fileList.map((file) => URL.createObjectURL(file));
+    const urls = fileList.map((file) =>
+      file.type.startsWith("image/") ? URL.createObjectURL(file) : "",
+    );
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreviews(urls);
-    return () => urls.forEach((url) => URL.revokeObjectURL(url));
-  }, [fileList, isImageOnly]);
+    return () => urls.forEach((url) => { if (url) URL.revokeObjectURL(url); });
+  }, [fileList]);
 
   // ── Drag counter (prevents flicker on child elements) ──
 
@@ -230,22 +232,35 @@ export const DropzoneInput = ({
     forwardFiles(updated);
   };
 
-  // ── Helper: render a single file row (non-image mode) ──
+  // ── Helper: render a single file row (file list mode) ──
 
-  const renderFileItem = (file: File, index: number) => (
-    <li key={`${file.name}-${index}`} className={styles.dropzoneFileItem}>
-      <span className={styles.dropzoneFileName}>{file.name}</span>
-      <span className={styles.dropzoneFileSize}>{formatSize(file.size)}</span>
-      <button
-        type="button"
-        className={styles.dropzoneRemoveBtn}
-        onClick={(e) => removeFile(index, e)}
-        aria-label={`Remove ${file.name}`}
-      >
-        <TrashIcon size={14} />
-      </button>
-    </li>
-  );
+  const renderFileItem = (file: File, index: number) => {
+    const isImage = file.type.startsWith("image/");
+
+    return (
+      <div key={`${file.name}-${index}`} className={styles.fileListRow}>
+        {isImage ? (
+          <img
+            src={previews[index] ?? URL.createObjectURL(file)}
+            alt={file.name}
+            className={styles.fileListThumb}
+          />
+        ) : (
+          <FileTypeIcon fileName={file.name} mimeType={file.type} size={18} />
+        )}
+        <span className={styles.fileListName}>{file.name}</span>
+        <span className={styles.fileListSize}>{formatSize(file.size)}</span>
+        <button
+          type="button"
+          className={styles.fileListRemoveBtn}
+          onClick={(e) => removeFile(index, e)}
+          aria-label={`Remove ${file.name}`}
+        >
+          <TrashIcon size={14} />
+        </button>
+      </div>
+    );
+  };
 
   // ── Hidden native input (shared by both modes) ──
 
@@ -375,8 +390,9 @@ export const DropzoneInput = ({
   // GENERAL FILE MODE (non-image)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  return (
-    <>
+  // Empty state — show dashed dropzone
+  if (fileList.length === 0) {
+    return (
       <div
         className={zoneClasses}
         style={dynamicStyles}
@@ -396,52 +412,57 @@ export const DropzoneInput = ({
       >
         {renderHiddenInput()}
 
-        {/* Empty state */}
-        {fileList.length === 0 && !isDragOver && (
+        {isDragOver ? (
+          <>
+            <UploadIcon size={32} />
+            <span className={styles.dropzoneTitle}>Drop files here</span>
+          </>
+        ) : (
           <>
             <UploadIcon size={32} />
             <span className={styles.dropzoneTitle}>Drag & drop files here</span>
             <span className={styles.dropzoneSubtext}>or click to browse</span>
           </>
         )}
-
-        {/* Drag-over state */}
-        {isDragOver && (
-          <>
-            <UploadIcon size={32} />
-            <span className={styles.dropzoneTitle}>
-              {fileList.length > 0 ? "Drop to add more" : "Drop files here"}
-            </span>
-          </>
-        )}
-
-        {/* First 3 files inside the box */}
-        {fileList.length > 0 && !isDragOver && (
-          <>
-            <ul className={styles.dropzoneFileList}>
-              {fileList
-                .slice(0, 3)
-                .map((file, index) => renderFileItem(file, index))}
-            </ul>
-            <span className={styles.dropzoneSubtext}>
-              {isAtCapacity
-                ? "Maximum files reached"
-                : fileList.length > 3
-                  ? `+${fileList.length - 3} more — drop or click to add`
-                  : "Drop or click to add more"}
-            </span>
-          </>
-        )}
       </div>
+    );
+  }
 
-      {/* Overflow files below the box */}
-      {fileList.length > 3 && !isDragOver && (
-        <ul className={styles.dropzoneFileList}>
-          {fileList
-            .slice(3)
-            .map((file, index) => renderFileItem(file, index + 3))}
-        </ul>
+  // Files exist — show bordered list container
+  return (
+    <div
+      className={styles.fileListWrapper}
+      style={dynamicStyles}
+      onDrop={handleDrop}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+    >
+      {renderHiddenInput()}
+
+      {/* Drag overlay — covers the entire list */}
+      {isDragOver && (
+        <div className={styles.fileListOverlay}>
+          <UploadIcon size={32} />
+          <span className={styles.dropzoneTitle}>Drop files here</span>
+        </div>
       )}
-    </>
+
+      {/* File rows */}
+      {fileList.map((file, index) => renderFileItem(file, index))}
+
+      {/* "Add more" row */}
+      {!isAtCapacity && (
+        <button
+          type="button"
+          className={styles.addMoreRow}
+          onClick={handleZoneClick}
+          aria-label="Add more files"
+        >
+          <PlusIcon size={16} />
+          <span>Add more files</span>
+        </button>
+      )}
+    </div>
   );
 };
