@@ -2,6 +2,7 @@ import styles from "../../FileInput.module.css";
 import type { AvatarInputProps } from "./AvatarInput.types";
 import { useAvatarFile } from "./useAvatarFile";
 import { AvatarEmpty } from "./components/AvatarEmpty";
+import { AvatarOverlay } from "./components/AvatarOverlay";
 
 /**
  * Avatar variant for FileInput.
@@ -116,24 +117,10 @@ export const AvatarInput = ({
         />
 
         {/* Hover overlay with Delete / Replace */}
-        <div className={styles.avatarOverlay}>
-          <button
-            type="button"
-            className={styles.avatarOverlayBtn}
-            onClick={avatar.removeFile}
-            aria-label="Delete file"
-          >
-            Delete
-          </button>
-          <button
-            type="button"
-            className={styles.avatarOverlayBtn}
-            onClick={avatar.replaceFile}
-            aria-label="Replace file"
-          >
-            Replace
-          </button>
-        </div>
+        <AvatarOverlay
+          onDelete={avatar.removeFile}
+          onReplace={avatar.replaceFile}
+        />
       </div>
     );
   }

@@ -268,3 +268,128 @@ FileInput/
             └── FileList.tsx            # File rows list
 ```
 
+---
+
+### Step 3.1 — Types & AvatarInput Shell
+**Files:** `FileInput.types.ts`, `variants/variant.types.ts`, `variants/avatar/AvatarInput.tsx`, `variants/avatar/AvatarInput.types.ts`, `FileInput.tsx`, `variants/index.ts`, `FileInput.module.css`, `FileInput.stories.tsx`
+
+Foundation for the Avatar variant with four visual styles:
+- Added `AvatarFill` type (`"default" | "outline"`) to `FileInput.types.ts`
+- Added `avatarShape` and `avatarFill` to `BaseVariantProps` — all variants receive them from the shell, only Avatar uses them
+- Created `AvatarInput.tsx` shell: renders container based on `avatarShape` × `avatarFill`, click-to-browse, keyboard accessible (`role="button"`, `tabIndex={0}`, Enter/Space)
+- CSS: `.avatarWrapper` (flex, centered, `overflow: hidden`), `.avatarCircle` (120px × 120px, `border-radius: 50%`), `.avatarRectangle` (100% width, `aspect-ratio: 4/3`), `.avatarDefault` (dashed border), `.avatarOutline` (gray background)
+- Wired into `FileInput.tsx` shell (replaced Phase 3 placeholder), exported from `variants/index.ts`
+- 5 stories: AvatarCircle, AvatarCircleOutline, AvatarRectangle, AvatarRectangleOutline, AvatarDisabled
+
+**Principle:** LSP — AvatarInput implements the same `BaseVariantProps` interface as StandardInput and DropzoneInput. The shell's `renderVariant()` switch treats all variants uniformly without knowing their internals.
+
+### Step 3.2 — AvatarEmpty Sub-Component
+**Files:** `variants/avatar/components/AvatarEmpty.tsx`, `variants/avatar/AvatarInput.tsx`
+
+Extracted empty state content into a dedicated component:
+- `fill="outline"` → `UserIcon` (32px) + "Upload" — profile silhouette placeholder
+- `fill="default"` → `CameraIcon` (24px) + "Upload media" — upload prompt
+- AvatarInput delegates with `<AvatarEmpty fill={avatarFill} />`
+
+**Principle:** SRP — AvatarEmpty has one reason to change: when the empty state visual design changes. AvatarInput doesn't know what icons or text the empty state renders.
+
+### Step 3.3 — useAvatarFile Hook (Drag & Drop, Preview, Video Thumbnail)
+**Files:** `variants/avatar/useAvatarFile.ts`, `variants/avatar/AvatarInput.tsx`, `FileInput.module.css`
+
+Created the logic hook for single-file management:
+
+**State:**
+- `file: File | null` — the selected file (single, not accumulated)
+- `preview: string` — blob URL for images, canvas `dataURL` for video thumbnails
+- `isDragOver: boolean` — drag highlight state
+
+**File selection:**
+- On file select: replaces current file (no accumulation — single-file mode)
+- On file remove: clears file + revokes preview URL + resets native input
+- On replace: triggers `inputRef.current.click()` for new file picker
+- Reuses `validateDropzoneFiles()` from dropzone for `accept`/`maxSize` validation
+
+**Preview generation (in `useEffect`):**
+- **Images:** `URL.createObjectURL(file)` with cleanup via `URL.revokeObjectURL()`
+- **Videos:** Auto-generate thumbnail — creates `<video>` in memory, seeks to 10% of duration, draws frame to offscreen `<canvas>`, exports via `canvas.toDataURL("image/jpeg", 0.8)`. Falls back to empty preview on failure.
+
+**Drag & drop:**
+- `handleDragEnter`/`handleDragLeave` with drag counter ref (prevents flicker)
+- `handleDrop` validates then selects first file
+- `handleDragOver` with `e.preventDefault()` to allow drop
+
+**Orchestrator updates:**
+- Two render paths: empty state (click/drag) vs filled state (preview + hover overlay)
+- CSS: `.avatarFilled` (no border), `.avatarPreviewImg` (`position: absolute`, `object-fit: cover`), `.avatarDragOver` (color highlight + box-shadow), `.avatarOverlay` (semi-transparent + `backdrop-filter: blur`), `.avatarOverlayBtn` (glass buttons)
+
+**Principle:** DIP — `useAvatarFile` depends on the `validateDropzoneFiles` abstraction, not on the Dropzone variant directly. The validation logic is shared and reusable, not duplicated.
+
+### Step 3.4 — AvatarOverlay Sub-Component
+**Files:** `variants/avatar/components/AvatarOverlay.tsx`, `variants/avatar/AvatarInput.tsx`
+
+Extracted the hover overlay into its own component:
+- Receives `onDelete` and `onReplace` callbacks as props
+- Renders two glass-style buttons inside a semi-transparent backdrop
+- AvatarInput delegates with `<AvatarOverlay onDelete={...} onReplace={...} />`
+
+**Principle:** SRP — AvatarOverlay has one reason to change: when the overlay design or button layout changes. The orchestrator doesn't know about button labels, styles, or `aria-label` attributes.
+
+### Step 3.5 — Stories
+**Files:** `FileInput.stories.tsx`
+
+Added 2 additional stories:
+- `AvatarVideo` — `accept="video/*"` for video thumbnail testing
+- `AvatarWithError` — `isInvalid` + `errorMessage` for error state display
+
+Total Avatar stories: 7 (AvatarCircle, AvatarCircleOutline, AvatarRectangle, AvatarRectangleOutline, AvatarDisabled, AvatarVideo, AvatarWithError)
+
+**Principle:** Each story tests one axis of variation — shape, fill, media type, state.
+
+---
+
+### SOLID Compliance Summary (Avatar Variant)
+
+| Principle | How It's Applied |
+|---|---|
+| **S — Single Responsibility** | `useAvatarFile` → logic only. `AvatarEmpty` → empty state only. `AvatarOverlay` → hover overlay only. `AvatarInput` → wiring only. Each file has one reason to change. |
+| **O — Open/Closed** | New visual styles (e.g. a future `"rounded"` shape) can be added via CSS class without modifying sub-components. New overlay actions can be added to `AvatarOverlay` without changing the orchestrator. |
+| **L — Liskov Substitution** | `AvatarInput` implements `BaseVariantProps` — the shell treats it identically to `StandardInput` and `DropzoneInput` via the `renderVariant()` switch. |
+| **I — Interface Segregation** | `AvatarEmpty` takes only `fill`. `AvatarOverlay` takes only `onDelete` + `onReplace`. Sub-components receive minimal, focused interfaces — not the full `BaseVariantProps`. |
+| **D — Dependency Inversion** | `useAvatarFile` depends on `validateDropzoneFiles` (a pure utility), not on the Dropzone component. The orchestrator depends on hook return types, not on state implementation details. |
+
+---
+
+### File Structure (after Phase 3)
+
+```
+FileInput/
+├── FileInput.tsx              # Shell: container, label, variant switch, errors
+├── FileInput.types.ts         # Type contract (AvatarFill, maxFiles, minFiles)
+├── FileInput.module.css       # Styles (shared by all variants)
+├── FileInput.stories.tsx      # Storybook stories (31 total)
+├── FileInput.md               # This documentation
+├── index.ts                   # Barrel export
+└── variants/
+    ├── index.ts               # Variants barrel
+    ├── variant.types.ts       # BaseVariantProps (shared by all variants)
+    ├── standard/
+    │   ├── StandardInput.tsx
+    │   └── StandardInput.types.ts
+    ├── dropzone/
+    │   ├── DropzoneInput.tsx           # Orchestrator
+    │   ├── DropzoneInput.types.ts
+    │   ├── useDropzoneFiles.ts         # State + logic hook
+    │   ├── validateDropzoneFiles.ts    # Pure validation (shared)
+    │   └── components/
+    │       ├── DragOverlay.tsx
+    │       ├── DropzoneEmpty.tsx
+    │       ├── ImageGrid.tsx
+    │       └── FileList.tsx
+    └── avatar/
+        ├── AvatarInput.tsx            # Orchestrator
+        ├── AvatarInput.types.ts       # Extends BaseVariantProps
+        ├── useAvatarFile.ts           # State + logic hook (single-file)
+        └── components/
+            ├── AvatarEmpty.tsx        # Empty state (4 styles)
+            └── AvatarOverlay.tsx      # Hover overlay (Delete / Replace)
+```
