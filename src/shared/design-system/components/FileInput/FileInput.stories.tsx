@@ -209,3 +209,54 @@ export const DropzoneMixed: Story = {
     helperText: "Mixed types: images + documents — uses file list mode",
   },
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AVATAR VARIANT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const AvatarCircle: Story = {
+  args: {
+    name: "avatar",
+    label: "Profile Picture",
+    variant: "avatar",
+    avatarShape: "circle",
+    avatarFill: "default",
+    accept: "image/*",
+    helperText: "PNG, JPG up to 5MB",
+  },
+};
+
+export const AvatarCircleOutline: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Profile Picture (Outline)",
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarRectangle: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Cover Image",
+    avatarShape: "rectangle",
+    avatarFill: "default",
+  },
+};
+
+export const AvatarRectangleOutline: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Cover Image (Outline)",
+    avatarShape: "rectangle",
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarDisabled: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Avatar (Disabled)",
+    avatarFill: "outline",
+    disabled: true,
+  },
+};

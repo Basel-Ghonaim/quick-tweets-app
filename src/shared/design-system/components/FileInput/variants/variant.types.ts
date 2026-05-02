@@ -1,3 +1,5 @@
+import type { AvatarShape, AvatarFill } from "../FileInput.types";
+
 /**
  * Shared props interface for all FileInput variants.
  *
@@ -38,6 +40,12 @@ export interface BaseVariantProps {
 
   /** Whether the input is disabled */
   disabled: boolean;
+
+  /** Avatar shape — circle or rectangle (only for avatar variant) */
+  avatarShape: AvatarShape;
+
+  /** Avatar background style — default or outline (only for avatar variant) */
+  avatarFill: AvatarFill;
 
   /** Whether the input has a validation error from parent */
   isInvalid: boolean;

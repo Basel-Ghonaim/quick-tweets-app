@@ -8,6 +8,9 @@ export type FileInputVariant = "standard" | "dropzone" | "avatar";
 /** Avatar shape — only applies when variant="avatar" */
 export type AvatarShape = "circle" | "rectangle";
 
+/** Avatar background style — only applies when variant="avatar" */
+export type AvatarFill = "default" | "outline";
+
 // ─── File Item (for multi-file list in Phase 4) ─────────────────────────────
 
 /** Status of an individual file in the list */
@@ -49,6 +52,9 @@ export interface FileInputProps {
 
   /** Avatar shape — only used when variant="avatar" */
   avatarShape?: AvatarShape;
+
+  /** Avatar background style — only used when variant="avatar" */
+  avatarFill?: AvatarFill;
 
   // ── Value (controlled) ──
 
