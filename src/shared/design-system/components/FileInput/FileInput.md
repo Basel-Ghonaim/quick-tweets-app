@@ -27,6 +27,8 @@ A multi-variant file upload component for the design system. Replaces the native
 | `accept` | `string` | — | Accepted file types (e.g. `"image/*"`) |
 | `maxSize` | `number` | — | Max file size in bytes |
 | `multiple` | `boolean` | `false` | Allow multi-file selection |
+| `maxFiles` | `number` | — | Maximum number of files allowed (multi-file mode) |
+| `minFiles` | `number` | — | Minimum number of files required (multi-file mode) |
 | `isInvalid` | `boolean` | `false` | Marks input as invalid |
 | `errorMessage` | `string` | — | Error text shown when invalid |
 | `disabled` | `boolean` | `false` | Disables the input |
@@ -127,19 +129,142 @@ Refactored to follow Single Responsibility Principle:
 
 **Principle:** SRP — every file has one reason to change. The shell routes, the variant renders, the utility formats.
 
-### File Structure (after refactor)
+---
+
+### Step 2.1 — BaseVariantProps Extraction
+**Files:** `variants/variant.types.ts`, `variants/standard/StandardInput.types.ts`
+
+Extracted the shared props interface used by all FileInput variants:
+- `BaseVariantProps` defines everything a variant receives from the shell: `inputRef`, `generatedId`, `errorId`, `helperId`, `name`, `accept`, `maxSize`, `multiple`, `maxFiles`, `minFiles`, `disabled`, `isInvalid`, `errorMessage`, `helperText`, `color`, `onChange`, `onNativeChange`, `onValidationError`
+- `StandardInputProps` and `DropzoneInputProps` now extend `BaseVariantProps` instead of duplicating the interface
+- Added `maxFiles` and `minFiles` to `FileInputProps` → shell wires them to variants
+
+**Principle:** DRY — one source of truth for variant props. Adding a new prop to all variants means editing one file.
+
+### Step 2.2 — Dropzone Static Rendering
+**Files:** `variants/dropzone/DropzoneInput.tsx`, `variants/dropzone/DropzoneInput.types.ts`, `FileInput.module.css`
+
+Built the visual foundation for the Dropzone variant:
+- Dashed-border drop zone container with upload icon and instructional text
+- Dynamic CSS variables for color theming (same pattern as Standard)
+- Zone class builder: `dropzoneWrapper` + conditional `isDragOver` and `isDisabled`
+- Hidden native `<input>` with full `aria-describedby` linking
+- Keyboard accessible: `role="button"`, `tabIndex={0}`, Enter/Space triggers click
+- CSS: dashed border, centered content, hover/focus transitions, disabled state
+
+**Principle:** Build the skeleton first — get the layout and accessibility right before adding behavior.
+
+### Step 2.3 — Drag & Drop Behavior
+**Files:** `variants/dropzone/DropzoneInput.tsx`, `FileInput.module.css`
+
+Added full drag & drop interaction:
+- `handleDragEnter` / `handleDragLeave` with drag counter ref (prevents flicker on child elements)
+- `handleDrop` receives files and runs validation pipeline
+- `handleDragOver` with `e.preventDefault()` to allow drop
+- Visual feedback: border color change + background alpha on drag-over
+- `validateFiles()` function enforces `accept` pattern matching on drop (browser only enforces for file picker, NOT for drag & drop):
+  - Wildcard MIME: `image/*` → `file.type.startsWith("image/")`
+  - Exact MIME: `application/pdf` → `file.type === "application/pdf"`
+  - Extension: `.pdf` → `file.name.endsWith(".pdf")`
+- `maxSize` validation with human-readable error from `formatSize()`
+- Click-to-browse still works via `inputRef.current.click()`
+
+**Principle:** Defense in depth — browser `accept` attribute only filters the file picker UI. Drop events bypass it entirely, so we validate manually.
+
+### Step 2.4 — Multi-File Support & Image Grid Mode
+**Files:** `variants/dropzone/DropzoneInput.tsx`, `FileInput.types.ts`, `variant.types.ts`, `FileInput.tsx`, `FileInput.module.css`, `icons/components/PlusIcon.tsx`
+
+Extended the Dropzone with multi-file management and an image-only rendering mode:
+
+**Multi-File Logic:**
+- `accumulateFiles()` — merges new files with existing `fileList` in multi-mode, replaces in single-mode
+- `maxFiles` check — rejects batch if total exceeds limit, shows "Maximum N files allowed"
+- `minFiles` check — blocks deletion if removing would go below minimum, shows "Minimum N files required"
+- `forwardFiles()` — sends `File[]` in multi-mode, `File` in single-mode via `onChange`
+
+**Image Grid Mode (auto-detected when `accept` is image-only):**
+- `isImageOnly` derived from `accept` — checks if ALL accepted types start with `image/`
+- CSS grid with `repeat(auto-fill, 80px)` for fluid thumbnail layout
+- Each thumbnail: 80×80px with `object-fit: cover` and `border-radius`
+- X delete button on each thumbnail (visible on hover, red background)
+- "Add more" button as last grid cell (same size as thumbnails, dashed border)
+- Drag overlay covers the entire grid wrapper with icon + "Drop images here"
+- Preview URLs via `URL.createObjectURL()` with cleanup in `useEffect` return
+
+**New icon:** `PlusIcon` — used for "Add more" buttons.
+
+**Principle:** LSP — the mode detection (`isImageOnly`) is automatic from the `accept` prop. The consumer doesn't need to specify a sub-variant.
+
+### Step 2.5 — File List Mode & FileTypeIcon
+**Files:** `variants/dropzone/DropzoneInput.tsx`, `FileInput.module.css`, `icons/components/FileTypeIcon.tsx`, `icons/components/index.ts`, `FileInput.stories.tsx`
+
+Replaced the fragmented "inside + outside the box" file display with a clean bordered container:
+
+**FileTypeIcon Component:**
+- Auto-detects file category from extension (30+ mapped) or MIME type (exact match + prefix fallback)
+- 7 categories with distinct colors: PDF (red `#EF4444`), Word (blue `#2563EB`), Excel (green `#10B981`), Archive (amber `#F59E0B`), Code (purple `#8B5CF6`), Image (purple `#8B5CF6`), Text/Generic (gray `#6B7280`)
+- Each category has a unique SVG path inside a document silhouette
+- Resolution priority: extension → exact MIME → MIME prefix → generic fallback
+
+**File List Design:**
+- Bordered container (`.fileListWrapper`) replaces the dashed dropzone after files are added
+- Each row (`.fileListRow`): file type icon or inline 24×24 thumbnail (for images) + truncated name (`min-width: 0` + `text-overflow: ellipsis`) + size + trash button
+- "Add more files" / "Replace file" dashed row at the bottom (contextual label based on `multiple`)
+- Drag overlay (`.fileListOverlay`) covers the entire container on drag-over
+- Row separators via `border-bottom`, hover effect, smooth transitions
+- Preview URLs generated for ALL image files (not just image-only mode) so inline thumbnails work in mixed mode
+
+**Stories added:** FileList, PdfOnly, PdfMax5, Mixed
+
+**Principle:** OCP — FileTypeIcon is open for extension (add new categories/extensions) without modifying existing rendering logic.
+
+### Step 2.6 — SOLID Refactoring
+**Files:** `DropzoneInput.tsx`, `useDropzoneFiles.ts`, `validateDropzoneFiles.ts`, `components/DragOverlay.tsx`, `components/DropzoneEmpty.tsx`, `components/ImageGrid.tsx`, `components/FileList.tsx`
+
+Decomposed the 472-line monolith into 7 focused modules:
+
+**Logic layer:**
+- `validateDropzoneFiles.ts` — Pure function. Takes `FileList` + options → returns `{ valid, error }`. No React, no state. Independently testable.
+- `useDropzoneFiles.ts` — Custom hook. Owns ALL state (`fileList`, `previews`, `isDragOver`), derived values (`isImageOnly`, `isAtCapacity`), event handlers (`handleDrop`, `handleDragEnter/Over/Leave`, `handleFileChange`, `removeFile`, `handleZoneClick`), and the preview URL lifecycle. Returns a clean API object.
+
+**Rendering layer:**
+- `DragOverlay.tsx` — Shared translucent overlay for both modes. Accepts `visible` and `label`.
+- `DropzoneEmpty.tsx` — Shared empty state (icon + title + subtext). Accepts `mode` ("image" | "file") and `isDragOver`. Eliminates duplicated JSX.
+- `ImageGrid.tsx` — Thumbnail grid with X delete buttons and "Add more" cell. Receives `files`, `previews`, callbacks.
+- `FileList.tsx` — File rows with type icons/thumbnails and "Add more" / "Replace" row. Receives `files`, `previews`, `multiple`, callbacks.
+
+**Orchestrator:**
+- `DropzoneInput.tsx` — Thin orchestrator (~170 lines). Calls `useDropzoneFiles`, computes CSS variables and zone classes, renders the correct sub-components based on `isImageOnly` and `fileList.length`.
+
+**Principle:** SRP — each file has one reason to change. The hook changes when logic changes. Sub-components change when their rendering changes. The orchestrator changes when the routing between modes changes.
+
+---
+
+### File Structure (after Phase 2)
 
 ```
 FileInput/
 ├── FileInput.tsx              # Shell: container, label, variant switch, errors
-├── FileInput.types.ts         # Type contract
+├── FileInput.types.ts         # Type contract (includes maxFiles, minFiles)
 ├── FileInput.module.css       # Styles (shared by all variants)
-├── FileInput.stories.tsx      # Storybook stories
+├── FileInput.stories.tsx      # Storybook stories (24 total)
 ├── FileInput.md               # This documentation
 ├── index.ts                   # Barrel export
 └── variants/
     ├── index.ts               # Variants barrel
-    └── standard/
-        ├── StandardInput.tsx       # Standard variant rendering + handlers
-        └── StandardInput.types.ts  # Standard variant props
+    ├── variant.types.ts       # BaseVariantProps (shared by all variants)
+    ├── standard/
+    │   ├── StandardInput.tsx
+    │   └── StandardInput.types.ts
+    └── dropzone/
+        ├── DropzoneInput.tsx           # Orchestrator
+        ├── DropzoneInput.types.ts      # Extends BaseVariantProps
+        ├── useDropzoneFiles.ts         # State + logic hook
+        ├── validateDropzoneFiles.ts    # Pure validation utility
+        └── components/
+            ├── DragOverlay.tsx         # Translucent overlay
+            ├── DropzoneEmpty.tsx        # Empty state
+            ├── ImageGrid.tsx           # Thumbnail grid
+            └── FileList.tsx            # File rows list
 ```
+
