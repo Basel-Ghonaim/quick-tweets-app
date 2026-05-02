@@ -342,6 +342,7 @@
 
 .fileListName {
   flex: 1;
+  min-width: 0;
   font-size: var(--font-size-xs);
   font-weight: 500;
   color: var(--color-text-primary);

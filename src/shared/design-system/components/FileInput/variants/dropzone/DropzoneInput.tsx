@@ -59,7 +59,10 @@ export const DropzoneInput = ({
     );
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreviews(urls);
-    return () => urls.forEach((url) => { if (url) URL.revokeObjectURL(url); });
+    return () =>
+      urls.forEach((url) => {
+        if (url) URL.revokeObjectURL(url);
+      });
   }, [fileList]);
 
   // ── Drag counter (prevents flicker on child elements) ──
@@ -451,7 +454,7 @@ export const DropzoneInput = ({
       {/* File rows */}
       {fileList.map((file, index) => renderFileItem(file, index))}
 
-      {/* "Add more" row */}
+      {/* "Add more" row — only for multi-file mode */}
       {!isAtCapacity && (
         <button
           type="button"
@@ -460,7 +463,7 @@ export const DropzoneInput = ({
           aria-label="Add more files"
         >
           <PlusIcon size={16} />
-          <span>Add more files</span>
+          <span>{multiple ? "Add more files" : "Replace file"}</span>
         </button>
       )}
     </div>
