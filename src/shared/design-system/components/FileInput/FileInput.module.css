@@ -141,16 +141,15 @@
   width: 100%;
   min-height: 160px;
   padding: var(--space-6);
-  border: var(--border-width-medium, 2px) dashed var(--gray-200);
+  border: var(--border-width-medium, 2px) dashed var(--file-input-color, var(--color-primary-primary));
   border-radius: var(--border-radius-lg, 12px);
   background-color: transparent;
   cursor: pointer;
-  color: var(--color-text-secondary);
+  color: var(--file-input-color, var(--color-primary-primary));
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dropzoneWrapper:hover:not(.isDisabled *) {
-  border-color: var(--file-input-color, var(--color-primary-primary));
   background-color: var(--file-input-alpha, var(--color-primary-alpha));
 }
 
