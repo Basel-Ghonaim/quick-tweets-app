@@ -50,6 +50,7 @@ export const SchemaField = ({
       case "file":
         return (
           <FileInput
+            variant="avatar"
             name={name}
             label={label}
             onNativeChange={onChange}

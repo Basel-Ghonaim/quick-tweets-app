@@ -11,6 +11,10 @@
   width: 100%;
 }
 
+.avatarContainer {
+  align-items: center;
+}
+
 /* ─── Label ──────────────────────────────────────────────────────────────── */
 
 .label {
