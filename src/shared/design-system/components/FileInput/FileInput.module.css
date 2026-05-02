@@ -414,8 +414,8 @@
   gap: var(--space-1);
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.2s ease;
-  color: var(--color-text-secondary);
+  transition: all 0.25s ease;
+  color: var(--color-text-tertiary, #9ca3af);
 }
 
 /* ── Shape modifiers ── */
@@ -436,26 +436,27 @@
 /* ── Fill modifiers ── */
 
 .avatarDefault {
-  border: var(--border-width-thick, 2px) var(--avatar-border-style, dashed) var(--file-input-color, var(--color-primary-primary));
-  background-color: transparent;
-  color: var(--file-input-color, var(--color-primary-primary));
+  border: var(--border-width-thick, 2px) var(--avatar-border-style, dashed) var(--gray-200, #e5e7eb);
+  background-color: var(--gray-50, #f9fafb);
 }
 
 .avatarDefault:hover {
+  border-color: var(--file-input-color, var(--color-primary-primary));
   background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  color: var(--file-input-color, var(--color-primary-primary));
+  transform: scale(1.02);
 }
 
 .avatarOutline {
-  border: var(--border-width-thick, 2px) var(--avatar-border-style, dashed) var(--file-input-color, var(--color-primary-primary));
-  background-color: var(--file-input-alpha, var(--color-primary-alpha));
-  color: var(--file-input-color, var(--color-primary-primary));
+  border: var(--border-width-thick, 2px) var(--avatar-border-style, dashed) transparent;
+  background-color: var(--gray-100, #f3f4f6);
 }
 
 .avatarOutline:hover {
   background-color: var(--file-input-alpha, var(--color-primary-alpha));
-  filter: brightness(0.92);
+  color: var(--file-input-color, var(--color-primary-primary));
+  transform: scale(1.02);
 }
-
 
 /* ── Avatar text ── */
 
@@ -463,12 +464,18 @@
   font-size: var(--font-size-xs);
   font-weight: 500;
   user-select: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.avatarWrapper:hover .avatarText {
+  opacity: 1;
 }
 
 /* ── Disabled ── */
 
 .avatarWrapper.isDisabled {
-  opacity: 0.5;
+  opacity: 0.4;
   pointer-events: none;
   cursor: not-allowed;
 }
@@ -489,17 +496,53 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: filter 0.25s ease;
+}
+
+.avatarWrapper:hover .avatarPreviewImg {
+  filter: brightness(0.75);
 }
 
 /* ── Drag-over highlight ── */
 
 .avatarDragOver {
-  border-color: var(--file-input-color, var(--color-primary-primary)) !important;
+  box-shadow: 0 0 0 3px var(--file-input-color, var(--color-primary-primary)) !important;
   background-color: var(--file-input-alpha, var(--color-primary-alpha)) !important;
-  box-shadow: 0 0 0 3px var(--file-input-alpha, var(--color-primary-alpha));
 }
 
-/* ── Hover overlay (Delete / Replace) ── */
+.avatarDragOver .avatarText {
+  color: var(--file-input-color, var(--color-primary-primary));
+  opacity: 1;
+}
+
+/* ── Edit badge (bottom-right floating button on filled state) ── */
+
+.avatarEditBadge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color-text-secondary, #6b7280);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 3;
+  opacity: 1;
+}
+
+.avatarEditBadge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  color: var(--file-input-color, var(--color-primary-primary));
+}
+
+/* ── Hover overlay (subtle — only on filled state) ── */
 
 .avatarOverlay {
   position: absolute;
@@ -507,10 +550,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.25s ease;
+  z-index: 2;
 }
 
 .avatarWrapper:hover .avatarOverlay {
@@ -519,7 +561,7 @@
 
 .avatarOverlayActions {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .avatarOverlayBtn {
@@ -528,21 +570,21 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-secondary, #6b7280);
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 .avatarOverlayBtn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: #fff;
   transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .avatarOverlayBtnDanger:hover {
-  background: rgba(239, 68, 68, 0.6);
-  border-color: rgba(239, 68, 68, 0.8);
+  color: var(--color-error-primary, #ef4444);
 }
