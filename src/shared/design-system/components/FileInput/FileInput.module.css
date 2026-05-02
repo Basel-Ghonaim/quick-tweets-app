@@ -422,14 +422,14 @@
 /* ── Shape modifiers ── */
 
 .avatarCircle {
-  width: 120px;
-  height: 120px;
+  width: var(--avatar-size, 120px);
+  height: var(--avatar-size, 120px);
   border-radius: 50%;
 }
 
 .avatarRectangle {
   width: 100%;
-  max-width: 240px;
+  max-width: var(--avatar-size, 240px);
   aspect-ratio: 4 / 3;
   border-radius: var(--border-radius-lg, 12px);
 }
@@ -437,7 +437,7 @@
 /* ── Fill modifiers ── */
 
 .avatarDefault {
-  border: var(--border-width-thick, 2px) dashed var(--file-input-color, var(--color-primary-primary));
+  border: var(--border-width-thick, 2px) var(--avatar-border-style, dashed) var(--file-input-color, var(--color-primary-primary));
   background-color: transparent;
   color: var(--file-input-color, var(--color-primary-primary));
 }
@@ -447,7 +447,7 @@
 }
 
 .avatarOutline {
-  border: none;
+  border: var(--border-width-thick, 2px) var(--avatar-border-style, dashed) var(--file-input-color, var(--color-primary-primary));
   background-color: var(--file-input-alpha, var(--color-primary-alpha));
   color: var(--file-input-color, var(--color-primary-primary));
 }

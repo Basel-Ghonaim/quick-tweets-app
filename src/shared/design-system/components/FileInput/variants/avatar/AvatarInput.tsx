@@ -32,6 +32,8 @@ export const AvatarInput = ({
   color,
   avatarShape,
   avatarFill,
+  avatarBorder,
+  avatarSize,
   onChange,
   onNativeChange,
   onValidationError,
@@ -51,6 +53,8 @@ export const AvatarInput = ({
   const dynamicStyles = {
     "--file-input-color": `var(--color-${color}-primary)`,
     "--file-input-alpha": `var(--color-${color}-alpha)`,
+    "--avatar-size": `${avatarSize}px`,
+    "--avatar-border-style": avatarBorder,
   } as React.CSSProperties;
 
   // ── Container classes ──

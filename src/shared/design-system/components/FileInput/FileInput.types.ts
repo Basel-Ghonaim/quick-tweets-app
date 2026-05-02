@@ -11,6 +11,9 @@ export type AvatarShape = "circle" | "rectangle";
 /** Avatar background style — only applies when variant="avatar" */
 export type AvatarFill = "default" | "outline";
 
+/** Avatar border style — only applies when variant="avatar" */
+export type AvatarBorder = "dashed" | "solid" | "none";
+
 // ─── File Item (for multi-file list in Phase 4) ─────────────────────────────
 
 /** Status of an individual file in the list */
@@ -55,6 +58,12 @@ export interface FileInputProps {
 
   /** Avatar background style — only used when variant="avatar" */
   avatarFill?: AvatarFill;
+
+  /** Avatar border style — dashed, solid, or none */
+  avatarBorder?: AvatarBorder;
+
+  /** Avatar size in pixels (width & height for circle, base size for rectangle) */
+  avatarSize?: number;
 
   // ── Value (controlled) ──
 

@@ -1,4 +1,4 @@
-import type { AvatarShape, AvatarFill } from "../FileInput.types";
+import type { AvatarShape, AvatarFill, AvatarBorder } from "../FileInput.types";
 
 /**
  * Shared props interface for all FileInput variants.
@@ -46,6 +46,12 @@ export interface BaseVariantProps {
 
   /** Avatar background style — default or outline (only for avatar variant) */
   avatarFill: AvatarFill;
+
+  /** Avatar border style — dashed, solid, or none (only for avatar variant) */
+  avatarBorder: AvatarBorder;
+
+  /** Avatar size in pixels (only for avatar variant) */
+  avatarSize: number;
 
   /** Whether the input has a validation error from parent */
   isInvalid: boolean;

@@ -287,3 +287,40 @@ export const AvatarSuccess: Story = {
     avatarFill: "outline",
   },
 };
+
+export const AvatarSolidBorder: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Solid Border",
+    avatarBorder: "solid",
+    avatarFill: "outline",
+    color: "info",
+  },
+};
+
+export const AvatarNoBorder: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "No Border",
+    avatarBorder: "none",
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarLarge: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Large Avatar (180px)",
+    avatarSize: 180,
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarSmall: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Small Avatar (80px)",
+    avatarSize: 80,
+    avatarFill: "outline",
+  },
+};
