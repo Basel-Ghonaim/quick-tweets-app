@@ -278,3 +278,12 @@ export const AvatarWithError: Story = {
     errorMessage: "Profile picture is required",
   },
 };
+
+export const AvatarSuccess: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Avatar (Success Color)",
+    color: "success",
+    avatarFill: "outline",
+  },
+};

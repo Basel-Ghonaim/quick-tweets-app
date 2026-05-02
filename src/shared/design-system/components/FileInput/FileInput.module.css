@@ -437,24 +437,26 @@
 /* ── Fill modifiers ── */
 
 .avatarDefault {
-  border: var(--border-width-thick, 2px) dashed var(--gray-300);
+  border: var(--border-width-thick, 2px) dashed var(--file-input-color, var(--color-primary-primary));
   background-color: transparent;
+  color: var(--file-input-color, var(--color-primary-primary));
 }
 
 .avatarDefault:hover {
-  border-color: var(--file-input-color, var(--color-primary-primary));
-  color: var(--file-input-color, var(--color-primary-primary));
   background-color: var(--file-input-alpha, var(--color-primary-alpha));
 }
 
 .avatarOutline {
   border: none;
-  background-color: var(--gray-100);
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  color: var(--file-input-color, var(--color-primary-primary));
 }
 
 .avatarOutline:hover {
-  background-color: var(--gray-200);
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  filter: brightness(0.92);
 }
+
 
 /* ── Avatar text ── */
 
