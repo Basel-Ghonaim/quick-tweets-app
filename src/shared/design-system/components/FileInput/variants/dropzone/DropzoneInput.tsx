@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { UploadIcon, TrashIcon, XIcon, PlusIcon } from "@shared/design-system/icons";
+import {
+  UploadIcon,
+  TrashIcon,
+  XIcon,
+  PlusIcon,
+} from "@shared/design-system/icons";
 import { formatSize } from "@shared/design-system/utils";
 import styles from "../../FileInput.module.css";
 import type { DropzoneInputProps } from "./DropzoneInput.types";
@@ -50,6 +55,7 @@ export const DropzoneInput = ({
   useEffect(() => {
     if (!isImageOnly) return;
     const urls = fileList.map((file) => URL.createObjectURL(file));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPreviews(urls);
     return () => urls.forEach((url) => URL.revokeObjectURL(url));
   }, [fileList, isImageOnly]);
@@ -89,7 +95,9 @@ export const DropzoneInput = ({
 
     // Validate accept — browser enforces for <input>, NOT for drop
     if (accept) {
-      const acceptedTypes = accept.split(",").map((t) => t.trim().toLowerCase());
+      const acceptedTypes = accept
+        .split(",")
+        .map((t) => t.trim().toLowerCase());
       const rejected = fileArray.find((file) => {
         return !acceptedTypes.some((pattern) => {
           if (pattern.endsWith("/*")) {
@@ -156,10 +164,16 @@ export const DropzoneInput = ({
     if (!files || files.length === 0) return;
 
     const valid = validateFiles(files);
-    if (!valid) { e.target.value = ""; return; }
+    if (!valid) {
+      e.target.value = "";
+      return;
+    }
 
     const accumulated = accumulateFiles(valid);
-    if (!accumulated) { e.target.value = ""; return; }
+    if (!accumulated) {
+      e.target.value = "";
+      return;
+    }
 
     onNativeChange?.(e);
     forwardFiles(accumulated);
@@ -248,10 +262,7 @@ export const DropzoneInput = ({
       onChange={handleFileChange}
       aria-invalid={isInvalid}
       aria-describedby={
-        [
-          isInvalid && errorMessage ? errorId : "",
-          helperText ? helperId : "",
-        ]
+        [isInvalid && errorMessage ? errorId : "", helperText ? helperId : ""]
           .filter(Boolean)
           .join(" ") || undefined
       }
@@ -293,7 +304,9 @@ export const DropzoneInput = ({
           ) : (
             <>
               <UploadIcon size={32} />
-              <span className={styles.dropzoneTitle}>Drag & drop images here</span>
+              <span className={styles.dropzoneTitle}>
+                Drag & drop images here
+              </span>
               <span className={styles.dropzoneSubtext}>or click to browse</span>
             </>
           )}
@@ -406,7 +419,9 @@ export const DropzoneInput = ({
         {fileList.length > 0 && !isDragOver && (
           <>
             <ul className={styles.dropzoneFileList}>
-              {fileList.slice(0, 3).map((file, index) => renderFileItem(file, index))}
+              {fileList
+                .slice(0, 3)
+                .map((file, index) => renderFileItem(file, index))}
             </ul>
             <span className={styles.dropzoneSubtext}>
               {isAtCapacity
@@ -422,7 +437,9 @@ export const DropzoneInput = ({
       {/* Overflow files below the box */}
       {fileList.length > 3 && !isDragOver && (
         <ul className={styles.dropzoneFileList}>
-          {fileList.slice(3).map((file, index) => renderFileItem(file, index + 3))}
+          {fileList
+            .slice(3)
+            .map((file, index) => renderFileItem(file, index + 3))}
         </ul>
       )}
     </>
