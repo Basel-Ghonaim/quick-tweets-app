@@ -8,3 +8,5 @@ export { SearchIcon } from "./SearchIcon";
 export { ChevronDownIcon } from "./ChevronDownIcon";
 export { UserIcon } from "./UserIcon";
 export { CameraIcon } from "./CameraIcon";
+export { PlusIcon } from "./PlusIcon";
+export { FileTypeIcon } from "./FileTypeIcon";

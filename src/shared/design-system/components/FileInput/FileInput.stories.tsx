@@ -93,3 +93,119 @@ export const ImagesOnly: Story = {
     helperText: "Only image files are accepted",
   },
 };
+
+export const DropzoneDisabled: Story = {
+  args: {
+    ...Dropzone.args,
+    disabled: true,
+  },
+};
+
+export const DropzoneWithHelper: Story = {
+  args: {
+    ...Dropzone.args,
+    helperText: "Drag files here or click to browse",
+    maxSize: 5 * 1024 * 1024,
+  },
+};
+
+export const DropzoneMultiFile: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents",
+    multiple: true,
+    helperText: "Drop multiple files — each drop adds to the list",
+  },
+};
+
+export const DropzoneMaxFiles: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents (max 3)",
+    multiple: true,
+    maxFiles: 3,
+    helperText: "Maximum 3 files allowed",
+  },
+};
+
+export const DropzoneMinFiles: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents (min 2)",
+    multiple: true,
+    minFiles: 2,
+    helperText: "Minimum 2 files required — cannot delete below 2",
+  },
+};
+
+export const DropzoneImageGrid: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Images",
+    accept: "image/*",
+    multiple: true,
+    helperText: "Images display as a grid — add, delete, and drag to upload",
+  },
+};
+
+export const DropzoneImageGridMax5: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Images (max 5)",
+    accept: "image/*",
+    multiple: true,
+    maxFiles: 5,
+    helperText: "Maximum 5 images — 'Add more' disappears at limit",
+  },
+};
+
+export const DropzoneImageGridSuccess: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Gallery Upload",
+    accept: "image/*",
+    multiple: true,
+    color: "success",
+    helperText: "Success color theme for image grid",
+  },
+};
+
+export const DropzoneFileList: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents",
+    multiple: true,
+    helperText: "Files show as a list with type icons — add, delete, drag to upload",
+  },
+};
+
+export const DropzonePdfOnly: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload PDF Files",
+    accept: "application/pdf",
+    multiple: true,
+    helperText: "Only PDF files are accepted",
+  },
+};
+
+export const DropzonePdfMax5: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload PDF (max 5)",
+    accept: "application/pdf",
+    multiple: true,
+    maxFiles: 5,
+    helperText: "Maximum 5 PDF files — 'Add more' disappears at limit",
+  },
+};
+
+export const DropzoneMixed: Story = {
+  args: {
+    ...Dropzone.args,
+    label: "Upload Documents & Images",
+    accept: "image/*,application/pdf,.docx,.xlsx",
+    multiple: true,
+    helperText: "Mixed types: images + documents — uses file list mode",
+  },
+};

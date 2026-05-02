@@ -115,11 +115,293 @@
   box-shadow: 0 0 0 3px var(--color-error-alpha, rgba(239, 68, 68, 0.15));
 }
 
+.isInvalid .dropzoneWrapper {
+  border-color: var(--color-error-primary);
+}
+
+.isInvalid .dropzoneWrapper:focus-visible {
+  box-shadow: 0 0 0 3px var(--color-error-alpha, rgba(239, 68, 68, 0.15));
+}
+
 /* ─── Disabled state ─────────────────────────────────────────────────────── */
 
 .isDisabled {
   opacity: 0.6;
   pointer-events: none;
+}
+
+/* ─── Dropzone Variant ───────────────────────────────────────────────────── */
+
+.dropzoneWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 160px;
+  padding: var(--space-6);
+  border: var(--border-width-medium, 2px) dashed var(--gray-200);
+  border-radius: var(--border-radius-lg, 12px);
+  background-color: transparent;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropzoneWrapper:hover:not(.isDisabled *) {
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+}
+
+.dropzoneWrapper:focus-visible {
+  outline: none;
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  box-shadow: 0 0 0 3px var(--file-input-alpha, var(--color-primary-alpha));
+}
+
+/* Active drag-over state — file being dragged over the zone */
+.isDragOver {
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  border-style: solid;
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  transform: scale(1.01);
+}
+
+.dropzoneTitle {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: var(--line-height-base, 1.5);
+}
+
+.dropzoneSubtext {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-base, 1.5);
+}
+
+/* ─── Image Grid Mode ────────────────────────────────────────────────────── */
+
+.imageGridWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 80px);
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.imageGridOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background-color: var(--file-input-alpha, rgba(59, 130, 246, 0.1));
+  border: var(--border-width-medium, 2px) solid var(--file-input-color, var(--color-primary-primary));
+  border-radius: var(--border-radius-lg, 12px);
+  z-index: 2;
+  color: var(--file-input-color, var(--color-primary-primary));
+}
+
+/* ─── Thumbnails ─────────────────────────────────────────────────────────── */
+
+.thumbnailWrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  border: var(--border-width-thin) solid var(--gray-200);
+  transition: border-color 0.15s ease;
+}
+
+.thumbnailWrapper:hover {
+  border-color: var(--file-input-color, var(--color-primary-primary));
+}
+
+.thumbnailImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.thumbnailRemoveBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.thumbnailWrapper:hover .thumbnailRemoveBtn {
+  opacity: 1;
+}
+
+.thumbnailRemoveBtn:hover {
+  background-color: var(--color-error-primary);
+}
+
+/* ─── "Add more" Button ──────────────────────────────────────────────────── */
+
+.addMoreBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 80px;
+  height: 80px;
+  border: var(--border-width-medium, 2px) dashed var(--gray-200);
+  border-radius: var(--border-radius-md);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.addMoreBtn:hover {
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  color: var(--file-input-color, var(--color-primary-primary));
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+}
+
+/* ─── File List Mode (non-image) ─────────────────────────────────────────── */
+
+.fileListWrapper {
+  position: relative;
+  width: 100%;
+  border: var(--border-width-thin) solid var(--gray-200);
+  border-radius: var(--border-radius-lg, 12px);
+  overflow: hidden;
+  background-color: var(--color-surface, white);
+}
+
+.fileListOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background-color: var(--file-input-alpha, rgba(59, 130, 246, 0.1));
+  border: var(--border-width-medium, 2px) solid var(--file-input-color, var(--color-primary-primary));
+  border-radius: var(--border-radius-lg, 12px);
+  z-index: 2;
+  color: var(--file-input-color, var(--color-primary-primary));
+}
+
+.fileListRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--gray-100);
+  min-width: 0;
+  transition: background-color 0.15s ease;
+}
+
+.fileListRow:last-of-type {
+  border-bottom: none;
+}
+
+.fileListRow:hover {
+  background-color: var(--color-surface-hover, rgba(0, 0, 0, 0.02));
+}
+
+.fileListThumb {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--border-radius-sm, 4px);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--gray-200);
+}
+
+.fileListName {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.fileListSize {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fileListRemoveBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--border-radius-sm, 4px);
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.fileListRemoveBtn:hover {
+  color: var(--color-error-primary);
+  background-color: var(--color-error-alpha, rgba(239, 68, 68, 0.1));
+}
+
+/* ─── "Add more" Row (file list mode) ────────────────────────────────────── */
+
+.addMoreRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: calc(100% - var(--space-2) * 2);
+  margin: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width-medium, 2px) dashed var(--gray-200);
+  border-radius: var(--border-radius-md);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.addMoreRow:hover {
+  border-color: var(--file-input-color, var(--color-primary-primary));
+  color: var(--file-input-color, var(--color-primary-primary));
+  background-color: var(--file-input-alpha, var(--color-primary-alpha));
 }
 
 /* ─── Placeholder (temporary — for future variants) ──────────────────────── */
@@ -132,3 +414,4 @@
   color: var(--color-text-secondary);
   text-align: center;
 }
+
