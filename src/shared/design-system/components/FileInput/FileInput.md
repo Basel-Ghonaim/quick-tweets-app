@@ -20,6 +20,9 @@ A multi-variant file upload component for the design system. Replaces the native
 | `label` | `string` | — | Label rendered above the input |
 | `variant` | `"standard" \| "dropzone" \| "avatar"` | `"standard"` | Visual variant |
 | `avatarShape` | `"circle" \| "rectangle"` | `"circle"` | Avatar shape (only for avatar variant) |
+| `avatarFill` | `"default" \| "outline"` | `"default"` | Avatar background style (only for avatar variant) |
+| `avatarBorder` | `"dashed" \| "solid" \| "none"` | `"dashed"` | Avatar border style (only for avatar variant) |
+| `avatarSize` | `number` | `120` | Avatar size in pixels (only for avatar variant) |
 | `value` | `File \| File[] \| null` | — | Controlled file value |
 | `onChange` | `(files) => void` | — | Called when file(s) are selected |
 | `onNativeChange` | `ChangeEventHandler` | — | Raw native event for form engines |
@@ -44,9 +47,89 @@ A multi-variant file upload component for the design system. Replaces the native
 |---|---|
 | `FileInputVariant` | `"standard" \| "dropzone" \| "avatar"` |
 | `AvatarShape` | `"circle" \| "rectangle"` |
+| `AvatarFill` | `"default" \| "outline"` |
+| `AvatarBorder` | `"dashed" \| "solid" \| "none"` |
 | `FileInputColor` | `"primary" \| "secondary" \| "success" \| "warning" \| "error" \| "info"` |
 | `FileItemStatus` | `"idle" \| "uploading" \| "success" \| "error"` |
 | `FileItem` | `{ id, file, preview?, status, progress, error? }` |
+
+### How to Use
+
+#### Profile Picture (Circle + Outline)
+
+```tsx
+<FileInput
+  name="profilePicture"
+  label="Profile Picture"
+  variant="avatar"
+  avatarShape="circle"
+  avatarFill="outline"
+  accept="image/*"
+  maxSize={5 * 1024 * 1024}
+  helperText="PNG, JPG up to 5MB"
+  onChange={(file) => console.log(file)}
+/>
+```
+
+#### Cover Image (Rectangle + Solid Border)
+
+```tsx
+<FileInput
+  name="coverImage"
+  label="Cover Image"
+  variant="avatar"
+  avatarShape="rectangle"
+  avatarFill="default"
+  avatarBorder="solid"
+  avatarSize={200}
+  accept="image/*"
+  onChange={(file) => console.log(file)}
+/>
+```
+
+#### Video Thumbnail (Circle + No Border + Custom Color)
+
+```tsx
+<FileInput
+  name="videoThumb"
+  label="Video Thumbnail"
+  variant="avatar"
+  avatarShape="circle"
+  avatarFill="outline"
+  avatarBorder="none"
+  avatarSize={150}
+  color="success"
+  accept="video/*"
+  helperText="MP4, WebM up to 10MB"
+/>
+```
+
+#### Dropzone (Multi-File)
+
+```tsx
+<FileInput
+  name="documents"
+  label="Upload Documents"
+  variant="dropzone"
+  multiple
+  maxFiles={5}
+  accept=".pdf,.doc,.docx"
+  maxSize={10 * 1024 * 1024}
+  helperText="PDF, DOC up to 10MB each"
+/>
+```
+
+#### Standard (Simple File Pick)
+
+```tsx
+<FileInput
+  name="resume"
+  label="Resume"
+  variant="standard"
+  accept=".pdf"
+  maxSize={5 * 1024 * 1024}
+/>
+```
 
 ---
 
