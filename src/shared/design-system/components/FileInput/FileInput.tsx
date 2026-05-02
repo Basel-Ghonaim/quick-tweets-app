@@ -1,7 +1,7 @@
 import { forwardRef, useId, useRef, useState } from "react";
 import styles from "./FileInput.module.css";
 import type { FileInputProps } from "./FileInput.types";
-import { StandardInput, DropzoneInput } from "./variants";
+import { StandardInput, DropzoneInput, AvatarInput } from "./variants";
 
 export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
   (
@@ -9,6 +9,10 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       name,
       label,
       variant = "standard",
+      avatarShape = "circle",
+      avatarFill = "default",
+      avatarBorder = "dashed",
+      avatarSize = 120,
       color = "primary",
       accept,
       maxSize,
@@ -66,6 +70,10 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
               errorMessage={errorMessage}
               helperText={helperText}
               color={color}
+              avatarShape={avatarShape}
+              avatarFill={avatarFill}
+              avatarBorder={avatarBorder}
+              avatarSize={avatarSize}
               children={children}
               onChange={onChange}
               onNativeChange={onNativeChange}
@@ -91,6 +99,10 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
               errorMessage={errorMessage}
               helperText={helperText}
               color={color}
+              avatarShape={avatarShape}
+              avatarFill={avatarFill}
+              avatarBorder={avatarBorder}
+              avatarSize={avatarSize}
               onChange={onChange}
               onNativeChange={onNativeChange}
               onValidationError={setValidationError}
@@ -98,7 +110,30 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           );
 
         case "avatar":
-          return <div className={styles.placeholder}>Avatar (Phase 3)</div>;
+          return (
+            <AvatarInput
+              inputRef={inputRef}
+              generatedId={generatedId}
+              errorId={errorId}
+              helperId={helperId}
+              name={name}
+              accept={accept}
+              maxSize={maxSize}
+              multiple={false}
+              disabled={disabled}
+              isInvalid={isInvalid}
+              errorMessage={errorMessage}
+              helperText={helperText}
+              color={color}
+              avatarShape={avatarShape}
+              avatarFill={avatarFill}
+              avatarBorder={avatarBorder}
+              avatarSize={avatarSize}
+              onChange={onChange}
+              onNativeChange={onNativeChange}
+              onValidationError={setValidationError}
+            />
+          );
 
         default:
           return null;

@@ -11,6 +11,10 @@ const meta = {
       control: "select",
       options: ["primary", "secondary", "success", "warning", "error", "info"],
     },
+    avatarShape: { control: "select", options: ["circle", "rectangle"] },
+    avatarFill: { control: "select", options: ["default", "outline"] },
+    avatarBorder: { control: "select", options: ["dashed", "solid", "none"] },
+    avatarSize: { control: { type: "number", min: 40, max: 300, step: 10 } },
     isInvalid: { control: "boolean" },
     disabled: { control: "boolean" },
     fullWidth: { control: "boolean" },
@@ -207,5 +211,120 @@ export const DropzoneMixed: Story = {
     accept: "image/*,application/pdf,.docx,.xlsx",
     multiple: true,
     helperText: "Mixed types: images + documents — uses file list mode",
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AVATAR VARIANT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const AvatarCircle: Story = {
+  args: {
+    name: "avatar",
+    label: "Profile Picture",
+    variant: "avatar",
+    avatarShape: "circle",
+    avatarFill: "default",
+    accept: "image/*",
+    helperText: "PNG, JPG up to 5MB",
+  },
+};
+
+export const AvatarCircleOutline: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Profile Picture (Outline)",
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarRectangle: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Cover Image",
+    avatarShape: "rectangle",
+    avatarFill: "default",
+  },
+};
+
+export const AvatarRectangleOutline: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Cover Image (Outline)",
+    avatarShape: "rectangle",
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarDisabled: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Avatar (Disabled)",
+    avatarFill: "outline",
+    disabled: true,
+  },
+};
+
+export const AvatarVideo: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Video Avatar",
+    accept: "video/*",
+    helperText: "MP4, WebM up to 10MB",
+  },
+};
+
+export const AvatarWithError: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Avatar (Error)",
+    isInvalid: true,
+    errorMessage: "Profile picture is required",
+  },
+};
+
+export const AvatarSuccess: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Avatar (Success Color)",
+    color: "success",
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarSolidBorder: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Solid Border",
+    avatarBorder: "solid",
+    avatarFill: "outline",
+    color: "info",
+  },
+};
+
+export const AvatarNoBorder: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "No Border",
+    avatarBorder: "none",
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarLarge: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Large Avatar (180px)",
+    avatarSize: 180,
+    avatarFill: "outline",
+  },
+};
+
+export const AvatarSmall: Story = {
+  args: {
+    ...AvatarCircle.args,
+    label: "Small Avatar (80px)",
+    avatarSize: 80,
+    avatarFill: "outline",
   },
 };
