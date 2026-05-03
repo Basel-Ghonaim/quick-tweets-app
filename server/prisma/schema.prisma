@@ -1,0 +1,39 @@
+// ─── Prisma Schema — Quick Tweets Database ──────────────────────────────────
+//
+// Current purpose:
+// - Defines the User model for authentication (register, login, profile)
+// - Configures PostgreSQL as the datasource
+// - Auto-generates Prisma Client for type-safe database queries
+//
+// Future expansion:
+// - Post model (id, content, image, userId, createdAt)
+// - Comment model (id, content, postId, userId, createdAt)
+// - Relations: User → Post (1:N), Post → Comment (1:N), User → Comment (1:N)
+// - Indexes for performance (userId on posts, postId on comments)
+// - Soft delete (deletedAt field) for data recovery
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  name          String
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  profileImage  String?  @map("profile_image")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Future relations:
+  // posts    Post[]
+  // comments Comment[]
+
+  @@map("users")
+}
