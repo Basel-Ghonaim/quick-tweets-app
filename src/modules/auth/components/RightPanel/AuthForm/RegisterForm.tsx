@@ -26,19 +26,25 @@ export const RegisterForm = () => {
         </div>
       )}
 
-      {fields.map((field) => (
-        <SchemaField
-          key={field.key}
-          name={field.key}
-          type={field.type}
-          label={field.label}
-          placeholder={field.placeholder}
-          value={values[field.key]}
-          error={errors[field.key]}
-          onChange={handleChange}
-          span={field.span}
-        />
-      ))}
+      {(() => {
+        const firstTextIndex = fields.findIndex((f) =>
+          ["text", "email", "password", "number"].includes(f.type),
+        );
+        return fields.map((field, index) => (
+          <SchemaField
+            key={field.key}
+            name={field.key}
+            type={field.type}
+            label={field.label}
+            placeholder={field.placeholder}
+            value={values[field.key]}
+            error={errors[field.key]}
+            onChange={handleChange}
+            span={field.span}
+            autoFocus={index === firstTextIndex}
+          />
+        ));
+      })()}
 
       <Button
         type="submit"
