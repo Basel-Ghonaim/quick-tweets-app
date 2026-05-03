@@ -27,7 +27,7 @@ export const LoginForm = () => {
         </div>
       )}
 
-      {fields.map((field) => (
+      {fields.map((field, index) => (
         <SchemaField
           key={field.key}
           name={field.key}
@@ -38,6 +38,7 @@ export const LoginForm = () => {
           error={errors[field.key]}
           onChange={handleChange}
           span={field.span}
+          autoFocus={index === 0}
         />
       ))}
 

@@ -9,4 +9,5 @@ export interface SchemaFieldProps {
   error: string | null;
   onChange: FormChangeHandler;
   span?: FieldSpan;
+  autoFocus?: boolean;
 }
