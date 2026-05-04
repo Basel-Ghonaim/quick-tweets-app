@@ -105,6 +105,24 @@ server/
 
 ---
 
-## Phase 3 — Auth Module (Step 3)
+## Root-Level Scripts (Step 6)
+
+**Date:** 2026-05-04
+**Branch:** `chore/root-server-scripts`
+
+Added convenience scripts to the root `package.json`:
+
+| Script | Command | What it does |
+|---|---|---|
+| `npm run server` | `npm run dev --prefix server` | Starts backend only |
+| `npm run dev:all` | `npm run dev & npm run server` | Starts frontend + backend together |
+
+### Commits
+
+- `3fc891c` — add root-level server convenience scripts
+
+---
+
+## Phase 3 — Auth Module
 
 _To be documented when executed._
