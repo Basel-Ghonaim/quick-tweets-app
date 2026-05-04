@@ -66,7 +66,42 @@ server/
 
 ## Phase 2 — Package Installation (Step 2)
 
-_To be documented when executed._
+**Date:** 2026-05-04
+**Branch:** `chor/install-backend-package`
+
+### Production Dependencies (8)
+
+| Package | Version | Purpose |
+|---|---|---|
+| `express` | ^5.2.1 | HTTP framework |
+| `cors` | ^2.8.6 | Cross-origin requests (frontend ↔ backend) |
+| `dotenv` | ^17.4.2 | Load `.env` variables |
+| `zod` | ^4.4.3 | Request validation schemas |
+| `bcrypt` | ^6.0.0 | Password hashing |
+| `jsonwebtoken` | ^9.0.3 | JWT token creation & verification |
+| `multer` | ^2.1.1 | File upload handling (profile images) |
+| `@prisma/client` | ^7.8.0 | Database client (auto-generated) |
+
+### Dev Dependencies (8)
+
+| Package | Version | Purpose |
+|---|---|---|
+| `typescript` | ^6.0.3 | TypeScript compiler |
+| `tsx` | ^4.21.0 | Run TypeScript directly (dev server, watch mode) |
+| `prisma` | ^7.8.0 | Prisma CLI (migrations, generate, studio) |
+| `@types/express` | ^5.0.6 | Express type definitions |
+| `@types/cors` | ^2.8.19 | CORS type definitions |
+| `@types/bcrypt` | ^6.0.0 | bcrypt type definitions |
+| `@types/jsonwebtoken` | ^9.0.10 | JWT type definitions |
+| `@types/multer` | ^2.1.0 | Multer type definitions |
+
+### Additional Changes
+
+- Added `server/.env` to root `.gitignore` to prevent committing secrets
+
+### Commits
+
+- `dcd4f44` — install all backend dependencies + update .gitignore
 
 ---
 
