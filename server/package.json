@@ -1,0 +1,16 @@
+{
+  "name": "quick-tweets-server",
+  "version": "1.0.0",
+  "description": "Backend API for Quick Tweets — Express + Prisma + PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
