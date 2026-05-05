@@ -131,3 +131,49 @@ It handles password hashing, JWT generation, token rotation, and throws typed `A
 - [ ] Documentation updated in `setup-log.md`
 
 **Related:** Issue #2 (parent), Sub-Issue #2.1 (repository), WorkingPrinciples.md (SRP, DIP, Factory Pattern, Error Normalization)
+
+---
+
+### Sub-Issue #2.3: API Layer — Routes, Controller, Validators, Middleware
+
+- **Title:** feat(server): add auth API layer — routes, controller, Zod validators, authGuard
+- **Labels:** [backend, auth, api]
+- **Branch:** `feature/auth-module-step3-api`
+- **Parent:** Issue #2
+- **Description:**
+
+Build the HTTP layer that exposes the auth service (Step 2) as REST endpoints.
+This step connects the client to the business logic via Express routes, Zod validation, and JWT middleware.
+
+**Endpoints:**
+
+| Method | Path | Purpose | Auth Required |
+|---|---|---|---|
+| `POST` | `/api/v1/auth/register` | Create new account | No |
+| `POST` | `/api/v1/auth/login` | Authenticate user | No |
+| `POST` | `/api/v1/auth/logout` | Invalidate refresh token | No (token in body) |
+| `POST` | `/api/v1/auth/refresh` | Get new token pair | No (refresh token in body) |
+| `GET` | `/api/v1/auth/me` | Get current user profile | Yes (access token) |
+
+**Files:**
+
+| File | Purpose | Principle |
+|---|---|---|
+| `middleware/validate.ts` | Generic Zod validation middleware | SRP — only validates, reusable across all modules |
+| `middleware/authGuard.ts` | JWT verification middleware, attaches `userId` to `req` | SRP — only auth checking |
+| `modules/auth/auth.validator.ts` | Zod schemas: `registerSchema`, `loginSchema`, `refreshSchema`, `logoutSchema` | SRP — only schema definitions |
+| `modules/auth/auth.controller.ts` | Parse request → call service → format response | SRP — only HTTP concerns |
+| `modules/auth/auth.routes.ts` | Express router with endpoint definitions | SRP — only route wiring |
+| `app.ts` [MODIFY] | Mount auth routes at `/api/v1/auth` | OCP — extend by adding routes |
+
+**Acceptance Criteria:**
+
+- [ ] Zod schemas validate all auth endpoints with proper constraints
+- [ ] `validate()` middleware rejects invalid requests with 400 + field-level errors
+- [ ] `authGuard` middleware verifies JWT and attaches `userId` to request
+- [ ] Controller calls service and returns proper HTTP status codes (200, 201, 204)
+- [ ] Routes wire validators, guards, and controller together
+- [ ] Auth routes mounted in `app.ts` at `/api/v1/auth`
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #2 (parent), Sub-Issue #2.2 (service), WorkingPrinciples.md (SRP, OCP, Layered Architecture)
