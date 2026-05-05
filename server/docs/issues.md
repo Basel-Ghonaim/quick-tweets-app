@@ -82,3 +82,52 @@ This step provides the foundation that Step 2 (service) will consume through int
 - [ ] Documentation updated in `setup-log.md`
 
 **Related:** Issue #2 (parent), WorkingPrinciples.md (DIP, SRP, ISP, Factory Pattern)
+
+---
+
+### Sub-Issue #2.2: Auth Service — Business Logic (bcrypt, JWT, error handling)
+
+- **Title:** feat(server): add auth service with password hashing, JWT tokens, and error handling
+- **Labels:** [backend, auth, service]
+- **Branch:** `feature/auth-module-step2-service`
+- **Parent:** Issue #2
+- **Description:**
+
+Implement the business logic layer for authentication.
+This layer consumes `IAuthRepository` and `ITokenRepository` (from Step 1) via dependency injection.
+It handles password hashing, JWT generation, token rotation, and throws typed `AppError` instances.
+
+**Files:**
+
+| File | Purpose | Principle |
+|---|---|---|
+| `shared/utils/jwt.ts` | JWT utility: `generateAccessToken`, `generateRefreshToken`, `verifyAccessToken` | SRP — only token operations |
+| `modules/auth/auth.types.ts` [MODIFY] | Add `IAuthService` interface | DIP — controller depends on abstraction |
+| `modules/auth/auth.service.ts` | Business logic: register, login, logout, refreshToken | SRP — only auth rules |
+
+**Error Handling in the Service:**
+
+| Scenario | Error Thrown | Status Code |
+|---|---|---|
+| Username already exists | `AppError.conflict("Username already taken")` | 409 |
+| Email already exists | `AppError.conflict("Email already in use")` | 409 |
+| Username not found | `AppError.authentication("Invalid credentials")` | 401 |
+| Password mismatch | `AppError.authentication("Invalid credentials")` | 401 |
+| Refresh token not found | `AppError.authentication("Invalid refresh token")` | 401 |
+| Refresh token expired | `AppError.authentication("Refresh token expired")` | 401 |
+
+**Acceptance Criteria:**
+
+- [ ] `generateAccessToken(userId)` — JWT signed with `JWT_SECRET`, expires in `JWT_EXPIRES_IN`
+- [ ] `generateRefreshToken()` — crypto random UUID
+- [ ] `verifyAccessToken(token)` — returns decoded payload or throws
+- [ ] `IAuthService` interface added to `auth.types.ts`
+- [ ] `createAuthService(authRepo, tokenRepo)` — factory function
+- [ ] `register()` — check uniqueness → hash password → create user → generate tokens
+- [ ] `login()` — find user → compare password → generate tokens
+- [ ] `logout(refreshToken)` — delete refresh token from DB
+- [ ] `refreshToken(token)` — validate → rotate → return new tokens
+- [ ] All errors use `AppError` static methods (never raw `throw new Error()`)
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #2 (parent), Sub-Issue #2.1 (repository), WorkingPrinciples.md (SRP, DIP, Factory Pattern, Error Normalization)
