@@ -234,6 +234,52 @@ Creates two tables in PostgreSQL:
 
 ---
 
-### Step 2 — Auth Service
+### Step 2 — Auth Service (Business Logic)
+
+**Date:** 2026-05-05
+**Branch:** `feature/auth-module-step2-service`
+**Sub-Issue:** #2.2 (Auth Service)
+
+#### Files Created / Modified
+
+| File | Action | Purpose | Principle |
+|---|---|---|---|
+| `shared/utils/jwt.ts` | NEW | `generateAccessToken`, `generateRefreshToken`, `verifyAccessToken` | SRP — only token operations |
+| `shared/utils/index.ts` | NEW | Barrel export | ISP |
+| `modules/auth/auth.types.ts` | MODIFIED | Added `IAuthService`, `AuthResult`, `TokenRefreshResult`, `LoginInput`, `RegisterInput` | DIP — controller depends on abstraction |
+| `modules/auth/auth.service.ts` | NEW | Business logic: register, login, logout, refreshToken | SRP, DIP, Factory Pattern |
+
+#### Error Handling Strategy
+
+| Scenario | AppError Method | Status Code | Security Note |
+|---|---|---|---|
+| Username taken | `AppError.conflict()` | 409 | — |
+| Email taken | `AppError.conflict()` | 409 | — |
+| Wrong username | `AppError.authentication()` | 401 | Generic "Invalid credentials" — prevents username enumeration |
+| Wrong password | `AppError.authentication()` | 401 | Same generic message |
+| Invalid refresh token | `AppError.authentication()` | 401 | — |
+| Expired refresh token | `AppError.authentication()` | 401 | Token deleted from DB on expiry |
+
+#### Design Decisions
+
+| Decision | Reasoning | Principle |
+|---|---|---|
+| bcrypt salt rounds = 12 | ~250ms per hash — secure yet responsive | Security |
+| Refresh token = crypto UUID | Opaque — validated by DB lookup, not decoding | Security |
+| Token rotation on refresh | Old token deleted, new one created — stolen tokens become invalid | Security |
+| Generic "Invalid credentials" | Same message for wrong username and wrong password | Security (no enumeration) |
+| `createAuthService(authRepo?, tokenRepo?)` | Injectable repos for testing | DIP, Factory Pattern |
+| JWT type cast for `expiresIn` | `@types/jsonwebtoken` uses `StringValue`, not plain `string` | TypeScript compatibility |
+
+#### Commits
+
+- `d997e33` — issues: sub-issue #2.2
+- `98b7737` — JWT utility (generateAccessToken, generateRefreshToken, verifyAccessToken)
+- `cd3cfe2` — IAuthService interface + JWT type fix
+- `bf7aee8` — auth service implementation (register, login, logout, refreshToken)
+
+---
+
+### Step 3 — API Layer
 
 _To be documented when executed._
