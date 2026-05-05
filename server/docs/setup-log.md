@@ -123,6 +123,80 @@ Added convenience scripts to the root `package.json`:
 
 ---
 
+## Database Setup — Prisma v7 + PostgreSQL Migration
+
+**Date:** 2026-05-05
+**Branch:** `feature/prisma-v7-setup`
+**PR:** #123
+
+### Context
+
+Prisma v7 introduced breaking changes from v6. We adapted our setup before running the first migration.
+
+### Prisma v7 Breaking Changes Addressed
+
+| What changed | v6 (old) | v7 (what we did) |
+|---|---|---|
+| Generator provider | `prisma-client-js` | `prisma-client` |
+| Client output | Auto to `node_modules` | Explicit: `src/generated/prisma/` |
+| Database URL | `url` field in `schema.prisma` | `prisma.config.ts` file |
+| Client instantiation | `new PrismaClient()` | `new PrismaClient({ adapter })` with `@prisma/adapter-pg` |
+| Env loading | Automatic | Manual via `import "dotenv/config"` |
+
+### Files Created / Modified
+
+| File | What |
+|---|---|
+| `prisma.config.ts` [NEW] | Provides `DATABASE_URL` to Prisma CLI via `defineConfig()` |
+| `prisma/schema.prisma` [MODIFIED] | Updated generator + datasource + added `bio` + `RefreshToken` model |
+| `server/.env` [NEW, gitignored] | Local database credentials |
+
+### Migration: `20260505080727_init`
+
+Creates two tables in PostgreSQL:
+
+**`users` table:**
+
+| Column | Type | Constraints |
+|---|---|---|
+| `id` | SERIAL | Primary key |
+| `username` | TEXT | Unique |
+| `email` | TEXT | Unique |
+| `name` | TEXT | — |
+| `password_hash` | TEXT | — |
+| `profile_image` | TEXT | Nullable |
+| `bio` | TEXT | Default `""` |
+| `created_at` | TIMESTAMP | Default `now()` |
+| `updated_at` | TIMESTAMP | Auto-updated |
+
+**`refresh_tokens` table:**
+
+| Column | Type | Constraints |
+|---|---|---|
+| `id` | SERIAL | Primary key |
+| `token` | TEXT | Unique |
+| `user_id` | INTEGER | FK → `users.id` (cascade delete) |
+| `expires_at` | TIMESTAMP | — |
+| `created_at` | TIMESTAMP | Default `now()` |
+
+### New Package
+
+| Package | Purpose |
+|---|---|
+| `@prisma/adapter-pg` | PostgreSQL driver adapter required by Prisma v7 |
+
+### Gitignore Additions
+
+- `server/.env` — database credentials (never commit)
+- `server/src/generated` — auto-generated Prisma Client (regenerated via `npx prisma generate`)
+
+### Commits
+
+- `330b99b` — Prisma v7 config + schema changes
+- `8b36de2` — migration (tables created) + gitignore
+
+---
+
 ## Phase 3 — Auth Module
 
 _To be documented when executed._
