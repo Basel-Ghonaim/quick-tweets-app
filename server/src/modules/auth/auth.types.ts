@@ -8,7 +8,6 @@
  * - Defines RefreshTokenRecord shape for token queries
  *
  * Future expansion:
- * - Add IAuthService interface when service layer is built (Step 2)
  * - Add UpdateUserData for profile editing
  * - Add PasswordResetToken types for forgot password flow
  *
@@ -63,4 +62,47 @@ export interface ITokenRepository {
   findRefreshToken(token: string): Promise<RefreshTokenRecord | null>;
   deleteRefreshToken(token: string): Promise<void>;
   deleteAllUserTokens(userId: number): Promise<void>;
+}
+
+// ─── Service Interface ───────────────────────────────────────────────────────
+
+/** Result returned by register and login operations. */
+export interface AuthResult {
+  user: User;
+  accessToken: string;
+  refreshToken: string;
+}
+
+/** Result returned by token refresh operations. */
+export interface TokenRefreshResult {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/** Login credentials received from the client. */
+export interface LoginInput {
+  username: string;
+  password: string;
+}
+
+/** Registration data received from the client. */
+export interface RegisterInput {
+  username: string;
+  name: string;
+  email: string;
+  password: string;
+  profileImage?: string | null;
+}
+
+/**
+ * IAuthService — authentication business logic.
+ *
+ * Consumed by: AuthController (Step 3)
+ * Implemented by: createAuthService (auth.service.ts)
+ */
+export interface IAuthService {
+  register(data: RegisterInput): Promise<AuthResult>;
+  login(data: LoginInput): Promise<AuthResult>;
+  logout(refreshToken: string): Promise<void>;
+  refreshToken(token: string): Promise<TokenRefreshResult>;
 }
