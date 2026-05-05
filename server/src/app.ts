@@ -8,8 +8,7 @@
  * - Registers the global error handler as the last middleware
  *
  * Future expansion:
- * - Register feature module routes (auth, posts, comments)
- * - Add Multer for file uploads
+ * - Add Multer for file uploads (profile image)
  * - Add rate limiting middleware
  * - Add helmet for security headers
  * - Add compression middleware for response compression
@@ -19,6 +18,7 @@ import express from "express";
 import cors from "cors";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
+import { authRoutes } from "./modules/auth/auth.routes.js";
 
 export const app = express();
 
@@ -35,8 +35,10 @@ app.get("/health", (_req, res) => {
 });
 
 // ─── Feature Routes ──────────────────────────────────────────────────────────
-// Routes will be registered here as modules are built:
-// app.use("/api/v1/auth", authRoutes);
+
+app.use("/api/v1/auth", authRoutes);
+
+// Future module routes:
 // app.use("/api/v1/posts", postRoutes);
 // app.use("/api/v1/comments", commentRoutes);
 
