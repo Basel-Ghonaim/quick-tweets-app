@@ -199,4 +199,41 @@ Creates two tables in PostgreSQL:
 
 ## Phase 3 — Auth Module
 
+### Step 1 — Repository Layer
+
+**Date:** 2026-05-05
+**Branch:** `feature/auth-module-step1-repository`
+**Parent Issue:** #2 (Auth Module)
+**Sub-Issue:** #2.1 (Repository Layer)
+
+#### Files Created
+
+| File | Purpose | Principle |
+|---|---|---|
+| `shared/database/prisma.ts` | Prisma Client singleton with `PrismaPg` adapter | SRP — one connection pool for all modules |
+| `shared/database/index.ts` | Barrel export | ISP — only exposes `prisma` |
+| `modules/auth/auth.types.ts` | `IAuthRepository` + `ITokenRepository` interfaces + data shapes | DIP — service depends on abstractions |
+| `modules/auth/auth.repository.ts` | Prisma implementation of both interfaces | LSP — swappable, Factory Pattern |
+
+#### Design Decisions
+
+| Decision | Reasoning | Principle |
+|---|---|---|
+| Two separate interfaces (user + token) | User queries and token queries are consumed by different parts | ISP |
+| Factory functions instead of classes | Matches frontend pattern (`restAuth()`, `authMapper()`) | Factory Pattern |
+| Default parameter `db = prisma` | Production uses singleton, tests inject mocks | DIP, testability |
+| `PrismaInstance` type alias | Avoids importing `PrismaClient` type everywhere | SRP |
+| Barrel export in `shared/database/` | Controls public API, hides implementation | ISP |
+
+#### Commits
+
+- `4395227` — issues: parent issue #2 + sub-issue #2.1
+- `b64dcbc` — Prisma Client singleton with PrismaPg adapter
+- `c798809` — IAuthRepository + ITokenRepository interfaces
+- `76ce22f` — Prisma implementation of both interfaces
+
+---
+
+### Step 2 — Auth Service
+
 _To be documented when executed._

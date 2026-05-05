@@ -1,0 +1,26 @@
+/**
+ * Prisma Client singleton — shared database connection for the entire backend.
+ *
+ * Current purpose:
+ * - Creates a single PrismaClient instance with the PrismaPg adapter
+ * - Provides type-safe access to all database models (User, RefreshToken)
+ * - Ensures one connection pool is reused across all modules
+ *
+ * Future expansion:
+ * - Add logging middleware for query debugging
+ * - Add graceful disconnect on SIGTERM
+ * - Add connection health check utility
+ *
+ * Principle: SRP — this file only manages the database connection.
+ * Principle: DIP — modules import this singleton, not Prisma directly.
+ */
+
+import "dotenv/config";
+import { PrismaClient } from "../../generated/prisma/client.js";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!,
+});
+
+export const prisma = new PrismaClient({ adapter });
