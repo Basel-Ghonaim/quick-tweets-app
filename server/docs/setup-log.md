@@ -393,6 +393,51 @@ const REFRESH_COOKIE_OPTIONS = {
 
 ---
 
-### Step 4b — Frontend Data Model
+### Step 4b — Frontend Data Model (Types, DTOs, Mapper, Store, API Clients)
+
+**Date:** 2026-05-06
+**Branch:** `feature/auth-module-step4b-frontend-model`
+**Sub-Issue:** #2.4b (Frontend Data Model)
+
+#### What Changed
+
+Aligned every frontend type, DTO, mapper, store slice, and API client with the new backend response format (camelCase, cookie-based auth, no counts).
+
+#### Files Modified
+
+| File | Change | Phase |
+|---|---|---|
+| `shared/types/user.ts` | Add `bio`, `createdAt`, nullable `profileImage`, remove `Counts` | A |
+| `entity/AuthResponse.ts` | `token` → `accessToken` | B |
+| `dto/AuthResponse.ts` | `UserDto` camelCase, `accessToken` only | B |
+| `dto/AuthRequest.ts` | `image` → `profileImage` | B |
+| `mapper/authMapper.ts` | Remove snake_case conversion, `accessToken` | C |
+| `shared/storage/AppStorage.ts` | `TOKEN` → `ACCESS_TOKEN` | D |
+| `services/authSessionService.ts` | `getToken` → `getAccessToken` | D |
+| `interceptors/request.ts` | `STORAGE_KEYS.ACCESS_TOKEN` | D |
+| `interceptors/response.ts` | `STORAGE_KEYS.ACCESS_TOKEN` | D |
+| `store/state/AuthState.ts` | `token` → `accessToken` | E |
+| `store/types/AuthPayloads.ts` | `token` → `accessToken` | E |
+| `store/state/initialState.ts` | `ACCESS_TOKEN` key | E |
+| `store/authSlice.ts` | Reducer: `accessToken` | E |
+| `shared/api/client.ts` | `baseURL` → localhost:4000 | F |
+| `shared/api/authClient.ts` | `baseURL` → localhost:4000, `withCredentials: true` | F |
+| `repository/restAuth.ts` | `/auth/*` paths, JSON body | G |
+| `hooks/useAuthState.ts` | `token` → `accessToken` | G |
+| `hooks/useAuthActions.ts` | `res.token` → `res.accessToken` | G |
+
+#### Commits
+
+- `7cd83a5` — Phase A: User entity update
+- `3adfd64` — Phase B: entity + DTOs
+- `e900c03` — Phase C: mapper simplification
+- `89eda72` — Phase D: storage + session + interceptors
+- `b6714d0` — Phase E: Redux store
+- `501407a` — Phase F: API clients → localhost
+- `8592c07` — Phase G: consumers (restAuth, hooks)
+
+---
+
+### Step 5 — Frontend Integration
 
 _To be documented when executed._
