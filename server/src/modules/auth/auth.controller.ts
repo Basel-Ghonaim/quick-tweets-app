@@ -2,11 +2,14 @@
  * Auth controller — HTTP request handling for auth endpoints.
  *
  * Current purpose:
- * - register: parse validated body → call service → return 201 + user + tokens
- * - login: parse validated body → call service → return 200 + user + tokens
- * - logout: parse validated body → call service → return 204
- * - refresh: parse validated body → call service → return 200 + new tokens
+ * - register: parse validated body → call service → set cookie → return 201 + user + accessToken
+ * - login: parse validated body → call service → set cookie → return 200 + user + accessToken
+ * - logout: read cookie → call service → clear cookie → return 204
+ * - refresh: read cookie → call service → set new cookie → return 200 + accessToken
  * - me: read userId from authGuard → fetch user → return 200 + user
+ *
+ * Security: refresh token is NEVER in the response body.
+ * It is set as an httpOnly cookie — JavaScript cannot read it.
  *
  * Future expansion:
  * - forgotPassword: validate email → call service → return 200
@@ -21,6 +24,17 @@ import type { AuthenticatedRequest } from "../../middleware/authGuard.js";
 import { createAuthService } from "./auth.service.js";
 import { createAuthRepository } from "./auth.repository.js";
 import type { IAuthService } from "./auth.types.js";
+
+// ─── Cookie Configuration ────────────────────────────────────────────────────
+
+/** Cookie options for the refresh token. */
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,                          // JS cannot read this cookie
+  secure: process.env.NODE_ENV === "production", // HTTPS only in production
+  sameSite: "strict" as const,             // blocks CSRF
+  path: "/api/v1/auth",                    // only sent to auth endpoints
+  maxAge: 7 * 24 * 60 * 60 * 1000,        // 7 days in milliseconds
+};
 
 // ─── User Response Formatter ─────────────────────────────────────────────────
 
@@ -51,16 +65,18 @@ export const createAuthController = (
 
   /**
    * POST /auth/register
-   * Creates a new user account and returns tokens.
+   * Creates a new user account.
+   * Sets refresh token as httpOnly cookie, returns accessToken in body.
    */
   register: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await service.register(req.body);
 
+      res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
+
       res.status(201).json({
         user: toUserResponse(result.user),
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       });
     } catch (err) {
       next(err);
@@ -69,16 +85,18 @@ export const createAuthController = (
 
   /**
    * POST /auth/login
-   * Authenticates user and returns tokens.
+   * Authenticates user.
+   * Sets refresh token as httpOnly cookie, returns accessToken in body.
    */
   login: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await service.login(req.body);
 
+      res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
+
       res.status(200).json({
         user: toUserResponse(result.user),
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       });
     } catch (err) {
       next(err);
@@ -87,11 +105,16 @@ export const createAuthController = (
 
   /**
    * POST /auth/logout
-   * Invalidates the provided refresh token.
+   * Reads refresh token from cookie, invalidates it, clears cookie.
    */
   logout: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await service.logout(req.body.refreshToken);
+      const refreshToken = req.cookies?.refreshToken;
+      if (refreshToken) {
+        await service.logout(refreshToken);
+      }
+
+      res.clearCookie("refreshToken", { path: "/api/v1/auth" });
       res.status(204).send();
     } catch (err) {
       next(err);
@@ -100,15 +123,23 @@ export const createAuthController = (
 
   /**
    * POST /auth/refresh
-   * Returns a new access + refresh token pair.
+   * Reads refresh token from cookie, rotates it, sets new cookie.
+   * Returns new accessToken in body.
    */
   refresh: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await service.refreshToken(req.body.refreshToken);
+      const refreshToken = req.cookies?.refreshToken;
+      if (!refreshToken) {
+        res.status(401).json({ type: "authentication", message: "No refresh token provided" });
+        return;
+      }
+
+      const result = await service.refreshToken(refreshToken);
+
+      res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
       res.status(200).json({
         accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
       });
     } catch (err) {
       next(err);
