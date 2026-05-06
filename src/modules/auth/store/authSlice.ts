@@ -21,7 +21,7 @@ export const authSlice = createSlice({
       state,
       action: PayloadAction<AuthRequestFulfilledPayload>,
     ) => {
-      const { requestType, user, token } = action.payload;
+      const { requestType, user, accessToken } = action.payload;
 
       state.requests[requestType] = {
         status: "success",
@@ -29,7 +29,7 @@ export const authSlice = createSlice({
       };
 
       if (user) state.user = user;
-      if (token) state.token = token;
+      if (accessToken) state.accessToken = accessToken;
     },
     authRequestRejected: (
       state,

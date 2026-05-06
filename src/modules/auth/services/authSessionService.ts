@@ -3,20 +3,20 @@ import type { User } from "@shared/types";
 
 export const authSessionService = () => {
   const { set, remove, get } = appStorage;
-  const { TOKEN, USER } = STORAGE_KEYS;
+  const { ACCESS_TOKEN, USER } = STORAGE_KEYS;
 
   return {
-    saveAuthSession: (token: string, user: User) => {
-      const savedToken = set(TOKEN, token);
+    saveAuthSession: (accessToken: string, user: User) => {
+      const savedToken = set(ACCESS_TOKEN, accessToken);
       const savedUser = set(USER, user);
       return savedToken && savedUser;
     },
     clearAuthSession: () => {
-      const removedToken = remove(TOKEN);
+      const removedToken = remove(ACCESS_TOKEN);
       const removedUser = remove(USER);
       return removedToken && removedUser;
     },
-    getToken: () => get<string>(TOKEN),
+    getAccessToken: () => get<string>(ACCESS_TOKEN),
     getUser: () => get<User>(USER),
   };
 };

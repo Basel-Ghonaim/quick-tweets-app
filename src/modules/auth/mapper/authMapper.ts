@@ -3,17 +3,15 @@ import type { AuthMapper } from "./Mapper";
 export const authMapper = (): AuthMapper => ({
   toAuthResponse: (data) => ({
     user: {
+      id: data.user.id,
       username: data.user.username,
       name: data.user.name,
       email: data.user.email,
-      id: data.user.id,
-      profileImage: data.user.profile_image,
-      counts: {
-        comments: data.user.comments_count,
-        posts: data.user.posts_count,
-      },
+      profileImage: data.user.profileImage,
+      bio: data.user.bio,
+      createdAt: data.user.createdAt,
     },
-    token: data.token,
+    accessToken: data.accessToken,
   }),
 
   loginCredentialsToDto: (data) => ({
@@ -25,6 +23,5 @@ export const authMapper = (): AuthMapper => ({
     name: data.name,
     email: data.email,
     password: data.password,
-    image: data.profileImage,
   }),
 });
