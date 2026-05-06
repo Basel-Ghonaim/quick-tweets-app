@@ -280,6 +280,54 @@ Creates two tables in PostgreSQL:
 
 ---
 
-### Step 3 — API Layer
+### Step 3 — API Layer (Routes, Controller, Validators, Middleware)
+
+**Date:** 2026-05-05
+**Branch:** `feature/auth-module-step3-api`
+**Sub-Issue:** #2.3 (API Layer)
+
+#### Endpoints
+
+| Method | Path | Middleware | Status |
+|---|---|---|---|
+| `POST` | `/api/v1/auth/register` | `validate(registerSchema)` | 201 Created |
+| `POST` | `/api/v1/auth/login` | `validate(loginSchema)` | 200 OK |
+| `POST` | `/api/v1/auth/logout` | `validate(logoutSchema)` | 204 No Content |
+| `POST` | `/api/v1/auth/refresh` | `validate(refreshSchema)` | 200 OK |
+| `GET` | `/api/v1/auth/me` | `authGuard` | 200 OK |
+
+#### Files Created / Modified
+
+| File | Action | Purpose | Principle |
+|---|---|---|---|
+| `middleware/validate.ts` | NEW | Generic Zod validation middleware | SRP, OCP — works with any schema |
+| `middleware/authGuard.ts` | NEW | JWT verification, attaches `userId` to request | SRP, Middleware Pattern |
+| `modules/auth/auth.validator.ts` | NEW | Zod v4 schemas for all auth endpoints | SRP — only schema definitions |
+| `modules/auth/auth.controller.ts` | NEW | Parse request → call service → format response | SRP, DIP, Factory Pattern |
+| `modules/auth/auth.routes.ts` | NEW | Express router wiring | SRP — only route definitions |
+| `app.ts` | MODIFIED | Mount auth routes at `/api/v1/auth` | OCP — extend by import |
+
+#### Design Decisions
+
+| Decision | Reasoning | Principle |
+|---|---|---|
+| Zod v4 `{ error: "..." }` syntax | Project uses Zod 4.4.3, not v3 | Compatibility |
+| `toUserResponse()` strips `passwordHash` | Never send password hash to client | Security |
+| `next(err)` in controller catch blocks | Delegates all errors to `errorHandler` middleware | Middleware Pattern |
+| Generic `validate()` middleware | Same middleware for auth, posts, comments — just pass different schema | OCP |
+| `AuthenticatedRequest` extends `Request` | Type-safe `userId` access in protected controllers | TypeScript |
+
+#### Commits
+
+- `d70d2b6` — issues: sub-issue #2.3
+- `16fd0bb` — generic Zod validation middleware
+- `a3b633e` — authGuard middleware (JWT verification)
+- `c3c2276` — Zod v4 schemas for auth endpoints
+- `ca5cea4` — auth controller (HTTP handlers)
+- `bfb8fc6` — auth routes + mount in app.ts
+
+---
+
+### Step 4 — Frontend Data Model
 
 _To be documented when executed._
