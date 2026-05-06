@@ -14,7 +14,7 @@ export const responseInterceptor = (client: AxiosInstance) => {
       }
 
       if (normalizedError.type === "unauthorized") {
-        appStorage.remove(STORAGE_KEYS.TOKEN);
+        appStorage.remove(STORAGE_KEYS.ACCESS_TOKEN);
         appStorage.remove(STORAGE_KEYS.USER);
       }
 
