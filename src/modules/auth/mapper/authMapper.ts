@@ -23,6 +23,5 @@ export const authMapper = (): AuthMapper => ({
     name: data.name,
     email: data.email,
     password: data.password,
-    profileImage: data.profileImage,
   }),
 });

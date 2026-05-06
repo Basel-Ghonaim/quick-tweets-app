@@ -19,9 +19,7 @@ export const restAuth = (
     },
     register: async (credentials) => {
       const dto = registerCredentialsToDto(credentials);
-      // Send JSON (not FormData) — file upload will use Multer in a future step
-      const { username, name, email, password } = dto;
-      const res = await api.post("/auth/register", { username, name, email, password });
+      const res = await api.post("/auth/register", dto);
       return toAuthResponse(res.data);
     },
     logout: async () => {
