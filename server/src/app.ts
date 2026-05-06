@@ -16,6 +16,7 @@
 
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
@@ -24,8 +25,9 @@ export const app = express();
 
 // ─── Global Middleware ───────────────────────────────────────────────────────
 
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 app.use(requestLogger);
 
 // ─── Health Check ────────────────────────────────────────────────────────────
