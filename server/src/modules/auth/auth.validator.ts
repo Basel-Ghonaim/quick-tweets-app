@@ -4,8 +4,9 @@
  * Current purpose:
  * - registerSchema: validates registration input (username, name, email, password)
  * - loginSchema: validates login input (username, password)
- * - refreshSchema: validates refresh token input
- * - logoutSchema: validates logout input (refresh token)
+ *
+ * Note: /refresh and /logout do NOT need body validation.
+ * The refresh token is read from an httpOnly cookie (req.cookies), not req.body.
  *
  * Future expansion:
  * - forgotPasswordSchema: validates email for password reset
@@ -58,20 +59,4 @@ export const loginSchema = z.object({
   password: z
     .string({ error: "Password is required" })
     .min(1, "Password is required"),
-});
-
-// ─── Refresh Token ───────────────────────────────────────────────────────────
-
-export const refreshSchema = z.object({
-  refreshToken: z
-    .string({ error: "Refresh token is required" })
-    .min(1, "Refresh token is required"),
-});
-
-// ─── Logout ──────────────────────────────────────────────────────────────────
-
-export const logoutSchema = z.object({
-  refreshToken: z
-    .string({ error: "Refresh token is required" })
-    .min(1, "Refresh token is required"),
 });

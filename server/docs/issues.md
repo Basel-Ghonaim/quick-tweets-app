@@ -41,11 +41,12 @@ This replaces the disabled external API with a fully owned custom backend.
 
 **Steps:**
 
-- [ ] **Step 1** — Repository Layer: Prisma Client singleton + `IAuthRepository` / `ITokenRepository` interfaces + Prisma implementation
-- [ ] **Step 2** — Auth Service: Business logic (bcrypt password hashing, JWT dual tokens, validation rules)
-- [ ] **Step 3** — API Layer: Routes, controller, Zod validators, Multer upload, authGuard middleware
-- [ ] **Step 4** — Frontend Data Model: Update User entity, AuthResponse, DTOs, mappers, store, session
-- [ ] **Step 5** — Frontend Integration: baseURL change, token refresh interceptor, storage keys
+- [x] **Step 1** — Repository Layer: Prisma Client singleton + `IAuthRepository` / `ITokenRepository` interfaces + Prisma implementation
+- [x] **Step 2** — Auth Service: Business logic (bcrypt password hashing, JWT dual tokens, validation rules)
+- [x] **Step 3** — API Layer: Routes, controller, Zod validators, authGuard middleware
+- [ ] **Step 4a** — Cookie Security: Refactor backend to send refresh token via httpOnly cookie instead of JSON body
+- [ ] **Step 4b** — Frontend Data Model: Update User entity, AuthResponse, DTOs, mappers, store, session
+- [ ] **Step 5** — Frontend Integration: baseURL change, token refresh interceptor, cookie-aware requests
 - [ ] **Step 6** — End-to-end verification: register → login → refresh → logout
 
 **Principles:** SOLID, Repository Pattern, Factory Pattern, Clean Architecture, Error Normalization
@@ -177,3 +178,93 @@ This step connects the client to the business logic via Express routes, Zod vali
 - [ ] Documentation updated in `setup-log.md`
 
 **Related:** Issue #2 (parent), Sub-Issue #2.2 (service), WorkingPrinciples.md (SRP, OCP, Layered Architecture)
+
+---
+
+### Sub-Issue #2.4a: Cookie Security — httpOnly refresh token (backend refactor)
+
+- **Title:** refactor(server): send refresh token via httpOnly cookie instead of JSON body
+- **Labels:** [backend, auth, security]
+- **Branch:** `feature/auth-module-step4a-cookie-security`
+- **Parent:** Issue #2
+- **Description:**
+
+Refactor the backend so the refresh token is never exposed to JavaScript.
+Instead of sending it in the response body, the server sets it as an httpOnly cookie.
+This eliminates XSS-based token theft — the most critical auth vulnerability.
+
+**Security model (Hybrid):**
+
+| Token | Storage | Why |
+|---|---|---|
+| Access Token | Frontend memory (Redux) | Short-lived (15min), acceptable XSS risk |
+| Refresh Token | httpOnly cookie (server-set) | Long-lived (7 days), JS cannot read it |
+| User data | localStorage | Not sensitive, used for UI hydration |
+
+**Files:**
+
+| File | Action | Change |
+|---|---|---|
+| `app.ts` | MODIFY | Add `cookie-parser` middleware + `credentials: true` in CORS |
+| `auth.controller.ts` | MODIFY | `res.cookie()` for refresh token, `req.cookies` to read it |
+| `auth.validator.ts` | MODIFY | Remove `refreshSchema` / `logoutSchema` (token from cookie, not body) |
+| `auth.routes.ts` | MODIFY | Remove `validate()` middleware from `/refresh` and `/logout` routes |
+| `package.json` | MODIFY | Add `cookie-parser` + `@types/cookie-parser` |
+
+**Acceptance Criteria:**
+
+- [ ] `cookie-parser` installed and registered in `app.ts`
+- [ ] CORS configured with `credentials: true`
+- [ ] Register/login/refresh: refresh token set via `res.cookie()` with `httpOnly`, `secure`, `sameSite`, `path`
+- [ ] Logout: `res.clearCookie()` removes the refresh token cookie
+- [ ] Refresh/logout: read token from `req.cookies.refreshToken` instead of `req.body`
+- [ ] Refresh token is NOT present in any JSON response body
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #2 (parent), Sub-Issue #2.3 (API layer), WorkingPrinciples.md (Security)
+
+---
+
+### Sub-Issue #2.4b: Frontend Data Model — Update types, DTOs, mappers, store, session
+
+- **Title:** feat(frontend): update auth data model for custom backend (cookie-based, new User shape)
+- **Labels:** [frontend, auth, refactor]
+- **Branch:** `feature/auth-module-step4b-frontend-model`
+- **Parent:** Issue #2
+- **Depends on:** Sub-Issue #2.4a (cookie security must be merged first)
+- **Description:**
+
+Update the frontend data model to match the new backend response format.
+The old API returned `{ user, token }` with snake_case.
+Our backend returns `{ user, accessToken }` in body + refresh token in httpOnly cookie.
+
+**Key difference from original plan:** The frontend does NOT store or manage the refresh token.
+The browser handles it automatically via cookies. This simplifies the frontend significantly.
+
+**Axes of change:**
+
+| Axis | What Changes | Why |
+|---|---|---|
+| User entity | Add `bio`, `createdAt`, remove `counts`, nullable `profileImage` | New backend shape |
+| AuthResponse entity | `token` → `accessToken` only (no refreshToken) | Refresh token is in cookie |
+| Response DTO | `UserDto` camelCase, no snake_case fields | Backend uses camelCase |
+| Request DTO | `image` → `profileImage` | Backend field name |
+| Mapper | Remove snake_case→camelCase transform | Backend already sends camelCase |
+| Storage | Remove `REFRESH_TOKEN` key (not needed) | Cookie handles it |
+| Session service | Store only `accessToken` + `user` | Refresh token is in cookie |
+| Auth state | `token` → `accessToken` only | Refresh token is in cookie |
+| API clients | `baseURL` → `localhost:4000/api/v1` | Point to our backend |
+
+**Acceptance Criteria:**
+
+- [ ] `User` entity updated: add `bio`, `createdAt`, make `profileImage` nullable, remove `counts`
+- [ ] `AuthResponse` entity: `accessToken` only (no refreshToken)
+- [ ] `AuthResponseDto` + `UserDto` match backend JSON shape (camelCase)
+- [ ] `RegisterRequestDto.image` → `profileImage`
+- [ ] Mapper simplified: no snake_case conversion, single accessToken mapping
+- [ ] `authSessionService` stores only `accessToken` + `user`
+- [ ] `AuthState` has `accessToken` instead of `token`
+- [ ] API clients point to `http://localhost:4000/api/v1`
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #2 (parent), Sub-Issue #2.4a (cookie security), WorkingPrinciples.md (DTO Pattern, Mapper Pattern)

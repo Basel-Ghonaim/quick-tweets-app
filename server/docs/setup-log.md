@@ -328,6 +328,71 @@ Creates two tables in PostgreSQL:
 
 ---
 
-### Step 4 — Frontend Data Model
+### Step 4a — Cookie Security (httpOnly Refresh Token)
+
+**Date:** 2026-05-06
+**Branch:** `feature/auth-module-step4a-cookie-security`
+**Sub-Issue:** #2.4a (Cookie Security)
+
+#### Problem
+
+Step 3 sent the refresh token in the JSON response body:
+```json
+{ "user": {...}, "accessToken": "eyJ...", "refreshToken": "550e8400-..." }
+```
+This means any JavaScript on the page (including XSS-injected scripts) could steal the refresh token via `response.data.refreshToken`. Since the refresh token is long-lived (7 days), a stolen one grants persistent access.
+
+#### Solution — Hybrid Token Storage
+
+| Token | Where | Why |
+|---|---|---|
+| Access Token | Response body → Frontend memory (Redux) | Short-lived (15min), acceptable risk |
+| Refresh Token | httpOnly cookie (server-set) | Long-lived (7 days), JS **cannot** read it |
+| User data | Response body → localStorage | Not sensitive, for UI hydration |
+
+#### Cookie Configuration
+
+```typescript
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,                          // JS cannot read
+  secure: process.env.NODE_ENV === "production", // HTTPS only in prod
+  sameSite: "strict",                      // blocks CSRF
+  path: "/api/v1/auth",                   // only sent to auth endpoints
+  maxAge: 7 * 24 * 60 * 60 * 1000,       // 7 days
+};
+```
+
+#### Files Modified
+
+| File | Change | Principle |
+|---|---|---|
+| `package.json` | Added `cookie-parser` + `@types/cookie-parser` | — |
+| `app.ts` | `cookieParser()` middleware + `credentials: true` in CORS | SRP — middleware concern |
+| `auth.controller.ts` | `res.cookie()` sets token, `req.cookies` reads it | SRP — HTTP concern |
+| `auth.validator.ts` | Removed `refreshSchema` / `logoutSchema` | YAGNI — no body to validate |
+| `auth.routes.ts` | Removed `validate()` from `/logout` and `/refresh` | Follows validator removal |
+
+#### Endpoint Changes
+
+| Endpoint | Before | After |
+|---|---|---|
+| `POST /register` | Body: `{ user, accessToken, refreshToken }` | Body: `{ user, accessToken }` + Set-Cookie |
+| `POST /login` | Body: `{ user, accessToken, refreshToken }` | Body: `{ user, accessToken }` + Set-Cookie |
+| `POST /logout` | Body: `{ refreshToken }` → service | Cookie → service + clearCookie |
+| `POST /refresh` | Body: `{ refreshToken }` → service | Cookie → service + new Set-Cookie |
+| `GET /me` | No change | No change |
+
+#### Commits
+
+- `8e22cbb` — docs: update plan — split Step 4 into 4a + 4b
+- `c44acca` — chore: install cookie-parser
+- `ca2f488` — feat: cookie-parser middleware + CORS credentials
+- `f9ef9be` — refactor: controller uses res.cookie / req.cookies
+- `4967eea` — refactor: remove refreshSchema / logoutSchema
+- `a2fffa6` — refactor: remove validate() from /logout and /refresh routes
+
+---
+
+### Step 4b — Frontend Data Model
 
 _To be documented when executed._
