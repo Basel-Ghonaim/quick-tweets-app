@@ -8,7 +8,7 @@ export interface AuthRequestPayload {
 }
 export interface AuthRequestFulfilledPayload extends AuthRequestPayload {
   user?: User;
-  token?: string;
+  accessToken?: string;
 }
 export interface AuthRequestRejectedPayload extends AuthRequestPayload {
   error: AppError;
