@@ -11,21 +11,21 @@ export const restAuth = (
 
   return {
     login: async (credentials) => {
-      const res = await api.post("/login", loginCredentialsToDto(credentials));
+      const res = await api.post(
+        "/auth/login",
+        loginCredentialsToDto(credentials),
+      );
       return toAuthResponse(res.data);
     },
     register: async (credentials) => {
-      const formData = new FormData();
       const dto = registerCredentialsToDto(credentials);
-      Object.entries(dto).forEach(([key, value]) => {
-        if (value !== null) formData.append(key, value);
-      });
-
-      const res = await api.post("/register", formData);
+      // Send JSON (not FormData) — file upload will use Multer in a future step
+      const { username, name, email, password } = dto;
+      const res = await api.post("/auth/register", { username, name, email, password });
       return toAuthResponse(res.data);
     },
     logout: async () => {
-      await authApi.post("/logout");
+      await authApi.post("/auth/logout");
     },
   };
 };
