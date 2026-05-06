@@ -1,12 +1,9 @@
 export interface User {
+  id: number;
   username: string;
   name: string;
   email: string;
-  id: number;
-  profileImage: string;
-  counts: Counts;
-}
-export interface Counts {
-  comments: number;
-  posts: number;
+  profileImage: string | null;
+  bio: string;
+  createdAt: string;
 }
