@@ -438,6 +438,47 @@ Aligned every frontend type, DTO, mapper, store slice, and API client with the n
 
 ---
 
-### Step 5 — Frontend Integration
+### Step 5 — Frontend Integration (Logout, Refresh Interceptor, Hybrid Storage, Silent Refresh)
+
+**Date:** 2026-05-07
+**Branch:** `feature/auth-module-step5-frontend-integration`
+**Sub-Issue:** #2.5 (Frontend Integration)
+
+#### Hybrid Token Model
+
+| Data | Storage | Why |
+|---|---|---|
+| Access Token | Redux memory ONLY | Never touches localStorage — safe from XSS |
+| Refresh Token | httpOnly cookie (server-set) | JS cannot read it |
+| User data | localStorage | Not sensitive — UI hydration hint |
+
+#### What Changed
+
+| File | Change | Task |
+|---|---|---|
+| `dto/RefreshResponse.ts` | NEW — DTO for `/refresh` response | 1 |
+| `repository/AuthRepository.ts` | Added `refresh(): Promise<string>` | 1 |
+| `repository/restAuth.ts` | Implemented `refresh()` via authApi | 1 |
+| `hooks/useAuthActions.ts` | Logout calls backend API first (try/finally) | 2 |
+| `interceptors/response.ts` | 401 → refresh → retry with concurrent queue, callback injection | 3 |
+| `interceptors/request.ts` | Accepts `getAccessToken` callback instead of localStorage | 3 |
+| `api/authClient.ts` | Wiring layer — provides Redux callbacks to interceptors | 3 |
+| `api/client.ts` | Simple error normalization (no refresh) | 3 |
+| `storage/AppStorage.ts` | Removed ACCESS_TOKEN from STORAGE_KEYS | 4 |
+| `services/authSessionService.ts` | Saves only user data (no token) | 4 |
+| `store/state/initialState.ts` | accessToken always null on startup | 4 |
+| `hooks/useInitAuth.ts` | NEW — silent refresh on startup | 5 |
+| `hooks/index.ts` | Exported useInitAuth | 5 |
+| `app/routes/App.tsx` | Loading screen during initialization | 5 |
+
+#### Architecture Decisions
+
+- **Callback injection**: Interceptors accept callbacks instead of importing Redux directly. The `shared/api` layer stays generic and doesn't know about the application's state management.
+- **Concurrent request queue**: When multiple requests fail with 401 simultaneously, only ONE `/refresh` call is made. All others wait and retry with the new token.
+- **Logout guarantee**: `try/finally` ensures local session is ALWAYS cleared, even if the backend API call fails.
+
+---
+
+### Step 6 — End-to-end Verification
 
 _To be documented when executed._
