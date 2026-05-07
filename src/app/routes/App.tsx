@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AuthPage } from "../../modules/auth";
-import { useInitAuth } from "../../modules/auth/hooks";
+import { useInitAuth } from "@modules/auth/hooks";
+import { AuthPage } from "@modules/auth";
 
 export const App = () => {
   const { isInitializing } = useInitAuth();

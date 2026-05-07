@@ -1,4 +1,4 @@
-import type { FormFieldConfig } from "../../../shared/schema-form/types/schema.types";
+import type { FormFieldConfig } from "@shared/schema-form";
 import type { LoginCredentials, RegisterCredentials } from "../types";
 import {
   isRequired,

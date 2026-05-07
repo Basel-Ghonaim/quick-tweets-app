@@ -1,5 +1,5 @@
 import type { AuthRepository } from "./AuthRepository";
-import { apiClient, authClient } from "../../../shared/api";
+import { apiClient, authClient } from "@shared/api";
 import { authMapper } from "../mapper";
 
 export const restAuth = (
