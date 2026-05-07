@@ -21,7 +21,7 @@ export const useAuthActions = () => {
     try {
       dispatch(authRequestPending({ requestType }));
       const res = await apiCall();
-      const isSessionSaved = saveAuthSession(res.accessToken, res.user);
+      const isSessionSaved = saveAuthSession(res.user);
       if (!isSessionSaved) {
         throw createAppError("unknown", "Failed to save auth session");
       }
