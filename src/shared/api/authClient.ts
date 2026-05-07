@@ -1,9 +1,9 @@
 import axios from "axios";
+import { reduxStore } from "@app/store/store";
+import { authActions } from "@modules/auth";
+import { appStorage, STORAGE_KEYS } from "../storage";
 import { attachTokenInterceptor } from "./interceptors/request";
 import { responseInterceptor } from "./interceptors/response";
-import { reduxStore } from "../../app/store/store";
-import { authActions } from "../../modules/auth/store";
-import { appStorage, STORAGE_KEYS } from "../storage";
 
 export const authClient = axios.create({
   baseURL: "http://localhost:4000/api/v1",

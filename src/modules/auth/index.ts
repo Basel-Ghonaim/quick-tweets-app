@@ -1,2 +1,2 @@
 export { AuthPage } from "./pages/AuthPage";
-export { authReducer } from "./store";
+export { authReducer, authActions } from "./store";
