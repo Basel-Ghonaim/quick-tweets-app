@@ -1,9 +1,16 @@
 import type { AxiosInstance } from "axios";
-import { appStorage, STORAGE_KEYS } from "../../storage";
 
-export const attachTokenInterceptor = (client: AxiosInstance) => {
+/**
+ * Attaches the access token to outgoing requests via the Authorization header.
+ * Accepts a callback to retrieve the token — the interceptor doesn't know
+ * where the token is stored (Redux, localStorage, etc.).
+ */
+export const attachTokenInterceptor = (
+  client: AxiosInstance,
+  getAccessToken: () => string | null,
+) => {
   client.interceptors.request.use((config) => {
-    const token = appStorage.get<string>(STORAGE_KEYS.ACCESS_TOKEN);
+    const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

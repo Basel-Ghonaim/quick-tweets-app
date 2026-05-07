@@ -44,9 +44,9 @@ This replaces the disabled external API with a fully owned custom backend.
 - [x] **Step 1** — Repository Layer: Prisma Client singleton + `IAuthRepository` / `ITokenRepository` interfaces + Prisma implementation
 - [x] **Step 2** — Auth Service: Business logic (bcrypt password hashing, JWT dual tokens, validation rules)
 - [x] **Step 3** — API Layer: Routes, controller, Zod validators, authGuard middleware
-- [ ] **Step 4a** — Cookie Security: Refactor backend to send refresh token via httpOnly cookie instead of JSON body
-- [ ] **Step 4b** — Frontend Data Model: Update User entity, AuthResponse, DTOs, mappers, store, session
-- [ ] **Step 5** — Frontend Integration: baseURL change, token refresh interceptor, cookie-aware requests
+- [x] **Step 4a** — Cookie Security: Refactor backend to send refresh token via httpOnly cookie instead of JSON body
+- [x] **Step 4b** — Frontend Data Model: Update User entity, AuthResponse, DTOs, mappers, store, session
+- [ ] **Step 5** — Frontend Integration: Logout API call, token refresh interceptor, Hybrid storage, silent refresh on startup
 - [ ] **Step 6** — End-to-end verification: register → login → refresh → logout
 
 **Principles:** SOLID, Repository Pattern, Factory Pattern, Clean Architecture, Error Normalization
@@ -268,3 +268,49 @@ The browser handles it automatically via cookies. This simplifies the frontend s
 - [ ] Documentation updated in `setup-log.md`
 
 **Related:** Issue #2 (parent), Sub-Issue #2.4a (cookie security), WorkingPrinciples.md (DTO Pattern, Mapper Pattern)
+
+---
+
+### Sub-Issue #2.5: Frontend Integration — Logout, refresh interceptor, Hybrid storage, silent refresh
+
+- **Title:** feat(frontend): complete auth integration — logout API, refresh interceptor, Hybrid token model
+- **Labels:** [frontend, auth, integration, security]
+- **Branch:** `feature/auth-module-step5-frontend-integration`
+- **Parent:** Issue #2
+- **Depends on:** Sub-Issue #2.4a (cookie), Sub-Issue #2.4b (frontend model)
+- **Description:**
+
+Connect all frontend auth pieces to make login, logout, refresh, and session restoration work end-to-end.
+
+**Hybrid token model:**
+
+| Data | Storage | Why |
+|---|---|---|
+| Access Token | Redux memory ONLY | Never touches localStorage — safe from XSS |
+| Refresh Token | httpOnly cookie (server-set) | JS cannot read it |
+| User data | localStorage | Not sensitive — UI hydration hint |
+
+**Tasks:**
+
+| # | Task | What |
+|---|---|---|
+| 1 | Add `refresh()` to repository | New DTO, interface method, restAuth implementation |
+| 2 | Fix logout flow | Call backend API → invalidate cookie → then clear local |
+| 3 | Token refresh interceptor | On 401 → call /refresh → retry request (with concurrent queue) |
+| 4 | Hybrid storage | Remove accessToken from localStorage, interceptor reads from Redux store |
+| 5 | Silent refresh on startup | useInitAuth hook + loading screen in App.tsx |
+| 6 | Update consumers + docs | useAuthActions, setup-log.md |
+
+**Acceptance Criteria:**
+
+- [ ] `AuthRepository` has `refresh()` method returning `Promise<string>`
+- [ ] `restAuth.refresh()` calls `/auth/refresh` with `authApi` (sends cookie)
+- [ ] Logout calls backend API before clearing local session
+- [ ] Response interceptor: 401 → refresh → retry (with concurrent request queue)
+- [ ] `accessToken` is NEVER stored in localStorage
+- [ ] Request interceptor reads token from `store.getState().auth.accessToken`
+- [ ] `useInitAuth` hook: checks localStorage user → calls /refresh → loading screen
+- [ ] App.tsx shows loading screen during initialization
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #2 (parent), Sub-Issue #2.4b (frontend model), WorkingPrinciples.md (SRP, DIP)
