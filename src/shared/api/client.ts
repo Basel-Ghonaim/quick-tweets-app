@@ -8,4 +8,6 @@ export const apiClient: AxiosInstance = axios.create({
   },
   timeout: 10000,
 });
+
+// No callbacks → simple error normalization only (no token refresh)
 responseInterceptor(apiClient);
