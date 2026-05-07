@@ -25,5 +25,9 @@ export const restAuth = (
     logout: async () => {
       await authApi.post("/auth/logout");
     },
+    refresh: async () => {
+      const res = await authApi.post("/auth/refresh");
+      return res.data.accessToken;
+    },
   };
 };

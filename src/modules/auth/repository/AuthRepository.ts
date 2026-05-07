@@ -5,4 +5,5 @@ export interface AuthRepository {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   register: (credentials: RegisterCredentials) => Promise<AuthResponse>;
   logout: () => Promise<void>;
+  refresh: () => Promise<string>;
 }
