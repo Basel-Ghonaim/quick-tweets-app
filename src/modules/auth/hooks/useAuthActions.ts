@@ -9,7 +9,7 @@ import type { LoginCredentials, RegisterCredentials } from "../types";
 
 export const useAuthActions = () => {
   const dispatch = useAppDispatch();
-  const { login, register } = restAuth();
+  const repo = restAuth();
   const { authRequestFulfilled, authRequestPending, authRequestRejected } =
     authActions;
   const { saveAuthSession, clearAuthSession } = authSessionService();
@@ -39,25 +39,24 @@ export const useAuthActions = () => {
     }
   };
 
-  const logout = () => {
-    const isSessionCleared = clearAuthSession();
-    if (!isSessionCleared) {
-      dispatch(
-        authRequestRejected({
-          requestType: "logout",
-          error: createAppError("unknown", "Failed to clear auth session"),
-        }),
-      );
-      return;
+  const logout = async () => {
+    try {
+      dispatch(authRequestPending({ requestType: "logout" }));
+      await repo.logout();
+    } catch {
+      // Even if API call fails, still clear local session.
+      // The cookie will expire on its own.
+    } finally {
+      clearAuthSession();
+      dispatch(authRequestFulfilled({ requestType: "logout" }));
     }
-    dispatch(authRequestFulfilled({ requestType: "logout" }));
   };
 
   return {
     login: (credentials: LoginCredentials) =>
-      executeAuthFlow(() => login(credentials), "login"),
+      executeAuthFlow(() => repo.login(credentials), "login"),
     register: (credentials: RegisterCredentials) =>
-      executeAuthFlow(() => register(credentials), "register"),
+      executeAuthFlow(() => repo.register(credentials), "register"),
     logout,
   };
 };
