@@ -366,3 +366,43 @@ This is the foundation for the tweets, comments, and users backend modules.
 - [ ] Documentation updated in `setup-log.md`
 
 **Related:** Issue #1 (foundation), Issue #2 (auth — existing User model)
+
+---
+
+## Issue #4: API Contract — Request/Response Shapes for All Endpoints
+
+- **Title:** docs(server): define API contract — request/response shapes for tweets, comments, users
+- **Labels:** [backend, documentation, api-design]
+- **Branch:** `docs/api-contract`
+- **Description:**
+
+Define the complete API contract before writing any implementation code.
+This is the agreement between backend and frontend — every endpoint's request body,
+query params, response shape, and error cases documented in one place.
+
+**Endpoints:**
+
+| Group | Endpoints | Count |
+|---|---|---|
+| Tweets | GET /tweets, GET /tweets/:id, POST /tweets, DELETE /tweets/:id, POST /tweets/:id/like | 5 |
+| Comments | GET /tweets/:tweetId/comments, POST /tweets/:tweetId/comments, DELETE /comments/:id | 3 |
+| Users | GET /users/:username, GET /users/:username/tweets | 2 |
+
+**Steps:**
+
+- [ ] Define shared types (AuthorEmbed, PaginationMeta, ErrorResponse)
+- [ ] Define tweets endpoints (5 endpoints)
+- [ ] Define comments endpoints (3 endpoints)
+- [ ] Define users endpoints (2 endpoints)
+- [ ] Documentation in `setup-log.md`
+
+**Acceptance Criteria:**
+
+- [ ] Every endpoint has: method, path, auth requirement, request shape, response shape
+- [ ] Error responses defined for each endpoint (400, 401, 403, 404, 422)
+- [ ] Pagination shape consistent across all list endpoints
+- [ ] AuthorEmbed shape consistent across tweets and comments
+- [ ] `isLiked` field documented with optionalAuth requirement
+- [ ] Contract file created at `server/docs/api-contract.md`
+
+**Related:** Issue #3 (schema), Issue #1 (foundation — error handler pattern)

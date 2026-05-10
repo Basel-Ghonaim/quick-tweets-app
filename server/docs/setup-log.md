@@ -562,3 +562,46 @@ Delete Tweet → deletes all its comments and likes
 - **Like as separate model**: Instead of a counter field, a Like table allows us to know WHO liked, prevent duplicates via DB constraint, and easily toggle.
 - **No soft delete**: YAGNI — we can add `deletedAt` later if needed.
 - **image as URL string**: File storage is a separate concern (future Multer integration). The DB stores the URL.
+
+---
+
+## Step 1 — API Contract
+
+**Date:** 2026-05-10
+**Branch:** `docs/api-contract`
+**Issue:** #4 (API Contract)
+**File:** `server/docs/api-contract.md`
+
+### Endpoints Summary
+
+| Group | Method | Endpoint | Auth |
+|---|---|---|---|
+| Tweets | GET | `/tweets` | Optional |
+| Tweets | GET | `/tweets/:id` | Optional |
+| Tweets | POST | `/tweets` | Required |
+| Tweets | PATCH | `/tweets/:id` | Required |
+| Tweets | DELETE | `/tweets/:id` | Required |
+| Tweets | POST | `/tweets/:id/like` | Required |
+| Comments | GET | `/tweets/:tweetId/comments` | None |
+| Comments | POST | `/tweets/:tweetId/comments` | Required |
+| Comments | PATCH | `/comments/:id` | Required |
+| Comments | DELETE | `/comments/:id` | Required |
+| Users | GET | `/users/:username` | None |
+| Users | GET | `/users/:username/tweets` | Optional |
+
+**Total: 12 endpoints** (6 tweets, 4 comments, 2 users)
+
+### Shared Types
+
+- **AuthorEmbed**: `{ id, username, name, profileImage }` — embedded in tweets and comments
+- **PaginationMeta**: `{ currentPage, limit, totalPages, totalRecords, hasNextPage, hasPreviousPage }`
+- **ErrorResponse**: `{ type, message }` — matches existing AppError pattern
+
+### Key Design Decisions
+
+- **Optional auth**: Feed and tweet detail accept auth optionally — `isLiked` is `false` for guests
+- **PATCH for edits**: partial update (not PUT) — only send fields that changed
+- **Like toggle**: one endpoint handles both like and unlike — no separate endpoints
+- **Comments ordered ASC**: oldest first (conversation style), unlike tweets which are newest first
+- **Standalone delete routes**: `DELETE /comments/:id` is not nested under tweets
+- **User profile counts**: `tweetsCount` + `likesCount` (received) — aggregated server-side
