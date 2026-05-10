@@ -187,6 +187,50 @@ interface ErrorResponse {
 
 ---
 
+### `PATCH /tweets/:id` — Edit own tweet
+
+**Auth:** Required
+
+```jsonc
+// Request body (all fields optional, at least one required)
+{
+  "body": "Updated tweet!"    // optional, 1-280 characters
+}
+
+// Response 200
+{
+  "tweet": {
+    "id": 5,
+    "body": "Updated tweet!",
+    "image": null,
+    "author": {
+      "id": 1,
+      "username": "basel",
+      "name": "Basel",
+      "profileImage": null
+    },
+    "likesCount": 3,
+    "commentsCount": 2,
+    "isLiked": true,
+    "createdAt": "2026-05-10T12:00:00.000Z"
+  }
+}
+
+// Response 401
+{ "type": "authentication", "message": "Missing or invalid authorization header" }
+
+// Response 403
+{ "type": "forbidden", "message": "You can only edit your own tweets" }
+
+// Response 404
+{ "type": "not_found", "message": "Tweet not found" }
+
+// Response 400
+{ "type": "validation", "message": "body must be between 1 and 280 characters" }
+```
+
+---
+
 ### `DELETE /tweets/:id` — Delete own tweet
 
 **Auth:** Required
@@ -227,3 +271,149 @@ interface ErrorResponse {
 **Notes:**
 - Toggle behavior: if already liked → unlike. If not liked → like.
 - No separate unlike endpoint — one endpoint handles both.
+
+---
+
+## Comments
+
+### `GET /tweets/:tweetId/comments` — Comments for a tweet (paginated)
+
+**Auth:** None
+**Query params:** `?page=1&limit=20`
+
+```jsonc
+// Response 200
+{
+  "comments": [
+    {
+      "id": 1,
+      "body": "Nice tweet!",
+      "author": {
+        "id": 2,
+        "username": "ahmed",
+        "name": "Ahmed",
+        "profileImage": null
+      },
+      "tweetId": 5,
+      "createdAt": "2026-05-10T12:05:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "limit": 20,
+    "totalPages": 1,
+    "totalRecords": 7,
+    "hasNextPage": false,
+    "hasPreviousPage": false
+  }
+}
+
+// Response 404
+{ "type": "not_found", "message": "Tweet not found" }
+```
+
+**Notes:**
+- Ordered by `createdAt ASC` (oldest first — like a conversation)
+- Returns 404 if the tweet doesn't exist
+
+---
+
+### `POST /tweets/:tweetId/comments` — Add comment
+
+**Auth:** Required
+
+```jsonc
+// Request body
+{
+  "body": "Nice tweet!"    // required, 1-280 characters
+}
+
+// Response 201
+{
+  "comment": {
+    "id": 8,
+    "body": "Nice tweet!",
+    "author": {
+      "id": 1,
+      "username": "basel",
+      "name": "Basel",
+      "profileImage": null
+    },
+    "tweetId": 5,
+    "createdAt": "2026-05-10T14:35:00.000Z"
+  }
+}
+
+// Response 401
+{ "type": "authentication", "message": "Missing or invalid authorization header" }
+
+// Response 400
+{ "type": "validation", "message": "body must be between 1 and 280 characters" }
+
+// Response 404
+{ "type": "not_found", "message": "Tweet not found" }
+```
+
+---
+
+### `PATCH /comments/:id` — Edit own comment
+
+**Auth:** Required
+
+```jsonc
+// Request body
+{
+  "body": "Updated comment!"    // required, 1-280 characters
+}
+
+// Response 200
+{
+  "comment": {
+    "id": 1,
+    "body": "Updated comment!",
+    "author": {
+      "id": 2,
+      "username": "ahmed",
+      "name": "Ahmed",
+      "profileImage": null
+    },
+    "tweetId": 5,
+    "createdAt": "2026-05-10T12:05:00.000Z"
+  }
+}
+
+// Response 401
+{ "type": "authentication", "message": "Missing or invalid authorization header" }
+
+// Response 403
+{ "type": "forbidden", "message": "You can only edit your own comments" }
+
+// Response 404
+{ "type": "not_found", "message": "Comment not found" }
+
+// Response 400
+{ "type": "validation", "message": "body must be between 1 and 280 characters" }
+```
+
+---
+
+### `DELETE /comments/:id` — Delete own comment
+
+**Auth:** Required
+
+```jsonc
+// Response 204 (No Content — empty body)
+
+// Response 401
+{ "type": "authentication", "message": "Missing or invalid authorization header" }
+
+// Response 403
+{ "type": "forbidden", "message": "You can only delete your own comments" }
+
+// Response 404
+{ "type": "not_found", "message": "Comment not found" }
+```
+
+**Notes:**
+- Standalone route (`/comments/:id`), not nested under tweets.
+- Only the comment author can delete it.
