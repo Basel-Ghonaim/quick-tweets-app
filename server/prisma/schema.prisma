@@ -1,16 +1,11 @@
 // ─── Prisma Schema — Quick Tweets Database ──────────────────────────────────
 //
-// Current purpose:
-// - Defines the User model for authentication (register, login, profile)
-// - Configures PostgreSQL as the datasource
-// - Auto-generates Prisma Client for type-safe database queries
-//
-// Future expansion:
-// - Post model (id, content, image, userId, createdAt)
-// - Comment model (id, content, postId, userId, createdAt)
-// - Relations: User → Post (1:N), Post → Comment (1:N), User → Comment (1:N)
-// - Indexes for performance (userId on posts, postId on comments)
-// - Soft delete (deletedAt field) for data recovery
+// Models:
+// - User: Authentication + profile data
+// - RefreshToken: JWT refresh token storage (auth module)
+// - Tweet: User posts (280 chars max)
+// - Comment: Replies to tweets
+// - Like: User-tweet like relationship (unique pair)
 
 generator client {
   provider = "prisma-client"
@@ -51,4 +46,23 @@ model RefreshToken {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("refresh_tokens")
+}
+
+// ─── Tweet ───────────────────────────────────────────────────────────────────
+
+model Tweet {
+  id        Int      @id @default(autoincrement())
+  body      String   @db.VarChar(280)
+  image     String?
+  authorId  Int      @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+  @@map("tweets")
 }
