@@ -61,6 +61,7 @@ model Tweet {
   // Relations
   author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments Comment[]
+  likes    Like[]
 
   // Indexes
   @@index([authorId])
@@ -85,4 +86,22 @@ model Comment {
   @@index([tweetId])
   @@index([authorId])
   @@map("comments")
+}
+
+// ─── Like ────────────────────────────────────────────────────────────────────
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  tweetId   Int      @map("tweet_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tweet Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+
+  // Constraints & Indexes
+  @@unique([userId, tweetId])
+  @@index([tweetId])
+  @@map("likes")
 }
