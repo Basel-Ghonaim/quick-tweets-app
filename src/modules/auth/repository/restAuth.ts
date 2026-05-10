@@ -1,17 +1,14 @@
 import type { AuthRepository } from "./AuthRepository";
-import { apiClient, authClient } from "@shared/api";
+import { authClient } from "@shared/api";
 import { authMapper } from "../mapper";
 
-export const restAuth = (
-  api = apiClient,
-  authApi = authClient,
-): AuthRepository => {
+export const restAuth = (authApi = authClient): AuthRepository => {
   const { toAuthResponse, loginCredentialsToDto, registerCredentialsToDto } =
     authMapper();
 
   return {
     login: async (credentials) => {
-      const res = await api.post(
+      const res = await authApi.post(
         "/auth/login",
         loginCredentialsToDto(credentials),
       );
@@ -19,7 +16,7 @@ export const restAuth = (
     },
     register: async (credentials) => {
       const dto = registerCredentialsToDto(credentials);
-      const res = await api.post("/auth/register", dto);
+      const res = await authApi.post("/auth/register", dto);
       return toAuthResponse(res.data);
     },
     logout: async () => {
