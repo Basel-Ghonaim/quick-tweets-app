@@ -59,10 +59,30 @@ model Tweet {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
 
   // Indexes
   @@index([authorId])
   @@index([createdAt(sort: Desc)])
   @@map("tweets")
+}
+
+// ─── Comment ─────────────────────────────────────────────────────────────────
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  body      String   @db.VarChar(280)
+  authorId  Int      @map("author_id")
+  tweetId   Int      @map("tweet_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tweet  Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([tweetId])
+  @@index([authorId])
+  @@map("comments")
 }
