@@ -417,3 +417,81 @@ interface ErrorResponse {
 **Notes:**
 - Standalone route (`/comments/:id`), not nested under tweets.
 - Only the comment author can delete it.
+
+---
+
+## Users
+
+### `GET /users/:username` — User profile
+
+**Auth:** None
+
+```jsonc
+// Response 200
+{
+  "user": {
+    "id": 1,
+    "username": "basel",
+    "name": "Basel",
+    "email": "basel@test.com",
+    "profileImage": null,
+    "bio": "",
+    "tweetsCount": 12,
+    "likesCount": 34,
+    "createdAt": "2026-04-20T10:00:00.000Z"
+  }
+}
+
+// Response 404
+{ "type": "not_found", "message": "User not found" }
+```
+
+**Notes:**
+- `tweetsCount`: total tweets authored by this user
+- `likesCount`: total likes received across all their tweets
+
+---
+
+### `GET /users/:username/tweets` — User's tweets (paginated)
+
+**Auth:** Optional
+**Query params:** `?page=1&limit=10`
+
+```jsonc
+// Response 200
+{
+  "tweets": [
+    {
+      "id": 5,
+      "body": "Hello world!",
+      "image": null,
+      "author": {
+        "id": 1,
+        "username": "basel",
+        "name": "Basel",
+        "profileImage": null
+      },
+      "likesCount": 3,
+      "commentsCount": 2,
+      "isLiked": true,
+      "createdAt": "2026-05-10T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "currentPage": 1,
+    "limit": 10,
+    "totalPages": 2,
+    "totalRecords": 12,
+    "hasNextPage": true,
+    "hasPreviousPage": false
+  }
+}
+
+// Response 404
+{ "type": "not_found", "message": "User not found" }
+```
+
+**Notes:**
+- Same tweet shape as feed — reuses `AuthorEmbed`
+- `isLiked` requires optional auth
+- Ordered by `createdAt DESC`
