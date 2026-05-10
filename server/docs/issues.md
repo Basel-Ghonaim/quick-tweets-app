@@ -314,3 +314,55 @@ Connect all frontend auth pieces to make login, logout, refresh, and session res
 - [ ] Documentation updated in `setup-log.md`
 
 **Related:** Issue #2 (parent), Sub-Issue #2.4b (frontend model), WorkingPrinciples.md (SRP, DIP)
+
+---
+
+## Issue #3: Data Models — Prisma Schema (Tweet, Comment, Like)
+
+- **Title:** schema(server): add Tweet, Comment, Like models with relations and indexes
+- **Labels:** [backend, database, schema, infrastructure]
+- **Branch:** `feature/data-models-schema`
+- **Description:**
+
+Expand the Prisma schema to support the core social features: tweets, comments, and likes.
+This is the foundation for the tweets, comments, and users backend modules.
+
+**Models:**
+
+| Model | Purpose | Key Fields |
+|---|---|---|
+| Tweet | User posts (280 chars max) | body, image?, authorId |
+| Comment | Replies to tweets | body, authorId, tweetId |
+| Like | User-tweet like (unique pair) | userId, tweetId |
+
+**Relations:**
+
+| Relation | Type | Cascade |
+|---|---|---|
+| User → Tweet | 1:N | Delete user → delete tweets |
+| User → Comment | 1:N | Delete user → delete comments |
+| User → Like | 1:N | Delete user → delete likes |
+| Tweet → Comment | 1:N | Delete tweet → delete comments |
+| Tweet → Like | 1:N | Delete tweet → delete likes |
+
+**Steps:**
+
+- [ ] Add Tweet model to schema
+- [ ] Add Comment model to schema
+- [ ] Add Like model to schema
+- [ ] Update User model with new relations
+- [ ] Run migration
+- [ ] Documentation in `setup-log.md`
+
+**Acceptance Criteria:**
+
+- [ ] Tweet model: body (varchar 280), image (optional), authorId, timestamps, indexes
+- [ ] Comment model: body (varchar 280), authorId, tweetId, timestamps, indexes
+- [ ] Like model: userId, tweetId, `@@unique` constraint, timestamps
+- [ ] User model: tweets, comments, likes relations added
+- [ ] All cascade deletes configured
+- [ ] Migration runs successfully
+- [ ] Prisma Client generated without errors
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #1 (foundation), Issue #2 (auth — existing User model)
