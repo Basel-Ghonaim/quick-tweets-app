@@ -29,10 +29,9 @@ model User {
 
   // Relations
   refreshTokens RefreshToken[]
-
-  // Future relations:
-  // posts    Post[]
-  // comments Comment[]
+  tweets        Tweet[]
+  comments      Comment[]
+  likes         Like[]
 
   @@map("users")
 }
