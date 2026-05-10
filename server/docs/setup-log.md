@@ -482,3 +482,83 @@ Aligned every frontend type, DTO, mapper, store slice, and API client with the n
 ### Step 6 — End-to-end Verification
 
 _To be documented when executed._
+
+---
+---
+
+# Phase 3 — Data Models (Issue #3)
+
+> This section documents the expansion of the database schema to support tweets, comments, and likes.
+> Separated from Phase 2 (Auth) documentation above.
+
+---
+
+## Step 0 — Prisma Schema (Tweet, Comment, Like)
+
+**Date:** 2026-05-10
+**Branch:** `feature/data-models-schema`
+**Issue:** #3 (Data Models)
+**Migration:** `20260510140834_add_tweets_comments_likes`
+
+### New Models
+
+| Model | Table | Purpose |
+|---|---|---|
+| Tweet | `tweets` | User posts, 280 chars max |
+| Comment | `comments` | Replies to tweets |
+| Like | `likes` | User-tweet like (unique pair) |
+
+### Tweet Model
+
+| Column | Type | Constraint |
+|---|---|---|
+| id | Int | PK, auto-increment |
+| body | VarChar(280) | Required |
+| image | String | Optional (URL) |
+| author_id | Int | FK → users.id, CASCADE |
+| created_at | DateTime | Default: now() |
+| updated_at | DateTime | Auto-update |
+
+**Indexes:** `author_id` (profile queries), `created_at DESC` (feed ordering)
+
+### Comment Model
+
+| Column | Type | Constraint |
+|---|---|---|
+| id | Int | PK, auto-increment |
+| body | VarChar(280) | Required |
+| author_id | Int | FK → users.id, CASCADE |
+| tweet_id | Int | FK → tweets.id, CASCADE |
+| created_at | DateTime | Default: now() |
+
+**Indexes:** `tweet_id` (comments for a tweet), `author_id` (user's comments)
+
+### Like Model
+
+| Column | Type | Constraint |
+|---|---|---|
+| id | Int | PK, auto-increment |
+| user_id | Int | FK → users.id, CASCADE |
+| tweet_id | Int | FK → tweets.id, CASCADE |
+| created_at | DateTime | Default: now() |
+
+**Constraints:** `UNIQUE(user_id, tweet_id)` — one like per user per tweet
+**Indexes:** `tweet_id` (count likes for a tweet)
+
+### User Model Updates
+
+Added relation arrays: `tweets Tweet[]`, `comments Comment[]`, `likes Like[]`
+
+### Cascade Delete Chain
+
+```
+Delete User → deletes all their tweets, comments, likes, refresh tokens
+Delete Tweet → deletes all its comments and likes
+```
+
+### Design Decisions
+
+- **VarChar(280)**: Enforced at DB level, not just application level. Double safety.
+- **Like as separate model**: Instead of a counter field, a Like table allows us to know WHO liked, prevent duplicates via DB constraint, and easily toggle.
+- **No soft delete**: YAGNI — we can add `deletedAt` later if needed.
+- **image as URL string**: File storage is a separate concern (future Multer integration). The DB stores the URL.
