@@ -1,7 +1,7 @@
 /**
  * Auth controller — HTTP request handling for auth endpoints.
  *
- * Current purpose:
+ * Purpose:
  * - register: parse validated body → call service → set cookie → return 201 + user + accessToken
  * - login: parse validated body → call service → set cookie → return 200 + user + accessToken
  * - logout: read cookie → call service → clear cookie → return 204
@@ -10,6 +10,8 @@
  *
  * Security: refresh token is NEVER in the response body.
  * It is set as an httpOnly cookie — JavaScript cannot read it.
+ *
+ * Response format: All responses use sendSuccess() → { success: true, data: {...} }
  *
  * Future expansion:
  * - forgotPassword: validate email → call service → return 200
@@ -24,6 +26,8 @@ import type { AuthenticatedRequest } from "../../middleware/authGuard.js";
 import { createAuthService } from "./auth.service.js";
 import { createAuthRepository } from "./auth.repository.js";
 import type { IAuthService } from "./auth.types.js";
+import { sendSuccess } from "../../shared/response/index.js";
+import { AppError } from "../../shared/errors/index.js";
 
 // ─── Cookie Configuration ────────────────────────────────────────────────────
 
@@ -74,10 +78,10 @@ export const createAuthController = (
 
       res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
-      res.status(201).json({
+      sendSuccess(res, {
         user: toUserResponse(result.user),
         accessToken: result.accessToken,
-      });
+      }, 201);
     } catch (err) {
       next(err);
     }
@@ -94,7 +98,7 @@ export const createAuthController = (
 
       res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
-      res.status(200).json({
+      sendSuccess(res, {
         user: toUserResponse(result.user),
         accessToken: result.accessToken,
       });
@@ -115,7 +119,7 @@ export const createAuthController = (
       }
 
       res.clearCookie("refreshToken", { path: "/api/v1/auth" });
-      res.status(204).send();
+      sendSuccess(res, null, 204);
     } catch (err) {
       next(err);
     }
@@ -130,15 +134,14 @@ export const createAuthController = (
     try {
       const refreshToken = req.cookies?.refreshToken;
       if (!refreshToken) {
-        res.status(401).json({ type: "authentication", message: "No refresh token provided" });
-        return;
+        throw AppError.authentication("No refresh token provided");
       }
 
       const result = await service.refreshToken(refreshToken);
 
       res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
-      res.status(200).json({
+      sendSuccess(res, {
         accessToken: result.accessToken,
       });
     } catch (err) {
@@ -158,11 +161,10 @@ export const createAuthController = (
       const user = await authRepo.findById(userId);
 
       if (!user) {
-        res.status(404).json({ type: "not_found", message: "User not found" });
-        return;
+        throw AppError.notFound("User");
       }
 
-      res.status(200).json({
+      sendSuccess(res, {
         user: toUserResponse(user),
       });
     } catch (err) {
