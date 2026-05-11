@@ -1,10 +1,14 @@
 /**
  * Global error handler middleware.
  *
- * Current purpose:
+ * Purpose:
  * - Catches all errors thrown in routes/services and formats a consistent JSON response
+ * - Returns standardized error shape: { success: false, error: { type, message } }
  * - Differentiates between known AppErrors (typed) and unknown errors (500)
  * - Prevents stack traces from leaking to the client in production
+ *
+ * Response format:
+ *   { success: false, error: { type: "validation", message: "..." } }
  *
  * Future expansion:
  * - Log errors to an external service (Sentry, LogRocket)
@@ -25,9 +29,12 @@ export const errorHandler = (
   // Known application error — send typed response
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
-      type: err.type,
-      message: err.message,
-      ...(err.errors && { errors: err.errors }),
+      success: false,
+      error: {
+        type: err.type,
+        message: err.message,
+        ...(err.errors && { errors: err.errors }),
+      },
     });
     return;
   }
@@ -36,7 +43,10 @@ export const errorHandler = (
   console.error("[ErrorHandler] Unhandled error:", err);
 
   res.status(500).json({
-    type: "server",
-    message: "Internal server error",
+    success: false,
+    error: {
+      type: "server",
+      message: "Internal server error",
+    },
   });
 };
