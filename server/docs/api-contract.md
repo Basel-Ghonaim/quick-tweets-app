@@ -8,6 +8,50 @@
 
 ---
 
+## Response Wrapper
+
+Every API response follows this standardized format:
+
+### Success Response
+
+```typescript
+{
+  success: true,
+  data: T,                            // object, array, or null (for 204)
+  meta?: Record<string, unknown>      // pagination, counts, etc.
+}
+```
+
+### Error Response
+
+```typescript
+{
+  success: false,
+  error: {
+    type: "validation" | "authentication" | "forbidden" | "not_found" | "conflict" | "server",
+    message: string,
+    errors?: Record<string, string[]>  // field-level validation errors
+  }
+}
+```
+
+### Examples
+
+```jsonc
+// POST /auth/register → 201
+{ "success": true, "data": { "user": {...}, "accessToken": "eyJ..." } }
+
+// GET /tweets → 200 with pagination
+{ "success": true, "data": [...], "meta": { "cursor": "abc", "hasMore": true } }
+
+// DELETE /tweets/:id → 204 (no body)
+
+// Error → 403
+{ "success": false, "error": { "type": "forbidden", "message": "You can only delete your own tweets" } }
+```
+
+---
+
 ## Shared Types
 
 ### AuthorEmbed
@@ -40,18 +84,20 @@ interface PaginationMeta {
 
 ### Error Response
 
-Consistent across all endpoints. Matches the existing `AppError` pattern.
+Consistent across all endpoints. Wrapped in the response wrapper above.
 
 ```typescript
-interface ErrorResponse {
+// Wrapped shape: { success: false, error: ErrorBody }
+interface ErrorBody {
   type:
     | "validation"
     | "authentication"
     | "forbidden"
     | "not_found"
     | "conflict"
-    | "unknown";
+    | "server";
   message: string;
+  errors?: Record<string, string[]>;  // field-level validation errors
 }
 ```
 
