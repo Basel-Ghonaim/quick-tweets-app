@@ -605,3 +605,56 @@ Delete Tweet → deletes all its comments and likes
 - **Comments ordered ASC**: oldest first (conversation style), unlike tweets which are newest first
 - **Standalone delete routes**: `DELETE /comments/:id` is not nested under tweets
 - **User profile counts**: `tweetsCount` + `likesCount` (received) — aggregated server-side
+
+---
+---
+
+# Phase 4 — Server Foundations Reform (Issue #5)
+
+> This section documents infrastructure fixes identified during the project review.
+> These set the patterns that ALL future modules follow.
+> Reference: `Gaps-and-shortcomings-map.md`
+
+---
+
+## Fix #5.1 — Response Wrapper (Standardize API Responses)
+
+**Date:** 2026-05-11
+**Branch:** `fix/response-wrapper`
+**Issue:** #5.1 (Response Wrapper)
+**Gap:** #5 from Gaps-and-shortcomings-map.md
+
+### Problem
+
+Responses had inconsistent shapes:
+- Register/login: `{ user, accessToken }`
+- Refresh: `{ accessToken }`
+- Errors: `{ type, message }`
+- Me: `{ user }`
+
+Frontend had to guess the structure of each response.
+
+### Solution
+
+Standardized ALL responses to:
+
+```
+Success: { success: true, data: T, meta?: {...} }
+Error:   { success: false, error: { type, message } }
+```
+
+### Files Changed
+
+| File | What Changed |
+|---|---|
+| `shared/response/sendSuccess.ts` | New utility — `sendSuccess(res, data, statusCode?, meta?)` |
+| `shared/response/index.ts` | Barrel export |
+| `middleware/errorHandler.ts` | Wraps errors in `{ success: false, error: {...} }` |
+| `modules/auth/auth.controller.ts` | All 5 handlers refactored to use `sendSuccess()` |
+| `docs/api-contract.md` | Added Response Wrapper section |
+
+### Design Decisions
+
+- **`sendSuccess()` handles 204**: If `statusCode === 204`, it sends `res.status(204).send()` with no body.
+- **Inline error removal**: Auth controller no longer has `res.status(401).json(...)` — all errors thrown as `AppError`, handled by `errorHandler`.
+- **`meta` is optional**: Only included when there's pagination or extra info. Keeps simple responses clean.
