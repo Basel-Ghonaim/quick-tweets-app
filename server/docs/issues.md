@@ -406,3 +406,73 @@ query params, response shape, and error cases documented in one place.
 - [ ] Contract file created at `server/docs/api-contract.md`
 
 **Related:** Issue #3 (schema), Issue #1 (foundation — error handler pattern)
+
+---
+
+## Issue #5: Server Foundations Reform (Parent)
+
+- **Title:** fix(server): address infrastructure gaps before building feature modules
+- **Labels:** [backend, fix, infrastructure, epic]
+- **Description:**
+
+Address foundational gaps identified in the project review (`Gaps-and-shortcomings-map.md`).
+These fixes set the patterns that ALL future modules must follow. Building features on top of
+inconsistent patterns creates technical debt that compounds with every new module.
+
+**Sub-Issues:**
+
+- [ ] **#5.1** — Response Wrapper: standardize all API responses to `{ success, data, meta? }`
+- [ ] **#5.2** — Rate Limiting: protect auth and POST endpoints
+- [ ] **#5.3** — optionalAuth Middleware: for isLiked on public endpoints
+- [ ] **#5.4** — Follow Model: schema + migration for followers system
+
+**Already solved (no action needed):**
+- ~~Cascade Delete~~ → already `onDelete: Cascade` in schema
+- ~~Global Error Handler~~ → already exists in `app.ts`
+- ~~Database Indexes~~ → already added in schema
+
+**Deferred to feature branches:**
+- Comment routing → addressed when building comments module
+- Repository duplication → addressed when building users module
+
+**Related:** Gaps-and-shortcomings-map.md, Issues #1-#4
+
+---
+
+### Sub-Issue #5.1: Response Wrapper — Standardize API Responses
+
+- **Title:** fix(server): standardize all API responses with success/data/meta wrapper
+- **Labels:** [backend, fix, refactor]
+- **Branch:** `fix/response-wrapper`
+- **Description:**
+
+Currently, responses have inconsistent shapes (`{ user }`, `{ accessToken }`, `{ type, message }`).
+Standardize everything to a predictable format so the frontend always knows what to expect.
+
+**Steps:**
+
+- [ ] Create `sendSuccess()` response helper
+- [ ] Create `sendError()` response helper
+- [ ] Update `errorHandler` middleware to use `{ success: false, error }` format
+- [ ] Refactor auth controller — all responses use `sendSuccess()`
+- [ ] Update API contract — add response wrapper section
+- [ ] Documentation in `setup-log.md`
+
+**Response format:**
+
+```
+Success: { success: true, data: {...}, meta?: {...} }
+Error:   { success: false, error: { type, message } }
+```
+
+**Acceptance Criteria:**
+
+- [ ] `sendSuccess(res, data, statusCode?, meta?)` utility exists
+- [ ] `errorHandler` returns `{ success: false, error: { type, message } }`
+- [ ] All auth controller responses use `sendSuccess()`
+- [ ] No direct `res.json()` calls remain in auth controller (except cookie/clear)
+- [ ] Frontend DTO types updated if needed
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#5)
+ 
