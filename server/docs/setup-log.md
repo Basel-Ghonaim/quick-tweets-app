@@ -658,3 +658,48 @@ Error:   { success: false, error: { type, message } }
 - **`sendSuccess()` handles 204**: If `statusCode === 204`, it sends `res.status(204).send()` with no body.
 - **Inline error removal**: Auth controller no longer has `res.status(401).json(...)` — all errors thrown as `AppError`, handled by `errorHandler`.
 - **`meta` is optional**: Only included when there's pagination or extra info. Keeps simple responses clean.
+
+---
+
+## Fix #5.2 — Rate Limiting (Protect Endpoints from Abuse)
+
+**Date:** 2026-05-12
+**Branch:** `fix/rate-limiting`
+**Issue:** #5.2 (Rate Limiting)
+**Gap:** #2 from Gaps-and-shortcomings-map.md
+
+### Problem
+
+No rate limiting. Anyone could:
+- Brute-force login with thousands of password attempts
+- Spam POST endpoints creating garbage content
+- Overload the server with requests (DoS)
+
+### Solution
+
+Three rate limiters with different thresholds:
+
+| Limiter | Endpoints | Limit | Why |
+|---|---|---|---|
+| `authLimiter` | `/login`, `/register` | 10 / 15 min | Brute force protection (passwords) |
+| `refreshLimiter` | `/refresh` | 30 / 15 min | Generous — silent refresh is automated |
+| `apiLimiter` | Future routes | 100 / 15 min | General protection |
+
+### Files Changed
+
+| File | What Changed |
+|---|---|
+| `package.json` | Added `express-rate-limit@8.5.1` |
+| `middleware/rateLimiter.ts` | New — 3 limiters with user-friendly 429 messages |
+| `app.ts` | Added `trust proxy = 1` for correct IP behind proxies |
+| `modules/auth/auth.routes.ts` | Applied authLimiter on login/register, refreshLimiter on refresh |
+| `docs/api-contract.md` | Added 429 status + rate limiting section |
+
+### Design Decisions
+
+- **Per-route limiters (not global)**: authLimiter only on login/register. Refresh has its own generous limit. Logout/me have no rate limit — they're single-call endpoints.
+- **Refresh excluded from authLimiter**: Silent refresh is automated. Sharing the strict 10-request auth limit would lock users out of login during normal browsing.
+- **`trust proxy = 1`**: Required for production. Without it, all users behind a reverse proxy share one IP counter.
+- **`standardHeaders: "draft-8"`**: Sends `RateLimit-*` headers so the frontend can show time-remaining info.
+- **User-friendly messages**: Each limiter has a clear, specific message explaining what happened and when to retry.
+
