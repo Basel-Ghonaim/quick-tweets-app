@@ -67,20 +67,42 @@ interface AuthorEmbed {
 }
 ```
 
-### PaginationMeta
+### CursorPaginationMeta
 
-Included in every paginated list response.
+Used for high-growth, chronological data (tweets, followers/following lists).
+Cursor is the `id` of the last item — auto-incrementing IDs guarantee chronological order.
 
 ```typescript
-interface PaginationMeta {
-  currentPage: number; // current page (1-indexed)
-  limit: number; // items per page
-  totalPages: number; // total count of records
-  totalRecords: number; // total count of records 
+interface CursorPaginationMeta {
+  nextCursor: string | null;  // id of last item, null if no more pages
+  limit: number;              // items per page
+  hasMore: boolean;           // are there more items after this page?
+}
+```
+
+**Query params:** `?cursor=<id>&limit=10`
+
+**Used by:** `GET /tweets`, `GET /users/:username/tweets`, `GET /users/:username/followers`, `GET /users/:username/following`
+
+### OffsetPaginationMeta
+
+Used for small, bounded datasets (comments on a tweet).
+
+```typescript
+interface OffsetPaginationMeta {
+  currentPage: number;
+  limit: number;
+  totalPages: number;
+  totalRecords: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }
 ```
+
+**Query params:** `?page=1&limit=10`
+
+**Used by:** `GET /tweets/:tweetId/comments`
+
 
 ### Error Response
 
@@ -131,15 +153,16 @@ interface ErrorBody {
 
 ## Tweets
 
-### `GET /tweets` — Feed (paginated)
+### `GET /tweets` — Feed (cursor-paginated)
 
 **Auth:** Optional
-**Query params:** `?page=1&limit=10`
+**Query params:** `?cursor=<id>&limit=10`
 
 ```jsonc
 // Response 200
 {
-  "tweets": [
+  "success": true,
+  "data": [
     {
       "id": 5,
       "body": "Hello world!",
@@ -156,21 +179,19 @@ interface ErrorBody {
       "createdAt": "2026-05-10T12:00:00.000Z"
     }
   ],
-  "pagination": {
-    "currentPage": 1,
+  "meta": {
+    "nextCursor": "5",
     "limit": 10,
-    "totalPages": 5,
-    "totalRecords": 42,
-    "hasNextPage": true,
-    "hasPreviousPage": false
+    "hasMore": true
   }
 }
 ```
 
 **Notes:**
-- Ordered by `createdAt DESC` (newest first)
+- Ordered by `id DESC` (newest first — auto-increment = chronological)
 - `isLiked` is `false` for unauthenticated users
 - `limit` capped at 50
+- First request: no cursor. Next page: pass `cursor=<last item id>`
 
 ---
 
