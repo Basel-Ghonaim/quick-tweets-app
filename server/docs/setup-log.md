@@ -743,3 +743,66 @@ Created `optionalAuth` middleware and simplified `authGuard`:
 - **`req.userId!` in authGuard routes**: After `authGuard` runs, `userId` is guaranteed to exist. The non-null assertion (`!`) is safe because `authGuard` throws 401 before the controller if the token is invalid.
 - **Never throws, never responds**: `optionalAuth` only enriches the request. All errors are silently caught — a guest with a bad token is still a guest.
 
+---
+
+## Fix #5.4 — Follow Model + API Contract Final Update
+
+**Date:** 2026-05-12
+**Branch:** `fix/follow-model-and-api-contract`
+**Issue:** #5.4 (Follow Model + API Contract)
+**Gaps:** #1, #3, #6, #7 from Gaps-and-shortcomings-map.md
+
+### Part A — Follow Model
+
+Added `Follow` model to Prisma schema for the social graph.
+
+**Schema:**
+
+```
+follows table:
+  id, follower_id, following_id, created_at
+  UNIQUE(follower_id, following_id) — can't follow twice
+  INDEX(follower_id) — fast "who am I following?" (feed)
+  INDEX(following_id) — fast "who follows me?" (count)
+  ON DELETE CASCADE — user deletion cleans relationships
+```
+
+**User model updated:**
+- `followers: Follow[] @relation("following")` — people who follow ME
+- `following: Follow[] @relation("followers")` — people I follow
+
+### Part B — API Contract Updates
+
+Three major changes reflected:
+
+**1. Cursor Pagination (Gap #3)**
+- Feed and user tweets use cursor (`?cursor=<id>&limit=10`)
+- Comments keep offset (`?page=1&limit=20`) — small, bounded dataset
+- Split `PaginationMeta` into `CursorPaginationMeta` + `OffsetPaginationMeta`
+
+**2. Nested Comment Routing (Gap #6)**
+- `PATCH/DELETE /comments/:id` → `PATCH/DELETE /tweets/:tweetId/comments/:commentId`
+- Server validates comment belongs to the specified tweet
+
+**3. Follow Endpoints (Gap #1)**
+- `POST /users/:username/follow` — follow user
+- `DELETE /users/:username/follow` — unfollow user
+- `GET /users/:username/followers` — cursor-paginated follower list
+- `GET /users/:username/following` — cursor-paginated following list
+- User profile updated: +`followersCount`, +`followingCount`, +`isFollowing`
+
+### Design Decisions
+
+- **Cursor = id only**: Auto-increment IDs guarantee chronological order. No compound cursor needed.
+- **COUNT() for follower counts**: No denormalization. COUNT() on indexed columns is O(log n) — fast for reasonable data sizes. Denormalize only if needed later.
+- **Self-follow prevention**: Not enforced at schema level. Will be a Service Layer check in Phase E: `if (followerId === followingId) throw AppError.validation("Cannot follow yourself")`
+- **Follow spam**: Already covered by apiLimiter (100 req/15min) + `@@unique` constraint.
+
+### Files Changed
+
+| File | What Changed |
+|---|---|
+| `prisma/schema.prisma` | Added Follow model + User relations |
+| `prisma/migrations/add_follow_model` | Creates follows table |
+| `docs/api-contract.md` | Cursor pagination, nested comments, follow endpoints |
+| `docs/issues.md` | Sub-Issue #5.4 |

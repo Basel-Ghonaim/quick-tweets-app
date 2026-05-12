@@ -67,20 +67,42 @@ interface AuthorEmbed {
 }
 ```
 
-### PaginationMeta
+### CursorPaginationMeta
 
-Included in every paginated list response.
+Used for high-growth, chronological data (tweets, followers/following lists).
+Cursor is the `id` of the last item — auto-incrementing IDs guarantee chronological order.
 
 ```typescript
-interface PaginationMeta {
-  currentPage: number; // current page (1-indexed)
-  limit: number; // items per page
-  totalPages: number; // total count of records
-  totalRecords: number; // total count of records 
+interface CursorPaginationMeta {
+  nextCursor: string | null;  // id of last item, null if no more pages
+  limit: number;              // items per page
+  hasMore: boolean;           // are there more items after this page?
+}
+```
+
+**Query params:** `?cursor=<id>&limit=10`
+
+**Used by:** `GET /tweets`, `GET /users/:username/tweets`, `GET /users/:username/followers`, `GET /users/:username/following`
+
+### OffsetPaginationMeta
+
+Used for small, bounded datasets (comments on a tweet).
+
+```typescript
+interface OffsetPaginationMeta {
+  currentPage: number;
+  limit: number;
+  totalPages: number;
+  totalRecords: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
 }
 ```
+
+**Query params:** `?page=1&limit=10`
+
+**Used by:** `GET /tweets/:tweetId/comments`
+
 
 ### Error Response
 
@@ -131,15 +153,16 @@ interface ErrorBody {
 
 ## Tweets
 
-### `GET /tweets` — Feed (paginated)
+### `GET /tweets` — Feed (cursor-paginated)
 
 **Auth:** Optional
-**Query params:** `?page=1&limit=10`
+**Query params:** `?cursor=<id>&limit=10`
 
 ```jsonc
 // Response 200
 {
-  "tweets": [
+  "success": true,
+  "data": [
     {
       "id": 5,
       "body": "Hello world!",
@@ -156,21 +179,19 @@ interface ErrorBody {
       "createdAt": "2026-05-10T12:00:00.000Z"
     }
   ],
-  "pagination": {
-    "currentPage": 1,
+  "meta": {
+    "nextCursor": "5",
     "limit": 10,
-    "totalPages": 5,
-    "totalRecords": 42,
-    "hasNextPage": true,
-    "hasPreviousPage": false
+    "hasMore": true
   }
 }
 ```
 
 **Notes:**
-- Ordered by `createdAt DESC` (newest first)
+- Ordered by `id DESC` (newest first — auto-increment = chronological)
 - `isLiked` is `false` for unauthenticated users
 - `limit` capped at 50
+- First request: no cursor. Next page: pass `cursor=<last item id>`
 
 ---
 
@@ -411,7 +432,7 @@ interface ErrorBody {
 
 ---
 
-### `PATCH /comments/:id` — Edit own comment
+### `PATCH /tweets/:tweetId/comments/:commentId` — Edit own comment
 
 **Auth:** Required
 
@@ -452,7 +473,7 @@ interface ErrorBody {
 
 ---
 
-### `DELETE /comments/:id` — Delete own comment
+### `DELETE /tweets/:tweetId/comments/:commentId` — Delete own comment
 
 **Auth:** Required
 
@@ -470,8 +491,9 @@ interface ErrorBody {
 ```
 
 **Notes:**
-- Standalone route (`/comments/:id`), not nested under tweets.
+- Fully nested under tweets (`/tweets/:tweetId/comments/:commentId`).
 - Only the comment author can delete it.
+- Server validates that the comment belongs to the specified tweet.
 
 ---
 
@@ -479,12 +501,13 @@ interface ErrorBody {
 
 ### `GET /users/:username` — User profile
 
-**Auth:** None
+**Auth:** Optional
 
 ```jsonc
 // Response 200
 {
-  "user": {
+  "success": true,
+  "data": {
     "id": 1,
     "username": "basel",
     "name": "Basel",
@@ -493,29 +516,36 @@ interface ErrorBody {
     "bio": "",
     "tweetsCount": 12,
     "likesCount": 34,
+    "followersCount": 120,
+    "followingCount": 45,
+    "isFollowing": true,
     "createdAt": "2026-04-20T10:00:00.000Z"
   }
 }
 
 // Response 404
-{ "type": "not_found", "message": "User not found" }
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
 ```
 
 **Notes:**
 - `tweetsCount`: total tweets authored by this user
 - `likesCount`: total likes received across all their tweets
+- `followersCount`: computed via `COUNT()` on follows table (indexed)
+- `followingCount`: computed via `COUNT()` on follows table (indexed)
+- `isFollowing`: `true` if the authenticated user follows this profile, `false` for guests
 
 ---
 
-### `GET /users/:username/tweets` — User's tweets (paginated)
+### `GET /users/:username/tweets` — User's tweets (cursor-paginated)
 
 **Auth:** Optional
-**Query params:** `?page=1&limit=10`
+**Query params:** `?cursor=<id>&limit=10`
 
 ```jsonc
 // Response 200
 {
-  "tweets": [
+  "success": true,
+  "data": [
     {
       "id": 5,
       "body": "Hello world!",
@@ -532,21 +562,132 @@ interface ErrorBody {
       "createdAt": "2026-05-10T12:00:00.000Z"
     }
   ],
-  "pagination": {
-    "currentPage": 1,
+  "meta": {
+    "nextCursor": "5",
     "limit": 10,
-    "totalPages": 2,
-    "totalRecords": 12,
-    "hasNextPage": true,
-    "hasPreviousPage": false
+    "hasMore": true
   }
 }
 
 // Response 404
-{ "type": "not_found", "message": "User not found" }
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
 ```
 
 **Notes:**
 - Same tweet shape as feed — reuses `AuthorEmbed`
 - `isLiked` requires optional auth
-- Ordered by `createdAt DESC`
+- Ordered by `id DESC` (newest first)
+- Uses cursor pagination (same as feed)
+
+---
+
+## Follow
+
+### `POST /users/:username/follow` — Follow a user
+
+**Auth:** Required
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": {
+    "isFollowing": true,
+    "followersCount": 121
+  }
+}
+
+// Response 400
+{ "success": false, "error": { "type": "validation", "message": "You cannot follow yourself" } }
+
+// Response 409
+{ "success": false, "error": { "type": "conflict", "message": "Already following this user" } }
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
+
+---
+
+### `DELETE /users/:username/follow` — Unfollow a user
+
+**Auth:** Required
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": {
+    "isFollowing": false,
+    "followersCount": 120
+  }
+}
+
+// Response 400
+{ "success": false, "error": { "type": "validation", "message": "You are not following this user" } }
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
+
+---
+
+### `GET /users/:username/followers` — Follower list (cursor-paginated)
+
+**Auth:** None
+**Query params:** `?cursor=<id>&limit=20`
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": [
+    {
+      "id": 2,
+      "username": "ahmed",
+      "name": "Ahmed",
+      "profileImage": null,
+      "bio": "Developer"
+    }
+  ],
+  "meta": {
+    "nextCursor": "2",
+    "limit": 20,
+    "hasMore": false
+  }
+}
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
+
+---
+
+### `GET /users/:username/following` — Following list (cursor-paginated)
+
+**Auth:** None
+**Query params:** `?cursor=<id>&limit=20`
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": [
+    {
+      "id": 3,
+      "username": "sara",
+      "name": "Sara",
+      "profileImage": null,
+      "bio": "Designer"
+    }
+  ],
+  "meta": {
+    "nextCursor": "3",
+    "limit": 20,
+    "hasMore": true
+  }
+}
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
