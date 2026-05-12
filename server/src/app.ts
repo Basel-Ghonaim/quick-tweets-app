@@ -18,7 +18,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
-import { apiLimiter } from "./middleware/rateLimiter.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 
 export const app = express();
