@@ -108,7 +108,16 @@ interface ErrorBody {
 | 403         | `forbidden`      | Authenticated but not authorized (e.g., deleting someone else's tweet) |
 | 404         | `not_found`      | Resource doesn't exist                                                 |
 | 409         | `conflict`       | Duplicate resource                                                     |
-| 500         | `unknown`        | Unexpected server error                                                |
+| 429         | `rate_limit`     | Too many requests — rate limit exceeded                                |
+| 500         | `server`         | Unexpected server error                                                |
+
+### Rate Limiting
+
+| Scope | Endpoints | Limit | 429 Message |
+|---|---|---|---|
+| Auth | `/auth/login`, `/auth/register` | 10 req / 15 min | "Too many login attempts. For your security, please wait 15 minutes before trying again." |
+| Refresh | `/auth/refresh` | 30 req / 15 min | "Too many refresh requests. Please wait a few minutes before continuing." |
+| API | All other routes | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
 
 ### Auth Modes
 
