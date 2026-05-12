@@ -475,4 +475,42 @@ Error:   { success: false, error: { type, message } }
 - [ ] Documentation updated in `setup-log.md`
 
 **Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#5)
- 
+
+---
+
+### Sub-Issue #5.2: Rate Limiting — Protect Endpoints from Abuse
+
+- **Title:** fix(server): add rate limiting to auth, refresh, and general API routes
+- **Labels:** [backend, fix, security]
+- **Branch:** `fix/rate-limiting`
+- **Description:**
+
+No rate limiting exists. Anyone can brute-force login, spam tweets, or overload the server.
+Three rate limiters with different thresholds protect different endpoint groups.
+
+**Rate Limiters:**
+
+| Limiter | Endpoints | Limit | Purpose |
+|---|---|---|---|
+| authLimiter | `/login`, `/register` | 10 / 15 min | Brute force protection (passwords) |
+| refreshLimiter | `/refresh` | 30 / 15 min | Generous — silent refresh is automated |
+| apiLimiter | All other routes | 100 / 15 min | General protection |
+
+**Steps:**
+
+- [ ] Install `express-rate-limit`
+- [ ] Create `middleware/rateLimiter.ts` (3 limiters with clear error messages)
+- [ ] Apply limiters in `app.ts` + `trust proxy` for production
+- [ ] Update API contract (429 status)
+- [ ] Documentation in `setup-log.md`
+
+**Acceptance Criteria:**
+
+- [ ] Auth routes (login/register) limited to 10 req / 15 min per IP
+- [ ] Refresh route limited to 30 req / 15 min per IP
+- [ ] General API routes limited to 100 req / 15 min per IP
+- [ ] 429 response uses standardized `{ success: false, error }` format
+- [ ] `trust proxy` enabled for correct IP detection behind reverse proxies
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#2)
