@@ -474,7 +474,41 @@ Error:   { success: false, error: { type, message } }
 - [ ] Frontend DTO types updated if needed
 - [ ] Documentation updated in `setup-log.md`
 
-**Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#5)
+**Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#2)
+
+---
+
+### Sub-Issue #5.3: optionalAuth Middleware — Soft Auth for Public Endpoints
+
+- **Title:** fix(server): add optionalAuth middleware with global userId type and fast JWT check
+- **Labels:** [backend, fix, middleware]
+- **Branch:** `fix/optional-auth`
+- **Description:**
+
+Public endpoints (feed, tweet detail) need to work for both guests and logged-in users.
+`optionalAuth` attaches `userId` if a valid token is present, otherwise continues as guest.
+Unlike `authGuard`, it never rejects — it only enriches the request.
+
+**Includes two improvements from review:**
+1. Global `userId?: number` on Express Request (prevents lint errors, eliminates casts)
+2. Fast JWT format check (skip `jwt.verify()` for obviously invalid tokens — saves CPU)
+
+**Steps:**
+
+- [ ] Extend Express Request type globally (`userId?: number`)
+- [ ] Create `optionalAuth.ts` with fast format check + silent token verification
+- [ ] Refactor `authGuard.ts` to use global type instead of custom interface
+- [ ] Documentation in `setup-log.md`
+
+**Acceptance Criteria:**
+
+- [ ] `req.userId` accessible on ALL routes without type casting
+- [ ] `optionalAuth` never returns 401 — always calls `next()`
+- [ ] Malformed tokens (not 3-part JWT) skipped before `jwt.verify()`
+- [ ] `authGuard` still works as before (401 on missing/invalid token)
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#9)
 
 ---
 

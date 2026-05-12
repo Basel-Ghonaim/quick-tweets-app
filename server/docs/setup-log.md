@@ -703,3 +703,43 @@ Three rate limiters with different thresholds:
 - **`standardHeaders: "draft-8"`**: Sends `RateLimit-*` headers so the frontend can show time-remaining info.
 - **User-friendly messages**: Each limiter has a clear, specific message explaining what happened and when to retry.
 
+---
+
+## Fix #5.3 — optionalAuth Middleware (Soft Auth for Public Endpoints)
+
+**Date:** 2026-05-12
+**Branch:** `fix/optional-auth`
+**Issue:** #5.3 (optionalAuth Middleware)
+**Gap:** #9 from Gaps-and-shortcomings-map.md
+
+### Problem
+
+Two issues:
+1. No middleware for endpoints that work for both guests and logged-in users (feed, tweet detail)
+2. `authGuard` used a redundant `AuthenticatedRequest` interface + type cast instead of the global type
+
+### Solution
+
+Created `optionalAuth` middleware and simplified `authGuard`:
+
+| Middleware | Behavior | userId after |
+|---|---|---|
+| `authGuard` | STRICT — 401 if no valid token | `number` (guaranteed) |
+| `optionalAuth` | SOFT — never rejects | `number \| undefined` |
+
+### Files Changed
+
+| File | What Changed |
+|---|---|
+| `middleware/optionalAuth.ts` | New — soft auth with fast JWT format check |
+| `middleware/authGuard.ts` | Removed `AuthenticatedRequest` interface, uses `req.userId` directly |
+| `modules/auth/auth.controller.ts` | Removed cast, uses `req.userId!` directly |
+| `shared/types/express.d.ts` | Updated docs for both middleware |
+
+### Design Decisions
+
+- **Fast JWT format check**: `token.split(".").length !== 3` — skips `jwt.verify()` for obviously malformed tokens. One `split()` call saves CPU on high-traffic public endpoints.
+- **Removed `AuthenticatedRequest`**: Global `userId?: number` on Express Request already existed. The custom interface + cast was redundant boilerplate.
+- **`req.userId!` in authGuard routes**: After `authGuard` runs, `userId` is guaranteed to exist. The non-null assertion (`!`) is safe because `authGuard` throws 401 before the controller if the token is invalid.
+- **Never throws, never responds**: `optionalAuth` only enriches the request. All errors are silently caught — a guest with a bad token is still a guest.
+
