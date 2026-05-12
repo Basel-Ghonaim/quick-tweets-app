@@ -478,6 +478,59 @@ Error:   { success: false, error: { type, message } }
 
 ---
 
+### Sub-Issue #5.4: Follow Model + API Contract Final Update
+
+- **Title:** fix(server): add Follow model to schema + finalize API contract
+- **Labels:** [backend, fix, schema, docs]
+- **Branch:** `fix/follow-model-and-api-contract`
+- **Description:**
+
+Two objectives in one branch:
+
+**Part A — Follow Model (Schema):**
+Add `Follow` model to Prisma schema. This is the foundation for the social graph
+(feed query, follower/following counts, profile `isFollowing` flag).
+
+**Part B — API Contract Final Update:**
+Reflect all architectural decisions from Phase A into the contract:
+- Cursor pagination (replace offset for feed/user tweets)
+- Nested comment routing (`/tweets/:tweetId/comments/:commentId`)
+- Follow endpoints (4 new)
+- User profile updates (followersCount, followingCount, isFollowing)
+
+**Schema design:**
+- `@@unique([followerId, followingId])` — can't follow someone twice
+- `@@index([followerId])` — fast feed query ("who am I following?")
+- `@@index([followingId])` — fast follower count
+- `onDelete: Cascade` — user deletion cleans up follow relationships
+
+**Note for Phase E (follow service):**
+Self-follow prevention must be enforced in the Service Layer:
+`if (followerId === followingId) throw AppError.validation("Cannot follow yourself")`
+
+**Steps:**
+
+- [ ] Add Follow model + User relations to `schema.prisma`
+- [ ] Run Prisma migration
+- [ ] Update API contract — cursor pagination
+- [ ] Update API contract — nested comment routing
+- [ ] Update API contract — follow endpoints + user profile
+- [ ] Documentation in `setup-log.md`
+
+**Acceptance Criteria:**
+
+- [ ] Follow model exists with unique constraint + indexes
+- [ ] Migration runs successfully
+- [ ] API contract reflects cursor pagination for feed/user tweets
+- [ ] API contract reflects nested comment routing
+- [ ] API contract includes follow endpoints (POST/DELETE/GET)
+- [ ] User profile shape includes followersCount, followingCount, isFollowing
+- [ ] Documentation updated in `setup-log.md`
+
+**Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#1, #3, #6, #7)
+
+---
+
 ### Sub-Issue #5.3: optionalAuth Middleware — Soft Auth for Public Endpoints
 
 - **Title:** fix(server): add optionalAuth middleware with global userId type and fast JWT check
