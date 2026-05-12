@@ -22,7 +22,6 @@
  */
 
 import type { Request, Response, NextFunction } from "express";
-import type { AuthenticatedRequest } from "../../middleware/authGuard.js";
 import { createAuthService } from "./auth.service.js";
 import { createAuthRepository } from "./auth.repository.js";
 import type { IAuthService } from "./auth.types.js";
@@ -156,7 +155,7 @@ export const createAuthController = (
    */
   me: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { userId } = req as AuthenticatedRequest;
+      const userId = req.userId!;
       const authRepo = createAuthRepository();
       const user = await authRepo.findById(userId);
 
