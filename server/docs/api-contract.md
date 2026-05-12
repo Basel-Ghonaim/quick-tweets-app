@@ -432,7 +432,7 @@ interface ErrorBody {
 
 ---
 
-### `PATCH /comments/:id` — Edit own comment
+### `PATCH /tweets/:tweetId/comments/:commentId` — Edit own comment
 
 **Auth:** Required
 
@@ -473,7 +473,7 @@ interface ErrorBody {
 
 ---
 
-### `DELETE /comments/:id` — Delete own comment
+### `DELETE /tweets/:tweetId/comments/:commentId` — Delete own comment
 
 **Auth:** Required
 
@@ -491,8 +491,9 @@ interface ErrorBody {
 ```
 
 **Notes:**
-- Standalone route (`/comments/:id`), not nested under tweets.
+- Fully nested under tweets (`/tweets/:tweetId/comments/:commentId`).
 - Only the comment author can delete it.
+- Server validates that the comment belongs to the specified tweet.
 
 ---
 
