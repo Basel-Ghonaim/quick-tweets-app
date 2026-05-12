@@ -501,12 +501,13 @@ interface ErrorBody {
 
 ### `GET /users/:username` — User profile
 
-**Auth:** None
+**Auth:** Optional
 
 ```jsonc
 // Response 200
 {
-  "user": {
+  "success": true,
+  "data": {
     "id": 1,
     "username": "basel",
     "name": "Basel",
@@ -515,29 +516,36 @@ interface ErrorBody {
     "bio": "",
     "tweetsCount": 12,
     "likesCount": 34,
+    "followersCount": 120,
+    "followingCount": 45,
+    "isFollowing": true,
     "createdAt": "2026-04-20T10:00:00.000Z"
   }
 }
 
 // Response 404
-{ "type": "not_found", "message": "User not found" }
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
 ```
 
 **Notes:**
 - `tweetsCount`: total tweets authored by this user
 - `likesCount`: total likes received across all their tweets
+- `followersCount`: computed via `COUNT()` on follows table (indexed)
+- `followingCount`: computed via `COUNT()` on follows table (indexed)
+- `isFollowing`: `true` if the authenticated user follows this profile, `false` for guests
 
 ---
 
-### `GET /users/:username/tweets` — User's tweets (paginated)
+### `GET /users/:username/tweets` — User's tweets (cursor-paginated)
 
 **Auth:** Optional
-**Query params:** `?page=1&limit=10`
+**Query params:** `?cursor=<id>&limit=10`
 
 ```jsonc
 // Response 200
 {
-  "tweets": [
+  "success": true,
+  "data": [
     {
       "id": 5,
       "body": "Hello world!",
@@ -554,21 +562,132 @@ interface ErrorBody {
       "createdAt": "2026-05-10T12:00:00.000Z"
     }
   ],
-  "pagination": {
-    "currentPage": 1,
+  "meta": {
+    "nextCursor": "5",
     "limit": 10,
-    "totalPages": 2,
-    "totalRecords": 12,
-    "hasNextPage": true,
-    "hasPreviousPage": false
+    "hasMore": true
   }
 }
 
 // Response 404
-{ "type": "not_found", "message": "User not found" }
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
 ```
 
 **Notes:**
 - Same tweet shape as feed — reuses `AuthorEmbed`
 - `isLiked` requires optional auth
-- Ordered by `createdAt DESC`
+- Ordered by `id DESC` (newest first)
+- Uses cursor pagination (same as feed)
+
+---
+
+## Follow
+
+### `POST /users/:username/follow` — Follow a user
+
+**Auth:** Required
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": {
+    "isFollowing": true,
+    "followersCount": 121
+  }
+}
+
+// Response 400
+{ "success": false, "error": { "type": "validation", "message": "You cannot follow yourself" } }
+
+// Response 409
+{ "success": false, "error": { "type": "conflict", "message": "Already following this user" } }
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
+
+---
+
+### `DELETE /users/:username/follow` — Unfollow a user
+
+**Auth:** Required
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": {
+    "isFollowing": false,
+    "followersCount": 120
+  }
+}
+
+// Response 400
+{ "success": false, "error": { "type": "validation", "message": "You are not following this user" } }
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
+
+---
+
+### `GET /users/:username/followers` — Follower list (cursor-paginated)
+
+**Auth:** None
+**Query params:** `?cursor=<id>&limit=20`
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": [
+    {
+      "id": 2,
+      "username": "ahmed",
+      "name": "Ahmed",
+      "profileImage": null,
+      "bio": "Developer"
+    }
+  ],
+  "meta": {
+    "nextCursor": "2",
+    "limit": 20,
+    "hasMore": false
+  }
+}
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
+
+---
+
+### `GET /users/:username/following` — Following list (cursor-paginated)
+
+**Auth:** None
+**Query params:** `?cursor=<id>&limit=20`
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": [
+    {
+      "id": 3,
+      "username": "sara",
+      "name": "Sara",
+      "profileImage": null,
+      "bio": "Designer"
+    }
+  ],
+  "meta": {
+    "nextCursor": "3",
+    "limit": 20,
+    "hasMore": true
+  }
+}
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
