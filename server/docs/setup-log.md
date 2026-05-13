@@ -806,3 +806,30 @@ Three major changes reflected:
 | `prisma/migrations/add_follow_model` | Creates follows table |
 | `docs/api-contract.md` | Cursor pagination, nested comments, follow endpoints |
 | `docs/issues.md` | Sub-Issue #5.4 |
+
+---
+
+## Tweets Data Layer — Types, Validator, Repository
+
+**Date:** 2026-05-13
+**Branch:** `feat/tweets-data-layer`
+
+### What was built
+
+The data foundation for the tweets module — three files that define shapes, validation, and database queries.
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `tweet.types.ts` | DTOs (TweetResponse, AuthorEmbed), cursor types, ITweetRepository, ITweetService |
+| `tweet.validator.ts` | Zod schemas: createTweetSchema, updateTweetSchema, cursorQuerySchema |
+| `tweet.repository.ts` | Prisma queries: CRUD with cursor pagination + like operations |
+
+### Design Decisions
+
+- **Cursor pagination (n+1 trick)**: Fetch `limit+1` items. If we get `limit+1` back, `hasMore=true` and we slice to `limit`. Avoids a separate COUNT query on every page.
+- **`buildTweetInclude(userId?)`**: Shared helper builds the Prisma include for author embed, counts, and user's like. Every query uses the same include, ensuring consistent response shape.
+- **`isLiked` via conditional include**: If `userId` is provided (logged in), includes `likes: { where: { userId } }`. If guest, skips the include entirely (empty array = not liked).
+- **Compound unique key for likes**: `findLike/deleteLike` use `where: { userId_tweetId: { userId, tweetId } }` — Prisma's auto-generated compound unique key from `@@unique([userId, tweetId])`.
+- **All types in one file**: Follows auth module pattern. All tweet types change together (same reason to change = SRP compliant).
