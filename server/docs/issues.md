@@ -477,6 +477,43 @@ Error:   { success: false, error: { type, message } }
 **Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#2)
 
 ---
+---
+
+## Issue: Tweets Module — Full Backend Implementation
+
+- **Labels:** [backend, feature]
+- **Description:**
+
+Complete tweets backend: feed (cursor-paginated), detail, create, edit, delete, and like toggle.
+Built on Phase A foundations (sendSuccess, authGuard/optionalAuth, rate limiting).
+
+**Sub-Issues:**
+
+1. Data Layer — types, validator, repository
+2. Service — business logic
+3. HTTP Layer — controller, routes, app wiring
+
+---
+
+### Sub-Issue: Tweets Data Layer — Types, Validator, Repository
+
+- **Title:** feat(server): add tweet types, validator, and repository
+- **Labels:** [backend, feature]
+- **Branch:** `feat/tweets-data-layer`
+- **Description:**
+
+Define interfaces (ITweetRepository, ITweetService, DTOs), Zod validation schemas,
+and Prisma repository with cursor pagination + like queries.
+
+**Steps:**
+
+- [ ] `tweet.types.ts` — interfaces, DTOs, repository/service contracts
+- [ ] `tweet.validator.ts` — Zod schemas (create, update, cursor query)
+- [ ] `tweet.repository.ts` — CRUD queries with cursor pagination
+- [ ] Like queries in repository (findLike, createLike, deleteLike)
+- [ ] Documentation in `setup-log.md`
+
+---
 
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
