@@ -1,0 +1,179 @@
+/**
+ * Tweet service — business logic for tweets.
+ *
+ * Purpose:
+ * - getFeed(): cursor pagination with n+1 slice, DTO transformation
+ * - getById(): single tweet lookup with 404 handling
+ * - create(): create tweet and return as DTO
+ * - update(): ownership check → update → return as DTO
+ * - delete(): ownership check → delete
+ * - toggleLike(): check existing → create or delete → return new state
+ *
+ * Principle: SRP — only business rules, no HTTP or database concerns.
+ * Principle: DIP — depends on ITweetRepository interface, not Prisma.
+ * Principle: Factory Pattern — createTweetService(repo?) for DI and testability.
+ */
+
+import { AppError } from "../../shared/errors/index.js";
+import { createTweetRepository } from "./tweet.repository.js";
+import type {
+  ITweetRepository,
+  ITweetService,
+  TweetResponse,
+  TweetWithRelations,
+  CursorParams,
+  CursorMeta,
+} from "./tweet.types.js";
+
+// ─── DTO Transformer ─────────────────────────────────────────────────────────
+
+/**
+ * Transforms a raw DB tweet (with relations) into the frontend DTO.
+ *
+ * Mapping:
+ *   _count.likes    → likesCount
+ *   _count.comments → commentsCount
+ *   likes[]         → isLiked (true if array has items)
+ */
+const toTweetResponse = (tweet: TweetWithRelations): TweetResponse => ({
+  id: tweet.id,
+  body: tweet.body,
+  image: tweet.image,
+  author: tweet.author,
+  likesCount: tweet._count.likes,
+  commentsCount: tweet._count.comments,
+  isLiked: (tweet.likes?.length ?? 0) > 0,
+  createdAt: tweet.createdAt,
+});
+
+// ─── Service Factory ─────────────────────────────────────────────────────────
+
+/**
+ * Creates an ITweetService with injected repository dependency.
+ *
+ * @param repo - Tweet database operations (defaults to Prisma implementation)
+ */
+export const createTweetService = (
+  repo: ITweetRepository = createTweetRepository(),
+): ITweetService => ({
+  // ─── Feed (cursor-paginated) ────────────────────────────────────────
+
+  getFeed: async (
+    params: CursorParams,
+    userId?: number,
+  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }> => {
+    const { limit } = params;
+
+    // Repository fetches limit+1 items (n+1 trick)
+    const tweets = await repo.findMany(params, userId);
+
+    // If we got more than limit, there are more pages
+    const hasMore = tweets.length > limit;
+    const sliced = hasMore ? tweets.slice(0, limit) : tweets;
+
+    // Build cursor meta
+    const lastItem = sliced[sliced.length - 1];
+    const meta: CursorMeta = {
+      nextCursor: hasMore && lastItem ? String(lastItem.id) : null,
+      limit,
+      hasMore,
+    };
+
+    return {
+      data: sliced.map(toTweetResponse),
+      meta,
+    };
+  },
+
+  // ─── Single Tweet ───────────────────────────────────────────────────
+
+  getById: async (id: number, userId?: number): Promise<TweetResponse> => {
+    const tweet = await repo.findById(id, userId);
+
+    if (!tweet) {
+      throw AppError.notFound("Tweet");
+    }
+
+    return toTweetResponse(tweet);
+  },
+
+  // ─── Create ─────────────────────────────────────────────────────────
+
+  create: async (authorId: number, body: string): Promise<TweetResponse> => {
+    const tweet = await repo.create(authorId, body);
+    return toTweetResponse(tweet);
+  },
+
+  // ─── Update (ownership check) ───────────────────────────────────────
+
+  update: async (
+    id: number,
+    userId: number,
+    data: { body?: string },
+  ): Promise<TweetResponse> => {
+    // 1. Find the tweet
+    const existing = await repo.findById(id);
+    if (!existing) {
+      throw AppError.notFound("Tweet");
+    }
+
+    // 2. Check ownership — only the author can edit
+    if (existing.authorId !== userId) {
+      throw AppError.authorization("You can only edit your own tweets");
+    }
+
+    // 3. Update and return
+    const updated = await repo.update(id, data);
+    return toTweetResponse(updated);
+  },
+
+  // ─── Delete (ownership check) ───────────────────────────────────────
+
+  delete: async (id: number, userId: number): Promise<void> => {
+    // 1. Find the tweet
+    const existing = await repo.findById(id);
+    if (!existing) {
+      throw AppError.notFound("Tweet");
+    }
+
+    // 2. Check ownership — only the author can delete
+    if (existing.authorId !== userId) {
+      throw AppError.authorization("You can only delete your own tweets");
+    }
+
+    // 3. Delete (cascade handles comments/likes)
+    await repo.delete(id);
+  },
+
+  // ─── Toggle Like ────────────────────────────────────────────────────
+
+  toggleLike: async (
+    userId: number,
+    tweetId: number,
+  ): Promise<{ liked: boolean; likesCount: number }> => {
+    // 1. Verify tweet exists
+    const tweet = await repo.findById(tweetId);
+    if (!tweet) {
+      throw AppError.notFound("Tweet");
+    }
+
+    // 2. Check if already liked
+    const existingLike = await repo.findLike(userId, tweetId);
+
+    if (existingLike) {
+      // Already liked → unlike
+      await repo.deleteLike(userId, tweetId);
+    } else {
+      // Not liked → like
+      await repo.createLike(userId, tweetId);
+    }
+
+    // 3. Get updated count
+    const likesCount = await repo.getLikesCount(tweetId);
+
+    return {
+      liked: !existingLike,
+      likesCount,
+    };
+  },
+});

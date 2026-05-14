@@ -515,6 +515,23 @@ and Prisma repository with cursor pagination + like queries.
 
 ---
 
+### Sub-Issue: Tweets Service — Business Logic
+
+- **Title:** feat(server): add tweet service — business logic layer
+- **Labels:** [backend, feature]
+- **Branch:** `feat/tweet-service`
+- **Description:**
+
+Business logic for tweets: DTO transformation, ownership checks,
+cursor pagination slicing (n+1), and like toggle.
+
+**Steps:**
+
+- [ ] `tweet.service.ts` — getFeed, getById, create, update, delete, toggleLike
+- [ ] Documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
