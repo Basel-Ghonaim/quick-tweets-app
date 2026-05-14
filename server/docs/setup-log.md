@@ -833,3 +833,33 @@ The data foundation for the tweets module — three files that define shapes, va
 - **`isLiked` via conditional include**: If `userId` is provided (logged in), includes `likes: { where: { userId } }`. If guest, skips the include entirely (empty array = not liked).
 - **Compound unique key for likes**: `findLike/deleteLike` use `where: { userId_tweetId: { userId, tweetId } }` — Prisma's auto-generated compound unique key from `@@unique([userId, tweetId])`.
 - **All types in one file**: Follows auth module pattern. All tweet types change together (same reason to change = SRP compliant).
+
+---
+
+## Tweets Service — Business Logic
+
+**Date:** 2026-05-14
+**Branch:** `feat/tweet-service`
+
+### What was built
+
+`tweet.service.ts` — implements `ITweetService` with 6 methods + a DTO transformer.
+
+### Methods
+
+| Method | What it does |
+|---|---|
+| `toTweetResponse()` | Transforms raw DB tweet → frontend DTO |
+| `getFeed()` | n+1 slice, cursor meta, DTO map |
+| `getById()` | Lookup + 404 |
+| `create()` | Create + DTO |
+| `update()` | Ownership check → update → DTO |
+| `delete()` | Ownership check → delete |
+| `toggleLike()` | Exists? → unlike, else → like → return new count |
+
+### Design Decisions
+
+- **`toTweetResponse()` is a plain function, not a method**: It's stateless — doesn't need `this` or the repository. Extracted outside the factory for reuse and clarity.
+- **Ownership checks in update/delete**: Service verifies `tweet.authorId === userId` before mutating. The repository has no concept of "who is doing this" — that's a business rule.
+- **`toggleLike` uses check-then-act**: `findLike()` → exists? delete : create. The `@@unique` constraint protects against race conditions (duplicate like INSERT fails).
+- **`AppError.authorization()`** for ownership violations (403), **`AppError.notFound("Tweet")`** for missing resources (404).
