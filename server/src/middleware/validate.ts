@@ -2,13 +2,9 @@
  * Zod validation middleware — generic request validator.
  *
  * Current purpose:
- * - Validates req.body against a provided Zod schema
+ * - Validates req.body or req.query against a provided Zod schema
  * - Rejects invalid requests with 400 + field-level error details
- * - Replaces req.body with parsed (typed, trimmed) data on success
- *
- * Future expansion:
- * - Validate req.params and req.query in addition to body
- * - Add support for multipart form data validation (post-Multer)
+ * - Replaces the source with parsed (typed, trimmed) data on success
  *
  * Principle: SRP — only validates, no business logic.
  * Principle: OCP — works with any Zod schema, no modification needed per endpoint.
@@ -19,21 +15,24 @@ import { ZodError, type ZodSchema } from "zod";
 import { AppError } from "../shared/errors/index.js";
 
 /**
- * Creates a middleware that validates req.body against the given Zod schema.
+ * Creates a middleware that validates a request source against the given Zod schema.
  *
- * On success: replaces req.body with parsed (type-safe) data → calls next().
+ * On success: replaces the source with parsed (type-safe) data → calls next().
  * On failure: throws AppError.validation(400) with field-level errors.
  *
  * Usage in routes:
- *   router.post("/register", validate(registerSchema), controller.register);
+ *   router.post("/tweets", validate(createTweetSchema), controller.create);          // body (default)
+ *   router.get("/tweets", validate(cursorQuerySchema, "query"), controller.getFeed);  // query
  *
  * @param schema - A Zod schema to validate against
+ * @param source - Which part of the request to validate: "body" (default) or "query"
  */
-export const validate = (schema: ZodSchema) => {
+export const validate = (schema: ZodSchema, source: "body" | "query" = "body") => {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
-      // Parse and replace body with validated, typed data
-      req.body = schema.parse(req.body);
+      // Parse and replace source with validated, typed data
+      const parsed = schema.parse(req[source]);
+      req[source] = parsed;
       next();
     } catch (err) {
       if (err instanceof ZodError) {
