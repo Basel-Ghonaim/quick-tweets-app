@@ -911,3 +911,31 @@ POST   /api/v1/tweets/:id/like → apiLimiter → authGuard → toggleLike
 - **`validate(schema, "query")`**: Extended validate middleware with a `source` parameter. Default is `"body"` (backward compatible). Feed uses `"query"` for cursor/limit.
 - **`isPrismaError()` helper**: Uses duck-typing to check Prisma error codes without importing Prisma's error class — keeps the service layer decoupled from Prisma internals.
 - **apiLimiter on route group**: Applied at `app.use()` level, not per-route. All 6 tweet endpoints share the 100 req/15min limit.
+
+---
+
+## Shared Type Extraction + Comments Data & Service
+
+**Date:** 2026-05-14
+**Branch:** `feat/comments-data-and-service`
+
+### Shared Type Extraction
+
+Moved `AuthorEmbed`, `CursorParams`, `CursorMeta` from `tweet.types.ts` to `shared/types/common.ts`. Both tweets and comments (and future modules) import from the shared location. `tweet.types.ts` re-exports them for backward compatibility.
+
+### Comments Module — Data Layer + Service
+
+| File | Purpose |
+|---|---|
+| `comment.types.ts` | CommentResponse, OffsetParams, OffsetMeta, ICommentRepository, ICommentService |
+| `comment.validator.ts` | Zod schemas: create, update, offset query (page/limit with coerce) |
+| `comment.repository.ts` | Prisma queries with offset pagination (skip/take), ASC order |
+| `comment.service.ts` | Double ownership checks, pagination math, parallel count+findMany |
+
+### Design Decisions
+
+- **Offset pagination (not cursor)**: Comments are bounded per tweet. Frontend needs `totalPages` + `currentPage` for a page navigator. `skip = (page-1) * limit`, `totalPages = ceil(totalRecords / limit)`.
+- **`Promise.all([count, findMany])`**: Runs count and data queries in parallel — halves the latency for list requests.
+- **Double ownership validation**: Update/delete checks 3 things: comment exists → comment.tweetId matches route param → comment.authorId matches userId. Prevents URL manipulation.
+- **`assertTweetExists()`**: Lightweight helper uses `select: { id: true }` to check tweet existence without loading full tweet data. Used by `getComments` and `create`.
+- **ASC ordering**: Comments ordered oldest first (`createdAt: "asc"`) — conversation order, unlike tweets which are newest first.
