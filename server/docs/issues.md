@@ -574,6 +574,25 @@ validation, and shared type extraction (AuthorEmbed → shared/types/).
 
 ---
 
+### Sub-Issue: Comments HTTP Layer — Controller, Routes, App Wiring
+
+- **Title:** feat(server): add comment controller, routes, and register in app
+- **Labels:** [backend, feature]
+- **Branch:** `feat/comments-http`
+- **Description:**
+
+Connect comments module to HTTP. Controller handlers with sendSuccess,
+route wiring with mergeParams, and app.ts registration with apiLimiter.
+
+**Steps:**
+
+- [ ] `comment.controller.ts` — 4 handlers (getComments, create, update, delete)
+- [ ] `comment.routes.ts` — with mergeParams: true for :tweetId access
+- [ ] Register in `app.ts` with apiLimiter under `/api/v1/tweets/:tweetId/comments`
+- [ ] Documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
