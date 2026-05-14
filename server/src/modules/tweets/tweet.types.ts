@@ -2,8 +2,8 @@
  * Tweet module type definitions — interfaces and data shapes.
  *
  * Purpose:
- * - Defines DTOs for API responses (TweetResponse, AuthorEmbed)
- * - Defines cursor pagination types (CursorParams, CursorMeta)
+ * - Re-exports shared types (AuthorEmbed, CursorParams, CursorMeta)
+ * - Defines DTOs for API responses (TweetResponse)
  * - Defines ITweetRepository interface (database operations)
  * - Defines ITweetService interface (business logic contract)
  *
@@ -11,15 +11,12 @@
  * Principle: ISP — repository and service contracts are separate.
  */
 
-// ─── Response DTOs ───────────────────────────────────────────────────────────
+import type { AuthorEmbed, CursorParams, CursorMeta } from "../../shared/types/index.js";
 
-/** Lightweight user snapshot embedded in tweet/comment responses. */
-export interface AuthorEmbed {
-  id: number;
-  username: string;
-  name: string;
-  profileImage: string | null;
-}
+// Re-export shared types so existing consumers don't need to change imports
+export type { AuthorEmbed, CursorParams, CursorMeta };
+
+// ─── Response DTOs ───────────────────────────────────────────────────────────
 
 /** Tweet shape returned to the frontend. */
 export interface TweetResponse {
@@ -33,20 +30,6 @@ export interface TweetResponse {
   createdAt: Date;
 }
 
-// ─── Cursor Pagination ───────────────────────────────────────────────────────
-
-/** Input params for cursor-based pagination. */
-export interface CursorParams {
-  cursor?: number; // id of last item from previous page
-  limit: number; // items per page (default 10, max 50)
-}
-
-/** Pagination metadata returned with cursor-paginated responses. */
-export interface CursorMeta {
-  nextCursor: string | null; // id of last item, null if no more pages
-  limit: number;
-  hasMore: boolean;
-}
 
 // ─── Repository Interface ────────────────────────────────────────────────────
 
