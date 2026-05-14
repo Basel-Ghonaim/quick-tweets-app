@@ -593,6 +593,29 @@ route wiring with mergeParams, and app.ts registration with apiLimiter.
 
 ---
 
+### Sub-Issue: Users Module — Profile + User Tweets
+
+- **Title:** feat(server): add users module — profile and user tweets endpoints
+- **Labels:** [backend, feature]
+- **Branch:** `feat/users-module`
+- **Description:**
+
+Two read-only endpoints: user profile with aggregated counts (tweets, likes,
+followers, following, isFollowing) and user's tweets with cursor pagination.
+Also extends tweet repository with findByAuthor.
+
+**Steps:**
+
+- [ ] `user.types.ts` — UserProfileResponse, IUserRepository, IUserService
+- [ ] `user.repository.ts` — profile query with _count, findByUsername
+- [ ] Extend `tweet.repository.ts` — add findByAuthor(authorId, params, userId?)
+- [ ] `user.service.ts` — profile DTO, user tweets orchestration, likesCount two-step
+- [ ] `user.controller.ts` + `user.routes.ts` — 2 handlers, route wiring
+- [ ] Register in `app.ts` with apiLimiter
+- [ ] Documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
