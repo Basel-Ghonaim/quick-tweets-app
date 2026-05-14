@@ -19,6 +19,8 @@ import cookieParser from "cookie-parser";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
+import { tweetRoutes } from "./modules/tweets/tweet.routes.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
 
 export const app = express();
 
@@ -44,9 +46,9 @@ app.get("/health", (_req, res) => {
 // ─── Feature Routes ──────────────────────────────────────────────────────────
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
 
-// Future module routes (each gets apiLimiter applied):
-// app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
+// Future module routes:
 // app.use("/api/v1/users", apiLimiter, userRoutes);
 
 // ─── Error Handler (must be last) ────────────────────────────────────────────

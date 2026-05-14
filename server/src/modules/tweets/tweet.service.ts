@@ -25,6 +25,18 @@ import type {
   CursorMeta,
 } from "./tweet.types.js";
 
+// ─── Prisma Error Helper ─────────────────────────────────────────────────────
+
+/**
+ * Checks if an error is a Prisma known request error with a specific code.
+ * Uses duck-typing to avoid importing Prisma's error class directly.
+ */
+const isPrismaError = (error: unknown, code: string): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (error as { code: string }).code === code;
+
 // ─── DTO Transformer ─────────────────────────────────────────────────────────
 
 /**
@@ -146,6 +158,12 @@ export const createTweetService = (
   },
 
   // ─── Toggle Like ────────────────────────────────────────────────────
+  //
+  // Race condition safety:
+  //   Rapid clicks can cause concurrent requests where findLike returns
+  //   stale data. We catch Prisma errors instead of crashing with 500:
+  //   - P2002 (unique violation) → createLike raced, like already exists
+  //   - P2025 (record not found) → deleteLike raced, like already gone
 
   toggleLike: async (
     userId: number,
@@ -160,20 +178,39 @@ export const createTweetService = (
     // 2. Check if already liked
     const existingLike = await repo.findLike(userId, tweetId);
 
+    let liked: boolean;
+
     if (existingLike) {
       // Already liked → unlike
-      await repo.deleteLike(userId, tweetId);
+      try {
+        await repo.deleteLike(userId, tweetId);
+        liked = false;
+      } catch (error: unknown) {
+        // P2025: another request already deleted this like
+        if (isPrismaError(error, "P2025")) {
+          liked = false;
+        } else {
+          throw error;
+        }
+      }
     } else {
       // Not liked → like
-      await repo.createLike(userId, tweetId);
+      try {
+        await repo.createLike(userId, tweetId);
+        liked = true;
+      } catch (error: unknown) {
+        // P2002: another request already created this like
+        if (isPrismaError(error, "P2002")) {
+          liked = true;
+        } else {
+          throw error;
+        }
+      }
     }
 
-    // 3. Get updated count
+    // 3. Get updated count (always accurate — reads after write)
     const likesCount = await repo.getLikesCount(tweetId);
 
-    return {
-      liked: !existingLike,
-      likesCount,
-    };
+    return { liked, likesCount };
   },
 });
