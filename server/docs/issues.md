@@ -532,6 +532,27 @@ cursor pagination slicing (n+1), and like toggle.
 
 ---
 
+### Sub-Issue: Tweets HTTP Layer — Controller, Routes, App Wiring
+
+- **Title:** feat(server): add tweet controller, routes, and register in app
+- **Labels:** [backend, feature]
+- **Branch:** `feat/HTTP-layer`
+- **Description:**
+
+Connect tweets module to HTTP: controller handlers with sendSuccess,
+route wiring with middleware, and app.ts registration with apiLimiter.
+Also hardens toggleLike against race conditions (Prisma P2002/P2025).
+
+**Steps:**
+
+- [ ] Fix toggleLike race condition — catch Prisma P2002/P2025 errors
+- [ ] `tweet.controller.ts` — 6 handlers (getFeed, getById, create, update, delete, toggleLike)
+- [ ] `tweet.routes.ts` — route wiring with optionalAuth, authGuard, validate
+- [ ] Register in `app.ts` with apiLimiter
+- [ ] Documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
