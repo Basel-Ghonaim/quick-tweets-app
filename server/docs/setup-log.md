@@ -939,3 +939,37 @@ Moved `AuthorEmbed`, `CursorParams`, `CursorMeta` from `tweet.types.ts` to `shar
 - **Double ownership validation**: Update/delete checks 3 things: comment exists → comment.tweetId matches route param → comment.authorId matches userId. Prevents URL manipulation.
 - **`assertTweetExists()`**: Lightweight helper uses `select: { id: true }` to check tweet existence without loading full tweet data. Used by `getComments` and `create`.
 - **ASC ordering**: Comments ordered oldest first (`createdAt: "asc"`) — conversation order, unlike tweets which are newest first.
+
+---
+
+## Comments HTTP Layer — Controller, Routes, App Wiring
+
+**Date:** 2026-05-14
+**Branch:** `feat/comments-http`
+
+### What was built
+
+Connected the comments module to HTTP — controller handlers, route wiring, app registration.
+
+### Files
+
+| File | What Changed |
+|---|---|
+| `comment.controller.ts` | 4 handlers using `sendSuccess()` |
+| `comment.routes.ts` | Route wiring with `mergeParams: true` |
+| `app.ts` | Registered `/api/v1/tweets/:tweetId/comments` with apiLimiter |
+
+### Route Map
+
+```
+GET    /api/v1/tweets/:tweetId/comments              → apiLimiter → validate(query) → getComments
+POST   /api/v1/tweets/:tweetId/comments              → apiLimiter → authGuard → validate(body) → create
+PATCH  /api/v1/tweets/:tweetId/comments/:commentId   → apiLimiter → authGuard → validate(body) → update
+DELETE /api/v1/tweets/:tweetId/comments/:commentId   → apiLimiter → authGuard → delete
+```
+
+### Design Decisions
+
+- **`Router({ mergeParams: true })`**: Required because the comment router is a child of `/api/v1/tweets/:tweetId/comments`. Without it, `req.params.tweetId` would be undefined.
+- **No optionalAuth on GET**: Comments don't have an `isLiked` or similar field that requires the user's identity. Unlike the tweet feed, the comments list is fully public.
+- **Phase C complete**: Comments module is fully functional — 4 endpoints live at `/api/v1/tweets/:tweetId/comments`.

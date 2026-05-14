@@ -47,8 +47,8 @@ app.get("/health", (_req, res) => {
 // ─── Feature Routes ──────────────────────────────────────────────────────────
 
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
 app.use("/api/v1/tweets/:tweetId/comments", apiLimiter, commentRoutes);
+app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
 
 // Future module routes:
 // app.use("/api/v1/users", apiLimiter, userRoutes);
