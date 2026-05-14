@@ -553,6 +553,27 @@ Also hardens toggleLike against race conditions (Prisma P2002/P2025).
 
 ---
 
+### Sub-Issue: Comments Data & Service — Types, Validator, Repository, Service
+
+- **Title:** feat(server): add comment types, validator, repository, service
+- **Labels:** [backend, feature]
+- **Branch:** `feat/comments-data-and-service`
+- **Description:**
+
+Data layer + business logic for comments. Offset pagination, double ownership
+validation, and shared type extraction (AuthorEmbed → shared/types/).
+
+**Steps:**
+
+- [x] Extract shared types to `shared/types/common.ts`
+- [ ] `comment.types.ts` — CommentResponse, OffsetMeta, ICommentRepository, ICommentService
+- [ ] `comment.validator.ts` — createCommentSchema, updateCommentSchema, offsetQuerySchema
+- [ ] `comment.repository.ts` — CRUD with offset pagination
+- [ ] `comment.service.ts` — double ownership checks, pagination math
+- [ ] Documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
