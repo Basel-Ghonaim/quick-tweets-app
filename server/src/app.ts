@@ -21,6 +21,7 @@ import { requestLogger } from "./middleware/requestLogger.js";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { tweetRoutes } from "./modules/tweets/tweet.routes.js";
 import { commentRoutes } from "./modules/comments/comment.routes.js";
+import { userRoutes } from "./modules/users/user.routes.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 
 export const app = express();
@@ -49,9 +50,7 @@ app.get("/health", (_req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tweets/:tweetId/comments", apiLimiter, commentRoutes);
 app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
-
-// Future module routes:
-// app.use("/api/v1/users", apiLimiter, userRoutes);
+app.use("/api/v1/users", apiLimiter, userRoutes);
 
 // ─── Error Handler (must be last) ────────────────────────────────────────────
 
