@@ -74,7 +74,6 @@ export const createUserService = (
       id: user.id,
       username: user.username,
       name: user.name,
-      email: user.email,
       profileImage: user.profileImage,
       bio: user.bio,
       tweetsCount: user._count.tweets,

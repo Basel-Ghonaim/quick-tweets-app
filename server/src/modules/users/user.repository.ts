@@ -40,7 +40,6 @@ export const createUserRepository = (
         id: true,
         username: true,
         name: true,
-        email: true,
         profileImage: true,
         bio: true,
         createdAt: true,

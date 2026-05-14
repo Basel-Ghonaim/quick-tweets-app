@@ -26,7 +26,6 @@ export interface UserProfileResponse {
   id: number;
   username: string;
   name: string;
-  email: string;
   profileImage: string | null;
   bio: string;
   tweetsCount: number;
@@ -44,7 +43,6 @@ export interface UserWithCounts {
   id: number;
   username: string;
   name: string;
-  email: string;
   profileImage: string | null;
   bio: string;
   createdAt: Date;
