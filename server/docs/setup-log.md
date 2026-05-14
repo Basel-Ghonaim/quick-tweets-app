@@ -973,3 +973,42 @@ DELETE /api/v1/tweets/:tweetId/comments/:commentId   → apiLimiter → authGuar
 - **`Router({ mergeParams: true })`**: Required because the comment router is a child of `/api/v1/tweets/:tweetId/comments`. Without it, `req.params.tweetId` would be undefined.
 - **No optionalAuth on GET**: Comments don't have an `isLiked` or similar field that requires the user's identity. Unlike the tweet feed, the comments list is fully public.
 - **Phase C complete**: Comments module is fully functional — 4 endpoints live at `/api/v1/tweets/:tweetId/comments`.
+
+---
+
+## Users Module — Profile + User Tweets
+
+**Date:** 2026-05-14
+**Branch:** `feat/users-module`
+
+### What was built
+
+Two read-only endpoints: user profile with aggregated counts and user's tweets with cursor pagination.
+
+### Files
+
+| File | What Changed |
+|---|---|
+| `user.types.ts` | UserProfileResponse, UserWithCounts, IUserRepository, IUserService |
+| `user.repository.ts` | Profile query with `_count`, `isFollowing` via compound unique, `countLikesReceived` |
+| `tweet.types.ts` | Added `findByAuthor` to ITweetRepository |
+| `tweet.repository.ts` | Implemented `findByAuthor(authorId, params, userId?)` |
+| `user.service.ts` | Profile DTO with parallel queries, cross-module tweet orchestration |
+| `user.controller.ts` | 2 handlers using sendSuccess |
+| `user.routes.ts` | Route wiring with optionalAuth, reusing cursorQuerySchema |
+| `app.ts` | Registered `/api/v1/users` with apiLimiter |
+
+### Route Map
+
+```
+GET /api/v1/users/:username         → apiLimiter → optionalAuth → getProfile
+GET /api/v1/users/:username/tweets  → apiLimiter → optionalAuth → validate(query) → getUserTweets
+```
+
+### Design Decisions
+
+- **`likesCount` two-step query**: Prisma's `_count` can't compute nested aggregates. `countLikesReceived()` uses `db.like.count({ where: { tweet: { authorId } } })` — Prisma compiles this to an efficient SQL JOIN.
+- **Parallel queries in profile**: `isFollowing` + `countLikesReceived` run via `Promise.all` — halves latency.
+- **`isFollowing` as separate method**: Avoids conditional `select` in profile query that would require `as any`. Uses the `@@unique([followerId, followingId])` compound index.
+- **`findByAuthor` in tweet repo**: Receives `authorId` (number), not `username`. User service resolves `username → authorId`, then delegates. No user-domain leak.
+- **Cross-module reuse**: User tweets reuse `cursorQuerySchema`, `buildTweetInclude`, `toTweetResponse`, and `TweetResponse` from the tweets module.
