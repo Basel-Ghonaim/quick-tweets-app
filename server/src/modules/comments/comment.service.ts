@@ -17,7 +17,6 @@
  * Principle: Factory Pattern — createCommentService(repo?) for DI and testability.
  */
 
-import { prisma } from "../../shared/database/index.js";
 import { AppError } from "../../shared/errors/index.js";
 import { createCommentRepository } from "./comment.repository.js";
 import type {
@@ -40,22 +39,6 @@ const toCommentResponse = (comment: CommentWithRelations): CommentResponse => ({
   createdAt: comment.createdAt,
 });
 
-// ─── Tweet Existence Helper ──────────────────────────────────────────────────
-
-/**
- * Verifies that a tweet exists. Throws 404 if not found.
- * Uses prisma directly (lightweight check, no need for a full tweet repo dependency).
- */
-const assertTweetExists = async (tweetId: number): Promise<void> => {
-  const tweet = await prisma.tweet.findUnique({
-    where: { id: tweetId },
-    select: { id: true },
-  });
-  if (!tweet) {
-    throw AppError.notFound("Tweet");
-  }
-};
-
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
@@ -73,7 +56,10 @@ export const createCommentService = (
     params: OffsetParams,
   ): Promise<{ data: CommentResponse[]; meta: OffsetMeta }> => {
     // 1. Verify tweet exists
-    await assertTweetExists(tweetId);
+    const tweetFound = await repo.tweetExists(tweetId);
+    if (!tweetFound) {
+      throw AppError.notFound("Tweet");
+    }
 
     const { page, limit } = params;
     const skip = (page - 1) * limit;
@@ -109,7 +95,10 @@ export const createCommentService = (
     body: string,
   ): Promise<CommentResponse> => {
     // 1. Verify tweet exists
-    await assertTweetExists(tweetId);
+    const tweetFound = await repo.tweetExists(tweetId);
+    if (!tweetFound) {
+      throw AppError.notFound("Tweet");
+    }
 
     // 2. Create and return as DTO
     const comment = await repo.create(authorId, tweetId, body);

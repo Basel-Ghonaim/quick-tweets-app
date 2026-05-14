@@ -44,6 +44,16 @@ const commentInclude = {
 export const createCommentRepository = (
   db: PrismaInstance = prisma,
 ): ICommentRepository => ({
+  // ── Tweet Existence Check ──
+
+  tweetExists: async (tweetId) => {
+    const tweet = await db.tweet.findUnique({
+      where: { id: tweetId },
+      select: { id: true },
+    });
+    return tweet !== null;
+  },
+
   // ── List (offset paginated) ──
 
   findMany: (tweetId, skip, limit) =>

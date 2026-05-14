@@ -71,6 +71,8 @@ export interface CommentWithRelations {
  * Implemented by: createCommentRepository (comment.repository.ts)
  */
 export interface ICommentRepository {
+  tweetExists(tweetId: number): Promise<boolean>;
+
   findMany(tweetId: number, skip: number, limit: number): Promise<CommentWithRelations[]>;
 
   count(tweetId: number): Promise<number>;
