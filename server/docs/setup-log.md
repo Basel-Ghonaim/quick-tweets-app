@@ -863,3 +863,51 @@ The data foundation for the tweets module — three files that define shapes, va
 - **Ownership checks in update/delete**: Service verifies `tweet.authorId === userId` before mutating. The repository has no concept of "who is doing this" — that's a business rule.
 - **`toggleLike` uses check-then-act**: `findLike()` → exists? delete : create. The `@@unique` constraint protects against race conditions (duplicate like INSERT fails).
 - **`AppError.authorization()`** for ownership violations (403), **`AppError.notFound("Tweet")`** for missing resources (404).
+
+---
+
+## Tweets HTTP Layer — Controller, Routes, App Wiring
+
+**Date:** 2026-05-14
+**Branch:** `feat/HTTP-layer`
+
+### What was built
+
+Connected the tweets module to HTTP — controller handlers, route wiring, and app registration.
+
+### Files
+
+| File | What Changed |
+|---|---|
+| `tweet.service.ts` | Hardened `toggleLike` against race conditions (P2002/P2025) |
+| `validate.ts` | Extended to support `"query"` source in addition to `"body"` |
+| `tweet.controller.ts` | 6 handlers using `sendSuccess()` |
+| `tweet.routes.ts` | Middleware wiring: optionalAuth, authGuard, validate |
+| `app.ts` | Registered `/api/v1/tweets` with apiLimiter |
+
+### Route Map
+
+```
+GET    /api/v1/tweets          → apiLimiter → optionalAuth → validate(query) → getFeed
+GET    /api/v1/tweets/:id      → apiLimiter → optionalAuth → getById
+POST   /api/v1/tweets          → apiLimiter → authGuard → validate(body) → create
+PATCH  /api/v1/tweets/:id      → apiLimiter → authGuard → validate(body) → update
+DELETE /api/v1/tweets/:id      → apiLimiter → authGuard → delete
+POST   /api/v1/tweets/:id/like → apiLimiter → authGuard → toggleLike
+```
+
+### Security Review (pre-implementation checklist)
+
+| Point | Status | How |
+|---|---|---|
+| Race condition in likes | ✅ Fixed | Catch Prisma P2002/P2025 gracefully |
+| Pagination hard cap | ✅ Already covered | Zod max(50) in cursorQuerySchema |
+| Cascade deletion | ✅ Already covered | onDelete: Cascade in schema |
+| N+1 query problem | ✅ Already covered | Prisma `include` (JOINs, not N queries) |
+| Select optimization | ✅ Fine as-is | Author uses select, tweet cols are minimal |
+
+### Design Decisions
+
+- **`validate(schema, "query")`**: Extended validate middleware with a `source` parameter. Default is `"body"` (backward compatible). Feed uses `"query"` for cursor/limit.
+- **`isPrismaError()` helper**: Uses duck-typing to check Prisma error codes without importing Prisma's error class — keeps the service layer decoupled from Prisma internals.
+- **apiLimiter on route group**: Applied at `app.use()` level, not per-route. All 6 tweet endpoints share the 100 req/15min limit.
