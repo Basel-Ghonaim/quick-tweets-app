@@ -69,6 +69,20 @@ export const createTweetRepository = (
     });
   },
 
+  // ── User's Tweets ──
+
+  findByAuthor: async (authorId: number, params: CursorParams, userId?: number) => {
+    const { cursor, limit } = params;
+
+    return db.tweet.findMany({
+      where: { authorId },
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      orderBy: { id: "desc" },
+      include: buildTweetInclude(userId),
+    });
+  },
+
   // ── Single Tweet ──
 
   findById: (id, userId?) =>

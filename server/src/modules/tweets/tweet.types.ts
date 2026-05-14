@@ -67,6 +67,12 @@ export interface ITweetRepository {
     userId?: number,
   ): Promise<TweetWithRelations[]>;
 
+  findByAuthor(
+    authorId: number,
+    params: CursorParams,
+    userId?: number,
+  ): Promise<TweetWithRelations[]>;
+
   findById(id: number, userId?: number): Promise<TweetWithRelations | null>;
 
   create(authorId: number, body: string): Promise<TweetWithRelations>;
