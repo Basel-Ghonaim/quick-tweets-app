@@ -1012,3 +1012,55 @@ GET /api/v1/users/:username/tweets  → apiLimiter → optionalAuth → validate
 - **`isFollowing` as separate method**: Avoids conditional `select` in profile query that would require `as any`. Uses the `@@unique([followerId, followingId])` compound index.
 - **`findByAuthor` in tweet repo**: Receives `authorId` (number), not `username`. User service resolves `username → authorId`, then delegates. No user-domain leak.
 - **Cross-module reuse**: User tweets reuse `cursorQuerySchema`, `buildTweetInclude`, `toTweetResponse`, and `TweetResponse` from the tweets module.
+
+---
+
+## Follow Module — Follow/Unfollow + Follower/Following Lists
+
+**Date:** 2026-05-15
+**Branch:** `feat/follow-module`
+
+### What was built
+
+Four endpoints: separate follow/unfollow mutations, cursor-paginated follower/following lists. Self-follow prevention and idempotent error handling.
+
+### Files
+
+| File | Purpose |
+|---|---|
+| `follow.types.ts` | FollowActionResponse, FollowUserItem, IFollowRepository, IFollowService |
+| `follow.repository.ts` | Follow CRUD, cursor-paginated lists, user lookup |
+| `follow.service.ts` | Self-follow prevention, user existence, separate mutation logic |
+| `follow.controller.ts` | 4 handlers using sendSuccess |
+| `follow.routes.ts` | Route wiring with mergeParams, authGuard for mutations |
+| `app.ts` | Registered follow routes at `/api/v1/users` (before user routes) |
+
+### Route Map
+
+```
+POST   /api/v1/users/:username/follow      → apiLimiter → authGuard → follow
+DELETE /api/v1/users/:username/follow      → apiLimiter → authGuard → unfollow
+GET    /api/v1/users/:username/followers   → apiLimiter → validate(query) → getFollowers
+GET    /api/v1/users/:username/following   → apiLimiter → validate(query) → getFollowing
+```
+
+### Design Decisions
+
+- **Separate POST/DELETE (not toggle)**: Explicit intent, no ambiguity, no race conditions. Client knows exactly what action is being performed.
+- **Follow routes before user routes in app.ts**: Both mount on `/api/v1/users`. More specific patterns (`:username/follow`, `:username/followers`) must register first to avoid the double-apiLimiter issue.
+- **`resolveUser()` helper**: Shared between follow/unfollow/getFollowers/getFollowing — resolves username → userId or throws 404.
+- **Cursor pagination for lists**: Follower/following lists are unbounded (unlike comments). Cursor pagination with n+1 trick — same pattern as tweet feed.
+- **Self-follow prevention**: `AppError.validation("You cannot follow yourself")` — checked before any DB operation.
+- **Error semantics**: Already following → 409 Conflict. Not following → 400 Validation. Matches API contract exactly.
+
+### Backend Phases Complete 🎉
+
+All five backend phases are now implemented:
+
+| Phase | Module | Endpoints |
+|---|---|---|
+| A | Auth | register, login, refresh, logout, me |
+| B | Tweets | feed, getById, create, update, delete, toggleLike |
+| C | Comments | getComments, create, update, delete |
+| D | Users | getProfile, getUserTweets |
+| E | Follow | follow, unfollow, getFollowers, getFollowing |
