@@ -29,6 +29,18 @@ import type {
   CursorMeta,
 } from "./follow.types.js";
 
+// ─── Prisma Error Helper ─────────────────────────────────────────────────────
+
+/**
+ * Checks if an error is a Prisma known request error with a specific code.
+ * Uses duck-typing to avoid importing Prisma's error class directly.
+ */
+const isPrismaError = (error: unknown, code: string): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  (error as { code: string }).code === code;
+
 // ─── Helper: Resolve username to userId or throw 404 ─────────────────────────
 
 const resolveUser = async (
@@ -66,16 +78,24 @@ export const createFollowService = (
       throw AppError.validation("You cannot follow yourself");
     }
 
-    // 3. Already following?
+    // 3. Already following? (fast-path UX check)
     const alreadyFollowing = await repo.isFollowing(reqUserId, targetId);
     if (alreadyFollowing) {
       throw AppError.conflict("Already following this user");
     }
 
-    // 4. Create follow + get updated count in parallel
-    await repo.follow(reqUserId, targetId);
-    const followersCount = await repo.countFollowers(targetId);
+    // 4. Create follow (with race condition safety net)
+    try {
+      await repo.follow(reqUserId, targetId);
+    } catch (error) {
+      // P2002: another concurrent request already created this follow
+      if (isPrismaError(error, "P2002")) {
+        throw AppError.conflict("Already following this user");
+      }
+      throw error;
+    }
 
+    const followersCount = await repo.countFollowers(targetId);
     return { isFollowing: true, followersCount };
   },
 
@@ -88,16 +108,24 @@ export const createFollowService = (
     // 1. Resolve target user
     const targetId = await resolveUser(repo, targetUsername);
 
-    // 2. Must be currently following
+    // 2. Must be currently following (fast-path UX check)
     const currentlyFollowing = await repo.isFollowing(reqUserId, targetId);
     if (!currentlyFollowing) {
       throw AppError.validation("You are not following this user");
     }
 
-    // 3. Delete follow + get updated count
-    await repo.unfollow(reqUserId, targetId);
-    const followersCount = await repo.countFollowers(targetId);
+    // 3. Delete follow (with race condition safety net)
+    try {
+      await repo.unfollow(reqUserId, targetId);
+    } catch (error) {
+      // P2025: another concurrent request already deleted this follow
+      if (isPrismaError(error, "P2025")) {
+        throw AppError.validation("You are not following this user");
+      }
+      throw error;
+    }
 
+    const followersCount = await repo.countFollowers(targetId);
     return { isFollowing: false, followersCount };
   },
 

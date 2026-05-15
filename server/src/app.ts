@@ -52,8 +52,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tweets/:tweetId/comments", apiLimiter, commentRoutes);
 app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
 app.use("/api/v1/users", apiLimiter, followRoutes);
-app.use("/api/v1/users", apiLimiter, userRoutes);
+app.use("/api/v1/users", userRoutes);
 
 // ─── Error Handler (must be last) ────────────────────────────────────────────
-
 app.use(errorHandler);
