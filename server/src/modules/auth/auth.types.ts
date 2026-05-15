@@ -29,6 +29,9 @@ export interface CreateUserData {
   profileImage?: string | null;
 }
 
+/** User without passwordHash — used by /me and other non-auth queries. */
+export type UserSafe = Omit<User, "passwordHash">;
+
 /** RefreshToken record as returned from the database. */
 export type RefreshTokenRecord = RefreshToken;
 
@@ -43,7 +46,7 @@ export type RefreshTokenRecord = RefreshToken;
 export interface IAuthRepository {
   findByUsername(username: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
-  findById(id: number): Promise<User | null>;
+  findById(id: number): Promise<UserSafe | null>;
   create(data: CreateUserData): Promise<User>;
 }
 

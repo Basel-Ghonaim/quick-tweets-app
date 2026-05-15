@@ -637,6 +637,26 @@ follower/following lists, self-follow prevention, idempotent operations.
 
 ---
 
+### Sub-Issue: Security Hardening — Audit Response
+
+- **Title:** fix(server): security hardening — helmet, env config, graceful shutdown, passwordHash omit
+- **Labels:** [backend, security, fix]
+- **Branch:** `fix/security-hardening`
+- **Description:**
+
+Apply 10 fixes from Stage 1 security audit. Infrastructure-level hardening —
+no new features, no schema changes.
+
+**Steps:**
+
+- [ ] Add `CORS_ORIGIN`, `NODE_ENV` to env config, fix `JWT_EXPIRES_IN` default to `15m`
+- [ ] Install helmet, add to app.ts, JSON body limit, dynamic CORS, health check depth
+- [ ] Graceful shutdown (SIGTERM/SIGINT) + Prisma explicit connect in server.ts
+- [ ] passwordHash defense-in-depth — safe select constant in auth repo
+- [ ] Remove unused multer dependency + documentation
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
@@ -759,4 +779,4 @@ Three rate limiters with different thresholds protect different endpoint groups.
 - [ ] `trust proxy` enabled for correct IP detection behind reverse proxies
 - [ ] Documentation updated in `setup-log.md`
 
-**Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#2)
+**Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#2)

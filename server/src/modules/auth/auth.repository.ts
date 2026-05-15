@@ -21,6 +21,24 @@ import type { IAuthRepository, ITokenRepository, CreateUserData } from "./auth.t
 
 type PrismaInstance = typeof prisma;
 
+// ─── Safe Select (excludes passwordHash) ─────────────────────────────────────
+
+/**
+ * User fields safe for non-auth queries (e.g. /me).
+ * Defense-in-depth: even if the DTO mapper is bypassed,
+ * passwordHash never leaves the database for these queries.
+ */
+const userSafeSelect = {
+  id: true,
+  username: true,
+  name: true,
+  email: true,
+  profileImage: true,
+  bio: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
 // ─── Auth Repository ─────────────────────────────────────────────────────────
 
 /**
@@ -36,7 +54,7 @@ export const createAuthRepository = (db: PrismaInstance = prisma): IAuthReposito
     db.user.findUnique({ where: { email } }),
 
   findById: (id) =>
-    db.user.findUnique({ where: { id } }),
+    db.user.findUnique({ where: { id }, select: userSafeSelect }),
 
   create: (data: CreateUserData) =>
     db.user.create({ data }),
