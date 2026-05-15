@@ -616,6 +616,27 @@ Also extends tweet repository with findByAuthor.
 
 ---
 
+### Sub-Issue: Follow Module — Follow/Unfollow + Follower/Following Lists
+
+- **Title:** feat(server): add follow module — follow, unfollow, follower/following lists
+- **Labels:** [backend, feature]
+- **Branch:** `feat/follow-module`
+- **Description:**
+
+Four endpoints: separate follow/unfollow mutations (not toggle), offset-paginated
+follower/following lists, self-follow prevention, idempotent operations.
+
+**Steps:**
+
+- [ ] `follow.types.ts` — FollowUserResponse, IFollowRepository, IFollowService
+- [ ] `follow.validator.ts` — offsetQuerySchema (reuse from comments)
+- [ ] `follow.repository.ts` — follow/unfollow, list followers/following with offset
+- [ ] `follow.service.ts` — self-follow prevention, user existence, idempotent ops
+- [ ] `follow.controller.ts` + `follow.routes.ts` — 4 handlers, mergeParams
+- [ ] Register in `app.ts` + documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
