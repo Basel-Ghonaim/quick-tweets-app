@@ -1064,3 +1064,40 @@ All five backend phases are now implemented:
 | C | Comments | getComments, create, update, delete |
 | D | Users | getProfile, getUserTweets |
 | E | Follow | follow, unfollow, getFollowers, getFollowing |
+
+---
+
+## Security Hardening — Audit Response
+
+**Date:** 2026-05-15
+**Branch:** `fix/security-hardening`
+
+### What was fixed
+
+10 findings from Stage 1 security audit — infrastructure-level hardening.
+
+### Fixes Applied
+
+| # | Finding | Fix |
+|---|---|---|
+| C-1 | CORS hardcoded to localhost | Added `CORS_ORIGIN` env var, `app.ts` uses `env.CORS_ORIGIN` |
+| C-2 | No helmet middleware | Installed `helmet@8.1.0`, added `app.use(helmet())` before all routes |
+| C-3 | No JSON body size limit | Changed to `express.json({ limit: "16kb" })` |
+| C-5 | No graceful shutdown | Added SIGTERM/SIGINT handlers in `server.ts`, 10s forced exit timeout |
+| C-6 | No Prisma connection management | Added explicit `prisma.$connect()` on startup, fail-fast on DB failure |
+| C-7 | Shallow health check | Health endpoint now pings DB with `SELECT 1`, returns 503 on failure |
+| E-2 | JWT_EXPIRES_IN defaults to 7d | Changed default to `"15m"` — short-lived access tokens |
+| E-3 | No NODE_ENV in env validation | Added `NODE_ENV` with enum validation and `"development"` default |
+| S-3 | passwordHash not excluded at DB | `findById` now uses `userSafeSelect` — passwordHash never leaves DB for /me |
+| — | Multer installed but unused | Removed `multer` + `@types/multer` from dependencies |
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `config/env.ts` | Added `CORS_ORIGIN`, `NODE_ENV`, fixed `JWT_EXPIRES_IN` default |
+| `app.ts` | helmet(), JSON limit, dynamic CORS, health check with DB ping |
+| `server.ts` | Graceful shutdown, Prisma connect, environment logging |
+| `auth.types.ts` | Added `UserSafe` type (User without passwordHash) |
+| `auth.repository.ts` | `findById` uses `userSafeSelect`, defense-in-depth |
+| `package.json` | Added helmet, removed multer |
