@@ -17,7 +17,11 @@
  */
 
 import { prisma } from "../../shared/database/index.js";
-import type { IAuthRepository, ITokenRepository, CreateUserData } from "./auth.types.js";
+import type {
+  IAuthRepository,
+  ITokenRepository,
+  CreateUserData,
+} from "./auth.types.js";
 
 type PrismaInstance = typeof prisma;
 
@@ -46,18 +50,17 @@ const userSafeSelect = {
  *
  * @param db - Prisma client instance (defaults to singleton, injectable for tests)
  */
-export const createAuthRepository = (db: PrismaInstance = prisma): IAuthRepository => ({
-  findByUsername: (username) =>
-    db.user.findUnique({ where: { username } }),
+export const createAuthRepository = (
+  db: PrismaInstance = prisma,
+): IAuthRepository => ({
+  findByUsername: (username) => db.user.findUnique({ where: { username } }),
 
-  findByEmail: (email) =>
-    db.user.findUnique({ where: { email } }),
+  findByEmail: (email) => db.user.findUnique({ where: { email } }),
 
   findById: (id) =>
     db.user.findUnique({ where: { id }, select: userSafeSelect }),
 
-  create: (data: CreateUserData) =>
-    db.user.create({ data }),
+  create: (data: CreateUserData) => db.user.create({ data }),
 });
 
 // ─── Token Repository ────────────────────────────────────────────────────────
@@ -67,17 +70,18 @@ export const createAuthRepository = (db: PrismaInstance = prisma): IAuthReposito
  *
  * @param db - Prisma client instance (defaults to singleton, injectable for tests)
  */
-export const createTokenRepository = (db: PrismaInstance = prisma): ITokenRepository => ({
+export const createTokenRepository = (
+  db: PrismaInstance = prisma,
+): ITokenRepository => ({
   createRefreshToken: (userId, token, expiresAt) =>
     db.refreshToken.create({
       data: { userId, token, expiresAt },
     }),
 
-  findRefreshToken: (token) =>
-    db.refreshToken.findUnique({ where: { token } }),
+  findRefreshToken: (token) => db.refreshToken.findUnique({ where: { token } }),
 
   deleteRefreshToken: async (token) => {
-    await db.refreshToken.delete({ where: { token } });
+    await db.refreshToken.deleteMany({ where: { token } });
   },
 
   deleteAllUserTokens: async (userId) => {

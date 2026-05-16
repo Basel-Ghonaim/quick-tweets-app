@@ -117,7 +117,10 @@ export const createAuthController = (
         await service.logout(refreshToken);
       }
 
-      res.clearCookie("refreshToken", { path: "/api/v1/auth" });
+      // Clear cookie with matching flags — browser requires httpOnly, secure, sameSite
+      // to match the original options (except maxAge/expires) or it won't clear.
+      const { maxAge, ...clearOptions } = REFRESH_COOKIE_OPTIONS;
+      res.clearCookie("refreshToken", clearOptions);
       sendSuccess(res, null, 204);
     } catch (err) {
       next(err);
