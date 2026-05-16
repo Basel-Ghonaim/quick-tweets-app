@@ -39,6 +39,7 @@ export interface AccessTokenPayload {
  */
 export const generateAccessToken = (userId: number): string => {
   return jwt.sign({ userId }, env.JWT_SECRET, {
+    algorithm: "HS256",
     expiresIn: env.JWT_EXPIRES_IN as jwt.SignOptions["expiresIn"],
   });
 };
@@ -66,7 +67,9 @@ export const generateRefreshToken = (): string => {
  */
 export const verifyAccessToken = (token: string): AccessTokenPayload => {
   try {
-    const decoded = jwt.verify(token, env.JWT_SECRET) as AccessTokenPayload;
+    const decoded = jwt.verify(token, env.JWT_SECRET, {
+      algorithms: ["HS256"],
+    }) as AccessTokenPayload;
     return decoded;
   } catch {
     throw AppError.authentication("Invalid or expired token");
