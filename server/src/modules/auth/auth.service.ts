@@ -161,4 +161,14 @@ export const createAuthService = (
 
     return { accessToken: newAccessToken, refreshToken: newRefreshTokenValue };
   },
+
+  // ─── Get Me ────────────────────────────────────────────────────────────
+
+  getMe: async (userId: number) => {
+    const user = await authRepo.findById(userId);
+    if (!user) {
+      throw AppError.notFound("User");
+    }
+    return user;
+  },
 });

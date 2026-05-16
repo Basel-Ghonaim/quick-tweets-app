@@ -23,7 +23,6 @@
 
 import type { Request, Response, NextFunction } from "express";
 import { createAuthService } from "./auth.service.js";
-import { createAuthRepository } from "./auth.repository.js";
 import type { IAuthService } from "./auth.types.js";
 import { sendSuccess } from "../../shared/response/index.js";
 import { AppError } from "../../shared/errors/index.js";
@@ -167,12 +166,7 @@ export const createAuthController = (
   me: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.userId!;
-      const authRepo = createAuthRepository();
-      const user = await authRepo.findById(userId);
-
-      if (!user) {
-        throw AppError.notFound("User");
-      }
+      const user = await service.getMe(userId);
 
       sendSuccess(res, {
         user: toUserResponse(user),

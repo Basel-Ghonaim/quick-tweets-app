@@ -108,4 +108,5 @@ export interface IAuthService {
   login(data: LoginInput): Promise<AuthResult>;
   logout(refreshToken: string): Promise<void>;
   refreshToken(token: string): Promise<TokenRefreshResult>;
+  getMe(userId: number): Promise<UserSafe>;
 }
