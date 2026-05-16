@@ -43,3 +43,4 @@ authRoutes.post("/refresh", refreshLimiter, controller.refresh);
 // ─── Protected Routes (auth required) ────────────────────────────────────────
 
 authRoutes.get("/me", authGuard, controller.me);
+authRoutes.post("/logout-all", authGuard, controller.logoutAll);

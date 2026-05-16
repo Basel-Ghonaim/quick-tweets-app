@@ -135,6 +135,24 @@ export const createAuthController = (
   },
 
   /**
+   * POST /auth/logout-all
+   * Invalidates ALL refresh tokens for the authenticated user (all devices).
+   * Requires authGuard — userId comes from the verified JWT.
+   */
+  logoutAll: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!;
+      await service.logoutAll(userId);
+
+      // Clear cookie on current device
+      res.clearCookie("refreshToken", REFRESH_COOKIE_BASE);
+      sendSuccess(res, null, 204);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
    * POST /auth/refresh
    * Reads refresh token from cookie, rotates it, sets new cookie.
    * Returns new accessToken in body.
