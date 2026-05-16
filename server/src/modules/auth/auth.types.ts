@@ -65,6 +65,12 @@ export interface ITokenRepository {
   findRefreshToken(token: string): Promise<RefreshTokenRecord | null>;
   deleteRefreshToken(token: string): Promise<void>;
   deleteAllUserTokens(userId: number): Promise<void>;
+  rotateRefreshToken(
+    oldToken: string,
+    userId: number,
+    newToken: string,
+    expiresAt: Date,
+  ): Promise<RefreshToken>;
 }
 
 // ─── Service Interface ───────────────────────────────────────────────────────
@@ -107,5 +113,7 @@ export interface IAuthService {
   register(data: RegisterInput): Promise<AuthResult>;
   login(data: LoginInput): Promise<AuthResult>;
   logout(refreshToken: string): Promise<void>;
+  logoutAll(userId: number): Promise<void>;
   refreshToken(token: string): Promise<TokenRefreshResult>;
+  getMe(userId: number): Promise<UserSafe>;
 }

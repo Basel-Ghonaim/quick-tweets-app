@@ -23,19 +23,27 @@
 
 import type { Request, Response, NextFunction } from "express";
 import { createAuthService } from "./auth.service.js";
-import { createAuthRepository } from "./auth.repository.js";
 import type { IAuthService } from "./auth.types.js";
 import { sendSuccess } from "../../shared/response/index.js";
 import { AppError } from "../../shared/errors/index.js";
 
 // ─── Cookie Configuration ────────────────────────────────────────────────────
 
-/** Cookie options for the refresh token. */
-const REFRESH_COOKIE_OPTIONS = {
+/**
+ * Cookie identity flags — shared between setCookie and clearCookie.
+ * clearCookie requires the same flags (except maxAge/expires) to match.
+ * Adding a flag here ensures both operations stay in sync.
+ */
+const REFRESH_COOKIE_BASE = {
   httpOnly: true,                          // JS cannot read this cookie
   secure: process.env.NODE_ENV === "production", // HTTPS only in production
   sameSite: "strict" as const,             // blocks CSRF
   path: "/api/v1/auth",                    // only sent to auth endpoints
+} as const;
+
+/** Full cookie options (base + maxAge) — used when setting the cookie. */
+const REFRESH_COOKIE_OPTIONS = {
+  ...REFRESH_COOKIE_BASE,
   maxAge: 7 * 24 * 60 * 60 * 1000,        // 7 days in milliseconds
 };
 
@@ -117,7 +125,27 @@ export const createAuthController = (
         await service.logout(refreshToken);
       }
 
-      res.clearCookie("refreshToken", { path: "/api/v1/auth" });
+      // Clear cookie with matching flags — uses REFRESH_COOKIE_BASE
+      // so any new flag added to the base is automatically picked up.
+      res.clearCookie("refreshToken", REFRESH_COOKIE_BASE);
+      sendSuccess(res, null, 204);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * POST /auth/logout-all
+   * Invalidates ALL refresh tokens for the authenticated user (all devices).
+   * Requires authGuard — userId comes from the verified JWT.
+   */
+  logoutAll: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!;
+      await service.logoutAll(userId);
+
+      // Clear cookie on current device
+      res.clearCookie("refreshToken", REFRESH_COOKIE_BASE);
       sendSuccess(res, null, 204);
     } catch (err) {
       next(err);
@@ -156,12 +184,7 @@ export const createAuthController = (
   me: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.userId!;
-      const authRepo = createAuthRepository();
-      const user = await authRepo.findById(userId);
-
-      if (!user) {
-        throw AppError.notFound("User");
-      }
+      const user = await service.getMe(userId);
 
       sendSuccess(res, {
         user: toUserResponse(user),

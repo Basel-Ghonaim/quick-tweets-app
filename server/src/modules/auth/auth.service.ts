@@ -132,6 +132,13 @@ export const createAuthService = (
     await tokenRepo.deleteRefreshToken(refreshToken);
   },
 
+  // ─── Logout All Devices ────────────────────────────────────────────────
+
+  logoutAll: async (userId: number): Promise<void> => {
+    // Delete ALL refresh tokens for this user — forces re-login on every device
+    await tokenRepo.deleteAllUserTokens(userId);
+  },
+
   // ─── Refresh Token ───────────────────────────────────────────────────
 
   refreshToken: async (token: string): Promise<TokenRefreshResult> => {
@@ -148,17 +155,30 @@ export const createAuthService = (
       throw AppError.authentication("Refresh token expired");
     }
 
-    // 3. Token rotation: delete old token, create new pair
-    await tokenRepo.deleteRefreshToken(token);
-
+    // 3. Atomic token rotation: delete old + create new in one transaction
     const newAccessToken = generateAccessToken(storedToken.userId);
     const newRefreshTokenValue = generateRefreshToken();
 
-    // 4. Store new refresh token
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
-    await tokenRepo.createRefreshToken(storedToken.userId, newRefreshTokenValue, expiresAt);
+
+    await tokenRepo.rotateRefreshToken(
+      token,
+      storedToken.userId,
+      newRefreshTokenValue,
+      expiresAt,
+    );
 
     return { accessToken: newAccessToken, refreshToken: newRefreshTokenValue };
+  },
+
+  // ─── Get Me ────────────────────────────────────────────────────────────
+
+  getMe: async (userId: number) => {
+    const user = await authRepo.findById(userId);
+    if (!user) {
+      throw AppError.notFound("User");
+    }
+    return user;
   },
 });
