@@ -657,6 +657,26 @@ no new features, no schema changes.
 
 ---
 
+### Sub-Issue: Auth Hardening — Stage 2 Audit Response
+
+- **Title:** fix(server): auth hardening — cookie flags, JWT algorithm, password policy, service layer
+- **Labels:** [backend, security, fix]
+- **Branch:** `fix/auth-hardening`
+- **Description:**
+
+8 fixes from Stage 2 auth audit. Cookie, JWT, validation, architecture, and token safety.
+
+**Steps:**
+
+- [ ] AUTH-1: clearCookie missing flags + AUTH-10: deleteRefreshToken safety
+- [ ] AUTH-8: JWT algorithm enforcement (HS256 explicit)
+- [ ] AUTH-6: Password validation (max 72, complexity) + AUTH-7: Username regex
+- [ ] AUTH-9: Move /me to service layer (DIP fix)
+- [ ] AUTH-2: Token rotation transaction + AUTH-4: Logout everywhere option
+- [ ] Documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
