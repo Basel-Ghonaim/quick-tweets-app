@@ -1101,3 +1101,44 @@ All five backend phases are now implemented:
 | `auth.types.ts` | Added `UserSafe` type (User without passwordHash) |
 | `auth.repository.ts` | `findById` uses `userSafeSelect`, defense-in-depth |
 | `package.json` | Added helmet, removed multer |
+
+---
+
+## Auth Hardening — Stage 2 Audit Response
+
+**Date:** 2026-05-16
+**Branch:** `fix/auth-hardening`
+
+### What was fixed
+
+8 findings from Stage 2 auth audit. Cookie security, JWT algorithm, password policy, architecture, token safety.
+
+### Fixes Applied
+
+| ID | Finding | Fix |
+|---|---|---|
+| AUTH-1 | `clearCookie` missing flags — logout fails in production | Split into `REFRESH_COOKIE_BASE` + `REFRESH_COOKIE_OPTIONS`, clearCookie uses base |
+| AUTH-2 | Token rotation not atomic — crash = lockout | Added `rotateRefreshToken` using `$transaction([delete, create])` |
+| AUTH-4 | No "logout everywhere" feature | Added `logoutAll` service method + `POST /auth/logout-all` endpoint (authGuard) |
+| AUTH-6 | Password max(16) too restrictive, no complexity | Max raised to 72 (bcrypt limit), added lowercase/uppercase/digit/special char regex |
+| AUTH-7 | Username allows special chars / unicode | Added `regex(/^[a-zA-Z0-9_]+$/)` — letters, numbers, underscores only |
+| AUTH-8 | JWT algorithm not explicitly enforced | Added `algorithm: "HS256"` to sign, `algorithms: ["HS256"]` to verify |
+| AUTH-9 | `/me` handler bypasses service layer (DIP violation) | Added `getMe` to `IAuthService`, controller now calls `service.getMe()` |
+| AUTH-10 | `deleteRefreshToken` throws on missing token | Changed `.delete()` to `.deleteMany()` — no P2025 on already-deleted tokens |
+
+### New Endpoint
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/v1/auth/logout-all` | Required | Invalidates all refresh tokens for the user (all devices) |
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `auth.types.ts` | Added `rotateRefreshToken` to `ITokenRepository`, `logoutAll`/`getMe` to `IAuthService` |
+| `auth.repository.ts` | `rotateRefreshToken` with `$transaction`, `deleteRefreshToken` uses `deleteMany` |
+| `auth.service.ts` | Atomic rotation via `rotateRefreshToken`, `logoutAll`, `getMe` |
+| `auth.controller.ts` | Cookie base/options split, `logoutAll` handler, `/me` uses `service.getMe()` |
+| `auth.routes.ts` | Added `POST /logout-all` with `authGuard` |
+| `auth.validator.ts` | Password max 72, complexity regex, username alphanumeric regex |
