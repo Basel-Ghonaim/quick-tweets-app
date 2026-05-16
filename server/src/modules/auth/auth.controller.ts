@@ -30,12 +30,21 @@ import { AppError } from "../../shared/errors/index.js";
 
 // ─── Cookie Configuration ────────────────────────────────────────────────────
 
-/** Cookie options for the refresh token. */
-const REFRESH_COOKIE_OPTIONS = {
+/**
+ * Cookie identity flags — shared between setCookie and clearCookie.
+ * clearCookie requires the same flags (except maxAge/expires) to match.
+ * Adding a flag here ensures both operations stay in sync.
+ */
+const REFRESH_COOKIE_BASE = {
   httpOnly: true,                          // JS cannot read this cookie
   secure: process.env.NODE_ENV === "production", // HTTPS only in production
   sameSite: "strict" as const,             // blocks CSRF
   path: "/api/v1/auth",                    // only sent to auth endpoints
+} as const;
+
+/** Full cookie options (base + maxAge) — used when setting the cookie. */
+const REFRESH_COOKIE_OPTIONS = {
+  ...REFRESH_COOKIE_BASE,
   maxAge: 7 * 24 * 60 * 60 * 1000,        // 7 days in milliseconds
 };
 
@@ -117,10 +126,9 @@ export const createAuthController = (
         await service.logout(refreshToken);
       }
 
-      // Clear cookie with matching flags — browser requires httpOnly, secure, sameSite
-      // to match the original options (except maxAge/expires) or it won't clear.
-      const { maxAge, ...clearOptions } = REFRESH_COOKIE_OPTIONS;
-      res.clearCookie("refreshToken", clearOptions);
+      // Clear cookie with matching flags — uses REFRESH_COOKIE_BASE
+      // so any new flag added to the base is automatically picked up.
+      res.clearCookie("refreshToken", REFRESH_COOKIE_BASE);
       sendSuccess(res, null, 204);
     } catch (err) {
       next(err);
