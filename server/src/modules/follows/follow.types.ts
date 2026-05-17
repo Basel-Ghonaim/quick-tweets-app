@@ -16,9 +16,6 @@
 
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 
-// Re-export for convenience
-export type { CursorParams, CursorMeta };
-
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
 /** Returned after follow/unfollow action. */

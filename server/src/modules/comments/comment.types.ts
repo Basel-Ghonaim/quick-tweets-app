@@ -13,9 +13,6 @@
 
 import type { AuthorEmbed } from "../../shared/types/index.js";
 
-// Re-export for convenience
-export type { AuthorEmbed };
-
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
 /** Comment shape returned to the frontend. */

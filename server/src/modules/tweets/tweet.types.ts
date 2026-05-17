@@ -13,9 +13,6 @@
 
 import type { AuthorEmbed, CursorParams, CursorMeta } from "../../shared/types/index.js";
 
-// Re-export shared types so existing consumers don't need to change imports
-export type { AuthorEmbed, CursorParams, CursorMeta };
-
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
 /** Tweet shape returned to the frontend. */

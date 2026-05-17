@@ -25,9 +25,8 @@ import type {
   FollowActionResponse,
   FollowUserItem,
   FollowWithUser,
-  CursorParams,
-  CursorMeta,
 } from "./follow.types.js";
+import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import { isPrismaError } from "../../shared/utils/index.js";
 
 // ─── Helper: Resolve username to userId or throw 404 ─────────────────────────

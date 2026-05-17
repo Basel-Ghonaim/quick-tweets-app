@@ -20,9 +20,8 @@ import type {
   ITweetRepository,
   ITweetService,
   TweetResponse,
-  CursorParams,
-  CursorMeta,
 } from "./tweet.types.js";
+import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import { isPrismaError } from "../../shared/utils/index.js";
 import { toTweetResponse } from "./tweet.mapper.js";
 

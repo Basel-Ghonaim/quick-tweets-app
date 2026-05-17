@@ -16,9 +16,6 @@
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import type { TweetResponse } from "../tweets/tweet.types.js";
 
-// Re-export for convenience
-export type { CursorParams, CursorMeta, TweetResponse };
-
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
 /** Full user profile returned to the frontend. */
