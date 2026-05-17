@@ -1142,3 +1142,45 @@ All five backend phases are now implemented:
 | `auth.controller.ts` | Cookie base/options split, `logoutAll` handler, `/me` uses `service.getMe()` |
 | `auth.routes.ts` | Added `POST /logout-all` with `authGuard` |
 | `auth.validator.ts` | Password max 72, complexity regex, username alphanumeric regex |
+
+---
+
+## Data Integrity — Stage 3 Audit Response
+
+**Date:** 2026-05-17
+**Branch:** `fix/data-integrity`
+
+### What was fixed
+
+5 findings from Stage 3 audit. Input validation, response accuracy, query optimization.
+
+### Fixes Applied
+
+| ID | Finding | Fix |
+|---|---|---|
+| W1 | Route params never validated (`Number("abc")` → NaN) | Created `parseId()` utility — validates positive integer, throws clean 400. Applied to all controllers. |
+| W5 | `update()` returns stale `isLiked: false` | Added `userId?` param to `repo.update()` → passes to `buildTweetInclude(userId)` |
+| W4 | Ownership check fetches full tweet with all relations | Added `findOwner(id)` → `select: { authorId: true }` to tweet repo |
+| W6 | Same pattern in comment ownership checks | Added `findOwner(id)` → `select: { authorId, tweetId }` to comment repo |
+| W7 | `create()` passes `authorId` as userId to `buildTweetInclude` | Changed to `buildTweetInclude()` — no userId needed on create |
+
+### New Shared Utility
+
+| File | Purpose |
+|---|---|
+| `shared/utils/parseId.ts` | Safe param parsing: validates positive integer, rejects NaN/0/floats with 400 |
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `shared/utils/parseId.ts` | **[NEW]** parseId utility |
+| `shared/utils/index.ts` | Export parseId |
+| `tweet.controller.ts` | All `Number(req.params)` → `parseId()` |
+| `comment.controller.ts` | All `Number(req.params)` → `parseId()` |
+| `tweet.types.ts` | Added `findOwner`, `userId?` to `update` |
+| `tweet.repository.ts` | `findOwner`, `update(userId?)`, `create` intent fix |
+| `tweet.service.ts` | Uses `findOwner` for ownership, passes `userId` to update |
+| `comment.types.ts` | Added `findOwner` to interface |
+| `comment.repository.ts` | `findOwner` implementation |
+| `comment.service.ts` | Uses `findOwner` for ownership checks |
