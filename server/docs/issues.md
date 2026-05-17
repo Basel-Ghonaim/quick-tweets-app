@@ -716,6 +716,24 @@ no new features, no schema changes.
 
 ---
 
+### Sub-Issue: Module Architecture — Import & Export Paths
+
+- **Title:** fix(server): module architecture — encapsulation, type segregation, import paths
+- **Labels:** [backend, fix, architecture]
+- **Branch:** `fix/module-architecture`
+- **Description:**
+
+4 findings from module architecture audit. Cross-module boundary violations, type export issues, import misdirection.
+
+**Steps:**
+
+- [x] Encapsulation: extract `cursorQuerySchema` to `shared/validators`, route user tweets through `ITweetService`
+- [x] Type Segregation: use `export type` for pure interfaces in shared barrel
+- [x] Import Misdirection: remove type re-exports from module types files
+- [x] Documentation
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
