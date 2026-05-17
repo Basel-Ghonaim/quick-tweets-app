@@ -19,6 +19,7 @@ import type { Request, Response, NextFunction } from "express";
 import { createCommentService } from "./comment.service.js";
 import type { ICommentService } from "./comment.types.js";
 import { sendSuccess } from "../../shared/response/index.js";
+import { parseId } from "../../shared/utils/index.js";
 
 // ─── Controller Factory ──────────────────────────────────────────────────────
 
@@ -37,7 +38,7 @@ export const createCommentController = (
    */
   getComments: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = Number(req.params.tweetId);
+      const tweetId = parseId(req.params.tweetId, "Tweet ID");
       const { page, limit } = req.query as unknown as { page: number; limit: number };
 
       const result = await service.getComments(tweetId, { page, limit });
@@ -54,7 +55,7 @@ export const createCommentController = (
    */
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = Number(req.params.tweetId);
+      const tweetId = parseId(req.params.tweetId, "Tweet ID");
       const comment = await service.create(req.userId!, tweetId, req.body.body);
 
       sendSuccess(res, comment, 201);
@@ -69,8 +70,8 @@ export const createCommentController = (
    */
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = Number(req.params.tweetId);
-      const commentId = Number(req.params.commentId);
+      const tweetId = parseId(req.params.tweetId, "Tweet ID");
+      const commentId = parseId(req.params.commentId, "Comment ID");
 
       const comment = await service.update(commentId, tweetId, req.userId!, req.body);
 
@@ -86,8 +87,8 @@ export const createCommentController = (
    */
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = Number(req.params.tweetId);
-      const commentId = Number(req.params.commentId);
+      const tweetId = parseId(req.params.tweetId, "Tweet ID");
+      const commentId = parseId(req.params.commentId, "Comment ID");
 
       await service.delete(commentId, tweetId, req.userId!);
 
