@@ -20,32 +20,11 @@ import type {
   ITweetRepository,
   ITweetService,
   TweetResponse,
-  TweetWithRelations,
   CursorParams,
   CursorMeta,
 } from "./tweet.types.js";
 import { isPrismaError } from "../../shared/utils/index.js";
-
-// ─── DTO Transformer ─────────────────────────────────────────────────────────
-
-/**
- * Transforms a raw DB tweet (with relations) into the frontend DTO.
- *
- * Mapping:
- *   _count.likes    → likesCount
- *   _count.comments → commentsCount
- *   likes[]         → isLiked (true if array has items)
- */
-const toTweetResponse = (tweet: TweetWithRelations): TweetResponse => ({
-  id: tweet.id,
-  body: tweet.body,
-  image: tweet.image,
-  author: tweet.author,
-  likesCount: tweet._count.likes,
-  commentsCount: tweet._count.comments,
-  isLiked: (tweet.likes?.length ?? 0) > 0,
-  createdAt: tweet.createdAt,
-});
+import { toTweetResponse } from "./tweet.mapper.js";
 
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
