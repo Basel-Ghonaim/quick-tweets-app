@@ -1184,3 +1184,49 @@ All five backend phases are now implemented:
 | `comment.types.ts` | Added `findOwner` to interface |
 | `comment.repository.ts` | `findOwner` implementation |
 | `comment.service.ts` | Uses `findOwner` for ownership checks |
+
+---
+
+## Code Quality — DRY, Cleanup & Consistency
+
+**Date:** 2026-05-17
+**Branch:** `fix/code-quality`
+
+### What was fixed
+
+5 findings from audit. DRY violations, redundant queries, missing middleware.
+
+### Fixes Applied
+
+| ID | Finding | Fix |
+|---|---|---|
+| W1 | User profile routes missing `apiLimiter` | Added `apiLimiter` to `userRoutes` mount in `app.ts` |
+| W2 | Duplicated `toTweetResponse` in user service | Extracted to `tweet.mapper.ts` — both services import from mapper |
+| W3 | Unfollow uses `.delete()` (throws P2025) | Changed to `.deleteMany()` — idempotent, removed try/catch |
+| W4 | Follower/following queries fetch both sides | Split includes — each query fetches only its relevant side |
+| W5 | `isPrismaError` duplicated in 2 services | Extracted to `shared/utils/prismaError.ts` |
+
+### New Files
+
+| File | Purpose |
+|---|---|
+| `shared/utils/prismaError.ts` | **[NEW]** Shared Prisma error detection utility |
+| `tweets/tweet.mapper.ts` | **[NEW]** Tweet DTO mapper — shared across modules |
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `app.ts` | Added `apiLimiter` to user profile routes |
+| `shared/utils/index.ts` | Export `isPrismaError` |
+| `tweet.service.ts` | Removed inline `isPrismaError` + `toTweetResponse`, imports from shared |
+| `user.service.ts` | Removed duplicate `toTweetResponse`, imports from `tweet.mapper` |
+| `follow.repository.ts` | `.delete()` → `.deleteMany()`, split includes |
+| `follow.service.ts` | Removed inline `isPrismaError`, removed P2025 try/catch |
+| `follow.types.ts` | `FollowWithUser.follower/following` now optional |
+
+### Known Remaining Issue
+
+| ID | Finding | Status |
+|---|---|---|
+| W6 | User service accesses tweet repository cross-module | 🔲 Open |
