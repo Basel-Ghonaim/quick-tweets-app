@@ -28,18 +28,7 @@ import type {
   CursorParams,
   CursorMeta,
 } from "./follow.types.js";
-
-// ─── Prisma Error Helper ─────────────────────────────────────────────────────
-
-/**
- * Checks if an error is a Prisma known request error with a specific code.
- * Uses duck-typing to avoid importing Prisma's error class directly.
- */
-const isPrismaError = (error: unknown, code: string): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  (error as { code: string }).code === code;
+import { isPrismaError } from "../../shared/utils/index.js";
 
 // ─── Helper: Resolve username to userId or throw 404 ─────────────────────────
 
@@ -114,16 +103,8 @@ export const createFollowService = (
       throw AppError.validation("You are not following this user");
     }
 
-    // 3. Delete follow (with race condition safety net)
-    try {
-      await repo.unfollow(reqUserId, targetId);
-    } catch (error) {
-      // P2025: another concurrent request already deleted this follow
-      if (isPrismaError(error, "P2025")) {
-        throw AppError.validation("You are not following this user");
-      }
-      throw error;
-    }
+    // 3. Delete follow (deleteMany is idempotent — no P2025 on missing record)
+    await repo.unfollow(reqUserId, targetId);
 
     const followersCount = await repo.countFollowers(targetId);
     return { isFollowing: false, followersCount };
@@ -146,7 +127,7 @@ export const createFollowService = (
     const sliced = hasMore ? follows.slice(0, limit) : follows;
 
     // 3. Map to FollowUserItem (extract the follower side)
-    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.follower);
+    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.follower!);
 
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {
@@ -175,7 +156,7 @@ export const createFollowService = (
     const sliced = hasMore ? follows.slice(0, limit) : follows;
 
     // 3. Map to FollowUserItem (extract the following side)
-    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.following);
+    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.following!);
 
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {

@@ -38,11 +38,12 @@ export interface FollowUserItem {
 
 // ─── Raw DB Types ────────────────────────────────────────────────────────────
 
-/** Follow record with the related user data for list queries. */
+/** Follow record with the related user data for list queries.
+ *  Each query only includes one side (follower OR following). */
 export interface FollowWithUser {
   id: number;
-  follower: FollowUserItem;
-  following: FollowUserItem;
+  follower?: FollowUserItem;
+  following?: FollowUserItem;
 }
 
 // ─── Repository Interface ────────────────────────────────────────────────────

@@ -18,27 +18,14 @@
 import { AppError } from "../../shared/errors/index.js";
 import { createUserRepository } from "./user.repository.js";
 import { createTweetRepository } from "../tweets/tweet.repository.js";
-import type { ITweetRepository, TweetWithRelations, TweetResponse } from "../tweets/tweet.types.js";
+import { toTweetResponse } from "../tweets/tweet.mapper.js";
+import type { ITweetRepository, TweetResponse } from "../tweets/tweet.types.js";
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import type {
   IUserRepository,
   IUserService,
   UserProfileResponse,
 } from "./user.types.js";
-
-// ─── Tweet DTO (reuse from tweet module) ─────────────────────────────────────
-
-/** Same transformation used by the tweet service. Kept in sync. */
-const toTweetResponse = (tweet: TweetWithRelations): TweetResponse => ({
-  id: tweet.id,
-  body: tweet.body,
-  image: tweet.image,
-  author: tweet.author,
-  likesCount: tweet._count.likes,
-  commentsCount: tweet._count.comments,
-  isLiked: (tweet.likes?.length ?? 0) > 0,
-  createdAt: tweet.createdAt,
-});
 
 // ─── Service Factory ─────────────────────────────────────────────────────────
 

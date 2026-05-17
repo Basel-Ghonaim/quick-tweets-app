@@ -20,43 +20,11 @@ import type {
   ITweetRepository,
   ITweetService,
   TweetResponse,
-  TweetWithRelations,
   CursorParams,
   CursorMeta,
 } from "./tweet.types.js";
-
-// ─── Prisma Error Helper ─────────────────────────────────────────────────────
-
-/**
- * Checks if an error is a Prisma known request error with a specific code.
- * Uses duck-typing to avoid importing Prisma's error class directly.
- */
-const isPrismaError = (error: unknown, code: string): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  (error as { code: string }).code === code;
-
-// ─── DTO Transformer ─────────────────────────────────────────────────────────
-
-/**
- * Transforms a raw DB tweet (with relations) into the frontend DTO.
- *
- * Mapping:
- *   _count.likes    → likesCount
- *   _count.comments → commentsCount
- *   likes[]         → isLiked (true if array has items)
- */
-const toTweetResponse = (tweet: TweetWithRelations): TweetResponse => ({
-  id: tweet.id,
-  body: tweet.body,
-  image: tweet.image,
-  author: tweet.author,
-  likesCount: tweet._count.likes,
-  commentsCount: tweet._count.comments,
-  isLiked: (tweet.likes?.length ?? 0) > 0,
-  createdAt: tweet.createdAt,
-});
+import { isPrismaError } from "../../shared/utils/index.js";
+import { toTweetResponse } from "./tweet.mapper.js";
 
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
