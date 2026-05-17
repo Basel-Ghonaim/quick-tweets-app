@@ -96,16 +96,17 @@ export const createTweetRepository = (
   create: (authorId, body) =>
     db.tweet.create({
       data: { authorId, body },
-      include: buildTweetInclude(authorId),
+      // No userId — isLiked is always false on a newly created tweet
+      include: buildTweetInclude(),
     }),
 
   // ── Update ──
 
-  update: (id, data) =>
+  update: (id, data, userId?) =>
     db.tweet.update({
       where: { id },
       data,
-      include: buildTweetInclude(),
+      include: buildTweetInclude(userId),
     }),
 
   // ── Delete ──
@@ -113,6 +114,11 @@ export const createTweetRepository = (
   delete: async (id) => {
     await db.tweet.delete({ where: { id } });
   },
+
+  // ── Ownership Check (lightweight) ──
+
+  findOwner: (id) =>
+    db.tweet.findUnique({ where: { id }, select: { authorId: true } }),
 
   // ── Like Operations ──
 

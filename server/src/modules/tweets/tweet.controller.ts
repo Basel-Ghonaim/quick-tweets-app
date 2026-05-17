@@ -19,6 +19,7 @@ import type { Request, Response, NextFunction } from "express";
 import { createTweetService } from "./tweet.service.js";
 import type { ITweetService } from "./tweet.types.js";
 import { sendSuccess } from "../../shared/response/index.js";
+import { parseId } from "../../shared/utils/index.js";
 
 // ─── Controller Factory ──────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ export const createTweetController = (
    */
   getById: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const id = Number(req.params.id);
+      const id = parseId(req.params.id, "Tweet ID");
       const tweet = await service.getById(id, req.userId);
 
       sendSuccess(res, tweet);
@@ -81,7 +82,7 @@ export const createTweetController = (
    */
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const id = Number(req.params.id);
+      const id = parseId(req.params.id, "Tweet ID");
       const tweet = await service.update(id, req.userId!, req.body);
 
       sendSuccess(res, tweet);
@@ -96,7 +97,7 @@ export const createTweetController = (
    */
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const id = Number(req.params.id);
+      const id = parseId(req.params.id, "Tweet ID");
       await service.delete(id, req.userId!);
 
       sendSuccess(res, null, 204);
@@ -111,7 +112,7 @@ export const createTweetController = (
    */
   toggleLike: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = Number(req.params.id);
+      const tweetId = parseId(req.params.id, "Tweet ID");
       const result = await service.toggleLike(req.userId!, tweetId);
 
       sendSuccess(res, result);

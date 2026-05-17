@@ -113,19 +113,19 @@ export const createCommentService = (
     userId: number,
     data: { body?: string },
   ): Promise<CommentResponse> => {
-    // 1. Find the comment
-    const existing = await repo.findById(commentId);
-    if (!existing) {
+    // 1. Lightweight ownership check — only fetch authorId + tweetId
+    const owner = await repo.findOwner(commentId);
+    if (!owner) {
       throw AppError.notFound("Comment");
     }
 
     // 2. Verify comment belongs to the specified tweet (prevents URL manipulation)
-    if (existing.tweetId !== tweetId) {
+    if (owner.tweetId !== tweetId) {
       throw AppError.notFound("Comment");
     }
 
     // 3. Check ownership — only the author can edit
-    if (existing.authorId !== userId) {
+    if (owner.authorId !== userId) {
       throw AppError.authorization("You can only edit your own comments");
     }
 
@@ -141,19 +141,19 @@ export const createCommentService = (
     tweetId: number,
     userId: number,
   ): Promise<void> => {
-    // 1. Find the comment
-    const existing = await repo.findById(commentId);
-    if (!existing) {
+    // 1. Lightweight ownership check — only fetch authorId + tweetId
+    const owner = await repo.findOwner(commentId);
+    if (!owner) {
       throw AppError.notFound("Comment");
     }
 
     // 2. Verify comment belongs to the specified tweet
-    if (existing.tweetId !== tweetId) {
+    if (owner.tweetId !== tweetId) {
       throw AppError.notFound("Comment");
     }
 
     // 3. Check ownership — only the author can delete
-    if (existing.authorId !== userId) {
+    if (owner.authorId !== userId) {
       throw AppError.authorization("You can only delete your own comments");
     }
 

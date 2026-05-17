@@ -677,6 +677,25 @@ no new features, no schema changes.
 
 ---
 
+### Sub-Issue: Data Integrity — Tweets & Comments Hardening
+
+- **Title:** fix(server): data integrity — params validation, isLiked fix, ownership optimization
+- **Labels:** [backend, fix, data-integrity]
+- **Branch:** `fix/data-integrity`
+- **Description:**
+
+5 fixes from Stage 3 audit. Input validation, response accuracy, query optimization.
+
+**Steps:**
+
+- [ ] W1: Add `"params"` support to validate middleware + param schemas
+- [ ] W5: Fix stale `isLiked` on tweet update — pass userId to repo.update()
+- [ ] W4+W6: Lightweight `findOwner()` for ownership checks (tweets + comments)
+- [ ] W7: Fix `create()` buildTweetInclude intent — remove authorId
+- [ ] Documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
