@@ -114,6 +114,11 @@ export const createTweetRepository = (
     await db.tweet.delete({ where: { id } });
   },
 
+  // ── Ownership Check (lightweight) ──
+
+  findOwner: (id) =>
+    db.tweet.findUnique({ where: { id }, select: { authorId: true } }),
+
   // ── Like Operations ──
 
   findLike: (userId, tweetId) =>

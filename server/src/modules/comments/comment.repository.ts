@@ -100,4 +100,12 @@ export const createCommentRepository = (
   delete: async (id) => {
     await db.comment.delete({ where: { id } });
   },
+
+  // ── Ownership Check (lightweight) ──
+
+  findOwner: (id) =>
+    db.comment.findUnique({
+      where: { id },
+      select: { authorId: true, tweetId: true },
+    }),
 });

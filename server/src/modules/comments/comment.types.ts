@@ -84,6 +84,9 @@ export interface ICommentRepository {
   update(id: number, data: { body?: string }): Promise<CommentWithRelations>;
 
   delete(id: number): Promise<void>;
+
+  /** Lightweight query — only fetches authorId + tweetId for ownership checks. */
+  findOwner(id: number): Promise<{ authorId: number; tweetId: number } | null>;
 }
 
 // ─── Service Interface ───────────────────────────────────────────────────────

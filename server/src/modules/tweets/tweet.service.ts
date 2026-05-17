@@ -123,14 +123,14 @@ export const createTweetService = (
     userId: number,
     data: { body?: string },
   ): Promise<TweetResponse> => {
-    // 1. Find the tweet
-    const existing = await repo.findById(id);
-    if (!existing) {
+    // 1. Lightweight ownership check — only fetch authorId, not full relations
+    const owner = await repo.findOwner(id);
+    if (!owner) {
       throw AppError.notFound("Tweet");
     }
 
     // 2. Check ownership — only the author can edit
-    if (existing.authorId !== userId) {
+    if (owner.authorId !== userId) {
       throw AppError.authorization("You can only edit your own tweets");
     }
 
@@ -142,14 +142,14 @@ export const createTweetService = (
   // ─── Delete (ownership check) ───────────────────────────────────────
 
   delete: async (id: number, userId: number): Promise<void> => {
-    // 1. Find the tweet
-    const existing = await repo.findById(id);
-    if (!existing) {
+    // 1. Lightweight ownership check — only fetch authorId, not full relations
+    const owner = await repo.findOwner(id);
+    if (!owner) {
       throw AppError.notFound("Tweet");
     }
 
     // 2. Check ownership — only the author can delete
-    if (existing.authorId !== userId) {
+    if (owner.authorId !== userId) {
       throw AppError.authorization("You can only delete your own tweets");
     }
 

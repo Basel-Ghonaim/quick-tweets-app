@@ -81,6 +81,9 @@ export interface ITweetRepository {
 
   delete(id: number): Promise<void>;
 
+  /** Lightweight query — only fetches authorId for ownership checks. */
+  findOwner(id: number): Promise<{ authorId: number } | null>;
+
   // ── Like Operations ──
   findLike(userId: number, tweetId: number): Promise<{ id: number } | null>;
 
