@@ -14,7 +14,8 @@
  */
 
 import { prisma } from "../../shared/database/index.js";
-import type { ITweetRepository, CursorParams } from "./tweet.types.js";
+import type { ITweetRepository } from "./tweet.types.js";
+import type { CursorParams } from "../../shared/types/index.js";
 
 type PrismaInstance = typeof prisma;
 

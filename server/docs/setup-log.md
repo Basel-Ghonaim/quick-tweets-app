@@ -1229,4 +1229,49 @@ All five backend phases are now implemented:
 
 | ID | Finding | Status |
 |---|---|---|
-| W6 | User service accesses tweet repository cross-module | 🔲 Open |
+| W6 | User service accesses tweet repository cross-module | ✅ Fixed |
+
+---
+
+## Module Architecture — Import & Export Paths
+
+**Date:** 2026-05-17
+**Branch:** `fix/module-architecture`
+
+### What was fixed
+
+4 findings from module architecture audit. Cross-module boundary violations, type export issues, import misdirection.
+
+### Fixes Applied
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | `cursorQuerySchema` in tweet validator (cross-module) | Extracted to `shared/validators/cursor.ts` |
+| 2 | User service → tweet repository (cross-module) | Added `getByAuthor()` to `ITweetService`, user service delegates through service layer |
+| 3 | `shared/types/index.ts` uses value export for interfaces | Changed to `export type` |
+| 4 | Module types re-export shared types (import misdirection) | Removed re-exports, consumers import from `shared/types` directly |
+
+### New Files
+
+| File | Purpose |
+|---|---|
+| `shared/validators/cursor.ts` | **[NEW]** Shared cursor pagination Zod schema |
+| `shared/validators/index.ts` | **[NEW]** Validators barrel |
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `tweet.validator.ts` | Removed `cursorQuerySchema` (moved to shared) |
+| `tweet.types.ts` | Added `getByAuthor` to `ITweetService`, removed re-exports |
+| `tweet.service.ts` | Implemented `getByAuthor`, imports shared types directly |
+| `tweet.repository.ts` | Imports `CursorParams` from shared/types |
+| `tweet.routes.ts` | Imports `cursorQuerySchema` from shared/validators |
+| `user.service.ts` | Replaced `ITweetRepository` with `ITweetService`, removed mapper import |
+| `user.types.ts` | Removed re-exports, direct import of `TweetResponse` |
+| `user.routes.ts` | Imports `cursorQuerySchema` from shared/validators |
+| `follow.routes.ts` | Imports `cursorQuerySchema` from shared/validators |
+| `follow.types.ts` | Removed re-exports |
+| `follow.service.ts` | Imports shared types directly |
+| `comment.types.ts` | Removed `AuthorEmbed` re-export |
+| `shared/types/index.ts` | Changed to `export type` |

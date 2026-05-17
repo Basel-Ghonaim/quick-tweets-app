@@ -19,7 +19,7 @@ import { Router } from "express";
 import { validate } from "../../middleware/validate.js";
 import { authGuard } from "../../middleware/authGuard.js";
 import { createFollowController } from "./follow.controller.js";
-import { cursorQuerySchema } from "../tweets/tweet.validator.js";
+import { cursorQuerySchema } from "../../shared/validators/index.js";
 
 const controller = createFollowController();
 

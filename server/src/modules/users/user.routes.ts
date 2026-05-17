@@ -15,7 +15,7 @@ import { Router } from "express";
 import { validate } from "../../middleware/validate.js";
 import { optionalAuth } from "../../middleware/optionalAuth.js";
 import { createUserController } from "./user.controller.js";
-import { cursorQuerySchema } from "../tweets/tweet.validator.js";
+import { cursorQuerySchema } from "../../shared/validators/index.js";
 
 const controller = createUserController();
 

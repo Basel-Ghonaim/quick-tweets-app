@@ -20,9 +20,8 @@ import type {
   ITweetRepository,
   ITweetService,
   TweetResponse,
-  CursorParams,
-  CursorMeta,
 } from "./tweet.types.js";
+import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import { isPrismaError } from "../../shared/utils/index.js";
 import { toTweetResponse } from "./tweet.mapper.js";
 
@@ -52,6 +51,33 @@ export const createTweetService = (
     const sliced = hasMore ? tweets.slice(0, limit) : tweets;
 
     // Build cursor meta
+    const lastItem = sliced[sliced.length - 1];
+    const meta: CursorMeta = {
+      nextCursor: hasMore && lastItem ? String(lastItem.id) : null,
+      limit,
+      hasMore,
+    };
+
+    return {
+      data: sliced.map(toTweetResponse),
+      meta,
+    };
+  },
+
+  // ─── Tweets by Author (cursor-paginated) ────────────────────────────
+
+  getByAuthor: async (
+    authorId: number,
+    params: CursorParams,
+    userId?: number,
+  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }> => {
+    const { limit } = params;
+
+    const tweets = await repo.findByAuthor(authorId, params, userId);
+
+    const hasMore = tweets.length > limit;
+    const sliced = hasMore ? tweets.slice(0, limit) : tweets;
+
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {
       nextCursor: hasMore && lastItem ? String(lastItem.id) : null,
