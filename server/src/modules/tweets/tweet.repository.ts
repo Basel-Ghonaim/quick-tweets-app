@@ -96,7 +96,8 @@ export const createTweetRepository = (
   create: (authorId, body) =>
     db.tweet.create({
       data: { authorId, body },
-      include: buildTweetInclude(authorId),
+      // No userId — isLiked is always false on a newly created tweet
+      include: buildTweetInclude(),
     }),
 
   // ── Update ──
