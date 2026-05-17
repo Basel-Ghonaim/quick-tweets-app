@@ -696,6 +696,26 @@ no new features, no schema changes.
 
 ---
 
+### Sub-Issue: Code Quality — DRY, Cleanup & Consistency
+
+- **Title:** fix(server): code quality — shared utilities, redundant queries, rate limiter
+- **Labels:** [backend, fix, code-quality]
+- **Branch:** `fix/code-quality`
+- **Description:**
+
+5 fixes from audit. DRY violations, redundant DB queries, missing middleware.
+
+**Steps:**
+
+- [ ] W5: Extract `isPrismaError` to shared utility
+- [ ] W2: Export `toTweetResponse` from tweet service — eliminate duplicate in user service
+- [ ] W3: Unfollow `.delete()` → `.deleteMany()`
+- [ ] W4: Split follower/following includes — fetch only needed relation side
+- [ ] W1: Add `apiLimiter` to user profile routes
+- [ ] Documentation in `setup-log.md`
+
+---
+
 ### Sub-Issue #5.4: Follow Model + API Contract Final Update
 
 - **Title:** fix(server): add Follow model to schema + finalize API contract
