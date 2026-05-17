@@ -108,6 +108,12 @@ export interface ITweetService {
     userId?: number,
   ): Promise<{ data: TweetResponse[]; meta: CursorMeta }>;
 
+  getByAuthor(
+    authorId: number,
+    params: CursorParams,
+    userId?: number,
+  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }>;
+
   getById(id: number, userId?: number): Promise<TweetResponse>;
 
   create(authorId: number, body: string): Promise<TweetResponse>;

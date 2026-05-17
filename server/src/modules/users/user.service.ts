@@ -3,23 +3,23 @@
  *
  * Purpose:
  * - getProfile(): fetch user with counts + isFollowing + likesCount (two-step)
- * - getUserTweets(): resolve username → authorId → tweet repo findByAuthor
+ * - getUserTweets(): resolve username → authorId → delegate to tweet service
  *
- * Cross-module orchestration:
- *   getUserTweets uses ITweetRepository.findByAuthor() and the tweet module's
- *   toTweetResponse DTO transformer. The user service resolves the username to
- *   an authorId, then delegates to the tweet repository.
+ * Cross-module delegation:
+ *   getUserTweets calls ITweetService.getByAuthor() — the user service resolves
+ *   the username to an authorId, then delegates pagination + DTO mapping to the
+ *   tweet service. This respects module boundaries: the user service never
+ *   touches the tweet repository directly.
  *
  * Principle: SRP — only business rules, no HTTP or database concerns.
- * Principle: DIP — depends on IUserRepository and ITweetRepository interfaces.
- * Principle: Factory Pattern — createUserService(userRepo?, tweetRepo?) for DI.
+ * Principle: DIP — depends on IUserRepository and ITweetService interfaces.
+ * Principle: Factory Pattern — createUserService(userRepo?, tweetService?) for DI.
  */
 
 import { AppError } from "../../shared/errors/index.js";
 import { createUserRepository } from "./user.repository.js";
-import { createTweetRepository } from "../tweets/tweet.repository.js";
-import { toTweetResponse } from "../tweets/tweet.mapper.js";
-import type { ITweetRepository, TweetResponse } from "../tweets/tweet.types.js";
+import { createTweetService } from "../tweets/tweet.service.js";
+import type { ITweetService, TweetResponse } from "../tweets/tweet.types.js";
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import type {
   IUserRepository,
@@ -33,11 +33,11 @@ import type {
  * Creates an IUserService with injected dependencies.
  *
  * @param userRepo - User database operations
- * @param tweetRepo - Tweet database operations (for user tweets endpoint)
+ * @param tweetService - Tweet business logic (for user tweets endpoint)
  */
 export const createUserService = (
   userRepo: IUserRepository = createUserRepository(),
-  tweetRepo: ITweetRepository = createTweetRepository(),
+  tweetService: ITweetService = createTweetService(),
 ): IUserService => ({
   // ─── Profile ────────────────────────────────────────────────────────
 
@@ -85,24 +85,7 @@ export const createUserService = (
       throw AppError.notFound("User");
     }
 
-    // 2. Fetch tweets via tweet repository
-    const { limit } = params;
-    const tweets = await tweetRepo.findByAuthor(authorId, params, reqUserId);
-
-    // 3. Cursor pagination (n+1 trick — same pattern as feed)
-    const hasMore = tweets.length > limit;
-    const sliced = hasMore ? tweets.slice(0, limit) : tweets;
-
-    const lastItem = sliced[sliced.length - 1];
-    const meta: CursorMeta = {
-      nextCursor: hasMore && lastItem ? String(lastItem.id) : null,
-      limit,
-      hasMore,
-    };
-
-    return {
-      data: sliced.map(toTweetResponse),
-      meta,
-    };
+    // 2. Delegate to tweet service — respects module boundary
+    return tweetService.getByAuthor(authorId, params, reqUserId);
   },
 });

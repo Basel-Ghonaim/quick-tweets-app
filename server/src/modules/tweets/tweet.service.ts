@@ -65,6 +65,33 @@ export const createTweetService = (
     };
   },
 
+  // ─── Tweets by Author (cursor-paginated) ────────────────────────────
+
+  getByAuthor: async (
+    authorId: number,
+    params: CursorParams,
+    userId?: number,
+  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }> => {
+    const { limit } = params;
+
+    const tweets = await repo.findByAuthor(authorId, params, userId);
+
+    const hasMore = tweets.length > limit;
+    const sliced = hasMore ? tweets.slice(0, limit) : tweets;
+
+    const lastItem = sliced[sliced.length - 1];
+    const meta: CursorMeta = {
+      nextCursor: hasMore && lastItem ? String(lastItem.id) : null,
+      limit,
+      hasMore,
+    };
+
+    return {
+      data: sliced.map(toTweetResponse),
+      meta,
+    };
+  },
+
   // ─── Single Tweet ───────────────────────────────────────────────────
 
   getById: async (id: number, userId?: number): Promise<TweetResponse> => {

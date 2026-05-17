@@ -4,7 +4,7 @@
  * Purpose:
  * - createTweetSchema: validates POST /tweets body
  * - updateTweetSchema: validates PATCH /tweets/:id body
- * - cursorQuerySchema: validates cursor pagination query params
+ * - cursorQuerySchema: validates cursor pagination query params (moved to shared/validators)
  *
  * Note: DELETE /tweets/:id and POST /tweets/:id/like need no body validation.
  * The :id param is parsed by the controller.
@@ -38,16 +38,3 @@ export const updateTweetSchema = z
   .refine((data) => data.body !== undefined, {
     message: "At least one field must be provided",
   });
-
-// ─── Cursor Query Params ─────────────────────────────────────────────────────
-
-/**
- * Validates query params for cursor-paginated endpoints.
- *
- * Query strings arrive as strings, so we coerce to numbers.
- * Example: ?cursor=42&limit=10 → { cursor: 42, limit: 10 }
- */
-export const cursorQuerySchema = z.object({
-  cursor: z.coerce.number().int().positive().optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(10),
-});
