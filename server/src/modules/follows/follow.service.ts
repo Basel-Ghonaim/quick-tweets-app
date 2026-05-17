@@ -103,16 +103,8 @@ export const createFollowService = (
       throw AppError.validation("You are not following this user");
     }
 
-    // 3. Delete follow (with race condition safety net)
-    try {
-      await repo.unfollow(reqUserId, targetId);
-    } catch (error) {
-      // P2025: another concurrent request already deleted this follow
-      if (isPrismaError(error, "P2025")) {
-        throw AppError.validation("You are not following this user");
-      }
-      throw error;
-    }
+    // 3. Delete follow (deleteMany is idempotent — no P2025 on missing record)
+    await repo.unfollow(reqUserId, targetId);
 
     const followersCount = await repo.countFollowers(targetId);
     return { isFollowing: false, followersCount };

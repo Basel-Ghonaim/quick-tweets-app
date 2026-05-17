@@ -74,10 +74,8 @@ export const createFollowRepository = (
   // ── Unfollow ──
 
   unfollow: async (followerId, followingId) => {
-    await db.follow.delete({
-      where: {
-        followerId_followingId: { followerId, followingId },
-      },
+    await db.follow.deleteMany({
+      where: { followerId, followingId },
     });
   },
 
