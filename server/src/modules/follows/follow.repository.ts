@@ -96,7 +96,6 @@ export const createFollowRepository = (
       orderBy: { id: "desc" },
       include: {
         follower: { select: userSelect },
-        following: { select: userSelect },
       },
     });
   },
@@ -112,7 +111,6 @@ export const createFollowRepository = (
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       orderBy: { id: "desc" },
       include: {
-        follower: { select: userSelect },
         following: { select: userSelect },
       },
     });

@@ -127,7 +127,7 @@ export const createFollowService = (
     const sliced = hasMore ? follows.slice(0, limit) : follows;
 
     // 3. Map to FollowUserItem (extract the follower side)
-    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.follower);
+    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.follower!);
 
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {
@@ -156,7 +156,7 @@ export const createFollowService = (
     const sliced = hasMore ? follows.slice(0, limit) : follows;
 
     // 3. Map to FollowUserItem (extract the following side)
-    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.following);
+    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.following!);
 
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {
