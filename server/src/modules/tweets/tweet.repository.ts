@@ -101,11 +101,11 @@ export const createTweetRepository = (
 
   // ── Update ──
 
-  update: (id, data) =>
+  update: (id, data, userId?) =>
     db.tweet.update({
       where: { id },
       data,
-      include: buildTweetInclude(),
+      include: buildTweetInclude(userId),
     }),
 
   // ── Delete ──

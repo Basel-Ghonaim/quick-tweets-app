@@ -77,7 +77,7 @@ export interface ITweetRepository {
 
   create(authorId: number, body: string): Promise<TweetWithRelations>;
 
-  update(id: number, data: { body?: string }): Promise<TweetWithRelations>;
+  update(id: number, data: { body?: string }, userId?: number): Promise<TweetWithRelations>;
 
   delete(id: number): Promise<void>;
 

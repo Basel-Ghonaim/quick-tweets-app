@@ -134,8 +134,8 @@ export const createTweetService = (
       throw AppError.authorization("You can only edit your own tweets");
     }
 
-    // 3. Update and return
-    const updated = await repo.update(id, data);
+    // 3. Update and return (pass userId for correct isLiked in response)
+    const updated = await repo.update(id, data, userId);
     return toTweetResponse(updated);
   },
 
