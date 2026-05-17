@@ -28,18 +28,7 @@ import type {
   CursorParams,
   CursorMeta,
 } from "./follow.types.js";
-
-// ─── Prisma Error Helper ─────────────────────────────────────────────────────
-
-/**
- * Checks if an error is a Prisma known request error with a specific code.
- * Uses duck-typing to avoid importing Prisma's error class directly.
- */
-const isPrismaError = (error: unknown, code: string): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  (error as { code: string }).code === code;
+import { isPrismaError } from "../../shared/utils/index.js";
 
 // ─── Helper: Resolve username to userId or throw 404 ─────────────────────────
 
