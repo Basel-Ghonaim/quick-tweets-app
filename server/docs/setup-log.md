@@ -1229,6 +1229,7 @@ All five backend phases are now implemented:
 
 | ID | Finding | Status |
 |---|---|---|
+<<<<<<< HEAD
 | W6 | User service accesses tweet repository cross-module | ✅ Fixed |
 
 ---
@@ -1275,3 +1276,6 @@ All five backend phases are now implemented:
 | `follow.service.ts` | Imports shared types directly |
 | `comment.types.ts` | Removed `AuthorEmbed` re-export |
 | `shared/types/index.ts` | Changed to `export type` |
+=======
+| W6 | User service accesses tweet repository cross-module | 🔲 Open |
+>>>>>>> fix/code-quality
