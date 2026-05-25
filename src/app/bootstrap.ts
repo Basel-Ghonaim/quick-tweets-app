@@ -1,17 +1,4 @@
-/**
- * App bootstrap — wires shared infrastructure with app-level dependencies.
- *
- * Purpose:
- * - Connects the authClient (shared layer) to Redux store (app layer)
- * - Must be called once in main.tsx before rendering the app
- * - This is the ONLY place where shared/api touches app/store
- *
- * Why here:
- * - shared/ must have zero domain knowledge (no Redux, no auth)
- * - The app layer owns the wiring responsibility
- * - Keeps the dependency flow correct: app → shared (never shared → app)
- *
- */
+// App bootstrap — wires shared infrastructure (authClient) with Redux store.
 
 import { setupAuthClient } from "@shared/api";
 import { reduxStore } from "./store/store";

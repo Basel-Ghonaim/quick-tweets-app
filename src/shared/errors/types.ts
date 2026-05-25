@@ -1,3 +1,5 @@
+// Error type taxonomy — maps each error category to an HTTP status code.
+
 export type ErrorType =
   | "network"
   | "server"

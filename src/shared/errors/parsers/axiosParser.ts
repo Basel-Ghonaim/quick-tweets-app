@@ -27,27 +27,58 @@ export const parseAxiosError = (
       case 400:
         return createAppError("bad_request", backendMessage || "Bad Request");
       case 401:
-        return createAppError("unauthorized", backendMessage || "Unauthorized access");
+        return createAppError(
+          "unauthorized",
+          backendMessage || "Unauthorized access",
+        );
       case 403:
-        return createAppError("forbidden", backendMessage || "Forbidden access");
+        return createAppError(
+          "forbidden",
+          backendMessage || "Forbidden access",
+        );
       case 404:
-        return createAppError("not_found", backendMessage || "Resource not found");
+        return createAppError(
+          "not_found",
+          backendMessage || "Resource not found",
+        );
       case 409:
-        return createAppError("conflict", backendMessage || "Conflict occurred");
+        return createAppError(
+          "conflict",
+          backendMessage || "Conflict occurred",
+        );
       case 413:
-        return createAppError("payload_too_large", backendMessage || "File too large");
+        return createAppError(
+          "payload_too_large",
+          backendMessage || "File too large",
+        );
       case 415:
-        return createAppError("unsupported_media_type", backendMessage || "Unsupported format");
+        return createAppError(
+          "unsupported_media_type",
+          backendMessage || "Unsupported format",
+        );
       case 422:
-        return createAppError("validation", backendMessage || "Validation Error", validationErrors);
+        return createAppError(
+          "validation",
+          backendMessage || "Validation Error",
+          validationErrors,
+        );
       case 429:
-        return createAppError("too_many_requests", backendMessage || "Too many requests");
+        return createAppError(
+          "too_many_requests",
+          backendMessage || "Too many requests",
+        );
       case 503:
-        return createAppError("service_unavailable", backendMessage || "Service unavailable");
+        return createAppError(
+          "service_unavailable",
+          backendMessage || "Service unavailable",
+        );
     }
 
     if (status >= 500) {
-      return createAppError("server", backendMessage || "Server error occurred");
+      return createAppError(
+        "server",
+        backendMessage || "Server error occurred",
+      );
     }
   }
 

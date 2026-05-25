@@ -1,3 +1,5 @@
+// Typed error class — carries type, status, and optional structured errors payload.
+
 import { httpStatusMap, type ErrorType, type ErrorPayload } from "./types";
 
 export class AppError<T extends ErrorType = ErrorType> extends Error {

@@ -1,26 +1,10 @@
-/**
- * Retry interceptor — retries transient failures with exponential backoff.
- *
- * Purpose:
- * - Retries requests that fail due to network errors, timeouts, or 5xx server errors
- * - Uses exponential backoff to avoid overwhelming the server
- * - Configurable max retries and retryable status codes
- * - Does NOT retry client errors (4xx) — those are intentional rejections
- *
- * Default behavior:
- * - Max 2 retries (3 total attempts)
- * - Retries on: 500, 502, 503, 504, ECONNABORTED, ERR_NETWORK
- * - Backoff: 1s → 2s (doubles each attempt)
- */
+// Retry interceptor — exponential backoff for 5xx and network errors.
 
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
 
 export interface RetryOptions {
-  /** Maximum number of retry attempts. Default: 2 */
   maxRetries?: number;
-  /** HTTP status codes to retry. Default: [500, 502, 503, 504] */
   retryableStatuses?: number[];
-  /** Base delay in ms before first retry. Default: 1000 */
   baseDelay?: number;
 }
 
@@ -30,7 +14,6 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   baseDelay: 1000,
 };
 
-/** Axios error codes that indicate transient network issues. */
 const RETRYABLE_CODES = new Set(["ECONNABORTED", "ERR_NETWORK"]);
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
