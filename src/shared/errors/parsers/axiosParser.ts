@@ -4,8 +4,12 @@ import { createAppError } from "../errorFactory";
 import type { ValidationErrorsPayload } from "../types";
 
 export interface BackendErrorResponse {
-  message?: string;
-  errors?: ValidationErrorsPayload;
+  success: false;
+  error: {
+    type: string;
+    message: string;
+    errors?: ValidationErrorsPayload;
+  };
 }
 
 export const parseAxiosError = (
@@ -13,8 +17,8 @@ export const parseAxiosError = (
 ): AppError | null => {
   const { response, code } = error;
 
-  const backendMessage = response?.data?.message;
-  const validationErrors = response?.data?.errors;
+  const backendMessage = response?.data?.error?.message;
+  const validationErrors = response?.data?.error?.errors;
 
   if (response) {
     const status = response.status;
