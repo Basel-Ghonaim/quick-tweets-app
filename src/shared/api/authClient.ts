@@ -4,14 +4,15 @@ import { authActions } from "@modules/auth";
 import { appStorage, STORAGE_KEYS } from "../storage";
 import { attachTokenInterceptor } from "./interceptors/request";
 import { responseInterceptor } from "./interceptors/response";
+import { API_BASE_URL, API_TIMEOUT } from "./config";
 
 export const authClient = axios.create({
-  baseURL: "http://localhost:4000/api/v1",
+  baseURL: API_BASE_URL,
   headers: {
     Accept: "application/json",
   },
   withCredentials: true,
-  timeout: 10000,
+  timeout: API_TIMEOUT,
 });
 
 // Token attachment — reads from Redux store (token lives in memory only)
