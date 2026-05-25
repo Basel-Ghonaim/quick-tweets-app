@@ -1,2 +1,2 @@
 export { apiClient } from "./client";
-export { authClient } from "./authClient";
+export { authClient, setupAuthClient } from "./authClient";

@@ -1,9 +1,19 @@
+/**
+ * Authenticated Axios client — HTTP client with token attachment and refresh.
+ *
+ * Purpose:
+ * - Axios instance pre-configured for authenticated API calls
+ * - Token attachment and refresh callbacks are wired via setupAuthClient()
+ * - This file has ZERO knowledge of Redux, auth module, or app layer
+ *
+ * Setup:
+ * - Call setupAuthClient() from app bootstrap (main.tsx) before any API calls
+ * - The interceptors are attached lazily — not on import
+ */
+
 import axios from "axios";
-import { reduxStore } from "@app/store/store";
-import { authActions } from "@modules/auth";
-import { appStorage, STORAGE_KEYS } from "../storage";
 import { attachTokenInterceptor } from "./interceptors/request";
-import { responseInterceptor } from "./interceptors/response";
+import { responseInterceptor, type TokenRefreshCallbacks } from "./interceptors/response";
 import { API_BASE_URL, API_TIMEOUT } from "./config";
 
 export const authClient = axios.create({
@@ -15,30 +25,17 @@ export const authClient = axios.create({
   timeout: API_TIMEOUT,
 });
 
-// Token attachment — reads from Redux store (token lives in memory only)
-attachTokenInterceptor(
-  authClient,
-  () => reduxStore.getState().auth.accessToken,
-);
-
-// Response interceptor — handles 401 with automatic refresh
-responseInterceptor(authClient, {
-  refreshToken: async () => {
-    const res = await authClient.post("/auth/refresh");
-    return res.data.accessToken;
-  },
-  onTokenRefreshed: (newAccessToken) => {
-    reduxStore.dispatch(
-      authActions.authRequestFulfilled({
-        requestType: "login",
-        accessToken: newAccessToken,
-      }),
-    );
-  },
-  onSessionExpired: () => {
-    appStorage.remove(STORAGE_KEYS.USER);
-    reduxStore.dispatch(
-      authActions.authRequestFulfilled({ requestType: "logout" }),
-    );
-  },
-});
+/**
+ * Wires token attachment + refresh interceptors into the authClient.
+ * Must be called once from the app bootstrap layer before any API calls.
+ *
+ * @param getAccessToken - Callback to read the current token (e.g., from Redux)
+ * @param refreshCallbacks - Token refresh lifecycle callbacks
+ */
+export const setupAuthClient = (
+  getAccessToken: () => string | null,
+  refreshCallbacks: TokenRefreshCallbacks,
+) => {
+  attachTokenInterceptor(authClient, getAccessToken);
+  responseInterceptor(authClient, refreshCallbacks);
+};
