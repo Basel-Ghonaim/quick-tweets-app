@@ -1,3 +1,17 @@
+/**
+ * Response interceptor — normalizes errors and optionally handles 401 with token refresh.
+ *
+ * Without callbacks: just normalizes errors (for public clients like apiClient).
+ * With callbacks: on 401 → refresh token → retry failed request.
+ *
+ * Concurrent request handling:
+ * If multiple requests fail with 401 simultaneously, only ONE /refresh
+ * call is made. All others wait for it, then retry together.
+ *
+ * Refresh state is scoped per interceptor call (per client instance),
+ * not shared globally across all clients.
+ */
+
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from "axios";
 import { errorNormalizer } from "../../errors";
 
@@ -14,34 +28,25 @@ export interface TokenRefreshCallbacks {
   onSessionExpired: () => void;
 }
 
-let isRefreshing = false;
-let pendingRequests: Array<{
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-}> = [];
-
-const processPendingRequests = (token: string | null, error: unknown = null) => {
-  pendingRequests.forEach(({ resolve, reject }) => {
-    if (token) resolve(token);
-    else reject(error);
-  });
-  pendingRequests = [];
-};
-
-/**
- * Response interceptor — normalizes errors and optionally handles 401 with token refresh.
- *
- * Without callbacks: just normalizes errors (for public clients like apiClient).
- * With callbacks: on 401 → refresh token → retry failed request.
- *
- * Concurrent request handling:
- * If multiple requests fail with 401 simultaneously, only ONE /refresh
- * call is made. All others wait for it, then retry together.
- */
 export const responseInterceptor = (
   client: AxiosInstance,
   callbacks?: TokenRefreshCallbacks,
 ) => {
+  // Scoped per client — not shared globally
+  let isRefreshing = false;
+  let pendingRequests: Array<{
+    resolve: (token: string) => void;
+    reject: (error: unknown) => void;
+  }> = [];
+
+  const processPendingRequests = (token: string | null, error: unknown = null) => {
+    pendingRequests.forEach(({ resolve, reject }) => {
+      if (token) resolve(token);
+      else reject(error);
+    });
+    pendingRequests = [];
+  };
+
   client.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
