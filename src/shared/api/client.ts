@@ -1,13 +1,17 @@
+// Public Axios client — no auth, has retry + error normalization.
+
 import axios, { type AxiosInstance } from "axios";
+import { retryInterceptor } from "./interceptors/retry";
 import { responseInterceptor } from "./interceptors/response";
+import { API_BASE_URL, API_TIMEOUT } from "./config";
 
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: "http://localhost:4000/api/v1",
+  baseURL: API_BASE_URL,
   headers: {
     Accept: "application/json",
   },
-  timeout: 10000,
+  timeout: API_TIMEOUT,
 });
 
-// No callbacks → simple error normalization only (no token refresh)
+retryInterceptor(apiClient);
 responseInterceptor(apiClient);

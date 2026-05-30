@@ -22,3 +22,24 @@ Set up frontend infrastructure for the data features. No feature modules — onl
 - [ ] MainLayout + Sidebar scaffold
 - [ ] Routes — main layout + auth guard + modal pattern
 - [ ] Generic Modal component shell
+
+---
+
+### Fix: Shared API & Error Layer — Contract, Architecture, Reliability
+
+- **Title:** fix(client): shared API & error layer — contract mismatch, DIP violation, retry logic
+- **Labels:** [frontend, fix, architecture]
+- **Branch:** `fix/shared-api-errors`
+- **Description:**
+
+Audit findings from `shared/errors` and `shared/api`. Backend error contract mismatch, dependency inversion in authClient, no retry logic, hardcoded baseURL.
+
+**Commits:**
+
+- [ ] fix(client): backend error contract — read from `response.data.error`
+- [ ] refactor(client): extract API baseURL to environment config
+- [ ] refactor(client): decouple authClient from Redux — setupAuthClient pattern
+- [ ] fix(client): scope refresh state per client instance
+- [ ] refactor(client): merge econnaborted into timeout, explicit barrel exports
+- [ ] feat(client): add retry interceptor for transient failures
+- [ ] docs(client): add JSDoc to error layer + API layer

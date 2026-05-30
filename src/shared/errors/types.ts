@@ -1,3 +1,5 @@
+// Error type taxonomy — maps each error category to an HTTP status code.
+
 export type ErrorType =
   | "network"
   | "server"
@@ -9,7 +11,6 @@ export type ErrorType =
   | "timeout"
   | "conflict"
   | "too_many_requests"
-  | "econnaborted"
   | "bad_request"
   | "unknown"
   | "payload_too_large"
@@ -22,7 +23,6 @@ export const httpStatusMap: Record<ErrorType, number> = {
   forbidden: 403,
   not_found: 404,
   timeout: 408,
-  econnaborted: 408,
   conflict: 409,
   payload_too_large: 413,
   unsupported_media_type: 415,

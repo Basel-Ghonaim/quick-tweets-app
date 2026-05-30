@@ -1,43 +1,26 @@
+// Authenticated Axios client — wired via setupAuthClient() from app bootstrap.
+
 import axios from "axios";
-import { reduxStore } from "@app/store/store";
-import { authActions } from "@modules/auth";
-import { appStorage, STORAGE_KEYS } from "../storage";
 import { attachTokenInterceptor } from "./interceptors/request";
-import { responseInterceptor } from "./interceptors/response";
+import { retryInterceptor } from "./interceptors/retry";
+import { responseInterceptor, type TokenRefreshCallbacks } from "./interceptors/response";
+import { API_BASE_URL, API_TIMEOUT } from "./config";
 
 export const authClient = axios.create({
-  baseURL: "http://localhost:4000/api/v1",
+  baseURL: API_BASE_URL,
   headers: {
     Accept: "application/json",
   },
   withCredentials: true,
-  timeout: 10000,
+  timeout: API_TIMEOUT,
 });
 
-// Token attachment — reads from Redux store (token lives in memory only)
-attachTokenInterceptor(
-  authClient,
-  () => reduxStore.getState().auth.accessToken,
-);
-
-// Response interceptor — handles 401 with automatic refresh
-responseInterceptor(authClient, {
-  refreshToken: async () => {
-    const res = await authClient.post("/auth/refresh");
-    return res.data.accessToken;
-  },
-  onTokenRefreshed: (newAccessToken) => {
-    reduxStore.dispatch(
-      authActions.authRequestFulfilled({
-        requestType: "login",
-        accessToken: newAccessToken,
-      }),
-    );
-  },
-  onSessionExpired: () => {
-    appStorage.remove(STORAGE_KEYS.USER);
-    reduxStore.dispatch(
-      authActions.authRequestFulfilled({ requestType: "logout" }),
-    );
-  },
-});
+// Wires interceptors into authClient. Called once from app/bootstrap.ts.
+export const setupAuthClient = (
+  getAccessToken: () => string | null,
+  refreshCallbacks: TokenRefreshCallbacks,
+) => {
+  attachTokenInterceptor(authClient, getAccessToken);
+  retryInterceptor(authClient);
+  responseInterceptor(authClient, refreshCallbacks);
+};

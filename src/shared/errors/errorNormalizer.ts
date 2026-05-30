@@ -1,7 +1,12 @@
+// Entry point: converts any caught error into a typed AppError.
+
 import axios from "axios";
 import { AppError } from "./AppError";
 import { createUnknownError } from "./errorFactory";
-import { parseAxiosError, type BackendErrorResponse } from "./parsers/axiosParser";
+import {
+  parseAxiosError,
+  type BackendErrorResponse,
+} from "./parsers/axiosParser";
 
 export const errorNormalizer = (error: unknown): AppError => {
   if (error instanceof AppError) {
