@@ -3,7 +3,6 @@
  *
  * Purpose:
  * - getProfile: parse :username + optionalAuth → call service → return profile
- * - getUserTweets: parse :username + query + optionalAuth → call service → return paginated tweets
  *
  * Response format: All responses use sendSuccess() → { success: true, data, meta? }
  *
@@ -37,23 +36,6 @@ export const createUserController = (
       const profile = await service.getProfile(username, req.userId);
 
       sendSuccess(res, profile);
-    } catch (err) {
-      next(err);
-    }
-  },
-
-  /**
-   * GET /users/:username/tweets
-   * Returns user's tweets with cursor pagination. Uses optionalAuth for isLiked.
-   */
-  getUserTweets: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const username = String(req.params.username);
-      const { cursor, limit } = req.query as unknown as { cursor?: number; limit: number };
-
-      const result = await service.getUserTweets(username, { cursor, limit }, req.userId);
-
-      sendSuccess(res, result.data, 200, { ...result.meta });
     } catch (err) {
       next(err);
     }

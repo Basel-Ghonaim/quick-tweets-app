@@ -64,6 +64,8 @@ export interface ITweetRepository {
     userId?: number,
   ): Promise<TweetWithRelations[]>;
 
+  findAuthorIdByUsername(username: string): Promise<number | null>;
+
   findByAuthor(
     authorId: number,
     params: CursorParams,
@@ -101,6 +103,12 @@ export interface ITweetRepository {
  */
 export interface ITweetService {
   getFeed(
+    params: CursorParams,
+    userId?: number,
+  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }>;
+
+  getByAuthorUsername(
+    username: string,
     params: CursorParams,
     userId?: number,
   ): Promise<{ data: TweetResponse[]; meta: CursorMeta }>;

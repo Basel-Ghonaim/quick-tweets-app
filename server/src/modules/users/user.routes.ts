@@ -3,25 +3,21 @@
  *
  * Purpose:
  * - GET /:username         → optionalAuth → controller.getProfile
- * - GET /:username/tweets  → optionalAuth → validate(query) → controller.getUserTweets
  *
- * Both endpoints use optionalAuth for isFollowing (profile) and isLiked (tweets).
+ * This endpoint uses optionalAuth for isFollowing.
  * Rate limiting: applied at app.ts level via apiLimiter.
  *
  * Principle: SRP — only route definitions, no logic.
  */
 
 import { Router } from "express";
-import { validate } from "../../middleware/validate.js";
 import { optionalAuth } from "../../middleware/optionalAuth.js";
 import { createUserController } from "./user.controller.js";
-import { cursorQuerySchema } from "../../shared/validators/index.js";
 
 const controller = createUserController();
 
 export const userRoutes = Router();
 
-// ─── Public Routes (optionalAuth for isFollowing / isLiked) ──────────────────
+// ─── Public Routes (optionalAuth for isFollowing) ────────────────────────────
 
 userRoutes.get("/:username", optionalAuth, controller.getProfile);
-userRoutes.get("/:username/tweets", optionalAuth, validate(cursorQuerySchema, "query"), controller.getUserTweets);

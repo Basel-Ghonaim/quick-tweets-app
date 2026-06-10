@@ -34,12 +34,16 @@ export const createTweetController = (
 
   /**
    * GET /tweets
-   * Returns cursor-paginated feed. Uses optionalAuth for isLiked.
+   * Returns cursor-paginated feed. Optional ?author=username filters by author.
+   * Uses optionalAuth for isLiked.
    */
   getFeed: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { cursor, limit } = req.query as unknown as { cursor?: number; limit: number };
-      const result = await service.getFeed({ cursor, limit }, req.userId);
+      const { cursor, limit, author } = req.query as unknown as { cursor?: number; limit: number; author?: string };
+      
+      const result = author
+        ? await service.getByAuthorUsername(author, { cursor, limit }, req.userId)
+        : await service.getFeed({ cursor, limit }, req.userId);
 
       sendSuccess(res, result.data, 200, { ...result.meta });
     } catch (err) {

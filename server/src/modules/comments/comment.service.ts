@@ -9,8 +9,7 @@
  *
  * Double ownership validation:
  *   1. Does the comment exist?
- *   2. Does the comment belong to the specified tweet? (prevents URL manipulation)
- *   3. Is the user the author of this comment?
+ *   2. Is the user the author of this comment?
  *
  * Principle: SRP — only business rules, no HTTP or database concerns.
  * Principle: DIP — depends on ICommentRepository interface, not Prisma.
@@ -109,22 +108,16 @@ export const createCommentService = (
 
   update: async (
     commentId: number,
-    tweetId: number,
     userId: number,
     data: { body?: string },
   ): Promise<CommentResponse> => {
-    // 1. Lightweight ownership check — only fetch authorId + tweetId
+    // 1. Lightweight ownership check — only fetch authorId
     const owner = await repo.findOwner(commentId);
     if (!owner) {
       throw AppError.notFound("Comment");
     }
 
-    // 2. Verify comment belongs to the specified tweet (prevents URL manipulation)
-    if (owner.tweetId !== tweetId) {
-      throw AppError.notFound("Comment");
-    }
-
-    // 3. Check ownership — only the author can edit
+    // 2. Check ownership — only the author can edit
     if (owner.authorId !== userId) {
       throw AppError.authorization("You can only edit your own comments");
     }
@@ -134,25 +127,19 @@ export const createCommentService = (
     return toCommentResponse(updated);
   },
 
-  // ─── Delete Comment (double ownership check) ───────────────────────
+  // ─── Delete Comment (ownership check) ───────────────────────
 
   delete: async (
     commentId: number,
-    tweetId: number,
     userId: number,
   ): Promise<void> => {
-    // 1. Lightweight ownership check — only fetch authorId + tweetId
+    // 1. Lightweight ownership check — only fetch authorId
     const owner = await repo.findOwner(commentId);
     if (!owner) {
       throw AppError.notFound("Comment");
     }
 
-    // 2. Verify comment belongs to the specified tweet
-    if (owner.tweetId !== tweetId) {
-      throw AppError.notFound("Comment");
-    }
-
-    // 3. Check ownership — only the author can delete
+    // 2. Check ownership — only the author can delete
     if (owner.authorId !== userId) {
       throw AppError.authorization("You can only delete your own comments");
     }

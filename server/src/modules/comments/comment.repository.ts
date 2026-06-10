@@ -106,6 +106,6 @@ export const createCommentRepository = (
   findOwner: (id) =>
     db.comment.findUnique({
       where: { id },
-      select: { authorId: true, tweetId: true },
+      select: { authorId: true },
     }),
 });

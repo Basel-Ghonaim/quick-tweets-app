@@ -7,7 +7,7 @@
  * - getFollowers: parse :username + query → call service → return paginated list
  * - getFollowing: parse :username + query → call service → return paginated list
  *
- * All handlers receive :username via req.params.username (from mergeParams).
+ * All handlers receive :username via req.params.username.
  *
  * Response format: All responses use sendSuccess() → { success: true, data, meta? }
  *
@@ -32,7 +32,7 @@ export const createFollowController = (
 ) => ({
 
   /**
-   * POST /users/:username/follow
+   * POST /follows/:username
    * Follow a user. Requires authGuard (userId guaranteed).
    */
   follow: async (req: Request, res: Response, next: NextFunction) => {
@@ -47,7 +47,7 @@ export const createFollowController = (
   },
 
   /**
-   * DELETE /users/:username/follow
+   * DELETE /follows/:username
    * Unfollow a user. Requires authGuard (userId guaranteed).
    */
   unfollow: async (req: Request, res: Response, next: NextFunction) => {
@@ -62,7 +62,7 @@ export const createFollowController = (
   },
 
   /**
-   * GET /users/:username/followers
+   * GET /follows/:username/followers
    * Returns cursor-paginated follower list. No auth required.
    */
   getFollowers: async (req: Request, res: Response, next: NextFunction) => {
@@ -79,7 +79,7 @@ export const createFollowController = (
   },
 
   /**
-   * GET /users/:username/following
+   * GET /follows/:username/following
    * Returns cursor-paginated following list. No auth required.
    */
   getFollowing: async (req: Request, res: Response, next: NextFunction) => {

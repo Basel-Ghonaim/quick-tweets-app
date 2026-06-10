@@ -2,12 +2,10 @@
  * Comment controller — HTTP request handling for comment endpoints.
  *
  * Purpose:
- * - getComments: parse tweetId + query → call service → return offset-paginated comments
- * - create: parse tweetId + body + userId → call service → return 201
- * - update: parse tweetId + commentId + body + userId → call service → return updated
- * - delete: parse tweetId + commentId + userId → call service → return 204
- *
- * All handlers receive tweetId via req.params.tweetId (from mergeParams).
+ * - getComments: parse tweetId from query → call service → return offset-paginated comments
+ * - create: parse tweetId from body + userId → call service → return 201
+ * - update: parse commentId + body + userId → call service → return updated
+ * - delete: parse commentId + userId → call service → return 204
  *
  * Response format: All responses use sendSuccess() → { success: true, data, meta? }
  *
@@ -33,12 +31,12 @@ export const createCommentController = (
 ) => ({
 
   /**
-   * GET /tweets/:tweetId/comments
+   * GET /comments?tweetId=1
    * Returns offset-paginated comments for a tweet. No auth required.
    */
   getComments: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = parseId(req.params.tweetId, "Tweet ID");
+      const tweetId = parseId(req.query.tweetId as string, "Tweet ID");
       const { page, limit } = req.query as unknown as { page: number; limit: number };
 
       const result = await service.getComments(tweetId, { page, limit });
@@ -50,12 +48,12 @@ export const createCommentController = (
   },
 
   /**
-   * POST /tweets/:tweetId/comments
+   * POST /comments
    * Adds a comment to a tweet. Requires authGuard (userId guaranteed).
    */
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = parseId(req.params.tweetId, "Tweet ID");
+      const tweetId = parseId(req.body.tweetId as string, "Tweet ID");
       const comment = await service.create(req.userId!, tweetId, req.body.body);
 
       sendSuccess(res, comment, 201);
@@ -65,15 +63,14 @@ export const createCommentController = (
   },
 
   /**
-   * PATCH /tweets/:tweetId/comments/:commentId
+   * PATCH /comments/:id
    * Edits own comment. Requires authGuard (userId guaranteed).
    */
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = parseId(req.params.tweetId, "Tweet ID");
-      const commentId = parseId(req.params.commentId, "Comment ID");
+      const commentId = parseId(req.params.id, "Comment ID");
 
-      const comment = await service.update(commentId, tweetId, req.userId!, req.body);
+      const comment = await service.update(commentId, req.userId!, req.body);
 
       sendSuccess(res, comment);
     } catch (err) {
@@ -82,15 +79,14 @@ export const createCommentController = (
   },
 
   /**
-   * DELETE /tweets/:tweetId/comments/:commentId
+   * DELETE /comments/:id
    * Deletes own comment. Requires authGuard (userId guaranteed).
    */
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = parseId(req.params.tweetId, "Tweet ID");
-      const commentId = parseId(req.params.commentId, "Comment ID");
+      const commentId = parseId(req.params.id, "Comment ID");
 
-      await service.delete(commentId, tweetId, req.userId!);
+      await service.delete(commentId, req.userId!);
 
       sendSuccess(res, null, 204);
     } catch (err) {

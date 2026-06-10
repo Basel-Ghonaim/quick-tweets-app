@@ -53,16 +53,6 @@ export const createUserRepository = (
       },
     }),
 
-  // ── Lightweight Username Lookup ──
-
-  findIdByUsername: async (username) => {
-    const user = await db.user.findUnique({
-      where: { username },
-      select: { id: true },
-    });
-    return user?.id ?? null;
-  },
-
   // ── Follow Check ──
 
   isFollowing: async (followerId, followingId) => {
