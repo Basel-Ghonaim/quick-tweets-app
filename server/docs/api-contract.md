@@ -33,6 +33,13 @@ Each resource lives at a predictable, stable prefix that maps 1:1 to an RTK Quer
 ## Route Map
 
 ```
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+POST   /api/v1/auth/logout
+POST   /api/v1/auth/logout-all
+POST   /api/v1/auth/refresh
+GET    /api/v1/auth/me
+
 GET    /api/v1/tweets
 GET    /api/v1/tweets?author=:username
 GET    /api/v1/tweets/:id
@@ -149,6 +156,7 @@ interface ErrorBody {
     | "forbidden"
     | "not_found"
     | "conflict"
+    | "rate_limit"
     | "server";
   message: string;
   errors?: Record<string, string[]>;  // field-level validation errors
@@ -180,6 +188,116 @@ interface ErrorBody {
 | **Required** | `Authorization: Bearer <token>`            | 401 if missing or invalid                                                                |
 | **Optional** | `Authorization: Bearer <token>` (optional) | If present, attaches `userId`. If missing, continues as guest. Used for `isLiked` field. |
 | **None**     | —                                          | No auth needed                                                                           |
+
+---
+
+## Auth
+
+### `POST /auth/register` — Create a new account
+
+**Auth:** None
+
+```jsonc
+// Request body
+{
+  "username": "basel",      // 4-20 chars, alphanumeric/underscores
+  "name": "Basel",          // 1-50 chars
+  "email": "test@test.com", // valid email
+  "password": "Password1!"  // 8-72 chars, upper, lower, digit, special char
+}
+
+// Response 201
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "username": "basel",
+      "name": "Basel",
+      "email": "test@test.com",
+      "profileImage": null,
+      "bio": "",
+      "createdAt": "2026-05-10T12:00:00.000Z"
+    },
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+// Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
+```
+
+### `POST /auth/login` — Authenticate user
+
+**Auth:** None
+
+```jsonc
+// Request body
+{
+  "username": "basel",
+  "password": "Password1!"
+}
+
+// Response 200 — same shape as /auth/register
+// Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
+```
+
+### `POST /auth/logout` — Invalidate current session
+
+**Auth:** None (uses cookie)
+
+```jsonc
+// Request: reads refreshToken from cookie
+
+// Response 204 (No Content)
+// Set-Cookie: refreshToken=; Max-Age=0... (clears cookie)
+```
+
+### `POST /auth/logout-all` — Invalidate all sessions
+
+**Auth:** Required
+
+```jsonc
+// Response 204 (No Content)
+// Set-Cookie: refreshToken=; Max-Age=0... (clears cookie on current device)
+```
+
+### `POST /auth/refresh` — Get new access token
+
+**Auth:** None (uses cookie)
+
+```jsonc
+// Request: reads refreshToken from cookie
+
+// Response 200
+{
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+// Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
+```
+
+### `GET /auth/me` — Get current user profile
+
+**Auth:** Required
+
+```jsonc
+// Response 200
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 1,
+      "username": "basel",
+      "name": "Basel",
+      "email": "test@test.com",
+      "profileImage": null,
+      "bio": "",
+      "createdAt": "2026-05-10T12:00:00.000Z"
+    }
+  }
+}
+```
 
 ---
 
@@ -599,8 +717,8 @@ interface ErrorBody {
   }
 }
 
-// Response 400
-{ "success": false, "error": { "type": "validation", "message": "You are not following this user" } }
+// Response 409
+{ "success": false, "error": { "type": "conflict", "message": "You are not following this user" } }
 
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "User not found" } }

@@ -99,7 +99,7 @@ export const createFollowService = (
     // 2. Must be currently following (fast-path UX check)
     const currentlyFollowing = await repo.isFollowing(reqUserId, targetId);
     if (!currentlyFollowing) {
-      throw AppError.validation("You are not following this user");
+      throw AppError.conflict("You are not following this user");
     }
 
     // 3. Delete follow (deleteMany is idempotent — no P2025 on missing record)

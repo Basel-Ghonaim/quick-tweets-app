@@ -15,9 +15,10 @@
 export type ErrorType =
   | "validation"
   | "authentication"
-  | "authorization"
+  | "forbidden"
   | "not_found"
   | "conflict"
+  | "rate_limit"
   | "server";
 
 export class AppError extends Error {
@@ -52,8 +53,8 @@ export class AppError extends Error {
   }
 
   /** 403 — Authenticated but not authorized for this resource */
-  static authorization(message = "Access denied") {
-    return new AppError("authorization", message, 403);
+  static forbidden(message = "Access denied") {
+    return new AppError("forbidden", message, 403);
   }
 
   /** 404 — Resource not found */

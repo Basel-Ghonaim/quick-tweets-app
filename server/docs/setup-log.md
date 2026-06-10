@@ -1347,3 +1347,39 @@ DELETE /api/v1/follows/:username
 GET    /api/v1/follows/:username/followers
 GET    /api/v1/follows/:username/following
 ```
+
+---
+
+## API Contract Errors — Types, Status Codes, and Auth Routes
+
+**Date:** 2026-06-10
+**Branch:** `fix/api-contract-errors`
+**Issue:** #7
+
+### What was fixed
+
+Three confirmed issues in the API contract and corresponding backend code.
+
+1. **Error Types Table:** The `rate_limit` type was missing from `ErrorType` in `AppError.ts` and `ErrorBody` in `api-contract.md`. The `authorization` error type was mismatched with the standard HTTP name `forbidden` (403) documented in the contract.
+2. **Unfollow Status Code:** `DELETE /follows/:username` returned a `400` validation error when attempting to unfollow a user not followed.
+3. **Auth Routes Documentation:** Auth endpoints were missing from the API contract Route Map and request/response shapes.
+
+### Fixes Applied
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | `rate_limit` missing | Added `rate_limit` to `ErrorType` in `AppError.ts` and `ErrorBody` in `api-contract.md`. |
+| 2 | Mismatched `authorization` type | Renamed `authorization` to `forbidden` in `AppError.ts`, updated `tweet.service.ts` and `comment.service.ts` call sites. |
+| 3 | Unfollow 400 Validation Error | Changed `AppError.validation()` to `AppError.conflict()` in `follow.service.ts`, updated `api-contract.md` to reflect 409 status code. |
+| 4 | Auth routes not documented | Appended a fully detailed Auth section to `api-contract.md` with all 6 endpoints (`register`, `login`, `logout`, `logout-all`, `refresh`, `me`), and added `/auth/*` to Route Map. |
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `shared/errors/AppError.ts` | Added `rate_limit`, renamed `authorization` to `forbidden` |
+| `tweets/tweet.service.ts` | Updated `AppError.authorization()` -> `AppError.forbidden()` |
+| `comments/comment.service.ts` | Updated `AppError.authorization()` -> `AppError.forbidden()` |
+| `follows/follow.service.ts` | `AppError.validation()` -> `AppError.conflict()` for `unfollow()` |
+| `docs/api-contract.md` | Route Map update, `ErrorBody` update, Unfollow 409, Auth endpoints section |
+| `docs/issues.md` | Issue #7 |
