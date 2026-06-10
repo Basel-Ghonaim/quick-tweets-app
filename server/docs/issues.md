@@ -924,3 +924,30 @@ to an RTK Query tag, making cache invalidation predictable and removing `mergePa
 - [x] `setup-log.md` documents all stages
 
 **Related:** `plans/Flat-Route-Plan.md`, `plans/Issue-Flat-Route-Reform.md`
+
+---
+
+## Issue #7: API Contract Errors — Types, Status Codes, and Auth Routes
+
+- **Title:** fix(api-contract): resolve error types, unfollow status code, and add auth endpoints
+- **Labels:** [backend, fix, documentation]
+- **Branch:** `fix/api-contract-errors`
+- **Description:**
+
+Fixes three confirmed issues in the API contract and corresponding backend code.
+
+1. **Error Types Table:** The `rate_limit` type was missing from `ErrorType` in `AppError.ts` and `ErrorBody` in `api-contract.md`. Also, the `authorization` error type was mismatched with the standard HTTP name `forbidden` (403) documented in the contract.
+2. **Unfollow Status Code:** `DELETE /follows/:username` returned a `400` validation error when attempting to unfollow a user not followed. This has been corrected to a `409` conflict error to represent a data state conflict.
+3. **Auth Routes Documentation:** Auth endpoints (`/auth/login`, `/auth/register`, `/auth/refresh`, etc.) were missing from the API contract Route Map and request/response shapes.
+
+**Acceptance Criteria:**
+
+- [x] `rate_limit` is added to `ErrorType` and `ErrorBody`.
+- [x] `AppError.authorization()` is renamed to `AppError.forbidden()` across the codebase.
+- [x] `unfollow()` throws `AppError.conflict()` instead of `AppError.validation()`.
+- [x] API contract (`api-contract.md`) ErrorBody includes `rate_limit`.
+- [x] API contract (`api-contract.md`) Unfollow error response is updated to 409.
+- [x] API contract (`api-contract.md`) includes the complete, fully-documented Auth section and Route Map.
+- [x] `tsc --noEmit` passes with 0 errors.
+
+**Related:** `api-contract.md`
