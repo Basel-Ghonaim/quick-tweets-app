@@ -84,6 +84,14 @@ export const createTweetRepository = (
     });
   },
 
+  findAuthorIdByUsername: async (username: string) => {
+    const user = await db.user.findUnique({
+      where: { username },
+      select: { id: true },
+    });
+    return user?.id ?? null;
+  },
+
   // ── Single Tweet ──
 
   findById: (id, userId?) =>

@@ -13,6 +13,13 @@
  */
 
 import { z } from "zod";
+import { cursorQuerySchema } from "../../shared/validators/index.js";
+
+// ─── Feed Query ──────────────────────────────────────────────────────────────
+
+export const feedQuerySchema = cursorQuerySchema.extend({
+  author: z.string().trim().optional(),
+});
 
 // ─── Create Tweet ────────────────────────────────────────────────────────────
 

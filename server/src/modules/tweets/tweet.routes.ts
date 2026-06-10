@@ -20,8 +20,7 @@ import { validate } from "../../middleware/validate.js";
 import { authGuard } from "../../middleware/authGuard.js";
 import { optionalAuth } from "../../middleware/optionalAuth.js";
 import { createTweetController } from "./tweet.controller.js";
-import { createTweetSchema, updateTweetSchema } from "./tweet.validator.js";
-import { cursorQuerySchema } from "../../shared/validators/index.js";
+import { createTweetSchema, updateTweetSchema, feedQuerySchema } from "./tweet.validator.js";
 
 const controller = createTweetController();
 
@@ -29,7 +28,7 @@ export const tweetRoutes = Router();
 
 // ─── Public Routes (optionalAuth for isLiked) ────────────────────────────────
 
-tweetRoutes.get("/", optionalAuth, validate(cursorQuerySchema, "query"), controller.getFeed);
+tweetRoutes.get("/", optionalAuth, validate(feedQuerySchema, "query"), controller.getFeed);
 tweetRoutes.get("/:id", optionalAuth, controller.getById);
 
 // ─── Protected Routes (auth required) ────────────────────────────────────────
