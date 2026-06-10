@@ -119,7 +119,7 @@ export const createCommentService = (
 
     // 2. Check ownership — only the author can edit
     if (owner.authorId !== userId) {
-      throw AppError.authorization("You can only edit your own comments");
+      throw AppError.forbidden("You can only edit your own comments");
     }
 
     // 4. Update and return
@@ -141,7 +141,7 @@ export const createCommentService = (
 
     // 2. Check ownership — only the author can delete
     if (owner.authorId !== userId) {
-      throw AppError.authorization("You can only delete your own comments");
+      throw AppError.forbidden("You can only delete your own comments");
     }
 
     // 4. Delete

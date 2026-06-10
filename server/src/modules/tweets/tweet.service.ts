@@ -155,7 +155,7 @@ export const createTweetService = (
 
     // 2. Check ownership — only the author can edit
     if (owner.authorId !== userId) {
-      throw AppError.authorization("You can only edit your own tweets");
+      throw AppError.forbidden("You can only edit your own tweets");
     }
 
     // 3. Update and return (pass userId for correct isLiked in response)
@@ -174,7 +174,7 @@ export const createTweetService = (
 
     // 2. Check ownership — only the author can delete
     if (owner.authorId !== userId) {
-      throw AppError.authorization("You can only delete your own tweets");
+      throw AppError.forbidden("You can only delete your own tweets");
     }
 
     // 3. Delete (cascade handles comments/likes)
