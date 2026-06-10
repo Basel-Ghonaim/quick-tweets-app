@@ -8,6 +8,54 @@
 
 ---
 
+## Migration Note — Flat Route Reform
+
+As of this version, all nested routes have been migrated to a flat, resource-oriented structure.
+The old nested paths below are **removed** and will return `404`:
+
+| Old (Removed) | Replaced By |
+|---|---|
+| `GET  /tweets/:tweetId/comments` | `GET  /comments?tweetId=X` |
+| `POST /tweets/:tweetId/comments` | `POST /comments` (body includes `tweetId`) |
+| `PATCH /tweets/:tweetId/comments/:commentId` | `PATCH /comments/:id` |
+| `DELETE /tweets/:tweetId/comments/:commentId` | `DELETE /comments/:id` |
+| `GET  /users/:username/tweets` | `GET  /tweets?author=:username` |
+| `POST /users/:username/follow` | `POST /follows/:username` |
+| `DELETE /users/:username/follow` | `DELETE /follows/:username` |
+| `GET  /users/:username/followers` | `GET  /follows/:username/followers` |
+| `GET  /users/:username/following` | `GET  /follows/:username/following` |
+
+**Rationale:** Flat routes simplify client cache organization and resource ownership.
+Each resource lives at a predictable, stable prefix that maps 1:1 to an RTK Query tag.
+
+---
+
+## Route Map
+
+```
+GET    /api/v1/tweets
+GET    /api/v1/tweets?author=:username
+GET    /api/v1/tweets/:id
+POST   /api/v1/tweets
+PATCH  /api/v1/tweets/:id
+DELETE /api/v1/tweets/:id
+POST   /api/v1/tweets/:id/like
+
+GET    /api/v1/comments?tweetId=:tweetId
+POST   /api/v1/comments
+PATCH  /api/v1/comments/:id
+DELETE /api/v1/comments/:id
+
+GET    /api/v1/users/:username
+
+POST   /api/v1/follows/:username
+DELETE /api/v1/follows/:username
+GET    /api/v1/follows/:username/followers
+GET    /api/v1/follows/:username/following
+```
+
+---
+
 ## Response Wrapper
 
 Every API response follows this standardized format:
@@ -33,21 +81,6 @@ Every API response follows this standardized format:
     errors?: Record<string, string[]>  // field-level validation errors
   }
 }
-```
-
-### Examples
-
-```jsonc
-// POST /auth/register → 201
-{ "success": true, "data": { "user": {...}, "accessToken": "eyJ..." } }
-
-// GET /tweets → 200 with pagination
-{ "success": true, "data": [...], "meta": { "cursor": "abc", "hasMore": true } }
-
-// DELETE /tweets/:id → 204 (no body)
-
-// Error → 403
-{ "success": false, "error": { "type": "forbidden", "message": "You can only delete your own tweets" } }
 ```
 
 ---
@@ -82,7 +115,7 @@ interface CursorPaginationMeta {
 
 **Query params:** `?cursor=<id>&limit=10`
 
-**Used by:** `GET /tweets`, `GET /users/:username/tweets`, `GET /users/:username/followers`, `GET /users/:username/following`
+**Used by:** `GET /tweets`, `GET /tweets?author=username`, `GET /follows/:username/followers`, `GET /follows/:username/following`
 
 ### OffsetPaginationMeta
 
@@ -101,8 +134,7 @@ interface OffsetPaginationMeta {
 
 **Query params:** `?page=1&limit=10`
 
-**Used by:** `GET /tweets/:tweetId/comments`
-
+**Used by:** `GET /comments?tweetId=X`
 
 ### Error Response
 
@@ -188,10 +220,29 @@ interface ErrorBody {
 ```
 
 **Notes:**
-- Ordered by `id DESC` (newest first — auto-increment = chronological)
+- Ordered by `id DESC` (newest first)
 - `isLiked` is `false` for unauthenticated users
 - `limit` capped at 50
 - First request: no cursor. Next page: pass `cursor=<last item id>`
+
+---
+
+### `GET /tweets?author=:username` — Author's tweets (cursor-paginated)
+
+**Auth:** Optional
+**Query params:** `?author=basel&cursor=<id>&limit=10`
+
+```jsonc
+// Response 200 — same shape as GET /tweets
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
+
+**Notes:**
+- Filtered subset of the global feed — same tweet shape
+- `isLiked` requires optional auth
+- Returns `404` if username does not exist
 
 ---
 
@@ -202,16 +253,12 @@ interface ErrorBody {
 ```jsonc
 // Response 200
 {
-  "tweet": {
+  "success": true,
+  "data": {
     "id": 5,
     "body": "Hello world!",
     "image": null,
-    "author": {
-      "id": 1,
-      "username": "basel",
-      "name": "Basel",
-      "profileImage": null
-    },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 3,
     "commentsCount": 2,
     "isLiked": true,
@@ -220,7 +267,7 @@ interface ErrorBody {
 }
 
 // Response 404
-{ "type": "not_found", "message": "Tweet not found" }
+{ "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
 
 ---
@@ -237,16 +284,12 @@ interface ErrorBody {
 
 // Response 201
 {
-  "tweet": {
+  "success": true,
+  "data": {
     "id": 13,
     "body": "Hello world!",
     "image": null,
-    "author": {
-      "id": 1,
-      "username": "basel",
-      "name": "Basel",
-      "profileImage": null
-    },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 0,
     "commentsCount": 0,
     "isLiked": false,
@@ -255,10 +298,10 @@ interface ErrorBody {
 }
 
 // Response 401
-{ "type": "authentication", "message": "Missing or invalid authorization header" }
+{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
 
 // Response 400
-{ "type": "validation", "message": "body must be between 1 and 280 characters" }
+{ "success": false, "error": { "type": "validation", "message": "body must be between 1 and 280 characters" } }
 ```
 
 ---
@@ -268,23 +311,19 @@ interface ErrorBody {
 **Auth:** Required
 
 ```jsonc
-// Request body (all fields optional, at least one required)
+// Request body (at least one field required)
 {
   "body": "Updated tweet!"    // optional, 1-280 characters
 }
 
 // Response 200
 {
-  "tweet": {
+  "success": true,
+  "data": {
     "id": 5,
     "body": "Updated tweet!",
     "image": null,
-    "author": {
-      "id": 1,
-      "username": "basel",
-      "name": "Basel",
-      "profileImage": null
-    },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 3,
     "commentsCount": 2,
     "isLiked": true,
@@ -293,16 +332,13 @@ interface ErrorBody {
 }
 
 // Response 401
-{ "type": "authentication", "message": "Missing or invalid authorization header" }
+{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
 
 // Response 403
-{ "type": "forbidden", "message": "You can only edit your own tweets" }
+{ "success": false, "error": { "type": "forbidden", "message": "You can only edit your own tweets" } }
 
 // Response 404
-{ "type": "not_found", "message": "Tweet not found" }
-
-// Response 400
-{ "type": "validation", "message": "body must be between 1 and 280 characters" }
+{ "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
 
 ---
@@ -315,13 +351,13 @@ interface ErrorBody {
 // Response 204 (No Content — empty body)
 
 // Response 401
-{ "type": "authentication", "message": "Missing or invalid authorization header" }
+{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
 
 // Response 403
-{ "type": "forbidden", "message": "You can only delete your own tweets" }
+{ "success": false, "error": { "type": "forbidden", "message": "You can only delete your own tweets" } }
 
 // Response 404
-{ "type": "not_found", "message": "Tweet not found" }
+{ "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
 
 ---
@@ -332,16 +368,16 @@ interface ErrorBody {
 
 ```jsonc
 // Response 200 (toggled ON)
-{ "liked": true, "likesCount": 4 }
+{ "success": true, "data": { "liked": true, "likesCount": 4 } }
 
 // Response 200 (toggled OFF)
-{ "liked": false, "likesCount": 3 }
+{ "success": true, "data": { "liked": false, "likesCount": 3 } }
 
 // Response 401
-{ "type": "authentication", "message": "Missing or invalid authorization header" }
+{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
 
 // Response 404
-{ "type": "not_found", "message": "Tweet not found" }
+{ "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
 
 **Notes:**
@@ -352,15 +388,16 @@ interface ErrorBody {
 
 ## Comments
 
-### `GET /tweets/:tweetId/comments` — Comments for a tweet (paginated)
+### `GET /comments?tweetId=:id` — Comments for a tweet (offset-paginated)
 
 **Auth:** None
-**Query params:** `?page=1&limit=20`
+**Query params:** `?tweetId=5&page=1&limit=20`
 
 ```jsonc
 // Response 200
 {
-  "comments": [
+  "success": true,
+  "data": [
     {
       "id": 1,
       "body": "Nice tweet!",
@@ -374,7 +411,7 @@ interface ErrorBody {
       "createdAt": "2026-05-10T12:05:00.000Z"
     }
   ],
-  "pagination": {
+  "meta": {
     "currentPage": 1,
     "limit": 20,
     "totalPages": 1,
@@ -385,54 +422,52 @@ interface ErrorBody {
 }
 
 // Response 404
-{ "type": "not_found", "message": "Tweet not found" }
+{ "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
 
 **Notes:**
+- `tweetId` is a required query param
 - Ordered by `createdAt ASC` (oldest first — like a conversation)
-- Returns 404 if the tweet doesn't exist
+- Returns `404` if the tweet doesn't exist
 
 ---
 
-### `POST /tweets/:tweetId/comments` — Add comment
+### `POST /comments` — Add comment
 
 **Auth:** Required
 
 ```jsonc
 // Request body
 {
-  "body": "Nice tweet!"    // required, 1-280 characters
+  "tweetId": 5,             // required — which tweet to comment on
+  "body": "Nice tweet!"     // required, 1-280 characters
 }
 
 // Response 201
 {
-  "comment": {
+  "success": true,
+  "data": {
     "id": 8,
     "body": "Nice tweet!",
-    "author": {
-      "id": 1,
-      "username": "basel",
-      "name": "Basel",
-      "profileImage": null
-    },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "tweetId": 5,
     "createdAt": "2026-05-10T14:35:00.000Z"
   }
 }
 
 // Response 401
-{ "type": "authentication", "message": "Missing or invalid authorization header" }
+{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
 
 // Response 400
-{ "type": "validation", "message": "body must be between 1 and 280 characters" }
+{ "success": false, "error": { "type": "validation", "message": "body must be between 1 and 280 characters" } }
 
 // Response 404
-{ "type": "not_found", "message": "Tweet not found" }
+{ "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
 
 ---
 
-### `PATCH /tweets/:tweetId/comments/:commentId` — Edit own comment
+### `PATCH /comments/:id` — Edit own comment
 
 **Auth:** Required
 
@@ -444,36 +479,29 @@ interface ErrorBody {
 
 // Response 200
 {
-  "comment": {
+  "success": true,
+  "data": {
     "id": 1,
     "body": "Updated comment!",
-    "author": {
-      "id": 2,
-      "username": "ahmed",
-      "name": "Ahmed",
-      "profileImage": null
-    },
+    "author": { "id": 2, "username": "ahmed", "name": "Ahmed", "profileImage": null },
     "tweetId": 5,
     "createdAt": "2026-05-10T12:05:00.000Z"
   }
 }
 
 // Response 401
-{ "type": "authentication", "message": "Missing or invalid authorization header" }
+{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
 
 // Response 403
-{ "type": "forbidden", "message": "You can only edit your own comments" }
+{ "success": false, "error": { "type": "forbidden", "message": "You can only edit your own comments" } }
 
 // Response 404
-{ "type": "not_found", "message": "Comment not found" }
-
-// Response 400
-{ "type": "validation", "message": "body must be between 1 and 280 characters" }
+{ "success": false, "error": { "type": "not_found", "message": "Comment not found" } }
 ```
 
 ---
 
-### `DELETE /tweets/:tweetId/comments/:commentId` — Delete own comment
+### `DELETE /comments/:id` — Delete own comment
 
 **Auth:** Required
 
@@ -481,19 +509,14 @@ interface ErrorBody {
 // Response 204 (No Content — empty body)
 
 // Response 401
-{ "type": "authentication", "message": "Missing or invalid authorization header" }
+{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
 
 // Response 403
-{ "type": "forbidden", "message": "You can only delete your own comments" }
+{ "success": false, "error": { "type": "forbidden", "message": "You can only delete your own comments" } }
 
 // Response 404
-{ "type": "not_found", "message": "Comment not found" }
+{ "success": false, "error": { "type": "not_found", "message": "Comment not found" } }
 ```
-
-**Notes:**
-- Fully nested under tweets (`/tweets/:tweetId/comments/:commentId`).
-- Only the comment author can delete it.
-- Server validates that the comment belongs to the specified tweet.
 
 ---
 
@@ -511,7 +534,6 @@ interface ErrorBody {
     "id": 1,
     "username": "basel",
     "name": "Basel",
-    "email": "basel@test.com",
     "profileImage": null,
     "bio": "",
     "tweetsCount": 12,
@@ -530,60 +552,14 @@ interface ErrorBody {
 **Notes:**
 - `tweetsCount`: total tweets authored by this user
 - `likesCount`: total likes received across all their tweets
-- `followersCount`: computed via `COUNT()` on follows table (indexed)
-- `followingCount`: computed via `COUNT()` on follows table (indexed)
+- `followersCount` / `followingCount`: computed via `COUNT()` on follows table
 - `isFollowing`: `true` if the authenticated user follows this profile, `false` for guests
 
 ---
 
-### `GET /users/:username/tweets` — User's tweets (cursor-paginated)
+## Follows
 
-**Auth:** Optional
-**Query params:** `?cursor=<id>&limit=10`
-
-```jsonc
-// Response 200
-{
-  "success": true,
-  "data": [
-    {
-      "id": 5,
-      "body": "Hello world!",
-      "image": null,
-      "author": {
-        "id": 1,
-        "username": "basel",
-        "name": "Basel",
-        "profileImage": null
-      },
-      "likesCount": 3,
-      "commentsCount": 2,
-      "isLiked": true,
-      "createdAt": "2026-05-10T12:00:00.000Z"
-    }
-  ],
-  "meta": {
-    "nextCursor": "5",
-    "limit": 10,
-    "hasMore": true
-  }
-}
-
-// Response 404
-{ "success": false, "error": { "type": "not_found", "message": "User not found" } }
-```
-
-**Notes:**
-- Same tweet shape as feed — reuses `AuthorEmbed`
-- `isLiked` requires optional auth
-- Ordered by `id DESC` (newest first)
-- Uses cursor pagination (same as feed)
-
----
-
-## Follow
-
-### `POST /users/:username/follow` — Follow a user
+### `POST /follows/:username` — Follow a user
 
 **Auth:** Required
 
@@ -609,7 +585,7 @@ interface ErrorBody {
 
 ---
 
-### `DELETE /users/:username/follow` — Unfollow a user
+### `DELETE /follows/:username` — Unfollow a user
 
 **Auth:** Required
 
@@ -632,7 +608,7 @@ interface ErrorBody {
 
 ---
 
-### `GET /users/:username/followers` — Follower list (cursor-paginated)
+### `GET /follows/:username/followers` — Follower list (cursor-paginated)
 
 **Auth:** None
 **Query params:** `?cursor=<id>&limit=20`
@@ -663,7 +639,7 @@ interface ErrorBody {
 
 ---
 
-### `GET /users/:username/following` — Following list (cursor-paginated)
+### `GET /follows/:username/following` — Following list (cursor-paginated)
 
 **Auth:** None
 **Query params:** `?cursor=<id>&limit=20`

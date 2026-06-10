@@ -857,3 +857,70 @@ Three rate limiters with different thresholds protect different endpoint groups.
 - [ ] Documentation updated in `setup-log.md`
 
 **Related:** Issue #5 (parent), Gaps-and-shortcomings-map.md (#2)
+
+---
+
+## Issue #6: Flat Route Reform — Migrate Nested Routes to Resource-Oriented Structure
+
+- **Title:** refactor(server): migrate nested comment/follow routes to flat resource-oriented API
+- **Labels:** [backend, refactor, architecture, breaking-change]
+- **Branch:** `refactor/flat-route-reform`
+- **Plan:** `plans/Flat-Route-Plan.md`
+- **Description:**
+
+Refactor the backend API from nested resource routing to flat, resource-oriented routing.
+This is a breaking API contract change — old nested paths return `404` after the reform.
+
+**Motivation:** Flat routes assign each resource a stable top-level prefix that maps 1:1
+to an RTK Query tag, making cache invalidation predictable and removing `mergeParams` coupling.
+
+**Stages:**
+
+- [x] **Stage 1** — Flatten Comments: `/tweets/:tweetId/comments` → `/comments`
+- [x] **Stage 2** — Flatten Follows: `/users/:username/follow` → `/follows/:username`
+- [x] **Stage 3** — Author Feed: add `GET /tweets?author=:username`
+- [x] **Stage 4** — Remove User Tweets: delete `/users/:username/tweets`
+- [x] **Stage 5** — Sync API Contract and Docs
+
+**Issues addressed (from original plan):**
+
+| # | Issue |
+|---|---|
+| 1 | Comment routes nested under tweets (wrong level) |
+| 2 | Comment router uses `mergeParams: true` (tight coupling) |
+| 3 | Comment update/delete param is `:commentId`, inconsistent with other resources (`:id`) |
+| 4 | `offsetQuerySchema` name doesn't reflect comment-specific `tweetId` field |
+| 5 | Follow routes co-mounted with user routes, using `mergeParams` |
+| 6 | No way to fetch a user's tweets without the user module |
+| 7 | `GET /users/:username/tweets` creates cross-module coupling |
+| 8 | `app.ts` mount paths don't reflect the resource hierarchy |
+| 9 | API contract and docs reference old nested routes |
+
+**Breaking changes:**
+
+| Old Route | Status |
+|---|---|
+| `GET  /tweets/:tweetId/comments` | ❌ Removed → 404 |
+| `POST /tweets/:tweetId/comments` | ❌ Removed → 404 |
+| `PATCH /tweets/:tweetId/comments/:commentId` | ❌ Removed → 404 |
+| `DELETE /tweets/:tweetId/comments/:commentId` | ❌ Removed → 404 |
+| `GET  /users/:username/tweets` | ❌ Removed → 404 |
+| `POST /users/:username/follow` | ❌ Removed → 404 |
+| `DELETE /users/:username/follow` | ❌ Removed → 404 |
+| `GET  /users/:username/followers` | ❌ Removed → 404 |
+| `GET  /users/:username/following` | ❌ Removed → 404 |
+
+**Acceptance Criteria:**
+
+- [x] `GET  /api/v1/comments?tweetId=X` returns offset-paginated comments
+- [x] `POST /api/v1/comments` body includes `tweetId` field
+- [x] `PATCH /api/v1/comments/:id` and `DELETE /api/v1/comments/:id` work flat
+- [x] `POST /api/v1/follows/:username` and `DELETE /api/v1/follows/:username` work
+- [x] `GET /api/v1/follows/:username/followers` and `/following` work
+- [x] `GET /api/v1/tweets?author=:username` returns author's tweets with 404 on unknown user
+- [x] All old nested routes return `404`
+- [x] TypeScript builds clean (`tsc --noEmit` passes with 0 errors)
+- [x] `api-contract.md` reflects new route map
+- [x] `setup-log.md` documents all stages
+
+**Related:** `plans/Flat-Route-Plan.md`, `plans/Issue-Flat-Route-Reform.md`

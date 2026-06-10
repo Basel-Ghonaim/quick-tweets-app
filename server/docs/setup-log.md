@@ -1229,53 +1229,121 @@ All five backend phases are now implemented:
 
 | ID | Finding | Status |
 |---|---|---|
-<<<<<<< HEAD
 | W6 | User service accesses tweet repository cross-module | ✅ Fixed |
 
 ---
 
-## Module Architecture — Import & Export Paths
+## Flat Route Reform — Stages 1–5
 
-**Date:** 2026-05-17
-**Branch:** `fix/module-architecture`
+**Date:** 2026-06-10
+**Branch:** `refactor/flat-route-reform`
+**Plan:** `plans/Flat-Route-Plan.md`
 
-### What was fixed
+### Why
 
-4 findings from module architecture audit. Cross-module boundary violations, type export issues, import misdirection.
+The original nested comment and follow routes created two problems:
 
-### Fixes Applied
+1. **RTK Query tag complexity** — each tag needed to carry both the parent and child IDs, making cache invalidation error-prone.
+2. **mergeParams dependency** — child routers were coupled to their parent mount path.
 
-| # | Finding | Fix |
-|---|---|---|
-| 1 | `cursorQuerySchema` in tweet validator (cross-module) | Extracted to `shared/validators/cursor.ts` |
-| 2 | User service → tweet repository (cross-module) | Added `getByAuthor()` to `ITweetService`, user service delegates through service layer |
-| 3 | `shared/types/index.ts` uses value export for interfaces | Changed to `export type` |
-| 4 | Module types re-export shared types (import misdirection) | Removed re-exports, consumers import from `shared/types` directly |
+Flat routes assign each resource a stable top-level prefix that maps 1:1 to an RTK Query tag.
 
-### New Files
+### Stage 1 — Flatten Comments (`refactor(comments): flatten comment routes`)
 
-| File | Purpose |
+| File | Change |
 |---|---|
-| `shared/validators/cursor.ts` | **[NEW]** Shared cursor pagination Zod schema |
-| `shared/validators/index.ts` | **[NEW]** Validators barrel |
+| `comment.routes.ts` | Removed `mergeParams: true`, paths now use `:id` not `:commentId` |
+| `comment.validator.ts` | Renamed `offsetQuerySchema` → `commentQuerySchema`, added `tweetId` field |
+| `comment.controller.ts` | Reads `tweetId` from `req.query` (GET) and `req.body` (POST) |
+| `comment.service.ts` | Removed `tweetId` and URL-manipulation check from `update`/`delete` |
+| `comment.types.ts` | `ICommentRepository.findOwner` returns `{ authorId }` only |
+| `comment.repository.ts` | `findOwner` select stripped of `tweetId` |
+| `app.ts` | Mount changed from `/api/v1/tweets/:tweetId/comments` → `/api/v1/comments` |
 
-### Files Modified
+**New comment routes:**
+```
+GET    /api/v1/comments?tweetId=X
+POST   /api/v1/comments            body: { tweetId, body }
+PATCH  /api/v1/comments/:id
+DELETE /api/v1/comments/:id
+```
 
-| File | Changes |
+### Stage 2 — Flatten Follows (`refactor(follows): mount follows as standalone resource`)
+
+| File | Change |
 |---|---|
-| `tweet.validator.ts` | Removed `cursorQuerySchema` (moved to shared) |
-| `tweet.types.ts` | Added `getByAuthor` to `ITweetService`, removed re-exports |
-| `tweet.service.ts` | Implemented `getByAuthor`, imports shared types directly |
-| `tweet.repository.ts` | Imports `CursorParams` from shared/types |
-| `tweet.routes.ts` | Imports `cursorQuerySchema` from shared/validators |
-| `user.service.ts` | Replaced `ITweetRepository` with `ITweetService`, removed mapper import |
-| `user.types.ts` | Removed re-exports, direct import of `TweetResponse` |
-| `user.routes.ts` | Imports `cursorQuerySchema` from shared/validators |
-| `follow.routes.ts` | Imports `cursorQuerySchema` from shared/validators |
-| `follow.types.ts` | Removed re-exports |
-| `follow.service.ts` | Imports shared types directly |
-| `comment.types.ts` | Removed `AuthorEmbed` re-export |
-| `shared/types/index.ts` | Changed to `export type` |
-=======
-| W6 | User service accesses tweet repository cross-module | 🔲 Open |
->>>>>>> fix/code-quality
+| `follow.routes.ts` | Removed `mergeParams: true`, `POST /:username/follow` → `POST /:username` |
+| `follow.controller.ts` | JSDoc updated to new paths |
+| `app.ts` | Split into `/api/v1/users` (userRoutes) + `/api/v1/follows` (followRoutes) |
+
+**New follow routes:**
+```
+POST   /api/v1/follows/:username
+DELETE /api/v1/follows/:username
+GET    /api/v1/follows/:username/followers
+GET    /api/v1/follows/:username/following
+```
+
+### Stage 3 — Author-Filtered Feed (`feat(tweets): support author-filtered tweet feed`)
+
+| File | Change |
+|---|---|
+| `tweet.validator.ts` | Added `feedQuerySchema` (extends `cursorQuerySchema` + `author?: string`) |
+| `tweet.routes.ts` | GET / now uses `feedQuerySchema` |
+| `tweet.controller.ts` | `getFeed` branches on `author` query → `getByAuthorUsername` |
+| `tweet.types.ts` | Added `findAuthorIdByUsername` to `ITweetRepository`, `getByAuthorUsername` to `ITweetService` |
+| `tweet.repository.ts` | Implemented `findAuthorIdByUsername` |
+| `tweet.service.ts` | Implemented `getByAuthorUsername` (resolves username → authorId → delegates to `getByAuthor`) |
+
+**New author feed route:**
+```
+GET /api/v1/tweets?author=:username
+```
+
+### Stage 4 — Remove User Tweets Endpoint (`refactor(users): remove user tweets endpoint`)
+
+| File | Change |
+|---|---|
+| `user.routes.ts` | Removed `GET /:username/tweets` route |
+| `user.controller.ts` | Removed `getUserTweets` handler |
+| `user.service.ts` | Removed `getUserTweets` method and tweet service injection |
+| `user.types.ts` | Removed `getUserTweets` from `IUserService`, `findIdByUsername` from `IUserRepository`, tweet imports |
+| `user.repository.ts` | Removed `findIdByUsername` implementation |
+
+**Replacement:** `GET /api/v1/tweets?author=:username`
+
+### Stage 5 — Sync API Contract and Docs (`docs(api): document flat route reform`)
+
+Fully rewrote `server/docs/api-contract.md`:
+- Added Migration Note table (old → new routes)
+- Added route map section
+- Replaced all nested comment endpoint docs with flat `/comments` endpoints
+- Replaced `/users/:username/follow` docs with `/follows/:username` docs
+- Replaced `/users/:username/tweets` with `GET /tweets?author=:username`
+- Updated `CursorPaginationMeta` used-by list
+- Updated `OffsetPaginationMeta` used-by reference
+- Corrected rationale: "flat routes simplify client cache organization and resource ownership"
+
+### Final Route Map
+
+```
+GET    /api/v1/tweets
+GET    /api/v1/tweets?author=:username
+GET    /api/v1/tweets/:id
+POST   /api/v1/tweets
+PATCH  /api/v1/tweets/:id
+DELETE /api/v1/tweets/:id
+POST   /api/v1/tweets/:id/like
+
+GET    /api/v1/comments?tweetId=:tweetId
+POST   /api/v1/comments
+PATCH  /api/v1/comments/:id
+DELETE /api/v1/comments/:id
+
+GET    /api/v1/users/:username
+
+POST   /api/v1/follows/:username
+DELETE /api/v1/follows/:username
+GET    /api/v1/follows/:username/followers
+GET    /api/v1/follows/:username/following
+```
