@@ -63,7 +63,7 @@ app.get("/health", async (_req, res) => {
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
-app.use("/api/v1/tweets/:tweetId/comments", apiLimiter, commentRoutes);
+app.use("/api/v1/comments", apiLimiter, commentRoutes);
 app.use("/api/v1/users", apiLimiter, userRoutes, followRoutes);
 
 // ─── Error Handler (must be last) ────────────────────────────────────────────

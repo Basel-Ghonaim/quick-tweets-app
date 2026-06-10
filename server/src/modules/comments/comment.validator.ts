@@ -2,9 +2,9 @@
  * Comment validators — Zod schemas for comment endpoint request validation.
  *
  * Purpose:
- * - createCommentSchema: validates POST /tweets/:tweetId/comments body
- * - updateCommentSchema: validates PATCH /tweets/:tweetId/comments/:commentId body
- * - offsetQuerySchema: validates offset pagination query params (page, limit)
+ * - createCommentSchema: validates POST /comments body
+ * - updateCommentSchema: validates PATCH /comments/:id body
+ * - commentQuerySchema: validates offset pagination query params (page, limit) and tweetId
  *
  * Principle: SRP — only schema definitions, no business logic.
  */
@@ -14,6 +14,10 @@ import { z } from "zod";
 // ─── Create Comment ──────────────────────────────────────────────────────────
 
 export const createCommentSchema = z.object({
+  tweetId: z.coerce
+    .number({ error: "Tweet ID is required" })
+    .int("Tweet ID must be an integer")
+    .positive("Tweet ID must be a positive number"),
   body: z
     .string({ error: "Comment body is required" })
     .min(1, "Comment body cannot be empty")
@@ -44,7 +48,11 @@ export const updateCommentSchema = z
  * Query strings arrive as strings, so we coerce to numbers.
  * Example: ?page=2&limit=20 → { page: 2, limit: 20 }
  */
-export const offsetQuerySchema = z.object({
+export const commentQuerySchema = z.object({
+  tweetId: z.coerce
+    .number({ error: "Tweet ID is required" })
+    .int("Tweet ID must be an integer")
+    .positive("Tweet ID must be a positive number"),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });

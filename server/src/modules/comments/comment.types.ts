@@ -82,8 +82,8 @@ export interface ICommentRepository {
 
   delete(id: number): Promise<void>;
 
-  /** Lightweight query — only fetches authorId + tweetId for ownership checks. */
-  findOwner(id: number): Promise<{ authorId: number; tweetId: number } | null>;
+  /** Lightweight query — only fetches authorId for ownership checks. */
+  findOwner(id: number): Promise<{ authorId: number } | null>;
 }
 
 // ─── Service Interface ───────────────────────────────────────────────────────
@@ -104,10 +104,9 @@ export interface ICommentService {
 
   update(
     commentId: number,
-    tweetId: number,
     userId: number,
     data: { body?: string },
   ): Promise<CommentResponse>;
 
-  delete(commentId: number, tweetId: number, userId: number): Promise<void>;
+  delete(commentId: number, userId: number): Promise<void>;
 }
