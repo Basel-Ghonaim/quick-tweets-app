@@ -3,24 +3,14 @@
  *
  * Purpose:
  * - getProfile(): fetch user with counts + isFollowing + likesCount (two-step)
- * - getUserTweets(): resolve username → authorId → delegate to tweet service
- *
- * Cross-module delegation:
- *   getUserTweets calls ITweetService.getByAuthor() — the user service resolves
- *   the username to an authorId, then delegates pagination + DTO mapping to the
- *   tweet service. This respects module boundaries: the user service never
- *   touches the tweet repository directly.
  *
  * Principle: SRP — only business rules, no HTTP or database concerns.
- * Principle: DIP — depends on IUserRepository and ITweetService interfaces.
- * Principle: Factory Pattern — createUserService(userRepo?, tweetService?) for DI.
+ * Principle: DIP — depends on IUserRepository interface.
+ * Principle: Factory Pattern — createUserService(userRepo?) for DI.
  */
 
 import { AppError } from "../../shared/errors/index.js";
 import { createUserRepository } from "./user.repository.js";
-import { createTweetService } from "../tweets/tweet.service.js";
-import type { ITweetService, TweetResponse } from "../tweets/tweet.types.js";
-import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import type {
   IUserRepository,
   IUserService,
@@ -33,11 +23,9 @@ import type {
  * Creates an IUserService with injected dependencies.
  *
  * @param userRepo - User database operations
- * @param tweetService - Tweet business logic (for user tweets endpoint)
  */
 export const createUserService = (
   userRepo: IUserRepository = createUserRepository(),
-  tweetService: ITweetService = createTweetService(),
 ): IUserService => ({
   // ─── Profile ────────────────────────────────────────────────────────
 
@@ -70,22 +58,5 @@ export const createUserService = (
       isFollowing,
       createdAt: user.createdAt,
     };
-  },
-
-  // ─── User Tweets (cursor-paginated) ─────────────────────────────────
-
-  getUserTweets: async (
-    username: string,
-    params: CursorParams,
-    reqUserId?: number,
-  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }> => {
-    // 1. Resolve username → authorId
-    const authorId = await userRepo.findIdByUsername(username);
-    if (authorId === null) {
-      throw AppError.notFound("User");
-    }
-
-    // 2. Delegate to tweet service — respects module boundary
-    return tweetService.getByAuthor(authorId, params, reqUserId);
   },
 });

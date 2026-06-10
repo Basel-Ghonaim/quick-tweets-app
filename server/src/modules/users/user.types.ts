@@ -6,15 +6,9 @@
  * - Defines IUserRepository interface (database operations)
  * - Defines IUserService interface (business logic contract)
  *
- * Note: User's tweets reuse TweetResponse from the tweets module.
- *       Cursor pagination types come from shared/types/.
- *
  * Principle: DIP — service depends on IUserRepository, not on Prisma.
  * Principle: ISP — repository and service contracts are separate.
  */
-
-import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
-import type { TweetResponse } from "../tweets/tweet.types.js";
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
@@ -62,9 +56,6 @@ export interface IUserRepository {
   /** Find user by username with aggregated counts. */
   findByUsernameWithCounts(username: string): Promise<UserWithCounts | null>;
 
-  /** Find user ID by username (lightweight lookup for tweet queries). */
-  findIdByUsername(username: string): Promise<number | null>;
-
   /** Check if followerId follows followingId. */
   isFollowing(followerId: number, followingId: number): Promise<boolean>;
 
@@ -82,10 +73,4 @@ export interface IUserRepository {
  */
 export interface IUserService {
   getProfile(username: string, reqUserId?: number): Promise<UserProfileResponse>;
-
-  getUserTweets(
-    username: string,
-    params: CursorParams,
-    reqUserId?: number,
-  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }>;
 }
