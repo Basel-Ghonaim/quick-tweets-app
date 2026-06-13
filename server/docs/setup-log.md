@@ -1383,3 +1383,30 @@ Three confirmed issues in the API contract and corresponding backend code.
 | `follows/follow.service.ts` | `AppError.validation()` -> `AppError.conflict()` for `unfollow()` |
 | `docs/api-contract.md` | Route Map update, `ErrorBody` update, Unfollow 409, Auth endpoints section |
 | `docs/issues.md` | Issue #7 |
+
+---
+
+## API Contract Refinements and Frontend Caching Improvements
+
+**Date:** 2026-06-13
+**Branch:** `fix/api-contract-refinements`
+**Issue:** #8
+
+### What was fixed
+
+Several warnings and documentation gaps were addressed to improve frontend integration and cache validation.
+
+1. **Frontend Caching Support:** Added `updatedAt` to `TweetResponse` DTO.
+2. **Missing Edge Cases in Contract:** Documented 400 validation errors for missing `tweetId` and empty `PATCH` bodies. Added guest response example for `GET /tweets/:id`.
+3. **Pagination Clarity:** Explicitly documented default cursor limit (10) and string cursor type.
+4. **Design Rationale & Versioning:** Added Versioning Policy and documented Follow POST/DELETE design choice.
+5. **Future Scope:** Documented that `image` field and Profile modification (`PATCH /users`) are reserved for future scope.
+
+### Files Modified
+
+| File | Changes |
+|---|---|
+| `tweets/tweet.types.ts` | Added `updatedAt` to `TweetResponse` |
+| `tweets/tweet.mapper.ts` | Mapped `updatedAt` to `TweetResponse` |
+| `docs/api-contract.md` | Versioning Policy, `updatedAt`, guest examples, 400 validation examples, cursor defaults, and future scope notes |
+| `docs/issues.md` | Issue #8 |
