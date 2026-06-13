@@ -8,6 +8,14 @@
 
 ---
 
+## Versioning Policy
+
+- The API is versioned via the URL path (`/api/v1/`).
+- **Breaking changes** (e.g., modifying response shapes, removing fields, renaming endpoints) will result in a new version (`v2`).
+- **Additive changes** (e.g., adding new optional fields like `updatedAt` or new endpoints) will be added to the current version and documented here.
+
+---
+
 ## Migration Note — Flat Route Reform
 
 As of this version, all nested routes have been migrated to a flat, resource-oriented structure.
@@ -114,8 +122,8 @@ Cursor is the `id` of the last item — auto-incrementing IDs guarantee chronolo
 
 ```typescript
 interface CursorPaginationMeta {
-  nextCursor: string | null;  // id of last item, null if no more pages
-  limit: number;              // items per page
+  nextCursor: string | null;  // id of last item (returned as string), null if no more pages
+  limit: number;              // items per page (default: 10, max: 50)
   hasMore: boolean;           // are there more items after this page?
 }
 ```
@@ -316,7 +324,7 @@ interface ErrorBody {
     {
       "id": 5,
       "body": "Hello world!",
-      "image": null,
+      "image": null,              // Reserved for future use (file uploads). Always null in v1.
       "author": {
         "id": 1,
         "username": "basel",
@@ -326,7 +334,8 @@ interface ErrorBody {
       "likesCount": 3,
       "commentsCount": 2,
       "isLiked": true,
-      "createdAt": "2026-05-10T12:00:00.000Z"
+      "createdAt": "2026-05-10T12:00:00.000Z",
+      "updatedAt": "2026-05-10T12:00:00.000Z"
     }
   ],
   "meta": {
@@ -380,7 +389,24 @@ interface ErrorBody {
     "likesCount": 3,
     "commentsCount": 2,
     "isLiked": true,
-    "createdAt": "2026-05-10T12:00:00.000Z"
+    "createdAt": "2026-05-10T12:00:00.000Z",
+    "updatedAt": "2026-05-10T12:00:00.000Z"
+  }
+}
+
+// Response 200 (Guest / Unauthenticated)
+{
+  "success": true,
+  "data": {
+    "id": 5,
+    "body": "Hello world!",
+    "image": null,
+    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
+    "likesCount": 3,
+    "commentsCount": 2,
+    "isLiked": false,
+    "createdAt": "2026-05-10T12:00:00.000Z",
+    "updatedAt": "2026-05-10T12:00:00.000Z"
   }
 }
 
@@ -406,12 +432,13 @@ interface ErrorBody {
   "data": {
     "id": 13,
     "body": "Hello world!",
-    "image": null,
+    "image": null,              // Reserved for future use. Always null in v1.
     "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 0,
     "commentsCount": 0,
     "isLiked": false,
-    "createdAt": "2026-05-10T14:30:00.000Z"
+    "createdAt": "2026-05-10T14:30:00.000Z",
+    "updatedAt": "2026-05-10T14:30:00.000Z"
   }
 }
 
@@ -445,9 +472,13 @@ interface ErrorBody {
     "likesCount": 3,
     "commentsCount": 2,
     "isLiked": true,
-    "createdAt": "2026-05-10T12:00:00.000Z"
+    "createdAt": "2026-05-10T12:00:00.000Z",
+    "updatedAt": "2026-05-10T15:00:00.000Z"
   }
 }
+
+// Response 400 (Empty body)
+{ "success": false, "error": { "type": "validation", "message": "At least one field is required to update" } }
 
 // Response 401
 { "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
@@ -539,6 +570,9 @@ interface ErrorBody {
   }
 }
 
+// Response 400
+{ "success": false, "error": { "type": "validation", "message": "tweetId query parameter is required" } }
+
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
@@ -607,6 +641,9 @@ interface ErrorBody {
   }
 }
 
+// Response 400 (Empty body)
+{ "success": false, "error": { "type": "validation", "message": "At least one field is required to update" } }
+
 // Response 401
 { "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
 
@@ -616,6 +653,9 @@ interface ErrorBody {
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "Comment not found" } }
 ```
+
+**Notes:**
+- Comment edits do not track timestamps (`updatedAt`) in this version.
 
 ---
 
@@ -672,6 +712,7 @@ interface ErrorBody {
 - `likesCount`: total likes received across all their tweets
 - `followersCount` / `followingCount`: computed via `COUNT()` on follows table
 - `isFollowing`: `true` if the authenticated user follows this profile, `false` for guests
+- **Future Scope:** Profile modification (`PATCH /users/:username`) is outside the scope of v1.
 
 ---
 
@@ -700,6 +741,9 @@ interface ErrorBody {
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "User not found" } }
 ```
+
+**Design Note:**
+- Follow uses separate POST/DELETE endpoints rather than an idempotent toggle to prevent race conditions and UX bugs (e.g., accidental double-clicks causing an unfollow).
 
 ---
 

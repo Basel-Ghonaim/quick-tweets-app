@@ -25,4 +25,5 @@ export const toTweetResponse = (tweet: TweetWithRelations): TweetResponse => ({
   commentsCount: tweet._count.comments,
   isLiked: (tweet.likes?.length ?? 0) > 0,
   createdAt: tweet.createdAt,
+  updatedAt: tweet.updatedAt,
 });

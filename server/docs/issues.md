@@ -951,3 +951,33 @@ Fixes three confirmed issues in the API contract and corresponding backend code.
 - [x] `tsc --noEmit` passes with 0 errors.
 
 **Related:** `api-contract.md`
+
+---
+
+## Issue #8: API Contract Refinements and Frontend Caching Improvements
+
+- **Title:** fix(api): refine api contract edge cases and add updatedAt to tweets
+- **Labels:** [backend, fix, documentation, enhancement]
+- **Branch:** `fix/api-contract-refinements`
+- **Plan:** `implementation_plan.md`
+- **Description:**
+
+Addresses several warnings and documentation gaps to improve frontend integration and cache validation.
+
+1. **Frontend Caching Support:** `updatedAt` was missing from the `TweetResponse` DTO, preventing the frontend from easily distinguishing between original and edited tweets in the cache.
+2. **Missing Edge Cases in Contract:** The contract lacked explicit error examples for empty `PATCH` request bodies and missing query parameters (`tweetId` on `GET /comments`). It also lacked an explicit example for unauthenticated guest responses (where `isLiked` is false).
+3. **Pagination Clarity:** The cursor type behavior (returned and passed as strings) and the default limit (10) were not explicitly documented.
+4. **Design Rationale & Versioning:** The contract lacked a defined versioning policy and did not explain why `POST /follows` uses a conflict pattern instead of a toggle pattern.
+
+**Acceptance Criteria:**
+
+- [x] `TweetResponse` interface and `toTweetResponse` mapper include `updatedAt`.
+- [x] `api-contract.md` includes `updatedAt` in all Tweet response examples.
+- [x] `api-contract.md` includes a Versioning Strategy section.
+- [x] `api-contract.md` explicitly documents the default cursor limit (10) and string cursor type.
+- [x] `api-contract.md` documents `image` field as reserved for future use.
+- [x] `api-contract.md` includes 400 validation examples for missing `tweetId` and empty `PATCH` bodies.
+- [x] `api-contract.md` includes a guest user response example for `GET /tweets/:id`.
+- [x] `api-contract.md` clarifies that profile editing is outside the scope of v1.
+
+**Related:** `api-contract.md`, `tweet.types.ts`

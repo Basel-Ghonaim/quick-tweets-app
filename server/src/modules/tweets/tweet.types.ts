@@ -25,6 +25,7 @@ export interface TweetResponse {
   commentsCount: number;
   isLiked: boolean;
   createdAt: Date;
+  updatedAt: Date;
 }
 
 
