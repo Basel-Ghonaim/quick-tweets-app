@@ -1,5 +1,4 @@
-// Error type taxonomy — maps each error category to an HTTP status code.
-
+// Error type taxonomy — defines the closed set of handled error types.
 export type ErrorType =
   | "network"
   | "server"
@@ -17,23 +16,14 @@ export type ErrorType =
   | "unsupported_media_type"
   | "service_unavailable";
 
-export const httpStatusMap: Record<ErrorType, number> = {
-  bad_request: 400,
-  unauthorized: 401,
-  forbidden: 403,
-  not_found: 404,
-  timeout: 408,
-  conflict: 409,
-  payload_too_large: 413,
-  unsupported_media_type: 415,
-  validation: 422,
-  too_many_requests: 429,
-  canceled: 499,
-  server: 500,
-  unknown: 500,
-  service_unavailable: 503,
-  network: 0,
-};
+// Valid HTTP status codes returned by the backend or mapped internally (e.g., 0 for network)
+export type HttpStatusCode =
+  | 400 | 401 | 403 | 404 | 408 | 409 | 413 | 415 | 422 | 429 | 499 | 500 | 503 | 0;
+
+export interface ErrorConfig {
+  status: HttpStatusCode;
+  defaultMessage: string;
+}
 
 export type ValidationErrorsPayload = Record<string, string[]>;
 
