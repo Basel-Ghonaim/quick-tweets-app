@@ -1,6 +1,7 @@
 // Typed error class — carries type, status, and optional structured errors payload.
 
-import { httpStatusMap, type ErrorType, type ErrorPayload } from "./types";
+import { errorConfigMap } from "./errorConfig";
+import { type ErrorType, type ErrorPayload } from "./types";
 
 export class AppError<T extends ErrorType = ErrorType> extends Error {
   public readonly type: T;
@@ -13,7 +14,7 @@ export class AppError<T extends ErrorType = ErrorType> extends Error {
     this.name = this.constructor.name;
 
     this.type = type;
-    this.status = httpStatusMap[type];
+    this.status = errorConfigMap[type].status;
     this.errors = errors;
 
     if ("captureStackTrace" in Error) {
