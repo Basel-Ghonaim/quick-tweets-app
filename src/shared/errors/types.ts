@@ -18,10 +18,24 @@ export type ErrorType =
 
 // Valid HTTP status codes returned by the backend or mapped internally (e.g., 0 for network)
 export type HttpStatusCode =
-  | 400 | 401 | 403 | 404 | 408 | 409 | 413 | 415 | 422 | 429 | 499 | 500 | 503 | 0;
+  | 400
+  | 401
+  | 403
+  | 404
+  | 408
+  | 409
+  | 413
+  | 415
+  | 422
+  | 429
+  | 499
+  | 500
+  | 503
+  | 0
+  | -1;
 
 export interface ErrorConfig {
-  status: HttpStatusCode;
+  status: number;
   defaultMessage: string;
 }
 
