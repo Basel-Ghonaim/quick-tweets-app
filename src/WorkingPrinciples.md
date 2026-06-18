@@ -189,10 +189,10 @@ Both sides use the same error taxonomy:
 | Error Type | Frontend Source | Backend Source |
 |---|---|---|
 | `validation` | Schema form validation | Zod request validation |
-| `authentication` | 401 from API | Invalid JWT / wrong password |
+| `unauthorized` | 401 from API | Invalid JWT / wrong password |
 | `not_found` | 404 from API | User not found in DB |
 | `server` | 500 from API | Unhandled exception |
-| `network` | Axios network error | — |
+| `network` | Axios/Fetch network error | — |
 
 ### Interceptor Pattern (Frontend) / Middleware Pattern (Backend)
 

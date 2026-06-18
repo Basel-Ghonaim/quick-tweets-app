@@ -91,7 +91,7 @@ Every API response follows this standardized format:
 {
   success: false,
   error: {
-    type: "validation" | "authentication" | "forbidden" | "not_found" | "conflict" | "server",
+    type: "validation" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "server",
     message: string,
     errors?: Record<string, string[]>  // field-level validation errors
   }
@@ -159,27 +159,35 @@ Consistent across all endpoints. Wrapped in the response wrapper above.
 // Wrapped shape: { success: false, error: ErrorBody }
 interface ErrorBody {
   type:
-    | "validation"
-    | "authentication"
+    | "bad_request"
+    | "unauthorized"
     | "forbidden"
     | "not_found"
     | "conflict"
-    | "rate_limit"
+    | "validation"
+    | "too_many_requests"
+    | "payload_too_large"
+    | "unsupported_media_type"
+    | "service_unavailable"
     | "server";
   message: string;
   errors?: Record<string, string[]>;  // field-level validation errors
 }
 ```
 
-| HTTP Status | Error Type       | When                                                                   |
-| ----------- | ---------------- | ---------------------------------------------------------------------- |
-| 400         | `validation`     | Invalid request body or query params                                   |
-| 401         | `authentication` | Missing or invalid JWT                                                 |
-| 403         | `forbidden`      | Authenticated but not authorized (e.g., deleting someone else's tweet) |
-| 404         | `not_found`      | Resource doesn't exist                                                 |
-| 409         | `conflict`       | Duplicate resource                                                     |
-| 429         | `rate_limit`     | Too many requests — rate limit exceeded                                |
-| 500         | `server`         | Unexpected server error                                                |
+| HTTP Status | Error Type              | When                                                                   |
+| ----------- | ----------------------- | ---------------------------------------------------------------------- |
+| 400         | `bad_request`           | Generic malformed request (missing headers, bad format)                 |
+| 401         | `unauthorized`          | Missing or invalid JWT                                                 |
+| 403         | `forbidden`             | Authenticated but not authorized (e.g., deleting someone else's tweet) |
+| 404         | `not_found`             | Resource doesn't exist                                                 |
+| 409         | `conflict`              | Duplicate resource                                                     |
+| 413         | `payload_too_large`     | File or payload exceeds size limit                                     |
+| 415         | `unsupported_media_type`| Wrong file format uploaded                                             |
+| 422         | `validation`            | Invalid request body or query params (field-level errors)              |
+| 429         | `too_many_requests`     | Too many requests — rate limit exceeded                                |
+| 500         | `server`                | Unexpected server error                                                |
+| 503         | `service_unavailable`   | Service temporarily unavailable (maintenance)                          |
 
 ### Rate Limiting
 
@@ -443,7 +451,7 @@ interface ErrorBody {
 }
 
 // Response 401
-{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
 // Response 400
 { "success": false, "error": { "type": "validation", "message": "body must be between 1 and 280 characters" } }
@@ -481,7 +489,7 @@ interface ErrorBody {
 { "success": false, "error": { "type": "validation", "message": "At least one field is required to update" } }
 
 // Response 401
-{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
 // Response 403
 { "success": false, "error": { "type": "forbidden", "message": "You can only edit your own tweets" } }
@@ -500,7 +508,7 @@ interface ErrorBody {
 // Response 204 (No Content — empty body)
 
 // Response 401
-{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
 // Response 403
 { "success": false, "error": { "type": "forbidden", "message": "You can only delete your own tweets" } }
@@ -523,7 +531,7 @@ interface ErrorBody {
 { "success": true, "data": { "liked": false, "likesCount": 3 } }
 
 // Response 401
-{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
@@ -608,7 +616,7 @@ interface ErrorBody {
 }
 
 // Response 401
-{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
 // Response 400
 { "success": false, "error": { "type": "validation", "message": "body must be between 1 and 280 characters" } }
@@ -645,7 +653,7 @@ interface ErrorBody {
 { "success": false, "error": { "type": "validation", "message": "At least one field is required to update" } }
 
 // Response 401
-{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
 // Response 403
 { "success": false, "error": { "type": "forbidden", "message": "You can only edit your own comments" } }
@@ -667,7 +675,7 @@ interface ErrorBody {
 // Response 204 (No Content — empty body)
 
 // Response 401
-{ "success": false, "error": { "type": "authentication", "message": "Missing or invalid authorization header" } }
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
 // Response 403
 { "success": false, "error": { "type": "forbidden", "message": "You can only delete your own comments" } }
