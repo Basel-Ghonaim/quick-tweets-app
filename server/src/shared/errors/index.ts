@@ -1,2 +1,2 @@
-export { AppError } from "./AppError";
-export type { ErrorType } from "./AppError";
+export { AppError } from "./AppError.js";
+export type { ErrorType } from "./types.js";
