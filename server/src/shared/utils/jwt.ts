@@ -63,7 +63,7 @@ export const generateRefreshToken = (): string => {
  *
  * @param token - The JWT string from the Authorization header
  * @returns Decoded payload containing userId
- * @throws AppError.authentication if token is invalid or expired
+ * @throws AppError.unauthorized if token is invalid or expired
  */
 export const verifyAccessToken = (token: string): AccessTokenPayload => {
   try {
@@ -72,6 +72,6 @@ export const verifyAccessToken = (token: string): AccessTokenPayload => {
     }) as AccessTokenPayload;
     return decoded;
   } catch {
-    throw AppError.authentication("Invalid or expired token");
+    throw AppError.unauthorized("Invalid or expired token");
   }
 };

@@ -8,18 +8,10 @@
  *
  * Future expansion:
  * - Add error `code` field for machine-readable error codes (e.g., "AUTH_INVALID_CREDENTIALS")
- * - Add `errors` field for validation errors (Record<string, string[]>)
  * - Add serialization method (.toJSON()) for consistent API responses
  */
 
-export type ErrorType =
-  | "validation"
-  | "authentication"
-  | "forbidden"
-  | "not_found"
-  | "conflict"
-  | "rate_limit"
-  | "server";
+import type { ErrorType } from "./types.js";
 
 export class AppError extends Error {
   public readonly type: ErrorType;
@@ -42,14 +34,14 @@ export class AppError extends Error {
     Object.setPrototypeOf(this, AppError.prototype);
   }
 
-  /** 400 — Bad input / validation failure */
-  static validation(message: string, errors?: Record<string, string[]>) {
-    return new AppError("validation", message, 400, errors);
+  /** 400 — Generic malformed request (not validation) */
+  static badRequest(message: string) {
+    return new AppError("bad_request", message, 400);
   }
 
   /** 401 — Not authenticated (missing or invalid token) */
-  static authentication(message = "Authentication required") {
-    return new AppError("authentication", message, 401);
+  static unauthorized(message = "Authentication required") {
+    return new AppError("unauthorized", message, 401);
   }
 
   /** 403 — Authenticated but not authorized for this resource */
@@ -67,8 +59,33 @@ export class AppError extends Error {
     return new AppError("conflict", message, 409);
   }
 
+  /** 413 — File or payload exceeds size limit */
+  static payloadTooLarge(message = "Payload too large") {
+    return new AppError("payload_too_large", message, 413);
+  }
+
+  /** 415 — Unsupported file format */
+  static unsupportedMediaType(message = "Unsupported media type") {
+    return new AppError("unsupported_media_type", message, 415);
+  }
+
+  /** 422 — Validation failure with field-level errors */
+  static validation(message: string, errors?: Record<string, string[]>) {
+    return new AppError("validation", message, 422, errors);
+  }
+
+  /** 429 — Rate limit exceeded */
+  static tooManyRequests(message = "Too many requests") {
+    return new AppError("too_many_requests", message, 429);
+  }
+
   /** 500 — Internal server error */
   static server(message = "Internal server error") {
     return new AppError("server", message, 500);
+  }
+
+  /** 503 — Service temporarily unavailable */
+  static serviceUnavailable(message = "Service unavailable") {
+    return new AppError("service_unavailable", message, 503);
   }
 }

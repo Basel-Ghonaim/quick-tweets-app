@@ -161,7 +161,7 @@ export const createAuthController = (
     try {
       const refreshToken = req.cookies?.refreshToken;
       if (!refreshToken) {
-        throw AppError.authentication("No refresh token provided");
+        throw AppError.unauthorized("No refresh token provided");
       }
 
       const result = await service.refreshToken(refreshToken);

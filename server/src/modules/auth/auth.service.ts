@@ -104,13 +104,13 @@ export const createAuthService = (
     const user = await authRepo.findByUsername(data.username);
     if (!user) {
       // Generic message — don't reveal whether username exists
-      throw AppError.authentication("Invalid credentials");
+      throw AppError.unauthorized("Invalid credentials");
     }
 
     // 2. Compare password with stored hash
     const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
     if (!isPasswordValid) {
-      throw AppError.authentication("Invalid credentials");
+      throw AppError.unauthorized("Invalid credentials");
     }
 
     // 3. Generate tokens
@@ -145,14 +145,14 @@ export const createAuthService = (
     // 1. Find the refresh token in database
     const storedToken = await tokenRepo.findRefreshToken(token);
     if (!storedToken) {
-      throw AppError.authentication("Invalid refresh token");
+      throw AppError.unauthorized("Invalid refresh token");
     }
 
     // 2. Check if token has expired
     if (new Date() > storedToken.expiresAt) {
       // Clean up expired token
       await tokenRepo.deleteRefreshToken(token);
-      throw AppError.authentication("Refresh token expired");
+      throw AppError.unauthorized("Refresh token expired");
     }
 
     // 3. Atomic token rotation: delete old + create new in one transaction

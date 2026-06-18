@@ -35,13 +35,13 @@ export const authGuard = (req: Request, _res: Response, next: NextFunction) => {
 
   // Check for Authorization header presence
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw AppError.authentication("Missing or invalid authorization header");
+    throw AppError.unauthorized("Missing or invalid authorization header");
   }
 
   // Extract token: "Bearer eyJhbGciOi..." → "eyJhbGciOi..."
   const token = authHeader.split(" ")[1];
 
-  // Verify and decode — throws AppError.authentication on failure
+  // Verify and decode — throws AppError.unauthorized on failure
   const payload = verifyAccessToken(token);
 
   // Attach userId to request for downstream controllers
