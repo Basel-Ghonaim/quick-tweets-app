@@ -1,94 +1,30 @@
 import type { AxiosError } from "axios";
 import type { AppError } from "../AppError";
 import { createAppError } from "../errorFactory";
-import type { ValidationErrorsPayload } from "../types";
-
-export interface BackendErrorResponse {
-  success: false;
-  error: {
-    type: string;
-    message: string;
-    errors?: ValidationErrorsPayload;
-  };
-}
+import { errorConfigMap } from "../errorConfig";
+import { buildAppError, type BackendErrorBody } from "./parserUtils";
 
 export const parseAxiosError = (
-  error: AxiosError<BackendErrorResponse>,
+  error: AxiosError<BackendErrorBody>,
 ): AppError | null => {
   const { response, code } = error;
 
-  const backendMessage = response?.data?.error?.message;
-  const validationErrors = response?.data?.error?.errors;
-
+  // HTTP response received — delegate to shared helper
   if (response) {
-    const status = response.status;
+    const backendType = response.data?.error?.type;
+    const validationErrors = response.data?.error?.errors;
 
-    switch (status) {
-      case 400:
-        return createAppError("bad_request", backendMessage || "Bad Request");
-      case 401:
-        return createAppError(
-          "unauthorized",
-          backendMessage || "Unauthorized access",
-        );
-      case 403:
-        return createAppError(
-          "forbidden",
-          backendMessage || "Forbidden access",
-        );
-      case 404:
-        return createAppError(
-          "not_found",
-          backendMessage || "Resource not found",
-        );
-      case 409:
-        return createAppError(
-          "conflict",
-          backendMessage || "Conflict occurred",
-        );
-      case 413:
-        return createAppError(
-          "payload_too_large",
-          backendMessage || "File too large",
-        );
-      case 415:
-        return createAppError(
-          "unsupported_media_type",
-          backendMessage || "Unsupported format",
-        );
-      case 422:
-        return createAppError(
-          "validation",
-          backendMessage || "Validation Error",
-          validationErrors,
-        );
-      case 429:
-        return createAppError(
-          "too_many_requests",
-          backendMessage || "Too many requests",
-        );
-      case 503:
-        return createAppError(
-          "service_unavailable",
-          backendMessage || "Service unavailable",
-        );
-    }
-
-    if (status >= 500) {
-      return createAppError(
-        "server",
-        backendMessage || "Server error occurred",
-      );
-    }
+    return buildAppError(response.status, backendType, validationErrors);
   }
 
+  // No response — handle Axios-specific network/transport codes
   switch (code) {
     case "ERR_CANCELED":
-      return createAppError("canceled", "Request was canceled");
+      return createAppError("canceled", errorConfigMap.canceled.defaultMessage);
     case "ERR_NETWORK":
-      return createAppError("network", "Network error occurred");
+      return createAppError("network", errorConfigMap.network.defaultMessage);
     case "ECONNABORTED":
-      return createAppError("timeout", "Request timeout");
+      return createAppError("timeout", errorConfigMap.timeout.defaultMessage);
   }
 
   return null;
