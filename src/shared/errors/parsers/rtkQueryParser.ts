@@ -4,6 +4,22 @@ import { createAppError, createUnknownError } from "../errorFactory";
 import { errorConfigMap } from "../errorConfig";
 import { buildAppError, type BackendErrorBody } from "./parserUtils";
 
+/**
+ * Type guard for RTK Query's FetchBaseQueryError.
+ * Checks for the distinctive `status` property (string or number).
+ */
+export const isFetchBaseQueryError = (
+  error: unknown,
+): error is FetchBaseQueryError => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    (typeof (error as FetchBaseQueryError).status === "number" ||
+      typeof (error as FetchBaseQueryError).status === "string")
+  );
+};
+
 export const rtkQueryParser = (error: FetchBaseQueryError): AppError | null => {
   // RTK Query string statuses — library-specific transport errors
   if (typeof error.status === "string") {
