@@ -255,10 +255,10 @@ Creates two tables in PostgreSQL:
 |---|---|---|---|
 | Username taken | `AppError.conflict()` | 409 | — |
 | Email taken | `AppError.conflict()` | 409 | — |
-| Wrong username | `AppError.authentication()` | 401 | Generic "Invalid credentials" — prevents username enumeration |
-| Wrong password | `AppError.authentication()` | 401 | Same generic message |
-| Invalid refresh token | `AppError.authentication()` | 401 | — |
-| Expired refresh token | `AppError.authentication()` | 401 | Token deleted from DB on expiry |
+| Wrong username | `AppError.unauthorized()` | 401 | Generic "Invalid credentials" — prevents username enumeration |
+| Wrong password | `AppError.unauthorized()` | 401 | Same generic message |
+| Invalid refresh token | `AppError.unauthorized()` | 401 | — |
+| Expired refresh token | `AppError.unauthorized()` | 401 | Token deleted from DB on expiry |
 
 #### Design Decisions
 
@@ -1360,7 +1360,7 @@ GET    /api/v1/follows/:username/following
 
 Three confirmed issues in the API contract and corresponding backend code.
 
-1. **Error Types Table:** The `rate_limit` type was missing from `ErrorType` in `AppError.ts` and `ErrorBody` in `api-contract.md`. The `authorization` error type was mismatched with the standard HTTP name `forbidden` (403) documented in the contract.
+1. **Error Types Table:** The `429` rate-limit type was undocumented in `ErrorBody` in `api-contract.md`. The rate-limiter middleware emits `type: "rate_limit"` in its 429 responses, while `AppError`/`ErrorType` defines the equivalent `too_many_requests` (429) type. The `authorization` error type was mismatched with the standard HTTP name `forbidden` (403) documented in the contract.
 2. **Unfollow Status Code:** `DELETE /follows/:username` returned a `400` validation error when attempting to unfollow a user not followed.
 3. **Auth Routes Documentation:** Auth endpoints were missing from the API contract Route Map and request/response shapes.
 
@@ -1368,7 +1368,7 @@ Three confirmed issues in the API contract and corresponding backend code.
 
 | # | Finding | Fix |
 |---|---|---|
-| 1 | `rate_limit` missing | Added `rate_limit` to `ErrorType` in `AppError.ts` and `ErrorBody` in `api-contract.md`. |
+| 1 | 429 rate-limit type undocumented | Documented the rate-limiter's `rate_limit` (429) type in `ErrorBody` in `api-contract.md`. `AppError` already defines the equivalent `too_many_requests` (429) type. |
 | 2 | Mismatched `authorization` type | Renamed `authorization` to `forbidden` in `AppError.ts`, updated `tweet.service.ts` and `comment.service.ts` call sites. |
 | 3 | Unfollow 400 Validation Error | Changed `AppError.validation()` to `AppError.conflict()` in `follow.service.ts`, updated `api-contract.md` to reflect 409 status code. |
 | 4 | Auth routes not documented | Appended a fully detailed Auth section to `api-contract.md` with all 6 endpoints (`register`, `login`, `logout`, `logout-all`, `refresh`, `me`), and added `/auth/*` to Route Map. |
@@ -1377,7 +1377,7 @@ Three confirmed issues in the API contract and corresponding backend code.
 
 | File | Changes |
 |---|---|
-| `shared/errors/AppError.ts` | Added `rate_limit`, renamed `authorization` to `forbidden` |
+| `shared/errors/AppError.ts` | Renamed `authorization` to `forbidden` |
 | `tweets/tweet.service.ts` | Updated `AppError.authorization()` -> `AppError.forbidden()` |
 | `comments/comment.service.ts` | Updated `AppError.authorization()` -> `AppError.forbidden()` |
 | `follows/follow.service.ts` | `AppError.validation()` -> `AppError.conflict()` for `unfollow()` |
