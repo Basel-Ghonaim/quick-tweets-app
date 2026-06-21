@@ -69,6 +69,8 @@ GET    /api/v1/follows/:username/followers
 GET    /api/v1/follows/:username/following
 ```
 
+> **Health check:** `GET /health` (outside `/api/v1`) returns `{ status, db, timestamp }` — `200` when the database ping (`SELECT 1`) succeeds, `503` when it fails. Used for infrastructure monitoring; not part of the versioned API.
+
 ---
 
 ## Response Wrapper
@@ -80,7 +82,7 @@ Every API response follows this standardized format:
 ```typescript
 {
   success: true,
-  data: T,                            // object, array, or null (for 204)
+  data: T,                            // object or array (204 responses have no body)
   meta?: Record<string, unknown>      // pagination, counts, etc.
 }
 ```
@@ -147,7 +149,7 @@ interface OffsetPaginationMeta {
 }
 ```
 
-**Query params:** `?page=1&limit=10`
+**Query params:** `?page=1&limit=20` — `page` defaults to `1`, `limit` defaults to `20` (max `50`)
 
 **Used by:** `GET /comments?tweetId=X`
 
@@ -165,6 +167,7 @@ interface ErrorBody {
     | "not_found"
     | "conflict"
     | "validation"
+    | "rate_limit"            // emitted by the rate-limiter middleware (429)
     | "too_many_requests"
     | "payload_too_large"
     | "unsupported_media_type"
@@ -185,9 +188,11 @@ interface ErrorBody {
 | 413         | `payload_too_large`     | File or payload exceeds size limit                                     |
 | 415         | `unsupported_media_type`| Wrong file format uploaded                                             |
 | 422         | `validation`            | Invalid request body or query params (field-level errors)              |
-| 429         | `too_many_requests`     | Too many requests — rate limit exceeded                                |
+| 429         | `rate_limit`            | Too many requests — rate limit exceeded (emitted by rate-limiter)      |
 | 500         | `server`                | Unexpected server error                                                |
 | 503         | `service_unavailable`   | Service temporarily unavailable (maintenance)                          |
+
+> **Note:** `429` responses are produced by the rate-limiter middleware, not the `AppError` pipeline, and carry `type: "rate_limit"`. `AppError` also defines an equivalent `too_many_requests` (429) type, but it is not currently thrown by any route.
 
 ### Rate Limiting
 
@@ -202,7 +207,7 @@ interface ErrorBody {
 | Mode         | Header                                     | Behavior                                                                                 |
 | ------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | **Required** | `Authorization: Bearer <token>`            | 401 if missing or invalid                                                                |
-| **Optional** | `Authorization: Bearer <token>` (optional) | If present, attaches `userId`. If missing, continues as guest. Used for `isLiked` field. |
+| **Optional** | `Authorization: Bearer <token>` (optional) | If present, attaches `userId`. If missing, continues as guest. Used for `isLiked` / `isFollowing` fields. |
 | **None**     | —                                          | No auth needed                                                                           |
 
 ---
@@ -239,6 +244,12 @@ interface ErrorBody {
   }
 }
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
+
+// Response 409 — username or email already taken
+{ "success": false, "error": { "type": "conflict", "message": "Username already taken" } }
+
+// Response 422 — validation failed (field-level errors)
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "password": ["Password must contain at least one uppercase letter"] } } }
 ```
 
 ### `POST /auth/login` — Authenticate user
@@ -254,6 +265,9 @@ interface ErrorBody {
 
 // Response 200 — same shape as /auth/register
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
+
+// Response 401 — wrong username or password (generic message, no user enumeration)
+{ "success": false, "error": { "type": "unauthorized", "message": "Invalid credentials" } }
 ```
 
 ### `POST /auth/logout` — Invalidate current session
@@ -453,8 +467,8 @@ interface ErrorBody {
 // Response 401
 { "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
-// Response 400
-{ "success": false, "error": { "type": "validation", "message": "body must be between 1 and 280 characters" } }
+// Response 422
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "body": ["Tweet body cannot be empty"] } } }
 ```
 
 ---
@@ -485,8 +499,8 @@ interface ErrorBody {
   }
 }
 
-// Response 400 (Empty body)
-{ "success": false, "error": { "type": "validation", "message": "At least one field is required to update" } }
+// Response 422 (Empty body)
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "body": ["At least one field must be provided"] } } }
 
 // Response 401
 { "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
@@ -578,8 +592,8 @@ interface ErrorBody {
   }
 }
 
-// Response 400
-{ "success": false, "error": { "type": "validation", "message": "tweetId query parameter is required" } }
+// Response 422 (missing or invalid tweetId)
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "tweetId": ["Tweet ID is required"] } } }
 
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
@@ -618,8 +632,8 @@ interface ErrorBody {
 // Response 401
 { "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
-// Response 400
-{ "success": false, "error": { "type": "validation", "message": "body must be between 1 and 280 characters" } }
+// Response 422
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "body": ["Comment body cannot be empty"] } } }
 
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
@@ -649,8 +663,8 @@ interface ErrorBody {
   }
 }
 
-// Response 400 (Empty body)
-{ "success": false, "error": { "type": "validation", "message": "At least one field is required to update" } }
+// Response 422 (Empty body)
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "body": ["At least one field must be provided"] } } }
 
 // Response 401
 { "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
@@ -740,7 +754,7 @@ interface ErrorBody {
   }
 }
 
-// Response 400
+// Response 422
 { "success": false, "error": { "type": "validation", "message": "You cannot follow yourself" } }
 
 // Response 409
