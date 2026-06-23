@@ -3,6 +3,10 @@
 > **Status:** Active standard.
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
+> **Version:** 1.0
+> **Last Updated:** 2026-06-23
+> **Owner:** Basel Ghonaim
+
 
 ---
 
@@ -29,7 +33,8 @@ These principles are binding. They mirror the project's engineering principles (
 5. **Document only what exists.** A section is written only when the code it describes exists. Speculative or aspirational documentation is not permitted.
 6. **Future work lives in the issue tracker**, not in documentation.
 7. **Significant decisions are recorded as ADRs** (see §8) and are immutable once accepted.
-8. **Documentation is versioned with the code that obligates it** (see §9), in the same change, under the same review.
+8. **Documentation is versioned with the code that obligates it** (see §10), in the same change, under the same review.
+9. **Documentation describes the *intended* architecture; the code is the source of truth for the *actual* state.** Where the two diverge, the deviation is recorded as an architecture finding (see §9) — it is never normalized into the design documentation as if it were intentional.
 
 ---
 
@@ -38,7 +43,7 @@ These principles are binding. They mirror the project's engineering principles (
 To guarantee "one owner per fact," every document is one of two kinds, and the boundary between them is strict.
 
 ### Platform documents
-Located in `architecture/`, `api/`, `backend/`, and `frontend/`. They own **shared mechanisms that no single feature owns** — the request lifecycle, the response/error model, authentication mechanisms, the design system, the data-model rationale. A platform document is the authoritative home for its mechanism.
+Located in `architecture/`, `api/`, `backend/`, and `frontend/`. They own **shared mechanisms that no single feature owns** — the request lifecycle, the response/error model, authentication mechanisms, the schema-driven form engine, the design system, the data-model rationale. A platform document is the authoritative home for its mechanism.
 
 ### Feature documents
 Located in `features/`. They own **one business capability** end to end. A feature document **composes** platform mechanisms by linking to them; it never re-describes them. It owns only what is specific to that capability: its purpose, its behavioral rules, and its feature-specific bindings.
@@ -70,6 +75,7 @@ docs/
     system-overview.md           ← topology and request lifecycle across frontend/backend/database
     data-model.md                ← schema rationale (relationships, cascade, indexing); refers to schema.prisma
     decisions/                   ← ADRs: one immutable file per architectural decision
+    findings/                    ← architecture findings, tech debt, and design concerns (one file per finding)
 
   api/
     api-contract.md              ← the single source for endpoints, payloads, and error shapes
@@ -79,10 +85,12 @@ docs/
     security.md                  ← JWT, password hashing, cookies, rate limiting, helmet/CORS mechanisms
 
   frontend/
-    architecture.md              ← feature-sliced layout, module pattern, API layer conventions
+    architecture.md              ← feature-sliced layout, module pattern, platform index, thin utilities (storage, hooks, types)
+    api-client.md                ← Axios clients, interceptors, retry, 401-refresh flow, base config
     state-and-data.md            ← Redux and RTK Query strategy
     error-handling.md            ← AppError normalization pipeline
-    design-system.md             ← components, design tokens, schema-driven forms
+    forms.md                     ← schema-driven form engine (validation, form state, field inference) + SchemaField seam
+    design-system.md             ← presentation only: components, design tokens, theme, typography
 
   features/
     <feature>.md                 ← one document per implemented feature capability
@@ -109,10 +117,10 @@ Each category has a single responsibility. Material outside that responsibility 
 | Category | Owns (single responsibility) | Must not contain |
 |---|---|---|
 | `project/` | Product scope, current implementation status, shared vocabulary | Implementation detail, future plans |
-| `architecture/` | System topology, data-model rationale, governance, recorded decisions (ADRs) | Endpoint shapes, per-feature behavior |
+| `architecture/` | System topology, data-model rationale, governance, recorded decisions (ADRs), and architecture findings | Endpoint shapes, per-feature behavior |
 | `api/` | The complete HTTP contract: endpoints, payloads, error shapes | Business rationale, frontend usage |
 | `backend/` | Cross-cutting backend mechanisms (conventions, security) | Per-feature or per-module logic |
-| `frontend/` | Cross-cutting frontend platform (state, data, errors, design system) | Per-feature flows |
+| `frontend/` | Cross-cutting frontend platform subsystems: API client, state/data, error normalization, the schema-driven form engine, and the design system (presentation only) | Per-feature flows |
 | `features/` | One capability's intent, rules, and feature-specific bindings — composing platform docs by link | Restated endpoints, schema, or generic mechanisms |
 | `development/` | How to run the project and how the team works | Architecture or feature content |
 
@@ -128,9 +136,13 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Database field-level truth | `prisma/schema.prisma` (code) | `architecture/data-model.md`, feature documents |
 | Relationship, cascade, and indexing rationale | `architecture/data-model.md` | feature documents |
 | Why an architectural decision was made | `architecture/decisions/` (ADRs) | architecture, backend, frontend, feature documents |
+| Known architectural deviations / technical debt | `architecture/findings/` | the affected platform/feature documents (which link to the finding) |
 | Authentication mechanisms (JWT, hashing, cookies, rate limiting) | `backend/security.md` | `features/authentication.md` |
 | Redux / RTK Query mechanics | `frontend/state-and-data.md` | feature documents |
-| Error normalization pipeline | `frontend/error-handling.md` | feature documents |
+| Error normalization pipeline | `frontend/error-handling.md` | feature documents, `frontend/api-client.md` |
+| Axios API client (clients, interceptors, retry, 401-refresh) | `frontend/api-client.md` | feature documents |
+| Schema-driven form engine (validation, state, inference, SchemaField seam) | `frontend/forms.md` | feature documents |
+| Design system (components, tokens, theme, typography) | `frontend/design-system.md` | feature documents, `frontend/forms.md` |
 | Project history | Git history | `project/overview.md` (status only) |
 | Planned/future work | Issue tracker (issues, milestones) | `project/overview.md` (link only) |
 
@@ -179,7 +191,36 @@ Do not create ADRs for routine implementation work, small refactors, naming chan
 
 ---
 
-## 9. Documentation Update Trigger Policy
+## 9. Architecture Findings Policy
+
+An **architecture finding** records a discovered deviation from the intended architecture — technical debt, an architectural smell, or a design concern — so the knowledge is preserved without normalizing the problem into the design documentation. Findings describe *what is wrong and why*; they do not schedule the fix.
+
+### When to create a finding
+Create a finding when a review surfaces an architectural problem that deserves discussion before implementation, such as:
+
+- a circular dependency or a layering violation,
+- a single-responsibility or ownership-boundary violation,
+- excessive coupling, or a duplicated / contradictory implementation,
+- an inconsistency between the intended design and the actual code.
+
+### When not to create a finding
+- A **decision has been made** → that is an **ADR** (§8), not a finding.
+- An **actionable task with no architectural dimension** (a routine bug or a feature request) → that is an **issue** in the tracker.
+- A finding **never schedules work** and **never edits the intended-architecture documents**; instead, the affected document **links** to the finding so readers see the known deviation.
+
+### Finding rules
+- **Location:** `architecture/findings/`, a sibling of `architecture/decisions/`.
+- **One finding per file.** Each records a single architectural concern.
+- **Content:** the observation, concrete evidence (code references), the principle or boundary it violates, the affected areas, a status, and links to any motivating discussion and to the resolving ADR / issue / PR.
+- **Status:** one of `Open`, `Acknowledged`, `Resolved`, or `Accepted` (consciously tolerated, with rationale).
+- **Append-only.** A resolved finding is marked `Resolved` with a link to the ADR, PR, or commit that fixed it — it is not deleted. The register is the project's durable memory of architectural debt.
+
+### Relationship to ADRs and issues
+A finding is the *problem observed*; an ADR is the *decision made*; an issue is the *task to do it*. One finding may motivate an ADR and spawn one or more issues, and it links to both. This keeps intended-architecture documents clean: they describe the target design and point to findings for any current divergence.
+
+---
+
+## 10. Documentation Update Trigger Policy
 
 Because most documents are thin and link-based, **most code changes require no documentation change.** Only the following triggers are mandatory. They are part of the pull-request checklist, and a pull request that meets a trigger without the corresponding documentation update is incomplete.
 
@@ -196,10 +237,10 @@ Because most documents are thin and link-based, **most code changes require no d
 
 ---
 
-## 10. Documentation Governance
+## 11. Documentation Governance
 
 1. **Compliance is mandatory.** All documentation contributions — by humans or AI assistants — must conform to this strategy. Reviewers reject documentation that violates it.
-2. **The pull-request checklist enforces this strategy.** Before merge, a documentation change must confirm: it has a single authoritative home, it duplicates no other document, it links rather than copies, it documents only existing code, and any triggered updates from §9 are included.
+2. **The pull-request checklist enforces this strategy.** Before merge, a documentation change must confirm: it has a single authoritative home, it duplicates no other document, it links rather than copies, it documents only existing code, any triggered updates from §10 are included, and any current deviation from the intended architecture is recorded as a finding (§9) rather than written into the design documentation.
 3. **Changing this strategy.** This document is itself governed: a material change to the documentation strategy is an architectural decision and requires an ADR plus the normal review and merge process. Routine clarifications follow the standard documentation pull-request flow.
 4. **Language and form.** Documentation is written in English, in clear and concise prose, as durable reference material — not as meeting notes, proposals, or revision logs.
 5. **Link integrity.** Cross-document links are part of the contract. A change that moves or renames a document must update the documents that link to it, and a verification pass confirms no broken links remain.
