@@ -24,7 +24,7 @@ Documentation captures the **intended** architecture and the **why**; the **code
 - **Stay in scope.** Touch only the files the task requires. Stage explicitly by path; never `git add -A` / `git add .`. No opportunistic refactoring, no drive-by edits. If you discover unrelated work, **record it — do not do it.**
 - **One owner per fact.** In documentation, summarize-and-link; never duplicate authoritative content.
 - **Atomic commits.** Each commit is one logically complete change, in Conventional Commits format.
-- **Decisions are gated.** Architectural decisions and scope changes require human approval — *propose, don't decide.* Recording a **finding** is always allowed. Merging, closing issues, deleting branches, and editing authoritative documents are **human-only.**
+- **Decisions are gated.** Architectural decisions and scope changes require human approval — *propose, don't decide.* Recording a **finding** is always allowed. Merging, closing issues, and deleting branches are **human-authorized**; the AI may *draft* changes to authoritative documents, but a change becomes canonical only on a human-authorized merge.
 - **Don't invent the future.** Document only what exists; speculative or planned work belongs in the issue tracker, not the docs.
 - **Right-size the process.** Match the process weight to the task: lightweight work (conversation, analysis, planning) skips the full lifecycle; substantial implementation and refactoring follow the Engineering Execution Standard, which defines the task classes and their rules.
 - **When unsure whether something is architectural, escalate.**
@@ -58,8 +58,8 @@ Consult the relevant one before deep work; do not duplicate it here.
 - **Documentation governance** → `docs/architecture/documentation-strategy.md`
 - **Documentation migration plan** → `docs/architecture/documentation-migration-plan.md`
 - **API contract** (single source for endpoints, payloads, error shapes) → `docs/api/api-contract.md`
-- **Engineering Execution Standard** (work units, Git lifecycle, branch/commit strategy, scope control, review, Definition of Done & Accepted, Decision Authority Matrix, stop rules) → `src/docs/Principles/GitHub.md`, `src/docs/Principles/Ai_ImplementationWorkflow.md`
-- **Code design principles** (SOLID, data/architectural patterns, naming) → `src/docs/Principles/MyWorkingPrinciples.md`
+- **Engineering Execution Standard** (work units, Git lifecycle, branch/commit strategy, scope control, review, Definition of Done & Accepted, Decision Authority Matrix, stop rules) → `docs/development/engineering-execution-standard.md`
+- **Code design principles** (SOLID, data/architectural patterns, naming) → `docs/development/engineering-principles.md`
 
 ---
 

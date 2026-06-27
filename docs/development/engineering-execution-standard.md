@@ -165,7 +165,7 @@ Review runs in three layers, and two definitions mark the work's transitions.
 **Review layers, in order:**
 
 1. **Self-review** — the author (human or AI) checks the work against the Definition of Done before requesting review. Always.
-2. **AI review** — an independent AI pass: **expected** for architectural changes and constitutional documents, **recommended** for other substantial Work Items, and skipped for trivial ones.
+2. **AI review** — an independent AI pass: **expected** for architectural changes and constitutional documents (defined by the [Documentation Strategy](../architecture/documentation-strategy.md)), **recommended** for other substantial Work Items, and skipped for trivial ones.
 3. **Human review** — the human reviews the PR. This is the gate; it is never skipped for a merge.
 
 **Definition of Done** — the Work Item is *ready for review* (not merged) when:
