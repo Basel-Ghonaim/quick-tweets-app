@@ -1,6 +1,6 @@
 # ADR 0002: Refined ADR Threshold — ADRs Only for Owner-less or Independently-Preserved Decisions
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-06-28
 > **Deciders:** Basel Ghonaim
 
