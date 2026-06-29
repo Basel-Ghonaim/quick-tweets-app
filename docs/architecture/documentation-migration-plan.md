@@ -46,9 +46,9 @@ Each file has **exactly one** decision (`Keep` / `Move` / `Merge` / `Delete`). F
 | 1 | `README.md` | **Keep** | `README.md` (root) | Stays as the repo landing page; later editorially trimmed to a short project intro that links to `docs/`. Not relocated. |
 | 2 | `docs/api/api-contract.md` | **Keep** | `docs/api/api-contract.md` | Already authoritative and correctly located. |
 | 3 | `docs/architecture/documentation-strategy.md` | **Keep** | `docs/architecture/documentation-strategy.md` | The governing standard; correctly located. |
-| 4 | `server/docs/setup-log.md` | **Delete** | — | Extract durable architectural decisions into ADRs under `docs/architecture/decisions/`; record any unresolved architectural concern as a finding under `docs/architecture/findings/`; chronological narrative is preserved by Git history. Delete only after extraction. |
+| 4 | `server/docs/setup-log.md` | **Delete** | — | Capture durable decisions in their natural-owner document (the backend platform docs; an ADR only if a decision has no natural owner, §8); record any unresolved architectural concern as a finding under `docs/architecture/findings/`; chronological narrative is preserved by Git history. Delete only after its durable content has a home. |
 | 5 | `server/docs/issues.md` | **Delete** | — | Issue tracking is owned by GitHub Issues (authoritative). No durable documentation value; remove after confirming issues exist in the tracker. |
-| 6 | `server/docs/Gaps-and-shortcomings-map.md` | **Delete** | — | Architectural rationale → ADRs; any still-open architectural concern → `architecture/findings/`; the remaining superseded backlog → issue tracker. Already removed in the working tree; this formalizes it. |
+| 6 | `server/docs/Gaps-and-shortcomings-map.md` | **Delete** | — | Durable rationale → its natural-owner document (an ADR only if owner-less, §8); any still-open architectural concern → `architecture/findings/`; the remaining superseded backlog → issue tracker. Already removed in the working tree; this formalizes it. |
 | 7 | `src/docs/Principles/GitHub.md` | **Merge** | `docs/development/engineering-execution-standard.md` | Git/branch/commit/PR/issue conventions — consolidated into the execution standard (authored and merged). |
 | 8 | `src/docs/Principles/Ai_ImplementationWorkflow.md` | **Merge** | `docs/development/engineering-execution-standard.md` | AI workflow steps — consolidated into the execution standard (authored and merged). |
 | 9 | `src/docs/Principles/MyWorkingPrinciples.md` | **Merge** | `docs/development/engineering-principles.md` | SOLID, naming, and coding standards become the engineering principles (authored and merged). Mechanism-specific subsections (JWT, RTK Query, schema-form, API client, etc.) are **owned by platform docs** and are linked, not copied. |
@@ -61,7 +61,7 @@ Each file has **exactly one** decision (`Keep` / `Move` / `Merge` / `Delete`). F
 | 16 | `src/shared/design-system/docs/FileInputIssues.md` | **Delete** | — | Backlog mirror; owned by GitHub Issues. |
 | 17 | `src/shared/design-system/docs/IconLibraryIssues.md` | **Delete** | — | Backlog mirror; owned by GitHub Issues. |
 | 18 | `src/shared/design-system/docs/Suggestions.md` | **Delete** | — | Speculative feature ideas; owned by GitHub Issues (no speculative documentation per strategy). |
-| 19 | `src/shared/schema-form/readme.md` | **Merge** | `docs/frontend/forms.md` | Engine reference (philosophy, structure, API, the `SchemaField` seam) folds into the dedicated forms doc — **not** the design system, which the form engine consumes. "Decision Log" → an ADR if it meets the architectural bar; "Future Roadmap" → issue tracker. |
+| 19 | `src/shared/schema-form/readme.md` | **Merge** | `docs/frontend/forms.md` | Engine reference (philosophy, structure, API, the `SchemaField` seam) folds into the dedicated forms doc — **not** the design system, which the form engine consumes. "Decision Log" → captured by `forms.md` (its natural owner; an ADR only if a decision has no natural owner, §8); "Future Roadmap" → issue tracker. |
 
 ---
 
@@ -83,7 +83,7 @@ Verification that, after migration, **every fact has one and only one owner** as
 | Auth mechanisms (JWT, bcrypt, cookies, rate limit) | `docs/backend/security.md` | setup-log.md, issues.md |
 | Git / AI process conventions | `docs/development/engineering-execution-standard.md` | GitHub.md, Ai_ImplementationWorkflow.md |
 | Code-design principles (SOLID, naming) | `docs/development/engineering-principles.md` | MyWorkingPrinciples.md |
-| Architectural decision rationale | `docs/architecture/decisions/` (ADRs) | setup-log.md, Gaps-and-shortcomings-map.md, schema-form/readme.md (decision log) |
+| Architectural decision rationale | the decision's **natural-owner document**; `docs/architecture/decisions/` (ADRs) only when no document owns it (§8) | setup-log.md, Gaps-and-shortcomings-map.md, schema-form/readme.md (decision log) |
 | Known architectural deviations / technical debt | `docs/architecture/findings/` | new register (see §7) |
 | Issues / planned work | GitHub Issues (tracker) | issues.md, FileInputIssues.md, IconLibraryIssues.md, Suggestions.md, all "Future Roadmap" sections |
 
@@ -109,7 +109,7 @@ The order is lowest-risk first, and **create-before-delete**: a source is remove
 1. **Development & project docs (lowest risk, self-contained).**
    Build the `development/` standards — `GitHub.md` + `Ai_ImplementationWorkflow.md` → `engineering-execution-standard.md` (process) and `MyWorkingPrinciples.md` (standards only) → `engineering-principles.md` (code design); **both authored and merged.** Create `docs/project/overview.md` and `docs/project/glossary.md`.
 2. **Architecture, ADRs, and findings.**
-   Create `docs/architecture/system-overview.md` and `docs/architecture/data-model.md`. Initialize `docs/architecture/decisions/` and `docs/architecture/findings/`. Extract durable decisions from `setup-log.md`, `Gaps-and-shortcomings-map.md`, and the `schema-form` decision log into ADRs; record discovered architectural smells (starting with the schema-form ↔ design-system circular dependency, §7) as findings. *(Extraction must complete before the corresponding deletions in step 6.)*
+   Create `docs/architecture/system-overview.md` and `docs/architecture/data-model.md`. Initialize `docs/architecture/decisions/` and `docs/architecture/findings/`. Route durable decisions from `setup-log.md`, `Gaps-and-shortcomings-map.md`, and the `schema-form` decision log to their **natural-owner documents** (an ADR only where a decision has no natural owner, §8); record discovered architectural smells (starting with the schema-form ↔ design-system circular dependency, §7) as findings. *(Durable content must have a home before the corresponding deletions in step 6.)*
 3. **Backend platform docs.**
    Create `docs/backend/conventions.md` and `docs/backend/security.md`, sourcing mechanism rationale from `setup-log.md`/`issues.md` and linking the contract in `api-contract.md`.
 4. **Frontend platform docs.**
@@ -121,7 +121,7 @@ The order is lowest-risk first, and **create-before-delete**: a source is remove
 7. **Index, pointers, and verification (last).**
    Author `docs/README.md` (the documentation map), trim the root `README.md` to point into `docs/`, repoint any remaining cross-links, then run a link-integrity and duplication audit to confirm one-owner-per-fact.
 
-**Ordering invariants:** ADR/finding extraction precedes `setup-log`/`Gaps` deletion; platform docs precede feature docs; all deletions precede the final verification; nothing is deleted while a live link still targets it.
+**Ordering invariants:** capturing durable content in its owning document (and recording findings) precedes `setup-log`/`Gaps` deletion; platform docs precede feature docs; all deletions precede the final verification; nothing is deleted while a live link still targets it.
 
 ---
 
@@ -129,7 +129,7 @@ The order is lowest-risk first, and **create-before-delete**: a source is remove
 
 | Risk | Where it arises | Mitigation |
 |---|---|---|
-| **Information loss** | Deleting `setup-log.md`, `Gaps-and-shortcomings-map.md`, the schema-form decision log | Extract durable decisions into ADRs (and open architectural concerns into findings) and reconcile mechanism rationale into platform docs **before** deletion; per strategy, a file is deleted only after its durable content has an assigned home. Git history preserves chronological narrative. |
+| **Information loss** | Deleting `setup-log.md`, `Gaps-and-shortcomings-map.md`, the schema-form decision log | Capture durable decisions in their natural-owner documents (an ADR only where a decision has no natural owner, §8), record open architectural concerns as findings, and reconcile mechanism rationale into platform docs **before** deletion; per strategy, a file is deleted only after its durable content has an assigned home. Git history preserves chronological narrative. |
 | **Content duplication** | Error taxonomy, auth flow, conventions, and endpoints each appear in multiple sources | Enforce the single-owner table (§3.1): write each fact into its owner once; all other documents link. A duplication audit runs in step 7 before the migration is declared complete. |
 | **Broken internal links** | Cross-references between docs and to soon-deleted files; external links to `src/docs/*` paths | Before moving/deleting, search for inbound references and repoint them to the new owner; perform deletions only after repointing; run a final link-integrity pass; record old→new locations in `docs/README.md` during the transition. |
 | **Responsibility conflicts** | Two-owner files: `shared-api-errors.md` (error → `error-handling.md` + API → `api-client.md`), `MyWorkingPrinciples.md` (principles + mechanisms), `auth_context.md` (feature + platform), `FileInput.md` / `schema-form/readme.md` (reference + build log + roadmap) | Split each file along the strategy's ownership boundary (mechanism → platform, feature-specific → feature, standards → workflow); drop build history (→ Git) and roadmaps (→ issues). Destinations are pre-assigned in §2 so no execution-time ambiguity remains. |
@@ -150,7 +150,7 @@ The order is lowest-risk first, and **create-before-delete**: a source is remove
 | **Delete** | 7 | `setup-log.md`, `issues.md`, `Gaps-and-shortcomings-map.md`, `RightPanel/changelog.md`, `FileInputIssues.md`, `IconLibraryIssues.md`, `Suggestions.md` |
 | **Total reviewed** | **19** | every Markdown file in the repository |
 
-Every existing documentation file has exactly one assigned fate. No file is left undecided. The plan is consistent with [`documentation-strategy.md`](./documentation-strategy.md): a single documentation root, one owner per fact, dedicated owners for the form engine (`frontend/forms.md`) and the API client (`frontend/api-client.md`), a presentation-only design system, no speculative documentation, decisions captured as ADRs, deviations captured as findings, and durable content preserved before any deletion.
+Every existing documentation file has exactly one assigned fate. No file is left undecided. The plan is consistent with [`documentation-strategy.md`](./documentation-strategy.md): a single documentation root, one owner per fact, dedicated owners for the form engine (`frontend/forms.md`) and the API client (`frontend/api-client.md`), a presentation-only design system, no speculative documentation, decisions captured by their owning document (an ADR only when owner-less, §8), deviations captured as findings, and durable content preserved before any deletion.
 
 ---
 

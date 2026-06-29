@@ -136,7 +136,7 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Endpoints, request/response, error shapes | `api/api-contract.md` | every feature document, `backend/conventions.md` |
 | Database field-level truth | `prisma/schema.prisma` (code) | `architecture/data-model.md`, feature documents |
 | Relationship, cascade, and indexing rationale | `architecture/data-model.md` | feature documents |
-| Why an architectural decision was made | `architecture/decisions/` (ADRs) | architecture, backend, frontend, feature documents |
+| Why an architectural decision was made | the decision's **natural-owner document**; `architecture/decisions/` (ADRs) only when no document owns it (§8) | architecture, backend, frontend, feature documents |
 | Known architectural deviations / technical debt | `architecture/findings/` | the affected platform/feature documents (which link to the finding) |
 | Authentication mechanisms (JWT, hashing, cookies, rate limiting) | `backend/security.md` | `features/authentication.md` |
 | Redux / RTK Query mechanics | `frontend/state-and-data.md` | feature documents |
@@ -160,7 +160,7 @@ Existing documentation is consolidated into the single root under `docs/` throug
    - **Keep** — already authoritative and correctly located.
    - **Move** — authoritative content relocated, unchanged in substance, to its category under `docs/`.
    - **Merge** — content folded into the single owning document for its subject.
-   - **Delete** — transient or superseded content removed, with its durable value preserved elsewhere (decisions → ADRs, history → Git, backlog/ideas → issue tracker).
+   - **Delete** — transient or superseded content removed, with its durable value preserved elsewhere (decisions → their natural-owner document, an ADR only when owner-less (§8); history → Git, backlog/ideas → issue tracker).
 3. **No information is lost on deletion.** A document may only be deleted after its durable content has an assigned home.
 4. **Migration is phased and isolated.** Each migration step is performed on its own `docs/` branch, reviewed, and merged independently, consistent with the project's small-PR and single-logical-unit standards.
 5. **One destination per subject.** Migration never produces two homes for the same fact; if two sources describe one subject, they are merged into the single owner.
@@ -175,12 +175,12 @@ The execution of individual moves, merges, and deletions occurs in subsequent do
 An **Architectural Decision Record (ADR)** captures *why* an architecture-level decision was made. ADRs are deliberately few.
 
 ### When to create an ADR
-Create an ADR only when the decision meets the architectural bar — it has long-term architectural impact, is difficult or expensive to reverse, affects multiple parts of the system, and explains a choice rather than an implementation detail.
+Create an ADR only when the decision meets the architectural bar — long-term architectural impact, difficult or expensive to reverse, affects multiple parts of the system, and explains a choice rather than an implementation detail — **and** it either has **no natural authoritative owner** among the project's documents, or **must be preserved independently** of its implementation and future documentation (a repository-wide or constitutional decision). When a decision has a natural platform, contract, or feature document as its owner, **that document owns both the mechanism and its rationale, and no ADR is created** (see [ADR 0002](decisions/0002-refined-adr-threshold.md)).
 
-> The guiding test: **if, one year from now, someone is likely to ask "Why did we choose this approach?", the decision deserves an ADR.**
+> The guiding test: **if, one year from now, someone is likely to ask "Why did we choose this approach?" — *and no other document is that rationale's natural home* — the decision deserves an ADR.**
 
 ### When not to create an ADR
-Do not create ADRs for routine implementation work, small refactors, naming changes, minor improvements, or temporary implementation details. These leave their trace in the code and Git history, not in an ADR.
+Do not create ADRs for routine implementation work, small refactors, naming changes, minor improvements, or temporary implementation details — these leave their trace in the code and Git history, not in an ADR. **Do not create an ADR for a decision that a platform, contract, or feature document naturally owns** — that document records the decision and its rationale; an ADR would split one fact across two homes.
 
 ### ADR rules
 - **Location:** `architecture/decisions/`.
@@ -188,7 +188,7 @@ Do not create ADRs for routine implementation work, small refactors, naming chan
 - **Immutability:** an accepted ADR is never edited to change its decision. If a decision changes, a **new** ADR is written that supersedes the old one, and the old one is marked superseded with a link forward. The historical record is preserved.
 - **Content:** the context that forced the decision, the decision itself, the alternatives considered, and the consequences (trade-offs accepted). ADRs explain *why*, not *how*.
 - **Status:** each ADR carries a status of `Proposed`, `Accepted`, or `Superseded`.
-- **Authority:** ADRs are the single owner of architectural rationale. Other documents link to ADRs rather than re-explaining a decision.
+- **Authority:** ADRs are the single owner of architectural rationale **that no other document owns**. Where a platform, contract, or feature document owns a decision, it owns that decision's rationale too, and an ADR does not duplicate it. Other documents link to ADRs rather than re-explaining a decision they do not own.
 
 ---
 
