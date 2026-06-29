@@ -32,3 +32,6 @@ server/src/generated
 *storybook.log
 storybook-static
 plans
+
+# Local AI working drafts (never committed or pushed)
+.project/
