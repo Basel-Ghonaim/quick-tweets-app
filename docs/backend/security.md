@@ -1,7 +1,7 @@
 # Backend Security
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the backend's **security mechanisms and the reasoning behind them** — authentication and the token model, password handling, the auth cookie, rate limiting, and HTTP hardening. It owns the *how* and the *why*. It does **not** own the wire contract (the auth endpoints, the rate-limit figures, and the auth modes are the [API contract](../api/api-contract.md)'s), the security *principles* it applies ([Engineering Principles §7](../development/engineering-principles.md)), or the **frontend** side of the token model (the in-memory access token and the 401-refresh flow belong to the forthcoming frontend API-client document).
+> **Authority:** The authoritative source for the backend's **security mechanisms and the reasoning behind them** — authentication and the token model, password handling, the auth cookie, rate limiting, and HTTP hardening. It owns the *how* and the *why*. It does **not** own the wire contract (the auth endpoints, the rate-limit figures, and the auth modes are the [API contract](../api/api-contract.md)'s), the security *principles* it applies ([Engineering Principles §7](../development/engineering-principles.md)), or the **frontend** side of the token model (the in-memory access token and the 401-refresh flow belong to the [frontend API client](../frontend/api-client.md)).
 > **Scope:** Server-side security mechanisms shared across the backend. Per-feature authorization rules live in the feature documents; the request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Version:** 1.0
 > **Last Updated:** 2026-06-29
@@ -25,7 +25,7 @@ The two tokens are stored differently **by design**, balancing usability against
 | Access (15 min) | the response body → the client holds it in memory | short-lived, so memory exposure is low-risk |
 | Refresh (7 days) | an **`HttpOnly` cookie** the server sets | long-lived, so it must be unreadable by JavaScript — `HttpOnly` keeps it safe even under XSS |
 
-This document owns the **server** side of that split (issuing the access token, setting the cookie, rotation). The **client** side — holding the access token in memory and replaying requests after a silent refresh — belongs to the frontend API-client document (Phase E).
+This document owns the **server** side of that split (issuing the access token, setting the cookie, rotation). The **client** side — holding the access token in memory and replaying requests after a silent refresh — belongs to the [frontend API client](../frontend/api-client.md).
 
 ## The refresh cookie
 
@@ -80,4 +80,4 @@ These mechanisms are the backend's application of the security principles ([Engi
 
 ---
 
-> This document owns the backend's security mechanisms and their rationale. The wire contract is owned by the API contract, the security principles by Engineering Principles, the error model by the backend conventions, and the frontend token handling by the frontend API-client document — linked here, never duplicated.
+> This document owns the backend's security mechanisms and their rationale. The wire contract is owned by the API contract, the security principles by Engineering Principles, the error model by the backend conventions, and the frontend token handling by the [frontend API client](../frontend/api-client.md) — linked here, never duplicated.
