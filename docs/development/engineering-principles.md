@@ -83,7 +83,7 @@ Principles only — query and pagination mechanics are owned by the backend conv
 
 ## 10. Accessibility Principles
 
-Principle only — component-level details are owned by the design-system document.
+Principle only — component-level details are owned by the [design-system document](../frontend/design-system.md).
 
 - **Accessible by default.** Use semantic HTML, label every control, expose state through ARIA, and ensure full keyboard operability. Accessibility is a requirement, not an enhancement.
 
