@@ -33,7 +33,7 @@ A typical authenticated request travels end to end as follows:
 
 - **Layered modules, dependencies inward.** Each backend feature module is internally layered (controller → service → repository) and depends on abstractions, not concretions — the application of the layering and dependency-inversion principles ([Engineering Principles §3, §5](../development/engineering-principles.md)).
 - **One envelope, one error shape.** Every response is wrapped, and every error — from any layer or any source — is normalized to one typed shape on **both** sides (backend `AppError` ↔ frontend error normalizer). The shapes themselves are owned by the [API contract](../api/api-contract.md).
-- **Token-based authentication.** A short-lived JWT **access token** authorizes API calls; a long-lived **refresh token** renews it without re-login. The token model — how each token is stored, the refresh flow, and session bootstrap — is owned by the backend security and frontend API-client documents.
+- **Token-based authentication.** A short-lived JWT **access token** authorizes API calls; a long-lived **refresh token** renews it without re-login. The token model — how each token is stored, the refresh flow, and session bootstrap — is owned by [Backend Security](../backend/security.md) and the [frontend API client](../frontend/api-client.md).
 - **Defense at the boundary.** Untrusted input is gated before business logic by rate limiting, schema validation, security headers, and auth guards — independent layers, so a single gap is not fatal.
 
 ## Where the details live
@@ -45,7 +45,7 @@ This document owns the topology and lifecycle only; each subsystem's internals a
 | Endpoints, payloads, error shapes, pagination | [API contract](../api/api-contract.md) |
 | Entities, relationships, cascade, indexing | `architecture/data-model.md` (Phase C — the data model's documentation owner) |
 | Backend layering, response wrapper, validation, security mechanisms | `backend/conventions.md` + `backend/security.md` (Phase D) |
-| Axios clients & interceptors, RTK Query, error normalization | `frontend/api-client.md` + `frontend/state-and-data.md` + `frontend/error-handling.md` (Phase E) |
+| Axios clients & interceptors, RTK Query, error normalization | [`frontend/api-client.md`](../frontend/api-client.md) + `frontend/state-and-data.md` + `frontend/error-handling.md` (Phase E) |
 | A known deviation from this intended architecture | [Finding 0001 — schema-form ↔ design-system cycle](findings/0001-schema-form-design-system-cycle.md) |
 
 ---
