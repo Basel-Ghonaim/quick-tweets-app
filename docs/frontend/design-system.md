@@ -60,7 +60,7 @@ The system is organized by responsibility: `foundations/` (tokens + theme), `com
 
 ## Relationship to forms, and a known cycle
 
-Schema-driven **form binding** — the `SchemaField` seam that maps a field type to a design-system control — is owned by the frontend **forms** document (forthcoming — Phase E), not here; this document owns only the presentation controls it consumes. A **circular dependency** between the design system and the form engine currently exists and is recorded, with its intended one-directional end state, in [Finding 0001 — schema-form ↔ design-system cycle](../architecture/findings/0001-schema-form-design-system-cycle.md). It is a known deviation, not intended design.
+Schema-driven **form binding** — the `SchemaField` seam that maps a field type to a design-system control — is owned by the [frontend forms](forms.md) document, not here; this document owns only the presentation controls it consumes. A **circular dependency** between the design system and the form engine currently exists and is recorded, with its intended one-directional end state, in [Finding 0001 — schema-form ↔ design-system cycle](../architecture/findings/0001-schema-form-design-system-cycle.md). It is a known deviation, not intended design.
 
 ## Principles applied
 
@@ -68,4 +68,4 @@ The through-line of these conventions is that quality is made **structural** rat
 
 ---
 
-> This document owns the frontend design-system **conventions**. Form binding and the `SchemaField` seam are owned by the frontend forms document (forthcoming), the app layout by the frontend architecture document (forthcoming), the known schema-form ↔ design-system cycle by [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md), and the underlying principles by [Engineering Principles](../development/engineering-principles.md) — linked here, never duplicated.
+> This document owns the frontend design-system **conventions**. Form binding and the `SchemaField` seam are owned by the [frontend forms](forms.md) document, the app layout by the frontend architecture document (forthcoming), the known schema-form ↔ design-system cycle by [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md), and the underlying principles by [Engineering Principles](../development/engineering-principles.md) — linked here, never duplicated.
