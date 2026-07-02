@@ -194,6 +194,8 @@ interface ErrorBody {
 
 > **Note:** `429` responses are produced by the rate-limiter middleware, not the `AppError` pipeline, and carry `type: "rate_limit"`. `AppError` also defines an equivalent `too_many_requests` (429) type, but it is not currently thrown by any route.
 
+**Across the stack:** this error contract is *produced* by the backend error model ([backend conventions](../backend/conventions.md)), *normalized on the client* by the [frontend error handling](../frontend/error-handling.md) pipeline, and rests on the one-typed-error principle ([Engineering Principles §4](../development/engineering-principles.md)).
+
 ### Rate Limiting
 
 | Scope | Endpoints | Limit | 429 Message |

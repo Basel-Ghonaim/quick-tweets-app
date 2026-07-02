@@ -1,7 +1,7 @@
 # Frontend API Client
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the frontend error-handling document, forthcoming — Phase E), the **RTK Query cache/data layer** (the frontend state-and-data document, forthcoming — Phase E), or the **server** side of the token model ([Backend Security](../backend/security.md)).
+> **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the [frontend error handling](error-handling.md) document), the **RTK Query cache/data layer** (the frontend state-and-data document, forthcoming — Phase E), or the **server** side of the token model ([Backend Security](../backend/security.md)).
 > **Scope:** The shared transport mechanisms in `src/shared/api/` and `src/shared/rtk-query/`. Per-feature data access lives in the feature documents; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Version:** 1.0
 > **Last Updated:** 2026-06-30
@@ -18,7 +18,7 @@ The selection rule is therefore by feature: Authentication is served by the Axio
 
 ## How a request leaves the frontend
 
-Whichever stack issues it, an outgoing request carries the **access token** as an `Authorization: Bearer <token>` header when one is present, and targets the backend under `/api/v1`. Every response — success or failure — is funnelled through error normalization so a caller only ever sees one typed `AppError` (the normalization pipeline is owned by the frontend error-handling document, forthcoming).
+Whichever stack issues it, an outgoing request carries the **access token** as an `Authorization: Bearer <token>` header when one is present, and targets the backend under `/api/v1`. Every response — success or failure — is funnelled through error normalization so a caller only ever sees one typed `AppError` (the normalization pipeline is owned by the [frontend error handling](error-handling.md) document).
 
 Responsibility transitions by feature: an Authentication call goes through the Axios `authClient`; a feature data request goes through an RTK Query endpoint injected on the shared `baseApi`. **In the current implementation, session renewal happens only through the Axios stack** (below) — because Authentication is still implemented on Axios; the RTK Query stack carries the current token but performs no refresh of its own. This reflects where Authentication currently lives, not a rule that the RTK Query stack must never refresh.
 
@@ -41,7 +41,7 @@ Interceptors run in registration order on the way out and reverse order on the w
 
 - **Token attachment** (request) — reads the access token through an **injected callback** and sets the `Authorization` header. The interceptor has no idea where the token is stored, so `shared/` stays free of Redux.
 - **Retry** (response) — exponential backoff (1s → 2s, max 2 retries) for transient failures only: `500/502/503/504` and the network/timeout codes (`ERR_NETWORK`, `ECONNABORTED`). Client `4xx` errors are never retried.
-- **Normalization + 401 refresh** (response) — converts any error to an `AppError` (pipeline owned by the error-handling document) and, on `authClient`, drives the refresh flow.
+- **Normalization + 401 refresh** (response) — converts any error to an `AppError` (pipeline owned by the [frontend error handling](error-handling.md) document) and, on `authClient`, drives the refresh flow.
 
 ### 401 refresh with request replay
 
@@ -57,7 +57,7 @@ Feature requests go through `fetchBaseQuery`, wrapped by `unifiedBaseQuery`:
 
 - **Token attachment** — `prepareHeaders` reads the access token from the auth slice and sets the `Authorization` header. State is read inline (not via a typed `RootState` import) to avoid a store ↔ `baseApi` cycle; the rule and the cache/data layer it protects are owned by the state-and-data document (forthcoming).
 - **No refresh of its own (current implementation)** — this stack neither sends credentials nor performs a `401` refresh; it relies on the access token kept current by the Axios authentication flow. This follows from Authentication currently living on the Axios stack — it is not a permanent constraint on RTK Query.
-- **Normalization** — `unifiedBaseQuery` converts any `fetchBaseQuery` error to an `AppError` before it reaches a hook, so components stay agnostic of the transport (pipeline owned by the error-handling document).
+- **Normalization** — `unifiedBaseQuery` converts any `fetchBaseQuery` error to an `AppError` before it reaches a hook, so components stay agnostic of the transport (pipeline owned by the [frontend error handling](error-handling.md) document).
 
 The cache/data layer built on top — `createApi`, `injectEndpoints`, tag invalidation, and the generated hooks — is owned by the **state-and-data document** (forthcoming — Phase E), not here.
 
@@ -79,8 +79,8 @@ This is the **client** half of the hybrid storage model whose server half — is
 
 ## Principles applied
 
-The transport layer applies the project's principles: dependency inversion (`setupAuthClient` keeps `shared/` free of app knowledge), one typed error shape across both stacks (normalization owned by the error-handling document), and resilience at the edge (bounded retry with backoff) — see [Engineering Principles](../development/engineering-principles.md).
+The transport layer applies the project's principles: dependency inversion (`setupAuthClient` keeps `shared/` free of app knowledge), one typed error shape across both stacks (normalization owned by the [frontend error handling](error-handling.md) document), and resilience at the edge (bounded retry with backoff) — see [Engineering Principles](../development/engineering-principles.md).
 
 ---
 
-> This document owns the frontend's transport layer. The wire contract is owned by the [API contract](../api/api-contract.md), the error-normalization pipeline by the frontend error-handling document (forthcoming), the RTK Query cache/data layer by the frontend state-and-data document (forthcoming), the request lifecycle by the [system overview](../architecture/system-overview.md), and the server side of the token model by [Backend Security](../backend/security.md) — linked here, never duplicated.
+> This document owns the frontend's transport layer. The wire contract is owned by the [API contract](../api/api-contract.md), the error-normalization pipeline by the [frontend error handling](error-handling.md) document, the RTK Query cache/data layer by the frontend state-and-data document (forthcoming), the request lifecycle by the [system overview](../architecture/system-overview.md), and the server side of the token model by [Backend Security](../backend/security.md) — linked here, never duplicated.
