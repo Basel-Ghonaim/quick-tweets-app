@@ -1,7 +1,7 @@
 # Frontend Design System
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the frontend **design-system conventions** — the design-token model, theming, the component-authoring pattern, the variant model, and how the system is organized. It owns the **rules**, not a component catalog: it never documents individual components (`Button`, `Input`, …) prop-by-prop. It does **not** own schema-driven **form binding** and the `SchemaField` seam (the frontend forms document, forthcoming — Phase E), the app layout (the frontend architecture document, forthcoming — Phase E), or the design **principles** these conventions apply ([Engineering Principles](../development/engineering-principles.md)).
+> **Authority:** The authoritative source for the frontend **design-system conventions** — the design-token model, theming, the component-authoring pattern, the variant model, and how the system is organized. It owns the **rules**, not a component catalog: it never documents individual components (`Button`, `Input`, …) prop-by-prop. It does **not** own schema-driven **form binding** and the `SchemaField` seam (the [frontend forms](forms.md) document), the app layout (the [frontend architecture](architecture.md)), or the design **principles** these conventions apply ([Engineering Principles](../development/engineering-principles.md)).
 > **Scope:** The shared UI foundations and components in `src/shared/design-system/`.
 > **Maturity:** This document describes the **currently implemented** design-system conventions. It covers only what exists today and will expand as the system grows; anything not described here is **not yet a stabilized convention** — either not yet built, or present but not yet settled enough to document — and is **not** something the architecture has rejected.
 > **Version:** 1.0
@@ -68,4 +68,4 @@ The through-line of these conventions is that quality is made **structural** rat
 
 ---
 
-> This document owns the frontend design-system **conventions**. Form binding and the `SchemaField` seam are owned by the [frontend forms](forms.md) document, the app layout by the frontend architecture document (forthcoming), the known schema-form ↔ design-system cycle by [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md), and the underlying principles by [Engineering Principles](../development/engineering-principles.md) — linked here, never duplicated.
+> This document owns the frontend design-system **conventions**. Form binding and the `SchemaField` seam are owned by the [frontend forms](forms.md) document, the app layout by the [frontend architecture](architecture.md) document, the known schema-form ↔ design-system cycle by [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md), and the underlying principles by [Engineering Principles](../development/engineering-principles.md) — linked here, never duplicated.
