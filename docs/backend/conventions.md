@@ -45,7 +45,7 @@ Errors use one typed shape, end to end ([Engineering Principles §4](../developm
 - Any layer signals failure by **throwing an `AppError`**, created through a factory method (`AppError.notFound`, `.forbidden`, `.conflict`, `.validation`, `.unauthorized`, …) that carries a `type`, an HTTP `statusCode`, and optional field-level `errors`.
 - A single **global error handler** (the last middleware) catches everything: an `AppError` becomes the error envelope at its status code; any *unknown* error is logged and returned as a generic `500`.
 
-Business code therefore never builds an error response — it throws a typed error and trusts the handler. The error **type taxonomy and status mapping** are owned by the [API contract](../api/api-contract.md); this document owns the *mechanism* — throw an `AppError`, normalize once at the boundary.
+Business code therefore never builds an error response — it throws a typed error and trusts the handler. The error **type taxonomy and status mapping** are owned by the [API contract](../api/api-contract.md); this document owns the *mechanism* — throw an `AppError`, normalize once at the boundary. The frontend normalization of these errors into a client-side `AppError` is owned by the [frontend error handling](../frontend/error-handling.md) pipeline.
 
 ## Request validation
 

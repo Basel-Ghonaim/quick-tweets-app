@@ -45,7 +45,7 @@ This document owns the topology and lifecycle only; each subsystem's internals a
 | Endpoints, payloads, error shapes, pagination | [API contract](../api/api-contract.md) |
 | Entities, relationships, cascade, indexing | `architecture/data-model.md` (Phase C — the data model's documentation owner) |
 | Backend layering, response wrapper, validation, security mechanisms | `backend/conventions.md` + `backend/security.md` (Phase D) |
-| Axios clients & interceptors, RTK Query, error normalization | [`frontend/api-client.md`](../frontend/api-client.md) + `frontend/state-and-data.md` + `frontend/error-handling.md` (Phase E) |
+| Axios clients & interceptors, RTK Query, error normalization | [`frontend/api-client.md`](../frontend/api-client.md) + [`frontend/error-handling.md`](../frontend/error-handling.md) + `frontend/state-and-data.md` (Phase E) |
 | A known deviation from this intended architecture | [Finding 0001 — schema-form ↔ design-system cycle](findings/0001-schema-form-design-system-cycle.md) |
 
 ---

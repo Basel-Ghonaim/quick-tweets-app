@@ -43,7 +43,7 @@ The five SOLID principles are the foundation of every design decision, frontend 
 
 - **DTO / Entity / Mapper.** A **DTO** is the exact shape on the wire; an **Entity** is the domain model used inside the app; a **Mapper** is a pure function that converts between them. Domain logic depends on the Entity, never the wire shape — so a contract change touches only the Mapper.
 - **Repository.** Data access sits behind an interface; concrete implementations (Prisma, Axios, …) fulfill it, and business logic depends on the interface.
-- **One typed error shape.** Every error, from any source, is normalized to a single typed shape before it reaches business logic or the UI. The principle lives here; the error taxonomy and the normalization pipeline are owned by the API contract and the frontend error-handling document.
+- **One typed error shape.** Every error, from any source, is normalized to a single typed shape before it reaches business logic or the UI. The principle lives here; the error taxonomy and the normalization pipeline are owned by the [API contract](../api/api-contract.md) and the [frontend error handling](../frontend/error-handling.md) document.
 
 ## 5. Cross-cutting Patterns
 
