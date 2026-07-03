@@ -22,7 +22,7 @@ The **backend exposes the full product surface; the frontend currently implement
 
 | Capability | Backend | Frontend |
 |---|---|---|
-| **Authentication** — register, login, logout, logout-all, token refresh, current user (JWT access token + HttpOnly refresh cookie; auth rate limiting) | Implemented | Implemented (sign-in / sign-up) |
+| [**Authentication**](../features/authentication.md) — register, login, logout, logout-all, token refresh, current user (JWT access token + HttpOnly refresh cookie; auth rate limiting) | Implemented | Implemented (sign-in / sign-up) |
 | **Tweets** — global feed and author timelines (cursor-paginated), single tweet, create, edit own, delete own | Implemented | Not yet |
 | **Likes** — toggle a like on a tweet | Implemented | Not yet |
 | **Comments** — list per tweet (offset-paginated), create, edit own, delete own | Implemented | Not yet |
@@ -37,7 +37,7 @@ The data model behind these capabilities — `User`, `RefreshToken`, `Tweet`, `C
 
 - **The HTTP surface** — endpoints, payloads, errors, pagination: the [API contract](../api/api-contract.md).
 - **How work is executed**, and how documentation is governed: the [Engineering Execution Standard](../development/engineering-execution-standard.md) and the [Documentation Strategy](../architecture/documentation-strategy.md).
-- **Per-capability behaviour** will be documented in feature documents under `docs/features/` as each capability's documentation is authored.
+- **Per-capability behaviour** lives in feature documents under `docs/features/` — currently [authentication](../features/authentication.md); the remaining capabilities gain theirs as each is authored.
 
 ---
 
