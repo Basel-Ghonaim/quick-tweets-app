@@ -55,6 +55,7 @@ Higher overrides lower. Any override must be **stated, never silent.** Silent dr
 
 Consult the relevant one before deep work; do not duplicate it here.
 
+- **Documentation map** (every document, classified, with its owner — the navigation entry point) → `docs/README.md`
 - **Documentation governance** → `docs/architecture/documentation-strategy.md`
 - **Documentation migration plan** → `docs/architecture/documentation-migration-plan.md`
 - **API contract** (single source for endpoints, payloads, error shapes) → `docs/api/api-contract.md`

@@ -27,7 +27,7 @@
 
 These appear across the project but are defined and owned by other documents — consult them rather than redefining the terms here:
 
-- **Access token, refresh token, JWT, rate limiting** — authentication mechanisms; see the [API contract](../api/api-contract.md) (and the backend security document once it is authored).
+- **Access token, refresh token, JWT, rate limiting** — authentication mechanisms; see the [API contract](../api/api-contract.md) and [Backend Security](../backend/security.md).
 - **Response wrapper, cursor / offset pagination, error type, `AuthorEmbed`** — wire-level shapes; owned by the [API contract](../api/api-contract.md).
 - **Work Item, branch, Pull Request, Definition of Done / Accepted** — execution process; owned by the [Engineering Execution Standard](../development/engineering-execution-standard.md).
 - **ADR, Finding, platform vs. feature document, one-owner-per-fact** — documentation governance; owned by the [Documentation Strategy](../architecture/documentation-strategy.md).
