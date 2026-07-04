@@ -1,7 +1,7 @@
 # Frontend API Client
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the [frontend error handling](error-handling.md) document), the **RTK Query cache/data layer** (the frontend state-and-data document, forthcoming — Phase E), or the **server** side of the token model ([Backend Security](../backend/security.md)).
+> **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the [frontend error handling](error-handling.md) document), the **RTK Query cache/data layer** (the frontend state-and-data document, deferred), or the **server** side of the token model ([Backend Security](../backend/security.md)).
 > **Scope:** The shared transport mechanisms in `src/shared/api/` and `src/shared/rtk-query/`. Per-feature data access lives in the feature documents; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Version:** 1.0
 > **Last Updated:** 2026-06-30
@@ -55,11 +55,11 @@ When `authClient` receives a `401`, it refreshes **once** and replays: the refre
 
 Feature requests go through `fetchBaseQuery`, wrapped by `unifiedBaseQuery`:
 
-- **Token attachment** — `prepareHeaders` reads the access token from the auth slice and sets the `Authorization` header. State is read inline (not via a typed `RootState` import) to avoid a store ↔ `baseApi` cycle; the rule and the cache/data layer it protects are owned by the state-and-data document (forthcoming).
+- **Token attachment** — `prepareHeaders` reads the access token from the auth slice and sets the `Authorization` header. State is read inline (not via a typed `RootState` import) to avoid a store ↔ `baseApi` cycle; the rule and the cache/data layer it protects are owned by the state-and-data document (deferred).
 - **No refresh of its own (current implementation)** — this stack neither sends credentials nor performs a `401` refresh; it relies on the access token kept current by the Axios authentication flow. This follows from Authentication currently living on the Axios stack — it is not a permanent constraint on RTK Query.
 - **Normalization** — `unifiedBaseQuery` converts any `fetchBaseQuery` error to an `AppError` before it reaches a hook, so components stay agnostic of the transport (pipeline owned by the [frontend error handling](error-handling.md) document).
 
-The cache/data layer built on top — `createApi`, `injectEndpoints`, tag invalidation, and the generated hooks — is owned by the **state-and-data document** (forthcoming — Phase E), not here.
+The cache/data layer built on top — `createApi`, `injectEndpoints`, tag invalidation, and the generated hooks — is owned by the **state-and-data document** (deferred), not here.
 
 ## Base URL configuration
 
@@ -83,4 +83,4 @@ The transport layer applies the project's principles: dependency inversion (`set
 
 ---
 
-> This document owns the frontend's transport layer. The wire contract is owned by the [API contract](../api/api-contract.md), the error-normalization pipeline by the [frontend error handling](error-handling.md) document, the RTK Query cache/data layer by the frontend state-and-data document (forthcoming), the request lifecycle by the [system overview](../architecture/system-overview.md), and the server side of the token model by [Backend Security](../backend/security.md) — linked here, never duplicated.
+> This document owns the frontend's transport layer. The wire contract is owned by the [API contract](../api/api-contract.md), the error-normalization pipeline by the [frontend error handling](error-handling.md) document, the RTK Query cache/data layer by the frontend state-and-data document (deferred), the request lifecycle by the [system overview](../architecture/system-overview.md), and the server side of the token model by [Backend Security](../backend/security.md) — linked here, never duplicated.
