@@ -33,7 +33,7 @@ The rationale: the model has no meaningful orphan — a comment without its twee
 
 Indexes exist to serve the product's hot read paths; each maps to a query the application actually runs:
 
-- **Tweets** are indexed by creation time (descending) for the **global feed**, and by author for **author timelines**.
+- **Tweets** carry a **creation-time (descending)** index and an **author** index (the author index serves **author timelines**). Whether the creation-time index backs the **global feed** is disputed: the feed query currently orders and cursors on `id` (the primary key), not `createdAt` — see [Finding 0003](findings/0003-feed-index-vs-id-ordering.md).
 - **Comments** are indexed by tweet (the "comments on this tweet" query) and by author.
 - **Likes** are indexed by tweet (per-tweet like counts) and carry a **unique (user, tweet)** constraint — a user can like a tweet at most once, which makes liking idempotent.
 - **Follows** carry a **unique (follower, followed)** constraint — you cannot follow someone twice — and are indexed in **both directions**: by follower ("who do I follow", which drives the feed) and by followed ("who follows me", which drives follower counts).
