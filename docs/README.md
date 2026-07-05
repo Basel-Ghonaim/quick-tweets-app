@@ -15,7 +15,7 @@ This is the **map** of the project's documentation — every document, what it o
 - [system-overview.md](architecture/system-overview.md) — topology and the end-to-end request lifecycle across frontend, backend, and database.
 - [data-model.md](architecture/data-model.md) — schema rationale: entities, relationships, cascade, and indexing.
 - [decisions/](architecture/decisions/) — Architectural Decision Records: [0001](architecture/decisions/0001-constitutional-architecture-reconciliation.md) (constitutional reconciliation), [0002](architecture/decisions/0002-refined-adr-threshold.md) (the refined ADR threshold).
-- [findings/](architecture/findings/) — recorded deviations from the intended architecture: [0001](architecture/findings/0001-schema-form-design-system-cycle.md) (schema-form ↔ design-system cycle), [0002](architecture/findings/0002-modules-app-store-dependency.md) (modules → app-store dependency).
+- [findings/](architecture/findings/) — recorded deviations from the intended architecture: [0001](architecture/findings/0001-schema-form-design-system-cycle.md) (schema-form ↔ design-system cycle), [0002](architecture/findings/0002-modules-app-store-dependency.md) (modules → app-store dependency), [0003](architecture/findings/0003-feed-index-vs-id-ordering.md) (feed ordering vs the `createdAt` index).
 - [documentation-migration-plan.md](architecture/documentation-migration-plan.md) — the execution plan that consolidated the earlier scattered docs into this set (historical reference).
 
 ### `api/` — the contract between frontend and backend
