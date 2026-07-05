@@ -1,6 +1,6 @@
 # Documentation Migration Plan
 
-> **Status:** Active reference for all documentation migration phases.
+> **Status:** **Complete.** The migration is executed and verified — the final audit (Work Item G3) is merged, and every fact now has a single owner under `docs/`. This plan is retained as a historical reference. The **single deliberate deferral** is the frontend `state-and-data.md` document (**E2**, deferred by the Stable-Core rule); its continuity — reason, re-evaluation trigger (#185 / #186), and interim source `src/docs/rtk-query-strategy.md` — is preserved in [#272](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/272).
 > **Authority:** This document is the official, binding plan for consolidating all existing documentation into the single root defined by [`documentation-strategy.md`](./documentation-strategy.md). Every migration phase must follow the inventory, decisions, ownership assignments, order, and risk controls recorded here.
 > **Scope:** Analysis and planning only. This document moves, merges, or deletes nothing. It records *what* will happen, *where* each fact will live, and *in what order* — so that execution phases are mechanical and reversible.
 > **Governing standard:** [`documentation-strategy.md`](./documentation-strategy.md). This plan is synchronized with the finalized strategy, including the dedicated owners `frontend/forms.md` and `frontend/api-client.md`, the narrowed `frontend/design-system.md`, and the `architecture/findings/` register.
