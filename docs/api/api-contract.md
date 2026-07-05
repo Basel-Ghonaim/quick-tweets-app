@@ -92,13 +92,11 @@ Every API response follows this standardized format:
 ```typescript
 {
   success: false,
-  error: {
-    type: "validation" | "unauthorized" | "forbidden" | "not_found" | "conflict" | "server",
-    message: string,
-    errors?: Record<string, string[]>  // field-level validation errors
-  }
+  error: ErrorBody
 }
 ```
+
+The `ErrorBody` shape — the complete `type` taxonomy, the `message`, and optional field-level `errors` — is defined once under [Shared Types](#shared-types) below.
 
 ---
 
@@ -119,8 +117,7 @@ interface AuthorEmbed {
 
 ### CursorPaginationMeta
 
-Used for high-growth, chronological data (tweets, followers/following lists).
-Cursor is the `id` of the last item — auto-incrementing IDs guarantee chronological order.
+The cursor is the `id` of the last item returned. When cursor pagination is used, and why, is owned by the [backend pagination convention](../backend/conventions.md#pagination).
 
 ```typescript
 interface CursorPaginationMeta {
@@ -136,7 +133,7 @@ interface CursorPaginationMeta {
 
 ### OffsetPaginationMeta
 
-Used for small, bounded datasets (comments on a tweet).
+When offset pagination is used, and why, is owned by the [backend pagination convention](../backend/conventions.md#pagination).
 
 ```typescript
 interface OffsetPaginationMeta {
