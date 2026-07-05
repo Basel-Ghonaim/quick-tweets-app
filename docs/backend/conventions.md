@@ -58,10 +58,10 @@ Numeric query params (`cursor`, `limit`, `page`) are coerced and bounded in the 
 
 ## Pagination
 
-Two conventions, chosen by the shape of the data — the rationale and the supporting indexes are owned by the [data model](../architecture/data-model.md), the `meta` shapes by the [API contract](../api/api-contract.md):
+Two conventions, chosen by the shape of the data. **This document owns the selection rule and its rationale;** the `meta` shapes and the endpoint-to-convention mapping are owned by the [API contract](../api/api-contract.md#cursorpaginationmeta), and the supporting indexes by the [data model](../architecture/data-model.md):
 
-- **Cursor** — for unbounded, chronological lists (the feed, author timelines, follower/following lists). The repository fetches **`limit + 1`** rows from the cursor; the service uses the extra row to set `hasMore`, trims to `limit`, and returns `nextCursor` (the last id) or `null`. This avoids a `COUNT` per page and is stable under inserts and deletes.
-- **Offset** — for small, bounded lists (comments on a tweet). The service computes `skip = (page − 1) × limit`, runs the page query and a `count` in parallel, and returns `currentPage` / `totalPages` / `hasNextPage` / `hasPreviousPage` for a page navigator.
+- **Cursor** — for unbounded, chronological lists. The repository fetches **`limit + 1`** rows from the cursor; the service uses the extra row to set `hasMore`, trims to `limit`, and returns `nextCursor` (the last id) or `null`. This avoids a `COUNT` per page and is stable under inserts and deletes.
+- **Offset** — for small, bounded lists. The service computes `skip = (page − 1) × limit`, runs the page query and a `count` in parallel, and returns `currentPage` / `totalPages` / `hasNextPage` / `hasPreviousPage` for a page navigator.
 
 Both keep queries **bounded** and fetch related data in one query to avoid N+1 ([Engineering Principles §9](../development/engineering-principles.md)).
 
