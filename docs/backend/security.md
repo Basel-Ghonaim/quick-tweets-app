@@ -22,7 +22,7 @@ The two tokens are stored differently **by design**, balancing usability against
 
 | Token | Lives in | Why |
 |---|---|---|
-| Access (15 min) | the response body → the client holds it in memory | short-lived, so memory exposure is low-risk |
+| Access (15 min) | the **response body** (not a cookie) | short-lived, and handed to the client to attach as a bearer header rather than locked in a cookie; the client-side in-memory storage and its rationale are owned by the [frontend API client](../frontend/api-client.md#the-client-side-of-the-token-model) |
 | Refresh (7 days) | an **`HttpOnly` cookie** the server sets | long-lived, so it must be unreadable by JavaScript — `HttpOnly` keeps it safe even under XSS |
 
 This document owns the **server** side of that split (issuing the access token, setting the cookie, rotation). The **client** side — holding the access token in memory and replaying requests after a silent refresh — belongs to the [frontend API client](../frontend/api-client.md).
