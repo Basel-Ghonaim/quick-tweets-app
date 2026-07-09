@@ -30,9 +30,21 @@ import { AppError } from "../shared/errors/index.js";
 export const validate = (schema: ZodSchema, source: "body" | "query" = "body") => {
   return (req: Request, _res: Response, next: NextFunction) => {
     try {
-      // Parse and replace source with validated, typed data
+      // Parse, then replace the source with the validated, typed data.
       const parsed = schema.parse(req[source]);
-      req[source] = parsed;
+      if (source === "query") {
+        // Express 5's `req.query` is a getter with no setter, so assigning to it
+        // throws. Shadow it with an own data property carrying the parsed value,
+        // so controllers keep reading the coerced query from `req.query`.
+        Object.defineProperty(req, "query", {
+          value: parsed,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
+      } else {
+        req[source] = parsed;
+      }
       next();
     } catch (err) {
       if (err instanceof ZodError) {
