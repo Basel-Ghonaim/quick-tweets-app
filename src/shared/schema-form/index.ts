@@ -5,6 +5,7 @@ export {
   isEmailFormat,
   isLengthChecked,
   isMatch,
+  matchesPattern,
 } from "./validators/coreValidators";
 export type {
   FormFieldConfig,

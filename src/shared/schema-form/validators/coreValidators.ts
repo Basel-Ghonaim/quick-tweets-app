@@ -55,3 +55,26 @@ export const isMatch = <T extends FormPayload>(
     return value !== target ? message : null;
   };
 };
+
+/**
+ * The value must match `pattern`; empty / non-string values pass (compose with
+ * `isRequired` for presence).
+ *
+ * Normalizes away the `g`/`y` flags once: a global or sticky regex keeps a mutable
+ * `lastIndex` between `.test()` calls, so reusing it would make repeated
+ * validations return alternating results — and the copy avoids mutating the
+ * caller's regex.
+ */
+export const matchesPattern = (
+  pattern: RegExp,
+  message: string = "Invalid format",
+): ValidatorFn => {
+  const stateless =
+    pattern.global || pattern.sticky
+      ? new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, ""))
+      : pattern;
+  return (value) => {
+    if (!value || typeof value !== "string") return null;
+    return stateless.test(value) ? null : message;
+  };
+};

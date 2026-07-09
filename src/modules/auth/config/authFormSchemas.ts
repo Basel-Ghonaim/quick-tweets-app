@@ -5,10 +5,48 @@ import {
   isEmailFormat,
   isLengthChecked,
   isMatch,
+  matchesPattern,
 } from "@shared/schema-form";
 import { VALIDATION_MESSAGES } from "./validationMessages";
+import { newPasswordPolicy, usernameRules, nameRules } from "./authValidationRules";
 
+// ─── Login: identity check only ──────────────────────────────────────────────
+// Presence only — login checks an existing credential and must not apply the
+// account-creation policy (matches the backend loginSchema).
 const loginFields = {
+  username: {
+    name: "username",
+    type: "text",
+    label: "Username",
+    placeholder: "johndoe",
+    validators: [isRequired(VALIDATION_MESSAGES.required("Username"))],
+  },
+  password: {
+    name: "password",
+    type: "password",
+    label: "Password",
+    placeholder: "Your password",
+    validators: [isRequired(VALIDATION_MESSAGES.required("Password"))],
+  },
+} satisfies Record<keyof LoginCredentials, FormFieldConfig<LoginCredentials>>;
+
+// ─── Register: full field rules + the New Password Policy ─────────────────────
+// Deliberately not built from loginFields — that coupling is how the stale
+// max(16) leaked into login. The backend re-validates independently.
+const registerFields = {
+  name: {
+    name: "name",
+    type: "text",
+    label: "Full Name",
+    placeholder: "John Doe",
+    validators: [
+      isRequired(VALIDATION_MESSAGES.required("Name")),
+      isLengthChecked(
+        undefined,
+        VALIDATION_MESSAGES.maxLength(nameRules.maxLength),
+      ),
+    ],
+  },
   username: {
     name: "username",
     type: "text",
@@ -17,9 +55,10 @@ const loginFields = {
     validators: [
       isRequired(VALIDATION_MESSAGES.required("Username")),
       isLengthChecked(
-        VALIDATION_MESSAGES.minLength(4),
-        VALIDATION_MESSAGES.maxLength(20),
+        VALIDATION_MESSAGES.minLength(usernameRules.minLength),
+        VALIDATION_MESSAGES.maxLength(usernameRules.maxLength),
       ),
+      matchesPattern(usernameRules.charset, VALIDATION_MESSAGES.usernameCharset),
     ],
   },
   password: {
@@ -30,22 +69,27 @@ const loginFields = {
     validators: [
       isRequired(VALIDATION_MESSAGES.required("Password")),
       isLengthChecked(
-        VALIDATION_MESSAGES.minLength(8),
-        VALIDATION_MESSAGES.maxLength(16),
+        VALIDATION_MESSAGES.minLength(newPasswordPolicy.minLength),
+        VALIDATION_MESSAGES.maxLength(newPasswordPolicy.maxLength),
+      ),
+      matchesPattern(
+        newPasswordPolicy.lowercase,
+        VALIDATION_MESSAGES.passwordComplexity.lowercase,
+      ),
+      matchesPattern(
+        newPasswordPolicy.uppercase,
+        VALIDATION_MESSAGES.passwordComplexity.uppercase,
+      ),
+      matchesPattern(
+        newPasswordPolicy.digit,
+        VALIDATION_MESSAGES.passwordComplexity.digit,
+      ),
+      matchesPattern(
+        newPasswordPolicy.special,
+        VALIDATION_MESSAGES.passwordComplexity.special,
       ),
     ],
   },
-} satisfies Record<keyof LoginCredentials, FormFieldConfig<LoginCredentials>>;
-
-const registerFields = {
-  name: {
-    name: "name",
-    type: "text",
-    label: "Full Name",
-    placeholder: "John Doe",
-    validators: [isRequired(VALIDATION_MESSAGES.required("Name"))],
-  },
-  ...loginFields,
   email: {
     name: "email",
     type: "email",
@@ -56,7 +100,6 @@ const registerFields = {
       isEmailFormat(),
     ],
   },
-
   confirmPassword: {
     name: "confirmPassword",
     type: "password",
@@ -90,9 +133,9 @@ export const authFormSchemas = {
   registerFields: {
     profileImage: { ...registerFields.profileImage, span: "full" },
     name: { ...registerFields.name, span: "half" },
-    username: { ...loginFields.username, span: "half" },
+    username: { ...registerFields.username, span: "half" },
     email: { ...registerFields.email, span: "full" },
-    password: { ...loginFields.password, span: "half" },
+    password: { ...registerFields.password, span: "half" },
     confirmPassword: { ...registerFields.confirmPassword, span: "half" },
     privacy: { ...registerFields.privacy, span: "full" },
   } satisfies Record<string, FormFieldConfig<RegisterCredentials>>,
