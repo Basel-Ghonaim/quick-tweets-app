@@ -11,9 +11,8 @@ import { VALIDATION_MESSAGES } from "./validationMessages";
 import { newPasswordPolicy, usernameRules, nameRules } from "./authValidationRules";
 
 // ─── Login: identity check only ──────────────────────────────────────────────
-// Login validates an EXISTING credential — it never applies the account-creation
-// policy (matches the backend `loginSchema`, which requires presence only). The
-// New Password Policy lives on the register fields below, not here.
+// Presence only — login checks an existing credential and must not apply the
+// account-creation policy (matches the backend loginSchema).
 const loginFields = {
   username: {
     name: "username",
@@ -32,9 +31,8 @@ const loginFields = {
 } satisfies Record<keyof LoginCredentials, FormFieldConfig<LoginCredentials>>;
 
 // ─── Register: full field rules + the New Password Policy ─────────────────────
-// Deliberately NOT built from `loginFields` (that coupling is how the stale
-// max(16) cap leaked into both flows). Rule sources come from
-// `authValidationRules.ts`; the backend re-validates independently.
+// Deliberately not built from loginFields — that coupling is how the stale
+// max(16) leaked into login. The backend re-validates independently.
 const registerFields = {
   name: {
     name: "name",

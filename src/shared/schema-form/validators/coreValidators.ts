@@ -57,16 +57,13 @@ export const isMatch = <T extends FormPayload>(
 };
 
 /**
- * Validates that a non-empty string matches a regular expression.
+ * The value must match `pattern`; empty / non-string values pass (compose with
+ * `isRequired` for presence).
  *
- * Generic primitive — the caller supplies the pattern. Guards against regex
- * statefulness: a pattern carrying the global (`g`) or sticky (`y`) flag keeps a
- * mutable `lastIndex` between `.test()` calls, which would make repeated
- * validations return alternating results. We normalize to a stateless copy once
- * (stripping `g`/`y`), so every call is deterministic and the caller's regex is
- * never mutated.
- *
- * Empty / non-string values pass — compose with `isRequired` for presence.
+ * Normalizes away the `g`/`y` flags once: a global or sticky regex keeps a mutable
+ * `lastIndex` between `.test()` calls, so reusing it would make repeated
+ * validations return alternating results — and the copy avoids mutating the
+ * caller's regex.
  */
 export const matchesPattern = (
   pattern: RegExp,
