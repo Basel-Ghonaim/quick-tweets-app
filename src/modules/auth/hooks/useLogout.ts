@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAppSelector } from "@app/store";
+import { useAuthSelector } from "../store/hooks";
 import { useRequestState } from "@shared/hooks";
 import { useAuthActions } from "./useAuthActions";
 
@@ -11,7 +11,7 @@ import { useAuthActions } from "./useAuthActions";
 export const useLogout = () => {
   const { logout } = useAuthActions();
 
-  const requestState = useAppSelector((state) => state.auth.requests.logout);
+  const requestState = useAuthSelector((state) => state.auth.requests.logout);
 
   const {
     isSuccess,

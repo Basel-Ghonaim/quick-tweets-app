@@ -1,4 +1,4 @@
-import { useAppSelector } from "@app/store";
+import { useAuthSelector } from "../store/hooks";
 import { useRequestState } from "@shared/hooks";
 import type { AppError } from "@shared/errors";
 import {
@@ -36,7 +36,7 @@ const useAuthFormBase = <
   action: (values: FormValue<TSchema>) => Promise<void>,
   requestType: AuthFlowType,
 ): AuthFlowReturn<TSchema> => {
-  const requestState = useAppSelector(
+  const requestState = useAuthSelector(
     (state) => state.auth.requests[requestType],
   );
   const {

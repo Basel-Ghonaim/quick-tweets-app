@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppDispatch } from "@app/store";
+import { useAuthDispatch } from "../store/hooks";
 import { restAuth } from "../repository/restAuth";
 import { authActions } from "../store";
 import { authSessionService } from "../services";
@@ -16,7 +16,7 @@ import { authSessionService } from "../services";
  */
 export const useInitAuth = () => {
   const [isInitializing, setIsInitializing] = useState(true);
-  const dispatch = useAppDispatch();
+  const dispatch = useAuthDispatch();
 
   useEffect(() => {
     const init = async () => {

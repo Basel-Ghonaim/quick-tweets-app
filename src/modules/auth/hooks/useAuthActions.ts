@@ -1,5 +1,5 @@
 import { createAppError, type AppError } from "@shared/errors";
-import { useAppDispatch } from "@app/store";
+import { useAuthDispatch } from "../store/hooks";
 
 import { restAuth } from "../repository/restAuth";
 import { authActions, type AuthRequestType } from "../store";
@@ -8,7 +8,7 @@ import type { AuthResponse } from "../entity";
 import type { LoginCredentials, RegisterCredentials } from "../types";
 
 export const useAuthActions = () => {
-  const dispatch = useAppDispatch();
+  const dispatch = useAuthDispatch();
   const repo = restAuth();
   const { authRequestFulfilled, authRequestPending, authRequestRejected } =
     authActions;

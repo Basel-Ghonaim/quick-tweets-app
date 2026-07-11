@@ -1,7 +1,8 @@
 # Finding 0002: Feature modules depend on the app zone's typed store hooks
 
-> **Status:** Open
+> **Status:** Resolved
 > **Date:** 2026-07-02
+> **Resolved:** 2026-07-11 (PR #287)
 > **Affected areas:** `src/modules/auth/hooks`, `src/app/store`
 > **Reported by:** Basel Ghonaim (surfaced by the E6 documentation review, Work Item #252)
 
@@ -37,6 +38,12 @@ The misplaced responsibility is the **typed store hooks**: they are consumed by 
 ## Resolution direction (not scheduled here)
 
 The intended end state keeps the rule strict: `modules/` never import `app/`. The typed hooks (or equivalents) must become consumable from **below** the module boundary — candidate remedies are hosted in [Issue #253](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/253), which owns the fix. A finding records the problem; it does not schedule the fix (Documentation Strategy §9).
+
+## Resolution
+
+Resolved on 2026-07-11 by [PR #287](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/287) (Issue #253).
+
+The misplaced responsibility — the typed store hooks — was relocated **below** the module boundary. The auth module now owns `useAuthSelector` / `useAuthDispatch` in `src/modules/auth/store/hooks.ts`, typed against its **own** slice (`{ auth: AuthState }`) through react-redux directly rather than the app-composed `RootState`. No `@app/store` import remains under `src/modules/`, so the `modules → app` edge — and the `app ↔ modules` cycle — is removed; the dependency now points one way (`modules → react-redux`). The change is compile-time-only (behavior-preserving): the selectors and dispatched actions are unchanged. A node store-level characterization test (`src/modules/auth/store/authStoreContract.test.ts`) locks the auth store-access contract the hooks depend on.
 
 ## Links
 
