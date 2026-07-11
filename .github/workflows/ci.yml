@@ -28,6 +28,10 @@ jobs:
     defaults:
       run:
         working-directory: server
+    env:
+      # Placeholder — `prisma generate` reads the schema but does not connect to a
+      # database, so no real DATABASE_URL is needed to generate the client.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/quick_tweets?schema=public"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,5 +40,6 @@ jobs:
           cache: npm
           cache-dependency-path: server/package-lock.json
       - run: npm ci
+      - run: npm run db:generate # generate the Prisma client (gitignored; required to type-check)
       - run: npm run typecheck
       - run: npm run test
