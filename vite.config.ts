@@ -24,7 +24,17 @@ export default defineConfig({
     }
   },
   test: {
-    projects: [{
+    projects: [
+      {
+        // Fast unit lane (Node env) — the CI gate runs this project only.
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.{test,spec}.{ts,tsx}'],
+        },
+      },
+      {
       extends: true,
       plugins: [
       // The plugin will run tests for the stories defined in your Storybook config

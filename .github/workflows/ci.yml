@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Lightweight gate: type-check + fast unit tests for both tiers.
+# The Storybook/Playwright browser tests and the build step are intentionally
+# out of this gate for now.
+jobs:
+  frontend:
+    name: Frontend — typecheck + unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test
+
+  backend:
+    name: Backend — typecheck + unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    env:
+      # Placeholder — `prisma generate` reads the schema but does not connect to a
+      # database, so no real DATABASE_URL is needed to generate the client.
+      DATABASE_URL: "postgresql://user:password@localhost:5432/quick_tweets?schema=public"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run db:generate # generate the Prisma client (gitignored; required to type-check)
+      - run: npm run typecheck
+      - run: npm run test
