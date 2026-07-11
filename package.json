@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "test": "vitest run --project unit",
+    "test:storybook": "vitest run --project storybook"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
