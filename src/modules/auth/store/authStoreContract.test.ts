@@ -81,8 +81,6 @@ describe("auth store-access contract (#253)", () => {
     expect(auth.requests.login).toEqual({ status: "success", error: null });
     expect(auth.user).toEqual(user);
     expect(auth.accessToken).toBe("tok-123");
-    // useAuthState.isLoggedIn: both present → logged in.
-    expect(!!auth.accessToken && !!auth.user).toBe(true);
   });
 
   it("records the error and marks error on rejected (what useAuthFlow surfaces)", () => {
