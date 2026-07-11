@@ -4,20 +4,23 @@
  * SchemaField is the type→control seam: given a field `type` it selects the
  * matching design-system control and wires the field's value, error, and change
  * handler, wrapping the result in `<div data-span data-type>`. Issue #248
- * relocates this seam out of the design system and into the form engine (a
+ * relocated this seam out of the design system and into the form engine (a
  * verbatim move — the engine consumes the controls, not the reverse) to resolve
  * Finding 0001. This test locks the seam's observable behavior — the wrapper
  * attributes, the control chosen per field type, and the props wired to it — so
- * the move can be shown behavior-preserving.
+ * the move is shown behavior-preserving.
  *
  * SchemaField is a pure, hookless function component, so it is characterized in
  * the Node unit lane by invoking it directly and inspecting the returned React
- * element tree — no DOM, no renderer. The test's import path moves with the
- * component in the refactor; the assertions below do not change.
+ * element tree — no DOM, no renderer, no new test dependencies. The controls it
+ * selects (Input / Checkbox / FileInput) are imported from the design system, so
+ * element identity (`child.type === Input`) confirms the seam's one-directional
+ * dependency on the design system.
  */
 import { describe, it, expect } from "vitest";
 import type { ReactElement } from "react";
-import { SchemaField, Input, Checkbox, FileInput } from "@shared/design-system";
+import { SchemaField } from "@shared/schema-form";
+import { Input, Checkbox, FileInput } from "@shared/design-system";
 
 type Props = Parameters<typeof SchemaField>[0];
 type El = ReactElement<Record<string, unknown>>;

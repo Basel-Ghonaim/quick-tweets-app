@@ -1,4 +1,8 @@
-import type { FormChangeHandler, FieldType, FieldSpan } from "@shared/schema-form";
+import type {
+  FormChangeHandler,
+  FieldType,
+  FieldSpan,
+} from "../../types/schema.types";
 
 export interface SchemaFieldProps {
   name: string;
