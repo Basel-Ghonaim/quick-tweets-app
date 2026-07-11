@@ -4,11 +4,9 @@ import { useRequestState } from "@shared/hooks";
 import { useAuthActions } from "./useAuthActions";
 
 /**
- * NOTE: `isLoading` is intentionally absent. The `logout` action is
- * synchronous — it never dispatches `authRequestPending`, so the loading
- * state will permanently remain `false`. When a server-side token revocation
- * call is added (refresh token support), this hook must be updated to handle
- * the async flow and expose `isLoading`.
+ * `isLoading` is intentionally not surfaced: no caller needs a logout spinner
+ * yet. The logout request does pass through a real loading state, so it can be
+ * added from `useRequestState` when a consumer needs one.
  */
 export const useLogout = () => {
   const { logout } = useAuthActions();
