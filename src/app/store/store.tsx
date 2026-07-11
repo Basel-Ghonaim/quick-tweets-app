@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer } from "../../modules/auth/store";
-import { baseApi } from "../../shared/rtk-query/baseApi";
+import { authReducer } from "@modules/auth/store";
+import { baseApi } from "@shared/rtk-query";
 import { setupListeners } from "@reduxjs/toolkit/query/react";
 
 export const reduxStore = configureStore({
