@@ -1,7 +1,7 @@
 import { useRegisterFlow } from "../../../hooks";
 import { authFormSchemas } from "../../../config/authFormSchemas";
-import { toFieldEntries } from "@shared/schema-form";
-import { SchemaField, Button } from "@shared/design-system";
+import { toFieldEntries, SchemaField } from "@shared/schema-form";
+import { Button } from "@shared/design-system";
 import { OAuthButtons } from "../OAuthButtons/OAuthButtons";
 import styles from "./AuthForm.module.css";
 

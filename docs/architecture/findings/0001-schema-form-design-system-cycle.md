@@ -1,7 +1,8 @@
 # Finding 0001: Circular dependency between the schema-form engine and the design system
 
-> **Status:** Open
+> **Status:** Resolved
 > **Date:** 2026-06-28
+> **Resolved:** 2026-07-11 (PR #288)
 > **Affected areas:** `src/shared/schema-form`, `src/shared/design-system`
 > **Reported by:** Basel Ghonaim
 
@@ -40,6 +41,12 @@ The two are not a re-export of one another; they are independent, behaviourally 
 ## Resolution direction (not scheduled here)
 
 The intended end state is a one-directional `schema-form → design-system` dependency with a single `SchemaField` seam owned by the form engine. Candidate fixes — relocating the shared form types so the design system no longer imports `@shared/schema-form`, and removing the design-system-side `SchemaField` — belong to a **future refactoring Work Item**. A finding records the problem; it does not schedule the fix (Documentation Strategy §9).
+
+## Resolution
+
+Resolved on 2026-07-11 by [PR #288](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/288) (Issue #248).
+
+The single canonical `SchemaField` — the live, richer implementation — was relocated out of the design system into the form engine (`src/shared/schema-form/components/SchemaField/`), where it **consumes** the design system's controls (`Input` / `Checkbox` / `FileInput`) and sources its field types locally. This establishes the intended one-directional **`schema-form → design-system`** dependency: no `@shared/schema-form` import remains anywhere under `src/shared/design-system/`. The dead, drifted duplicate in the form engine and the design-system copy were removed, leaving exactly one `SchemaField` implementation in the repository. The move is behavior-preserving — control selection and prop-wiring are unchanged — and a node-level characterization test (`src/shared/schema-form/components/SchemaField/SchemaField.test.tsx`) locks the seam's observable behavior.
 
 ## Links
 

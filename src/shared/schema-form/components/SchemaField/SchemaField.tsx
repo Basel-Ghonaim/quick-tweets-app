@@ -1,6 +1,4 @@
-import { Input } from "../Input";
-import { Checkbox } from "../Checkbox";
-import { FileInput } from "../FileInput";
+import { Input, Checkbox, FileInput } from "@shared/design-system";
 import type { SchemaFieldProps } from "./SchemaField.types";
 
 export const SchemaField = ({
