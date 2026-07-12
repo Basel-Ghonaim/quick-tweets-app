@@ -10,7 +10,6 @@ import type {
 const getInitialValue = (type: FieldType): FieldValue => {
   switch (type) {
     case "checkbox":
-    case "radio":
       return false;
     case "number":
       return "";
