@@ -118,3 +118,54 @@ describe("auth store-access contract (#253)", () => {
     expect(auth.accessToken).toBe("tok-123"); // unchanged
   });
 });
+
+describe("session hydration (#257)", () => {
+  it("sessionHydrated updates identity only and leaves every request slot idle (session restore)", () => {
+    const store = makeStore();
+
+    store.dispatch(
+      authActions.sessionHydrated({ user, accessToken: "tok-restore" }),
+    );
+
+    const { auth } = store.getState();
+    expect(auth.user).toEqual(user);
+    expect(auth.accessToken).toBe("tok-restore");
+    // Restore is not a user-initiated login — no request slot is touched.
+    expect(auth.requests.login).toEqual({ status: "idle", error: null });
+    expect(auth.requests.register).toEqual({ status: "idle", error: null });
+    expect(auth.requests.logout).toEqual({ status: "idle", error: null });
+  });
+
+  it("sessionHydrated with only an accessToken renews the token, keeps user, login idle (silent refresh)", () => {
+    const store = makeStore();
+    store.dispatch(authActions.sessionHydrated({ user, accessToken: "tok-1" }));
+
+    // A background refresh supplies a new token, no user.
+    store.dispatch(authActions.sessionHydrated({ accessToken: "tok-2" }));
+
+    const { auth } = store.getState();
+    expect(auth.accessToken).toBe("tok-2");
+    expect(auth.user).toEqual(user); // unchanged by the token-only refresh
+    expect(auth.requests.login).toEqual({ status: "idle", error: null });
+  });
+
+  it("a user login still transitions the login slot to success (unchanged by #257)", () => {
+    const store = makeStore();
+
+    store.dispatch(authActions.authRequestPending({ requestType: "login" }));
+    expect(store.getState().auth.requests.login.status).toBe("loading");
+
+    store.dispatch(
+      authActions.authRequestFulfilled({
+        requestType: "login",
+        user,
+        accessToken: "tok-login",
+      }),
+    );
+
+    const { auth } = store.getState();
+    expect(auth.requests.login).toEqual({ status: "success", error: null });
+    expect(auth.user).toEqual(user);
+    expect(auth.accessToken).toBe("tok-login");
+  });
+});

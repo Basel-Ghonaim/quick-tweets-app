@@ -13,3 +13,8 @@ export interface AuthRequestFulfilledPayload extends AuthRequestPayload {
 export interface AuthRequestRejectedPayload extends AuthRequestPayload {
   error: AppError;
 }
+
+export interface SessionHydratedPayload {
+  user?: User;
+  accessToken?: string;
+}

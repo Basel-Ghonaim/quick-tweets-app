@@ -32,8 +32,7 @@ export const useInitAuth = () => {
       try {
         const accessToken = await restAuth().refresh();
         dispatch(
-          authActions.authRequestFulfilled({
-            requestType: "login",
+          authActions.sessionHydrated({
             accessToken,
             user: cachedUser,
           }),

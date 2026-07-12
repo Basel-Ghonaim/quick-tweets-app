@@ -4,6 +4,7 @@ import type {
   AuthRequestPayload,
   AuthRequestFulfilledPayload,
   AuthRequestRejectedPayload,
+  SessionHydratedPayload,
 } from "./types/AuthPayloads";
 
 export const authSlice = createSlice({
@@ -54,6 +55,16 @@ export const authSlice = createSlice({
     },
     authLogout: () => {
       return initialState;
+    },
+
+    // Identity-only update for silent session hydration — startup restore
+    // (useInitAuth) and background token refresh (bootstrap.onTokenRefreshed).
+    // Deliberately touches no request slot: those track user-initiated flows
+    // (login/register/logout), so hydration must not mark `login` as succeeded.
+    sessionHydrated: (state, action: PayloadAction<SessionHydratedPayload>) => {
+      const { user, accessToken } = action.payload;
+      if (user) state.user = user;
+      if (accessToken) state.accessToken = accessToken;
     },
   },
 });
