@@ -50,9 +50,11 @@ export const isMatch = <T extends FormPayload>(
   message: string = "Fields do not match",
 ): ValidatorFn => {
   return (value, values) => {
-    const target = values[targetField];
-    if (!target) return null;
-    return value !== target ? message : null;
+    // Nothing to compare until this field itself has a value — presence is
+    // `isRequired`'s job. Guarding on the *target* instead (the previous
+    // `if (!target)`) masked a real mismatch whenever the target was still empty.
+    if (value === null || value === undefined || value === "") return null;
+    return value !== values[targetField] ? message : null;
   };
 };
 

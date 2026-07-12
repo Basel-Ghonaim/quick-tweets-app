@@ -12,9 +12,7 @@ export type FieldType =
   | "select"
   | "textarea";
 
-export type FieldValue<T extends FieldType = FieldType> = T extends
-  | "checkbox"
-  | "radio"
+export type FieldValue<T extends FieldType = FieldType> = T extends "checkbox"
   ? boolean
   : T extends "file"
     ? File | null

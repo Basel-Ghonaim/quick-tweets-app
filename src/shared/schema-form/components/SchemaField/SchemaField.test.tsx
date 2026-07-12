@@ -1,5 +1,5 @@
 /**
- * Characterization test for the SchemaField seam (Issue #248).
+ * Characterization test for the SchemaField seam (Issues #248, #249).
  *
  * SchemaField is the type→control seam: given a field `type` it selects the
  * matching design-system control and wires the field's value, error, and change
@@ -41,7 +41,7 @@ const base = {
   onChange: () => {},
 };
 
-describe("SchemaField seam (#248)", () => {
+describe("SchemaField seam (#248, #249)", () => {
   it("wraps every field in <div data-span data-type>, defaulting span to full", () => {
     const { wrapper } = invoke({ ...base, type: "text" });
     expect(wrapper.type).toBe("div");
@@ -79,10 +79,26 @@ describe("SchemaField seam (#248)", () => {
     expect(child?.props.fullWidth).toBe(true);
   });
 
-  it("renders no control for an unknown field type", () => {
-    // `type` is widened deliberately to exercise the switch default.
-    const { child } = invoke({ ...base, type: "unsupported" as never });
-    expect(child).toBeNull();
+  it("maps file-multiple to a FileInput (standard variant, multiple) via onNativeChange", () => {
+    const { child } = invoke({ ...base, type: "file-multiple" });
+    expect(child?.type).toBe(FileInput);
+    expect(child?.props.variant).toBe("standard");
+    expect(child?.props.multiple).toBe(true);
+    expect(child?.props.onNativeChange).toBe(base.onChange);
+    expect(child?.props.fullWidth).toBe(true);
+  });
+
+  it.each(["radio", "select", "textarea"] as const)(
+    "fails fast for the declared-but-unimplemented field type %s",
+    (type) => {
+      expect(() => invoke({ ...base, type })).toThrow(/not implemented yet/);
+    },
+  );
+
+  it("fails fast for an unknown field type via the exhaustiveness guard", () => {
+    expect(() => invoke({ ...base, type: "totally-unknown" as never })).toThrow(
+      /unhandled field type/,
+    );
   });
 
   it("passes error through: null → valid + no message; set → invalid + message", () => {
