@@ -12,8 +12,7 @@ export const bootstrap = () => {
       refreshToken: refreshSession,
       onTokenRefreshed: (newAccessToken) => {
         reduxStore.dispatch(
-          authActions.authRequestFulfilled({
-            requestType: "login",
+          authActions.sessionHydrated({
             accessToken: newAccessToken,
           }),
         );
