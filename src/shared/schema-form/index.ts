@@ -13,6 +13,8 @@ export type {
   FormFieldConfig,
   FormPayload,
   FormValue,
+  FieldValue,
+  ValidatorFn,
   FormChangeHandler,
   FormSubmitHandler,
   FieldType,
