@@ -97,10 +97,10 @@ describe("auth store-access contract (#253)", () => {
   });
 
   it("marks logout success without clearing identity in the slice", () => {
-    // logout dispatches fulfilled with no user/accessToken; the fulfilled reducer
-    // only writes those when provided, so it does not clear identity in the slice
-    // (a full reset is authLogout's job). Captured so a change can't silently
-    // alter what useLogout / useAuthState observe after a logout.
+    // The fulfilled reducer only writes user/accessToken when they are provided,
+    // so a fulfilled dispatch carrying neither leaves identity untouched — this
+    // locks that reducer guard. (The logout *flow* itself now resets via
+    // authLogout, #294; this characterizes the reducer, not the flow.)
     const store = makeStore();
     store.dispatch(
       authActions.authRequestFulfilled({
