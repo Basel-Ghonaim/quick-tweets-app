@@ -24,7 +24,7 @@ export const restAuth = (authApi = authClient): AuthRepository => {
     },
     refresh: async () => {
       const res = await authApi.post("/auth/refresh");
-      return res.data.accessToken;
+      return toAuthResponse(res.data);
     },
   };
 };

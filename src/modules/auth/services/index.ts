@@ -1,2 +1,2 @@
 export * from "./authErrorHandler";
-export * from "./authSessionService";
+export * from "./executeAuthFlow";

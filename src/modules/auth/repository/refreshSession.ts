@@ -9,4 +9,5 @@ import { restAuth } from "./restAuth";
  * exposing this narrow capability lets consumers refresh a session without
  * depending on the repository's full surface.
  */
-export const refreshSession = (): Promise<string> => restAuth().refresh();
+export const refreshSession = async (): Promise<string> =>
+  (await restAuth().refresh()).accessToken;

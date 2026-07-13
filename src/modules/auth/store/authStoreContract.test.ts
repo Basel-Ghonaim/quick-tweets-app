@@ -98,9 +98,9 @@ describe("auth store-access contract (#253)", () => {
 
   it("marks logout success without clearing identity in the slice", () => {
     // logout dispatches fulfilled with no user/accessToken; the fulfilled reducer
-    // only writes those when provided, so identity is cleared outside Redux (via
-    // clearAuthSession), not here. Captured so the refactor cannot silently change
-    // what useLogout / useAuthState observe after a logout.
+    // only writes those when provided, so it does not clear identity in the slice
+    // (a full reset is authLogout's job). Captured so a change can't silently
+    // alter what useLogout / useAuthState observe after a logout.
     const store = makeStore();
     store.dispatch(
       authActions.authRequestFulfilled({
