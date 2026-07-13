@@ -86,6 +86,7 @@ export interface AuthResult {
 export interface TokenRefreshResult {
   accessToken: string;
   refreshToken: string;
+  user: UserSafe;
 }
 
 /** Login credentials received from the client. */
