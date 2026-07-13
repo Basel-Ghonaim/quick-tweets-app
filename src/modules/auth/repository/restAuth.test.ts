@@ -1,23 +1,37 @@
 /**
- * Characterization of the auth repository's refresh contract (Issue #261).
+ * Characterization of the auth repository's refresh contract (#261, updated #258).
  *
- * `restAuth` owns the `/auth/refresh` HTTP call: it POSTs to that endpoint
- * through the injected client and returns `res.data.accessToken`. #261 extracts
- * a thin public `refreshSession` wrapper that delegates here, so `restAuth` must
- * remain the single owner of this contract. Locked via the repository's
- * injectable client — no DOM, no network.
+ * `restAuth.refresh` POSTs to `/auth/refresh` and returns the **full session**
+ * ({ user, accessToken }) — the server-side source Session Restore uses, with no
+ * local persistence. Locked via the repository's injectable client — no DOM, no
+ * network.
  */
 import { describe, it, expect, vi } from "vitest";
 import { restAuth } from "./restAuth";
+import type { User } from "@shared/types";
 
-describe("restAuth.refresh — single owner of the refresh contract (#261)", () => {
-  it("POSTs to /auth/refresh (no body) and returns the access token", async () => {
-    const post = vi.fn().mockResolvedValue({ data: { accessToken: "tok-abc" } });
+const userDto = {
+  id: 1,
+  username: "ada",
+  name: "Ada Lovelace",
+  email: "ada@example.com",
+  profileImage: null,
+  bio: "",
+  createdAt: "2026-01-01T00:00:00.000Z",
+};
+const expectedUser: User = { ...userDto };
+
+describe("restAuth.refresh — returns the full session (#261, #258)", () => {
+  it("POSTs to /auth/refresh (no body) and returns { user, accessToken }", async () => {
+    const post = vi
+      .fn()
+      .mockResolvedValue({ data: { user: userDto, accessToken: "tok-abc" } });
     const repo = restAuth({ post } as unknown as Parameters<typeof restAuth>[0]);
 
-    const token = await repo.refresh();
+    const session = await repo.refresh();
 
     expect(post).toHaveBeenCalledWith("/auth/refresh");
-    expect(token).toBe("tok-abc");
+    expect(session.accessToken).toBe("tok-abc");
+    expect(session.user).toEqual(expectedUser);
   });
 });

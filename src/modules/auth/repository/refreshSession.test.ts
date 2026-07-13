@@ -1,11 +1,10 @@
 /**
- * Characterization of the refreshSession capability (Issue #261).
+ * Characterization of the refreshSession capability (#261, updated #258).
  *
- * refreshSession is a thin public adapter that delegates to the auth
- * repository's refresh; it holds no HTTP logic or endpoint knowledge of its own.
- * This locks the delegation — whatever `restAuth().refresh()` resolves to is
- * what refreshSession returns. `restAuth` is mocked so the test asserts
- * delegation only; the endpoint contract itself is owned by restAuth.test.ts.
+ * refreshSession is the thin adapter for the API client's refresh callback: it
+ * delegates to `restAuth().refresh()` (which now returns the full session) and
+ * returns just the access token. `restAuth` is mocked so the test asserts the
+ * delegation + token extraction.
  */
 import { describe, it, expect, vi } from "vitest";
 
@@ -14,9 +13,9 @@ vi.mock("./restAuth", () => ({ restAuth: () => ({ refresh }) }));
 
 import { refreshSession } from "./refreshSession";
 
-describe("refreshSession — thin delegating wrapper (#261)", () => {
-  it("delegates to restAuth().refresh() and returns its result", async () => {
-    refresh.mockResolvedValue("delegated-token");
+describe("refreshSession — returns the token from the refreshed session (#261, #258)", () => {
+  it("delegates to restAuth().refresh() and returns its accessToken", async () => {
+    refresh.mockResolvedValue({ accessToken: "delegated-token", user: { id: 1 } });
 
     const token = await refreshSession();
 

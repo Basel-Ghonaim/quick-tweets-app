@@ -169,7 +169,19 @@ export const createAuthService = (
       expiresAt,
     );
 
-    return { accessToken: newAccessToken, refreshToken: newRefreshTokenValue };
+    // Load the user so refresh returns the full session (token + identity),
+    // consistent with login/register. The client restores from the server with
+    // no local persistence. See #258.
+    const user = await authRepo.findById(storedToken.userId);
+    if (!user) {
+      throw AppError.unauthorized("Invalid refresh token");
+    }
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshTokenValue,
+      user,
+    };
   },
 
   // ─── Get Me ────────────────────────────────────────────────────────────

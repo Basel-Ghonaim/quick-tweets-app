@@ -300,7 +300,16 @@ interface ErrorBody {
 {
   "success": true,
   "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": 1,
+      "username": "johndoe",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "profileImage": null,
+      "bio": "",
+      "createdAt": "2026-01-01T00:00:00.000Z"
+    }
   }
 }
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth

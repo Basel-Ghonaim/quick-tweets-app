@@ -5,7 +5,7 @@
 > **Scope:** The auth feature module (`src/modules/auth/`) and its behavior. The wire contract is the [API contract](../api/api-contract.md)'s; the server-side security mechanisms are [Backend Security](../backend/security.md)'s; the transport and the client half of the token model are the [frontend API client](../frontend/api-client.md)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organization is the current implementation of **this feature only — explicitly not the canonical template for future features** (the template is deliberately deferred by the [frontend architecture](../frontend/architecture.md) until a second feature validates or reshapes it). Anything not described here is not yet built, not architecturally rejected.
 > **Version:** 1.0
-> **Last Updated:** 2026-07-02
+> **Last Updated:** 2026-07-12
 > **Owner:** Basel Ghonaim
 
 ## What the feature does
@@ -13,13 +13,13 @@
 Authentication is the frontend's first — and currently only — fully built feature. It provides:
 
 - **Register** — account creation with username, full name, email, and password. The form also presents an avatar picker, but image upload is not implemented end-to-end (there is no upload path in the wire contract), so the account is created without the image — whether to implement or remove the field is under [#256](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/256).
-- **Login / Logout** — credential sign-in, and sign-out that revokes the server session and clears the local one.
-- **Silent session restore** — a returning user is signed back in on app startup without re-entering credentials.
+- **Login / Logout** — credential sign-in, and sign-out that revokes the server session.
+- **Silent session restore** — a returning user is signed back in on app startup, from the server, without re-entering credentials.
 - **The auth page** — a split-panel screen (brand panel + form card) whose sign-in/sign-up tabs are **URL-driven** (`/auth/signin`, `/auth/signup`); switching tabs navigates, so the active form is deep-linkable. The social-login buttons on the page are **visual placeholders** — no OAuth is implemented.
 
 ## Responsibility boundary
 
-The authentication feature **owns**: user identity state (who is signed in), **session orchestration** (when a session is restored, established, and ended), and authentication-specific **policies** (its form rules and wording, its error-message enrichment, what it persists).
+The authentication feature **owns**: user identity state (who is signed in), **session orchestration** (when a session is restored, established, and ended), and authentication-specific **policies** (its form rules and wording, its error-message enrichment).
 
 It does **not** own: transport, the token model and its storage, request retries and the 401 replay, form execution, control rendering, or error normalization. Those responsibilities belong to their platform owners and are **composed** here.
 
@@ -37,7 +37,6 @@ The feature implements almost nothing generic itself — it configures and compo
 | Its forms | schema configs driving the form engine | [Frontend Forms](../frontend/forms.md) |
 | Its controls | `SchemaField`-bound inputs, buttons | [Frontend Design System](../frontend/design-system.md) |
 | One typed error shape | normalized `AppError` | [Frontend Error Handling](../frontend/error-handling.md) |
-| Local persistence of the user snapshot | the shared storage utility | [Frontend Architecture](../frontend/architecture.md) (thin utilities) |
 | Its data entities (`User`, `RefreshToken`) | the schema behind the endpoints | [Data model](../architecture/data-model.md) |
 
 Where the platform needs something back from the application — the token getter and the session callbacks — the wiring happens in the **composition root**, not in this feature ([frontend architecture](../frontend/architecture.md)).
@@ -46,10 +45,10 @@ Where the platform needs something back from the application — the token gette
 
 The feature's own contribution is the **choreography** — when and why the platform pieces are invoked:
 
-1. **Startup restore.** Before the routed app renders, the feature checks for a locally cached user snapshot. No snapshot → straight to the login screen. Snapshot present → it calls the refresh endpoint (the `HttpOnly` cookie travels automatically); success hydrates the store with the user and a fresh access token — the user is signed in without credentials; failure means the refresh session has expired, so the stale snapshot is cleared and the login screen is shown. The app shell blocks rendering behind this check, so a returning user never flashes a logged-out view.
-2. **Login / Register.** A schema config defines the form; the form engine validates and hands the typed payload to the feature's injected action, which marks the request pending, calls the repository, persists the user snapshot, and stores the user + access token in the feature's state. Failures arrive as one normalized `AppError`, are passed through the feature's message enrichment, land in the per-request error state, and surface as a form-level alert.
-3. **Ongoing session.** During normal use the transport layer keeps the session alive (attaching the token, silently refreshing on expiry — the mechanism is the [API client](../frontend/api-client.md)'s). The feature's part is the **expiry behavior** wired on its behalf in the composition root: when a refresh ultimately fails, the callback clears the persisted snapshot and dispatches the feature's reset action — a clean local sign-out.
-4. **Logout.** Logout calls the server to revoke the session **and clears the local session regardless of the server's answer** — a failed revocation call never leaves the client half-signed-in; the refresh cookie then simply expires server-side.
+1. **Startup restore.** Before the routed app renders, the feature calls the refresh endpoint (the `HttpOnly` cookie travels automatically). Success → the server returns the **full session** (the user and a fresh access token), which hydrates the store — the user is signed in without credentials. Failure → the refresh session has expired, so a clean logged-out state is set and the login screen is shown. The app shell blocks rendering behind this check, so a returning user never flashes a logged-out view. Restore reads nothing from the client; the server is the source of truth for *who* is returning.
+2. **Login / Register.** A schema config defines the form; the form engine validates and hands the typed payload to the feature's injected action, which marks the request pending, calls the repository, and stores the user + access token in the feature's state. Failures arrive as one normalized `AppError`, are passed through the feature's message enrichment, land in the per-request error state, and surface as a form-level alert.
+3. **Ongoing session.** During normal use the transport layer keeps the session alive (attaching the token, silently refreshing on expiry — the mechanism is the [API client](../frontend/api-client.md)'s). The feature's part is the **expiry behavior** wired on its behalf in the composition root: when a refresh ultimately fails, the callback dispatches the feature's reset action — a clean local sign-out.
+4. **Logout.** Logout calls the server to revoke the session (`POST /auth/logout`), which invalidates the refresh cookie server-side.
 
 ## Inside the feature — the current implementation (not a template)
 
@@ -59,12 +58,12 @@ The module is internally layered; this is a description of **what exists**, not 
 - **DTO ↔ entity mapping.** Wire shapes and domain shapes are separate types bridged by a small mapper, so a contract change touches the mapper, not the flows ([Engineering Principles §4](../development/engineering-principles.md)).
 - **A per-request state machine.** The auth slice holds the identity (`user`, in-memory `accessToken`) plus an independent `{status, error}` record per request type (login, register, logout). The slice is **purely synchronous** — all async orchestration lives in the hooks — with a per-request error-clear and a single reset action that returns the whole feature to its initial state.
 - **Hooks as the feature's public surface.** Consumers use the module's designated `hooks/` barrel: the flow hooks (`useLoginFlow` / `useRegisterFlow`) merge form state and request state into one typed contract (`AuthFlowReturn`), `useAuthState` derives the identity (`isLoggedIn` is computed, never stored), `useLogout` and the startup-restore hook cover the rest. Internal orchestration hooks are not exported. *(The hooks currently import the app zone's typed store hooks — a recorded implementation deviation, [Finding 0002](../architecture/findings/0002-modules-app-store-dependency.md), not intended design.)*
-- **Feature services.** Session persistence (save/read/clear the user snapshot through the shared storage utility) and **error-message enrichment** — auth-specific wording layered over the normalized error for a handful of types (validation, conflict, forbidden, rate-limited) before it reaches the UI.
+- **Feature services.** The shared login/register flow (the single owner of the auth request choreography) and **error-message enrichment** — auth-specific wording layered over the normalized error for a handful of types (validation, conflict, forbidden, rate-limited) before it reaches the UI.
 - **Configuration, not code, for forms.** The login and register forms are schema configs (fields, validators, layout spans) plus a message catalog; the [form engine](../frontend/forms.md) does the rest. The validators are the feature's **client-side pre-check**; the [contract](../api/api-contract.md) remains authoritative for what the server ultimately accepts (the current pre-check rules drift from the contract in places — tracked in [#263](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/263)). The wording is the feature's.
 
 ## Feature policies
 
-- **What persists where:** only the **user snapshot** is persisted locally (so restore knows *who* might be returning); the access token is **never** persisted, and the refresh token is never visible to the feature at all — the feature *applies* the platform's token model, it does not define it.
+- **What persists where:** **nothing is persisted on the client.** The access token lives in memory (the Redux auth slice) only; the user is fetched from the server on restore rather than cached; and the refresh token is never visible to the feature at all — the feature *applies* the platform's token model, it does not define it.
 - **Errors speak auth.** Platform errors stay one typed shape; the feature only replaces the *message* for auth-relevant cases (e.g. a `conflict` becomes "This account is already registered. Try logging in.") — wording is feature-owned, the shape and pipeline are not.
 
 ## Relationship to the platform documentation

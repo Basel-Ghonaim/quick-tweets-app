@@ -170,6 +170,7 @@ export const createAuthController = (
 
       sendSuccess(res, {
         accessToken: result.accessToken,
+        user: toUserResponse(result.user),
       });
     } catch (err) {
       next(err);

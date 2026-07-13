@@ -2,17 +2,14 @@ import { useEffect, useState } from "react";
 import { useAuthDispatch } from "../store/hooks";
 import { restAuth } from "../repository/restAuth";
 import { authActions } from "../store";
-import { authSessionService } from "../services";
 
 /**
- * Runs once on app startup to restore the auth session.
+ * Runs once on app startup to restore the auth session from the **server**, with
+ * no dependency on any local persistence.
  *
- * Flow:
- * 1. Check localStorage for cached user data (hint: was this person logged in?)
- * 2. If no user → skip (first visit or logged out)
- * 3. If user exists → call POST /auth/refresh (cookie sent automatically)
- *    - Success → store new accessToken in Redux → user stays logged in
- *    - Failure → cookie expired → clear stale user → show login
+ * The httpOnly refresh cookie re-issues the full session (access token + user)
+ * via POST /auth/refresh; on success the user is hydrated into Redux. Any failure
+ * (missing/expired cookie) leaves a clean logged-out state.
  */
 export const useInitAuth = () => {
   const [isInitializing, setIsInitializing] = useState(true);
@@ -20,26 +17,12 @@ export const useInitAuth = () => {
 
   useEffect(() => {
     const init = async () => {
-      const { getUser, clearAuthSession } = authSessionService();
-      const cachedUser = getUser();
-
-      if (!cachedUser) {
-        // No previous session → skip refresh, go straight to login
-        setIsInitializing(false);
-        return;
-      }
-
       try {
-        const accessToken = await restAuth().refresh();
-        dispatch(
-          authActions.sessionHydrated({
-            accessToken,
-            user: cachedUser,
-          }),
-        );
+        const { user, accessToken } = await restAuth().refresh();
+        dispatch(authActions.sessionHydrated({ user, accessToken }));
       } catch {
-        // Refresh token expired or invalid → clear stale user data
-        clearAuthSession();
+        // No valid session (missing/expired cookie) → ensure a clean logged-out state.
+        dispatch(authActions.authLogout());
       }
 
       setIsInitializing(false);

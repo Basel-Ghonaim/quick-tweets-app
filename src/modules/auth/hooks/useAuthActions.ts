@@ -1,62 +1,31 @@
-import { createAppError, type AppError } from "@shared/errors";
 import { useAuthDispatch } from "../store/hooks";
 
 import { restAuth } from "../repository/restAuth";
-import { authActions, type AuthRequestType } from "../store";
-import { authErrorHandler, authSessionService } from "../services";
-import type { AuthResponse } from "../entity";
+import { authActions } from "../store";
+import { executeAuthFlow } from "../services";
 import type { LoginCredentials, RegisterCredentials } from "../types";
 
 export const useAuthActions = () => {
   const dispatch = useAuthDispatch();
   const repo = restAuth();
-  const { authRequestFulfilled, authRequestPending, authRequestRejected } =
-    authActions;
-  const { saveAuthSession, clearAuthSession } = authSessionService();
-
-  const executeAuthFlow = async (
-    apiCall: () => Promise<AuthResponse>,
-    requestType: AuthRequestType,
-  ) => {
-    try {
-      dispatch(authRequestPending({ requestType }));
-      const res = await apiCall();
-      const isSessionSaved = saveAuthSession(res.user);
-      if (!isSessionSaved) {
-        throw createAppError("unknown", "Failed to save auth session");
-      }
-      dispatch(
-        authRequestFulfilled({
-          requestType,
-          accessToken: res.accessToken,
-          user: res.user,
-        }),
-      );
-    } catch (error) {
-      const authError = authErrorHandler(error as AppError);
-      dispatch(authRequestRejected({ requestType, error: authError }));
-      throw authError;
-    }
-  };
+  const { authRequestPending, authRequestFulfilled } = authActions;
 
   const logout = async () => {
     try {
       dispatch(authRequestPending({ requestType: "logout" }));
       await repo.logout();
     } catch {
-      // Even if API call fails, still clear local session.
-      // The cookie will expire on its own.
+      // Even if the API call fails, the refresh cookie expires on its own.
     } finally {
-      clearAuthSession();
       dispatch(authRequestFulfilled({ requestType: "logout" }));
     }
   };
 
   return {
     login: (credentials: LoginCredentials) =>
-      executeAuthFlow(() => repo.login(credentials), "login"),
+      executeAuthFlow(dispatch, () => repo.login(credentials), "login"),
     register: (credentials: RegisterCredentials) =>
-      executeAuthFlow(() => repo.register(credentials), "register"),
+      executeAuthFlow(dispatch, () => repo.register(credentials), "register"),
     logout,
   };
 };
