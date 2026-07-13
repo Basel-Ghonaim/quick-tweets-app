@@ -4,20 +4,18 @@ import { useRequestState } from "@shared/hooks";
 import { useAuthActions } from "./useAuthActions";
 
 /**
- * `isLoading` is intentionally not surfaced: no caller needs a logout spinner
- * yet. The logout request does pass through a real loading state, so it can be
- * added from `useRequestState` when a consumer needs one.
+ * Only `isError` is surfaced. A successful logout resets the whole auth slice
+ * (`authLogout`), so "signed out" is observed via `isLoggedIn` going false — there
+ * is no logout request "success" state to expose. `isLoading` is likewise not
+ * surfaced (no caller needs a logout spinner yet); it can be read from
+ * `useRequestState` when one does.
  */
 export const useLogout = () => {
   const { logout } = useAuthActions();
 
   const requestState = useAuthSelector((state) => state.auth.requests.logout);
 
-  const {
-    isSuccess,
-    isError,
-    error: logoutError,
-  } = useRequestState(requestState);
+  const { isError, error: logoutError } = useRequestState(requestState);
 
   useEffect(() => {
     if (logoutError) {
@@ -28,7 +26,6 @@ export const useLogout = () => {
 
   return {
     logout,
-    isSuccess,
     isError,
   };
 };
