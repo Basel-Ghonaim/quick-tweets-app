@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.0
-> **Last Updated:** 2026-06-23
+> **Version:** 1.1
+> **Last Updated:** 2026-07-14
 > **Owner:** Basel Ghonaim
 
 
@@ -55,6 +55,11 @@ The dividing question is always: **"Is this a shared mechanism, or a feature-spe
 - A feature-specific application (e.g., "the tweets feature uses cache tag X", "authentication stores the access token in Redux memory") is owned by that feature document, and links to the platform document for the mechanism's details.
 
 This is a single-axis organization with a shared platform layer. There is no by-layer **and** by-feature duplication, because a fact is owned by its mechanism *or* by its feature — never both.
+
+### When a platform document is created — the Stable-Core rule
+A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This lifts Principle 4 (describe conventions, not inventory) and Principle 5 (document only what exists) from the section level — where §4 applies them (*"sections appear only when the code exists"*) — to the level of the whole document.
+
+Until a subsystem has a stable core, its document is **deferred**: its durable material is captured in an interim source and synthesized into the platform document later, and the deferral records a re-evaluation **trigger** as a *code-state condition* (the capability existing in the code), not a date. This is the rule under which the frontend `state-and-data.md` document was the migration's single deliberate deferral. See [ADR 0004](decisions/0004-stable-core-platform-document-rule.md).
 
 ---
 
@@ -107,7 +112,7 @@ docs/
 ### Structure rules
 - **No directory-tree document.** The repository is the source of truth for structure. Documents explain conventions, not file inventories.
 - **Feature documents map to code modules.** A capability that is part of another module (for example, likes, which live in the tweets module) is documented inside that module's feature document, not as a separate one.
-- **Sections appear only when the code exists.** A feature document includes a frontend section only once that feature has frontend code; otherwise that section is absent (not a placeholder).
+- **Sections appear only when the code exists.** A feature document includes a frontend section only once that feature has frontend code; otherwise that section is absent (not a placeholder). The whole-document analog — when a subsystem earns its own platform document — is the Stable-Core rule (§3).
 
 ---
 
