@@ -10,10 +10,7 @@ The documentation migration (parent [#215](https://github.com/Basel-Ghonaim/quic
 
 The rule: a subsystem earns its own authoritative **platform document** only when it has a *stable core* — at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable *rule or decision* warrants a document; a volatile *inventory* does not. Absent a stable core, the document is **deferred** — its durable material is captured in an interim source and synthesized later — and the deferral records a re-evaluation trigger expressed as a **code-state condition** (the capability existing in code), not a date.
 
-The rule was materially load-bearing during the migration, not a passing habit:
-
-- It caused the migration's **single deliberate deferral** — the frontend `state-and-data.md` document (E2). A maturity review found the RTK Query cache/data layer unrealized in code (no injected endpoints, tags, or hooks); a document authored then "would have described a plan, not an implementation." This is recorded in the [Migration Plan](../documentation-migration-plan.md) §3 status preamble and §8 (Execution Reconciliation, item 1); its continuity owner is [#272](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/272), which is still open — the trigger has not fired.
-- It set the scope of other platform documents as a per-Work-Item gate: a Stable-Core PASS check for the forms engine ([#250](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/250)), conventions-altitude authoring for the design system ([#244](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/244)), and deferral of the feature-internal template for the outer architecture ([#252](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/252)).
+The rule was applied repeatedly during the migration, not as a passing habit. Most visibly, it caused the migration's **single deliberate deferral** — the frontend `state-and-data.md` document (E2): a maturity review found the RTK Query cache/data layer unrealized in code, so a document authored then would have described a plan, not an implementation. Its authoring was deferred with a code-state re-evaluation trigger, recorded in the [Migration Plan](../documentation-migration-plan.md) §3 status preamble and §8 (Execution Reconciliation, item 1); its continuity owner [#272](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/272) remains open — the trigger has not fired. The same rule also gated the scope of several other documentation Work Items.
 
 It also remains valid **beyond** the migration: it governs a recurring, non-migration question — *when does any subsystem earn its own platform document?* — and its `state-and-data.md` trigger is still live in #272.
 
@@ -23,7 +20,7 @@ Until now the rule's only homes were the Migration Plan — a binding execution 
 
 ## Decision
 
-**Constitutionalize the Stable-Core rule.** Its operative text is added to the [Documentation Strategy](../documentation-strategy.md) §3 (Documentation Ownership Model), as a corollary of Principles 4 and 5 lifted from the section level (§4) to the whole-document level. The Strategy owns the operative rule; this ADR records the decision to adopt it and the rationale for doing so — one fact, one owner.
+**Constitutionalize the Stable-Core rule.** Its operative text is added to the [Documentation Strategy](../documentation-strategy.md) §3 (Documentation Ownership Model), where it **complements Principles 4 and 5 by introducing a whole-document eligibility criterion**. The Strategy owns the operative rule; this ADR records the decision to adopt it and the rationale for doing so — one fact, one owner.
 
 This ADR dispositions **only** the Stable-Core rule. The other two rules reviewed in #273 are dispositioned in that issue and are **not** constitutionalized here: *Ripeness-based sequencing* is retired (a spent, migration-execution corollary of this rule, with no content of its own), and the *Adaptive maturity caveat* continues on trial pending further evidence. Neither is recorded in the constitution.
 

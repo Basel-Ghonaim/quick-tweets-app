@@ -57,9 +57,9 @@ The dividing question is always: **"Is this a shared mechanism, or a feature-spe
 This is a single-axis organization with a shared platform layer. There is no by-layer **and** by-feature duplication, because a fact is owned by its mechanism *or* by its feature — never both.
 
 ### When a platform document is created — the Stable-Core rule
-A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This lifts Principle 4 (describe conventions, not inventory) and Principle 5 (document only what exists) from the section level — where §4 applies them (*"sections appear only when the code exists"*) — to the level of the whole document.
+A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This **complements Principles 4 and 5 by introducing a whole-document eligibility criterion** — the document-level counterpart to §4's section-level rule that *"sections appear only when the code exists."*
 
-Until a subsystem has a stable core, its document is **deferred**: its durable material is captured in an interim source and synthesized into the platform document later, and the deferral records a re-evaluation **trigger** as a *code-state condition* (the capability existing in the code), not a date. This is the rule under which the frontend `state-and-data.md` document was the migration's single deliberate deferral. See [ADR 0004](decisions/0004-stable-core-platform-document-rule.md).
+Until a subsystem has a stable core, its document is **deferred**: its durable material is captured in an interim source and synthesized into the platform document later, and the deferral records a re-evaluation **trigger** as a *code-state condition* (the capability existing in the code), not a date. See [ADR 0004](decisions/0004-stable-core-platform-document-rule.md).
 
 ---
 
