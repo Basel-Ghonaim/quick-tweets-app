@@ -1,7 +1,8 @@
 # Finding 0003: The global feed's cursor pagination orders by `id`, not the documented `createdAt` index
 
-> **Status:** Open
+> **Status:** Resolved
 > **Date:** 2026-07-05
+> **Resolved:** 2026-07-14 (PR #297)
 > **Affected areas:** `docs/architecture/data-model.md`, `server/prisma/schema.prisma`, `server/src/modules/tweets/tweet.repository.ts`
 > **Reported by:** Basel Ghonaim (surfaced by the G3 final migration audit, Work Item #271)
 
@@ -53,6 +54,21 @@ The divergence has three candidate resolutions, and choosing among them is an **
 3. **The index is unnecessary.** If `id` ordering is intended and nothing else uses `Tweet.createdAt`, the `@@index([createdAt(sort: Desc)])` is dead weight and could be dropped.
 
 Pending that decision, `data-model.md` is adjusted only enough to stop presenting the disputed feed↔`createdAt` mapping as settled truth, and links to this finding.
+
+## Resolution
+
+Resolved on 2026-07-14 by [PR #297](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/297) — **Option 1 + Option 3**, recorded as a **local design decision** (no ADR).
+
+Ordering the global feed (and author timelines) by the primary key **`id`** is affirmed as the intended, official behaviour: an `autoincrement()` `id` is monotonic with insertion, so `id DESC` is already reverse-chronological *and* a unique, deterministic cursor — strictly better for cursor pagination than `createdAt`, which is not unique and would require a composite `(createdAt, id)` cursor to be stable. The divergence is reconciled to the code (the source of truth):
+
+- **Docs:** `data-model.md` (Indexing) now describes the `id`-ordering and no longer credits a `createdAt` index.
+- **Schema:** the unused `@@index([createdAt(sort: Desc)])` on `Tweet` — which had no reader — is **dropped** (migration `drop_tweet_created_at_index`), upholding the rule that each index maps to a real query.
+
+The feed query is **unchanged** (Option 2 — reorder onto `createdAt` — was rejected: it adds composite-cursor complexity for a capability nothing needs). The `Tweet.createdAt` **column** is retained; only the dead index is removed.
+
+**No ADR:** this reconciles code, docs, and schema without changing architecture, patterns, layer boundaries, or dependency direction — the [ADR 0002](../decisions/0002-refined-adr-threshold.md) threshold is not met — consistent with how Findings 0001/0002 were resolved.
+
+**Caveat:** `id`-ordering assumes monotonic autoincrement; if tweets were ever bulk-imported with back-dated `createdAt` (out of `id` order), the feed would not reflect `createdAt` order. No such requirement today; revisit (Option 2) if back-dating becomes real.
 
 ## Links
 

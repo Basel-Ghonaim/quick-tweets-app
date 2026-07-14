@@ -67,7 +67,6 @@ model Tweet {
 
   // Indexes
   @@index([authorId])
-  @@index([createdAt(sort: Desc)])
   @@map("tweets")
 }
 
