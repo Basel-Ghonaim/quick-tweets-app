@@ -49,6 +49,6 @@ A plan is a living document while `Active`: it evolves across pull requests (Doc
 
 | Plan | Type | Status | Parent Issue |
 |---|---|---|---|
-| *(none yet)* | — | — | — |
+| [media-implementation.md](media-implementation.md) | Execution | Draft | — |
 
-> The Documentation Migration Plan will be relocated here (from `architecture/`) and marked `Historical` as this index's first entry, in a follow-up Work Item.
+> The Documentation Migration Plan will be relocated here (from `architecture/`) and marked `Historical` in a follow-up Work Item.
