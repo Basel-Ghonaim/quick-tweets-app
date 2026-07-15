@@ -215,7 +215,7 @@ Most Work Items are planned *inside* Execution Preparation (§3) and need no sep
 
 **When planning becomes a standalone artifact.** Create one only when the planning outlives the Work Item it precedes:
 
-- A **strategy** or **migration plan** — when the work spans many Work Items and needs a shared, durable reference.
+- A **strategy** or **migration plan** — when the work spans many Work Items and needs a shared, durable reference. Persistent execution plans live in [`docs/plans/`](../plans/README.md) and follow the `Draft → Active → Historical` lifecycle defined there.
 - A **blueprint** — when one substantial deliverable must have its **knowledge ownership and boundaries** resolved before authoring: which section owns which fact, and how each overlap with existing documents is settled. Structure follows from that partition. The blueprint is transient — discarded once the deliverable lands.
 - An **ADR** — when a decision carries lasting architectural consequence and must be recorded with its rationale and alternatives.
 - A **finding** — when an observation must persist but is not acted on now (§11).
