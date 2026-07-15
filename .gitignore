@@ -31,7 +31,10 @@ server/src/generated
 
 *storybook.log
 storybook-static
+# Local scratch plans stay ignored, but the formal plans home (docs/plans/) is tracked.
 plans
+!docs/plans/
+!docs/plans/**
 
 # Local AI working drafts (never committed or pushed)
 .project/

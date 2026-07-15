@@ -31,7 +31,7 @@ These principles are binding. They mirror the project's engineering principles (
 3. **Single responsibility per document.** Each document has one clearly defined subject. If a document needs two unrelated subjects, it must be split.
 4. **Describe intent and conventions, not inventory.** No document enumerates the file tree or narrates code that is self-evident in the repository. Documentation explains *patterns and reasons*, not *file listings*.
 5. **Document only what exists.** A section is written only when the code it describes exists. Speculative or aspirational documentation is not permitted.
-6. **Future work lives in the issue tracker**, not in documentation.
+6. **Future work lives in the issue tracker**, not in documentation — except that the *strategy and sequencing* of a multi-Work-Item effort may be captured in an **execution plan** (`plans/`, a distinct lifecycle-governed class — see [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md)), which links to the tracker's live status and never restates it.
 7. **Significant decisions are recorded as ADRs** (see §8) and are immutable once accepted.
 8. **Documentation is versioned with the code that obligates it** (see §10), in the same change, under the same review.
 9. **Documentation describes the *intended* architecture; the code is the source of truth for the *actual* state.** Where the two diverge, the deviation is recorded as an architecture finding (see §9) — it is never normalized into the design documentation as if it were intentional.
@@ -104,6 +104,9 @@ docs/
     setup.md                     ← running the project locally (environment, scripts)
     engineering-principles.md          ← code-design principles (SOLID, patterns, naming)
     engineering-execution-standard.md  ← how work is executed (Git lifecycle, commits, scope, review, decision authority)
+
+  plans/
+    <plan>.md                    ← execution-oriented plans (migration, execution, refactoring, release); a lifecycle-governed class, not permanent reference docs
 ```
 
 ### Single-root rule and the code-adjacent exemption
@@ -129,6 +132,7 @@ Each category has a single responsibility. Material outside that responsibility 
 | `frontend/` | Cross-cutting frontend platform subsystems: API client, state/data, error normalization, the schema-driven form engine, and the design system (presentation only) | Per-feature flows |
 | `features/` | One capability's intent, rules, and feature-specific bindings — composing platform docs by link | Restated endpoints, schema, or generic mechanisms |
 | `development/` | How to run the project and how the team works | Architecture or feature content |
+| `plans/` | The strategy, sequencing, rationale, risk management, and execution structure of multi-Work-Item efforts (a lifecycle-governed class — see [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md)) | Per-Work-Item implementation, status, or acceptance criteria (owned by Issues); permanent architecture rationale (owned by the relevant doc or ADR) |
 
 ---
 
