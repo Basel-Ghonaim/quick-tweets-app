@@ -31,6 +31,6 @@ The four decisions surveyed in C4 all have natural owners and therefore receive 
 ## Consequences
 
 - [Documentation Strategy §8](../documentation-strategy.md) is updated to carry the refined rule; its "single owner of architectural rationale" wording is narrowed accordingly.
-- The [Documentation Migration Plan](../documentation-migration-plan.md)'s ADR-routing language — its inventory rows, single-owner table, migration steps, ordering invariants, risk controls, and summary — is reconciled to route durable decision rationale to its natural-owner documents, with ADRs reserved for owner-less or independently-preserved decisions.
+- The [Documentation Migration Plan](../../plans/documentation-migration-plan.md)'s ADR-routing language — its inventory rows, single-owner table, migration steps, ordering invariants, risk controls, and summary — is reconciled to route durable decision rationale to its natural-owner documents, with ADRs reserved for owner-less or independently-preserved decisions.
 - The ADR register stays deliberately small; platform, contract, and feature documents own their own decisions' rationale.
 - This ADR is immutable once accepted; status moves from `Proposed` to `Accepted` on merge. A future change to this rule is a new, superseding ADR.

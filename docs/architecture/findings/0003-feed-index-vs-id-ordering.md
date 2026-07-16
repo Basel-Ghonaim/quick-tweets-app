@@ -72,5 +72,5 @@ The feed query is **unchanged** (Option 2 — reorder onto `createdAt` — was r
 
 ## Links
 
-- Surfaced during the G3 final migration audit ([Migration Plan §7](../documentation-migration-plan.md), Work Item #271).
+- Surfaced during the G3 final migration audit ([Migration Plan §7](../../plans/documentation-migration-plan.md), Work Item #271).
 - `docs/architecture/data-model.md` (Indexing) records the current state and links back to this finding.
