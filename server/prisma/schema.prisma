@@ -7,6 +7,7 @@
 // - Comment: Replies to tweets
 // - Like: User-tweet like relationship (unique pair)
 // - Follow: User-user follow relationship (social graph)
+// - MediaObject: Media registry — storage detail + identity (Media platform module)
 
 generator client {
   provider = "prisma-client"
@@ -124,4 +125,27 @@ model Follow {
   @@index([followerId])                  // "who am I following?" (feed query)
   @@index([followingId])                 // "who follows me?" (follower count)
   @@map("follows")
+}
+
+// ─── MediaObject ─────────────────────────────────────────────────────────────
+// Media registry (ADR 0005 Decision 3): the single owner of storage detail +
+// identity for one stored object. Feature tables persist a reference to `id`
+// (added by their own Work Items); the opaque `token` is the external read
+// handle (GET /media/:token). No back-relation to referrers — a MediaObject is
+// unaware of who points at it (Decision 9). Owned by the Media platform module.
+//
+// The uploader (Decision 5) is intentionally NOT here yet — it is added with
+// the ingest boundary (M4), which records it.
+
+model MediaObject {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique                          // opaque, non-enumerable public read handle
+  storageKey  String   @unique @map("storage_key")      // backend location; internal to Media
+  contentType String   @map("content_type")             // verified, content-derived type (set at ingest)
+  size        Int                                        // byte count
+  status      String   @default("ready")                // "ready" | "deleted" (tombstone; M11 drives deletion)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("media_objects")
 }

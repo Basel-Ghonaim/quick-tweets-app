@@ -49,3 +49,58 @@ export interface StorageAdapter {
   /** Remove the object at `key`; a no-op if already absent (idempotent). */
   delete(key: StorageKey): Promise<void>;
 }
+
+// ─── Registry: identity & the MediaObject record (ADR 0005 — Decision 3) ──────
+
+/**
+ * The opaque, non-enumerable public identifier for a stored object — the value
+ * in `GET /media/:token`. Features and the API hold this; it is deliberately
+ * distinct from the internal reference (the registry row's numeric `id`) and
+ * from the `StorageKey`. Minted via `mintToken()`, parsed via `mediaToken()`.
+ */
+export type MediaToken = Brand<string, "MediaToken">;
+
+/**
+ * Lifecycle states the registry models at this stage. `ready` is the only
+ * servable state; `deleted` is a tombstone whose producer is the reclamation
+ * Work Item — no path sets it yet. (A pre-servable `pending` state is deferred
+ * to the ingest boundary if it adopts write-before-validate.)
+ */
+export type MediaStatus = "ready" | "deleted";
+
+/**
+ * A registry entry — Media's authoritative record of one stored object.
+ * Internal to the module: features never receive it (they hold only a
+ * reference/token), because it carries storage detail the boundary must not leak.
+ */
+export interface MediaObject {
+  /** Internal reference — the numeric identity feature tables point at (via a real FK, added by their own Work Items). */
+  id: number;
+  token: MediaToken;
+  storageKey: StorageKey;
+  contentType: string;
+  size: number;
+  status: MediaStatus;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Fields required to register a newly-stored object; the token is minted by the registry. */
+export interface NewMediaObject {
+  storageKey: StorageKey;
+  contentType: string;
+  size: number;
+}
+
+/**
+ * The registry's data-access contract. Internal to Media (never published) —
+ * consumed by Media's own boundaries (ingest, read), never by features. It
+ * exposes no path that mutates a stored row: immutability-once-ready is encoded
+ * by the *absence* of a mutator (replacing media mints a new object).
+ */
+export interface IMediaRepository {
+  /** Register a newly-stored, validated object; mints its token and returns the entry. */
+  create(input: NewMediaObject): Promise<MediaObject>;
+  /** Resolve a public token to its registry entry, or `null` if none exists. */
+  findByToken(token: MediaToken): Promise<MediaObject | null>;
+}
