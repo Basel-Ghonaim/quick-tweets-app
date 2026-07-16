@@ -57,7 +57,6 @@ Consult the relevant one before deep work; do not duplicate it here.
 
 - **Documentation map** (every document, classified, with its owner — the navigation entry point) → `docs/README.md`
 - **Documentation governance** → `docs/architecture/documentation-strategy.md`
-- **Documentation migration plan** → `docs/architecture/documentation-migration-plan.md`
 - **API contract** (single source for endpoints, payloads, error shapes) → `docs/api/api-contract.md`
 - **Engineering Execution Standard** (work units, Git lifecycle, branch/commit strategy, scope control, review, Definition of Done & Accepted, Decision Authority Matrix, stop rules) → `docs/development/engineering-execution-standard.md`
 - **Code design principles** (SOLID, data/architectural patterns, naming) → `docs/development/engineering-principles.md`
