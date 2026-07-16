@@ -1,6 +1,6 @@
 # ADR 0006: A Home and Lifecycle for Execution Plans
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-07-14
 > **Deciders:** Basel Ghonaim
 

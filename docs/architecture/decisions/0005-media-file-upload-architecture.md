@@ -1,6 +1,6 @@
 # ADR 0005: Media / File Upload Architecture — a Media Platform Module Behind a Storage-Adapter Port
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-07-14
 > **Deciders:** Basel Ghonaim
 
