@@ -12,7 +12,6 @@
  * - CORS_ORIGIN controls allowed frontend origin (no hardcoding)
  *
  * Future expansion:
- * - Add UPLOAD_DIR for file storage path
  * - Add REFRESH_TOKEN_SECRET for refresh token rotation
  * - Add rate limiting config (RATE_LIMIT_WINDOW, RATE_LIMIT_MAX)
  */
@@ -27,6 +26,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default("15m"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
+  UPLOAD_DIR: z.string().default("./uploads"),
 });
 
 export const env = envSchema.parse(process.env);
