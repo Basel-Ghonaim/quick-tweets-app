@@ -1,6 +1,6 @@
 # ADR 0004: The Stable-Core Rule — a Platform Document Is Created Only When Its Subsystem Has a Stable Core
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-07-14
 > **Deciders:** Basel Ghonaim
 
