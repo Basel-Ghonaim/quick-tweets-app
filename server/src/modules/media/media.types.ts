@@ -33,6 +33,11 @@ export type StorageKey = Brand<string, "StorageKey">;
 /**
  * The storage-adapter port: backend-agnostic byte I/O for a `StorageKey`.
  * Implementations are the *only* code permitted to touch physical storage.
+ *
+ * Responsibility: a `StorageAdapter` persists and retrieves bytes for a
+ * `StorageKey` — nothing more. It never generates identifiers, validates
+ * content, owns metadata, or implements business rules. Those responsibilities
+ * belong to higher Media-layer components.
  */
 export interface StorageAdapter {
   /** Persist the byte stream `data` as the object at `key`. */
