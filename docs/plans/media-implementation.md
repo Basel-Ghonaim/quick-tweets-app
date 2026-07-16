@@ -1,10 +1,10 @@
 # Media / File Upload — Implementation Plan
 
-> **Status:** Draft
+> **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-07-15
-> **Parent Issue:** — *(a tracking Parent Issue is created when implementation begins; this plan is `Draft`)*
+> **Last Updated:** 2026-07-16
+> **Parent Issue:** [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305)
 > **Supersedes:** —
 
 This plan translates **[ADR 0005 — Media / File Upload Architecture](../architecture/decisions/0005-media-file-upload-architecture.md)** into an ordered set of independently reviewable Work Items. ADR 0005 is **settled**: this plan **sequences its implementation and never reopens its boundaries, ownership, contracts, or invariants.** Where ADR 0005 deliberately left a *mechanism* open, this plan **surfaces it as a deferred decision** — resolved in its own record (a sub-ADR where architectural, otherwise the Work Item's Issue), never here.
