@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-07-16
+> **Last Updated:** 2026-07-17
 > **Parent Issue:** [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305)
 > **Supersedes:** —
 
@@ -116,8 +116,8 @@ ADR 0005 deliberately left these open. Each is settled in its **own** record —
 
 **Likely sub-ADRs (architectural):**
 
-- **#256 pre-auth ingest authorization model** — *needed before M6.* How an ingest binds to a not-yet-existent principal on the unauthenticated register endpoint without opening an anonymous-upload vector. A security-boundary authorization choice that would set a reusable pattern.
-- **Reference-coordination mechanism** — *needed before M9 and M11 (the begin-half touches M6).* How a feature signals a reference begins/ends so Media reasons from its own state (explicit call, transactional bookkeeping, reference count, or reconciliation). Cross-cutting across the consumers and reclamation.
+- **#256 pre-auth ingest authorization model** — *needed before M6.* How an ingest binds to a not-yet-existent principal on the unauthenticated register endpoint without opening an anonymous-upload vector. A security-boundary authorization choice that would set a reusable pattern. **Resolved by [ADR 0007](../architecture/decisions/0007-pre-auth-ingest-upload-grant-model.md)** (the upload-grant model) — settled ahead of its gate so M4 builds the ingest authorization contract once.
+- **Reference-coordination mechanism** — *needed before M9 and M11 (the begin-half touches M6).* How a feature signals a reference begins/ends so Media reasons from its own state (explicit call, transactional bookkeeping, reference count, or reconciliation). Cross-cutting across the consumers and reclamation. **The M6 begin-half is fixed by [ADR 0007](../architecture/decisions/0007-pre-auth-ingest-upload-grant-model.md)** — adoption constitutes the reference-begins signal on the register path; the general begin/end contract remains open, due before M9 and M11.
 - **Scheduled/background-execution substrate + single-run safety** — *resolved within M10, before M11.* A new platform capability whose selection also serves later needs (e.g., refresh-token cleanup).
 - **Media access posture (public vs access-controlled reads)** — *needed only by the first feature requiring non-public media — not #256.* Shapes token authority and whether a resolution-time check runs. M5 ships public + a seam.
 - **Future object-store ADR (presigned write / redirect-CDN read)** — *needed only to adopt a non-local-disk backend.* The plan only keeps the port and read endpoint from precluding it.
