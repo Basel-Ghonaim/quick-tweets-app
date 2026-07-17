@@ -7,7 +7,7 @@
  * code never does.
  */
 
-export type MediaStorageErrorCode = "not_found" | "invalid_key";
+export type MediaStorageErrorCode = "not_found" | "invalid_key" | "invalid_token";
 
 export class MediaStorageError extends Error {
   public readonly code: MediaStorageErrorCode;
@@ -28,5 +28,10 @@ export class MediaStorageError extends Error {
   /** The key is malformed or would escape the storage root. */
   static invalidKey(value: string): MediaStorageError {
     return new MediaStorageError("invalid_key", `Invalid storage key '${value}'`);
+  }
+
+  /** The public token is malformed (not a well-formed media token). */
+  static invalidToken(value: string): MediaStorageError {
+    return new MediaStorageError("invalid_token", `Invalid media token '${value}'`);
   }
 }
