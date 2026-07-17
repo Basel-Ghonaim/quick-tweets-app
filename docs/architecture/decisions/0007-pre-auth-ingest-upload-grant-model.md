@@ -1,6 +1,6 @@
 # ADR 0007: Pre-auth Ingest — the Upload-Grant Authorization Model
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-07-17
 > **Deciders:** Basel Ghonaim
 
