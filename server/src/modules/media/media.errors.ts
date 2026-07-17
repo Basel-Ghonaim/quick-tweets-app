@@ -1,10 +1,11 @@
 /**
- * Media module — storage-layer error type.
+ * Media module — error types.
  *
- * A small, HTTP-agnostic error in the style of the backend's `AppError`, but
+ * Small, HTTP-agnostic errors in the style of the backend's `AppError`, but
  * carrying no HTTP status: the Media module is transport-agnostic (ADR 0005).
- * A higher layer (the read boundary, M5) decides the HTTP mapping; storage
- * code never does.
+ * A higher layer (the ingest and read boundaries) decides the HTTP mapping —
+ * e.g. a validation rejection becomes the reserved 415/413 there; storage and
+ * policy code never speak HTTP.
  */
 
 export type MediaStorageErrorCode = "not_found" | "invalid_key" | "invalid_token";
@@ -33,5 +34,37 @@ export class MediaStorageError extends Error {
   /** The public token is malformed (not a well-formed media token). */
   static invalidToken(value: string): MediaStorageError {
     return new MediaStorageError("invalid_token", `Invalid media token '${value}'`);
+  }
+}
+
+// ─── Validation errors (ADR 0005 — Decision 7) ───────────────────────────────
+
+export type MediaValidationErrorCode = "unsupported_type" | "too_large";
+
+export class MediaValidationError extends Error {
+  public readonly code: MediaValidationErrorCode;
+
+  constructor(code: MediaValidationErrorCode, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "MediaValidationError";
+    // Preserve the prototype chain for `instanceof` across the transpile target.
+    Object.setPrototypeOf(this, MediaValidationError.prototype);
+  }
+
+  /** The content does not verify as any allowed type (the declared type is irrelevant). */
+  static unsupportedType(): MediaValidationError {
+    return new MediaValidationError(
+      "unsupported_type",
+      "Content does not verify as an allowed media type",
+    );
+  }
+
+  /** The content exceeds the media size limit. */
+  static tooLarge(sizeBytes: number, limitBytes: number): MediaValidationError {
+    return new MediaValidationError(
+      "too_large",
+      `Content of ${sizeBytes} bytes exceeds the ${limitBytes}-byte media size limit`,
+    );
   }
 }
