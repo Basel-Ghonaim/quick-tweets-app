@@ -69,8 +69,20 @@ export const verifyAccessToken = (token: string): AccessTokenPayload => {
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET, {
       algorithms: ["HS256"],
-    }) as AccessTokenPayload;
-    return decoded;
+    });
+    // Discriminate an access token from any other token signed with the same
+    // secret (e.g. a media upload grant, ADR 0007): an access token always
+    // carries a numeric `userId`, a grant never does. Without this, a grant —
+    // mintable without authentication — would pass as an access token and set
+    // `req.userId = undefined`, defeating authGuard.
+    if (
+      typeof decoded !== "object" ||
+      decoded === null ||
+      typeof (decoded as { userId?: unknown }).userId !== "number"
+    ) {
+      throw new Error("not an access token");
+    }
+    return { userId: (decoded as { userId: number }).userId };
   } catch {
     throw AppError.unauthorized("Invalid or expired token");
   }

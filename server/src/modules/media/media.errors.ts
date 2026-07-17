@@ -68,3 +68,50 @@ export class MediaValidationError extends Error {
     );
   }
 }
+
+// ─── Upload-grant errors (ADR 0007) ──────────────────────────────────────────
+
+export type MediaGrantErrorCode = "invalid_grant" | "grant_exhausted";
+
+export class MediaGrantError extends Error {
+  public readonly code: MediaGrantErrorCode;
+
+  constructor(code: MediaGrantErrorCode, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "MediaGrantError";
+    // Preserve the prototype chain for `instanceof` across the transpile target.
+    Object.setPrototypeOf(this, MediaGrantError.prototype);
+  }
+
+  /** The grant is malformed, not an upload grant, or expired. */
+  static invalid(): MediaGrantError {
+    return new MediaGrantError("invalid_grant", "Invalid or expired upload grant");
+  }
+
+  /** The grant's bounded object count is already used up. */
+  static exhausted(): MediaGrantError {
+    return new MediaGrantError("grant_exhausted", "Upload grant is exhausted");
+  }
+}
+
+// ─── Ingest transport errors ─────────────────────────────────────────────────
+
+export type MediaIngestErrorCode = "source_failed";
+
+export class MediaIngestError extends Error {
+  public readonly code: MediaIngestErrorCode;
+
+  constructor(code: MediaIngestErrorCode, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "MediaIngestError";
+    // Preserve the prototype chain for `instanceof` across the transpile target.
+    Object.setPrototypeOf(this, MediaIngestError.prototype);
+  }
+
+  /** The upload stream failed before completing (e.g. a client-aborted or truncated request). */
+  static sourceFailed(): MediaIngestError {
+    return new MediaIngestError("source_failed", "Upload stream ended before completing");
+  }
+}
