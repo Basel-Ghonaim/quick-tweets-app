@@ -20,6 +20,9 @@ const fakeRow = (over: Record<string, unknown> = {}) => ({
   contentType: "image/png",
   size: 1234,
   status: "ready",
+  uploaderId: null,
+  grantId: null,
+  grantExpiresAt: null,
   createdAt: new Date("2026-07-16T00:00:00.000Z"),
   updatedAt: new Date("2026-07-16T00:00:00.000Z"),
   ...over,
@@ -43,13 +46,15 @@ describe("media repository", () => {
       storageKey: storageKey("objects/avatar-1"),
       contentType: "image/png",
       size: 1234,
+      provenance: { uploaderId: 7 },
     });
 
-    // a token was minted and handed to persistence
+    // a token was minted and handed to persistence, with its provenance
     expect(captured?.data.token).toMatch(/^[A-Za-z0-9_-]+$/);
     expect(captured?.data.storageKey).toBe("objects/avatar-1");
     expect(captured?.data.contentType).toBe("image/png");
     expect(captured?.data.size).toBe(1234);
+    expect(captured?.data.uploaderId).toBe(7);
     // the result is the branded domain object
     expect(obj.storageKey).toBe("objects/avatar-1");
     expect(obj.contentType).toBe("image/png");
@@ -75,5 +80,41 @@ describe("media repository", () => {
 
     const missing = await repo.findByToken(mintToken());
     expect(missing).toBeNull();
+  });
+
+  it("create() records grant provenance (no uploaderId) when given a grant", async () => {
+    let captured: { data: Record<string, unknown> } | undefined;
+    const db = {
+      mediaObject: {
+        create: async (args: { data: Record<string, unknown> }) => {
+          captured = args;
+          return fakeRow(args.data);
+        },
+        findUnique: async () => null,
+      },
+    };
+    const repo = createMediaRepository(db as never);
+    const grantExpiresAt = new Date("2026-07-17T15:15:00.000Z");
+    await repo.create({
+      storageKey: storageKey("objects/g"),
+      contentType: "image/png",
+      size: 10,
+      provenance: { grantId: "grant-1", grantExpiresAt },
+    });
+    expect(captured?.data.grantId).toBe("grant-1");
+    expect(captured?.data.grantExpiresAt).toBe(grantExpiresAt);
+    expect(captured?.data.uploaderId).toBeUndefined();
+  });
+
+  it("countByGrant() passes through to the count query", async () => {
+    const db = {
+      mediaObject: {
+        count: async (args: { where: { grantId: string } }) =>
+          args.where.grantId === "g1" ? 1 : 0,
+      },
+    };
+    const repo = createMediaRepository(db as never);
+    expect(await repo.countByGrant("g1")).toBe(1);
+    expect(await repo.countByGrant("other")).toBe(0);
   });
 });

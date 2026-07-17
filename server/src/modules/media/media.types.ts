@@ -81,15 +81,30 @@ export interface MediaObject {
   contentType: string;
   size: number;
   status: MediaStatus;
+  /** Authenticated uploader / adopted owner; `null` while under grant provenance. */
+  uploaderId: number | null;
+  /** Pre-auth provenance: the upload grant that ingested the object (ADR 0007). */
+  grantId: string | null;
+  grantExpiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
+
+/**
+ * Who an ingested object is accountable to (ADR 0005 Decision 5 / ADR 0007):
+ * an authenticated uploader, or — for pre-auth ingest — the minting grant.
+ * Exactly one form is present at creation; adoption later fills the owner.
+ */
+export type MediaProvenance =
+  | { uploaderId: number }
+  | { grantId: string; grantExpiresAt: Date };
 
 /** Fields required to register a newly-stored object; the token is minted by the registry. */
 export interface NewMediaObject {
   storageKey: StorageKey;
   contentType: string;
   size: number;
+  provenance: MediaProvenance;
 }
 
 /**
@@ -103,4 +118,25 @@ export interface IMediaRepository {
   create(input: NewMediaObject): Promise<MediaObject>;
   /** Resolve a public token to its registry entry, or `null` if none exists. */
   findByToken(token: MediaToken): Promise<MediaObject | null>;
+  /** How many objects a grant has ingested (per-grant bound enforcement). */
+  countByGrant(grantId: string): Promise<number>;
+}
+
+// ─── Ingest boundary (ADR 0005 Decision 5 / ADR 0007) ────────────────────────
+
+/** The two admissible authorization evidence types fixed by ADR 0007. */
+export type IngestEvidence =
+  | { kind: "user"; userId: number }
+  | { kind: "grant"; grant: string };
+
+/** What ingest returns to the client — the reference token plus display facts. */
+export interface IngestResult {
+  token: MediaToken;
+  contentType: string;
+  size: number;
+}
+
+/** The ingest orchestration contract — transport-agnostic (a `Readable`, never HTTP). */
+export interface IMediaService {
+  ingest(file: Readable, evidence: IngestEvidence): Promise<IngestResult>;
 }
