@@ -13,7 +13,6 @@
  * - CORS origin is configurable via CORS_ORIGIN env var
  *
  * Future expansion:
- * - Add Multer for file uploads (profile image)
  * - Add compression middleware for response compression
  */
 
@@ -28,6 +27,7 @@ import { tweetRoutes } from "./modules/tweets/tweet.routes.js";
 import { commentRoutes } from "./modules/comments/comment.routes.js";
 import { userRoutes } from "./modules/users/user.routes.js";
 import { followRoutes } from "./modules/follows/follow.routes.js";
+import { mediaRoutes } from "./modules/media/media.routes.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import { env } from "./config/env.js";
 import { prisma } from "./shared/database/index.js";
@@ -66,6 +66,9 @@ app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
 app.use("/api/v1/comments", apiLimiter, commentRoutes);
 app.use("/api/v1/users", apiLimiter, userRoutes);
 app.use("/api/v1/follows", apiLimiter, followRoutes);
+// Media manages its own limits per route (like auth): the strict mint limiter
+// on /grants, the general limiter on ingest — no blanket prefix limiter.
+app.use("/api/v1/media", mediaRoutes);
 
 // ─── Error Handler (must be last) ────────────────────────────────────────────
 app.use(errorHandler);

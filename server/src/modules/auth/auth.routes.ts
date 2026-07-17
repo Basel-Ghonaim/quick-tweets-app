@@ -16,7 +16,6 @@
  * Future expansion:
  * - POST /forgot-password → validate → controller.forgotPassword
  * - POST /reset-password  → validate → controller.resetPassword
- * - PATCH /profile        → authGuard → multer → validate → controller.updateProfile
  *
  * Principle: SRP — only route definitions, no logic.
  * Principle: Layered Architecture — middleware → controller → service → repository.
