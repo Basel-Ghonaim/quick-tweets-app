@@ -7,12 +7,19 @@
  */
 
 import { Readable } from "node:stream";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { generateAccessToken } from "../../shared/utils/jwt.js";
-import { MediaGrantError, MediaIngestError, MediaValidationError } from "./media.errors";
+import {
+  MediaGrantError,
+  MediaIngestError,
+  MediaReadError,
+  MediaStorageError,
+  MediaValidationError,
+} from "./media.errors";
 import { mintUploadGrant } from "./media.grants";
 import { createMediaService } from "./media.service";
+import { storageKey } from "./media.keys";
 import { mintToken } from "./media.tokens";
 import { MEDIA_MAX_SIZE_BYTES } from "./media.validation";
 import type {
@@ -244,5 +251,77 @@ describe("media ingest service", () => {
     expect(err).toBeInstanceOf(MediaGrantError);
     expect((err as MediaGrantError).code).toBe("grant_exhausted");
     expect(deleted).toHaveLength(1); // partial object cleaned up
+  });
+});
+
+describe("media service — read (resolution)", () => {
+  const readObject = (over: Partial<MediaObject> = {}): MediaObject => ({
+    id: 1,
+    token: mintToken(),
+    storageKey: storageKey("objects/x"),
+    contentType: "image/png",
+    size: 5,
+    status: "ready",
+    uploaderId: 1,
+    grantId: null,
+    grantExpiresAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...over,
+  });
+
+  const makeReadService = (
+    object: MediaObject | null,
+    opts: { bytes?: string; missing?: boolean } = {},
+  ) => {
+    const repo: IMediaRepository = {
+      create: async () => { throw new Error("unused"); },
+      findByToken: async () => object,
+      countByGrant: async () => 0,
+    };
+    const storage: StorageAdapter = {
+      save: async () => {},
+      createReadStream: async () => {
+        if (opts.missing) throw MediaStorageError.notFound("objects/x");
+        return Readable.from([Buffer.from(opts.bytes ?? "img")]);
+      },
+      exists: async () => true,
+      delete: async () => {},
+    };
+    return createMediaService(storage, repo);
+  };
+
+  it("returns the byte stream and header facts for a ready object", async () => {
+    const svc = makeReadService(readObject({ contentType: "image/webp", size: 3 }), { bytes: "abc" });
+    const result = await svc.read(mintToken());
+    expect(result.contentType).toBe("image/webp");
+    expect(result.size).toBe(3);
+    let body = "";
+    for await (const chunk of result.stream) body += chunk;
+    expect(body).toBe("abc");
+  });
+
+  it("throws not_found for an unknown token", async () => {
+    const err = await makeReadService(null).read(mintToken()).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(MediaReadError);
+    expect((err as MediaReadError).code).toBe("not_found");
+  });
+
+  it("throws gone for a deleted object", async () => {
+    const err = await makeReadService(readObject({ status: "deleted" })).read(mintToken()).catch((e: unknown) => e);
+    expect((err as MediaReadError).code).toBe("gone");
+  });
+
+  it("throws not_found for a pending (not-yet-servable) object", async () => {
+    const err = await makeReadService(readObject({ status: "pending" })).read(mintToken()).catch((e: unknown) => e);
+    expect((err as MediaReadError).code).toBe("not_found");
+  });
+
+  it("fails safe (not_found) and logs on registry/storage divergence", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const err = await makeReadService(readObject(), { missing: true }).read(mintToken()).catch((e: unknown) => e);
+    expect((err as MediaReadError).code).toBe("not_found");
+    expect(spy).toHaveBeenCalled(); // internally observable, without M11 machinery
+    spy.mockRestore();
   });
 });

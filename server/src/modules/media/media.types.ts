@@ -61,12 +61,12 @@ export interface StorageAdapter {
 export type MediaToken = Brand<string, "MediaToken">;
 
 /**
- * Lifecycle states the registry models at this stage. `ready` is the only
- * servable state; `deleted` is a tombstone whose producer is the reclamation
- * Work Item — no path sets it yet. (A pre-servable `pending` state is deferred
- * to the ingest boundary if it adopts write-before-validate.)
+ * Lifecycle states the registry models. `ready` is the only servable state;
+ * `pending` is a modeled not-yet-servable state with no producer yet
+ * (write-after-validate ingest never persists it — the read boundary refuses
+ * it); `deleted` is a tombstone whose producer is the reclamation Work Item.
  */
-export type MediaStatus = "ready" | "deleted";
+export type MediaStatus = "pending" | "ready" | "deleted";
 
 /**
  * A registry entry — Media's authoritative record of one stored object.
@@ -136,7 +136,20 @@ export interface IngestResult {
   size: number;
 }
 
-/** The ingest orchestration contract — transport-agnostic (a `Readable`, never HTTP). */
+/**
+ * A servable object opened for reading: the header facts plus the byte stream.
+ * Deliberately narrow — it carries no storage detail (the storage key stays
+ * inside the module; the read boundary only needs the type, size, and bytes).
+ */
+export interface MediaReadResult {
+  contentType: string;
+  size: number;
+  stream: Readable;
+}
+
+/** Media's orchestration contract — transport-agnostic (a `Readable`, never HTTP). */
 export interface IMediaService {
   ingest(file: Readable, evidence: IngestEvidence): Promise<IngestResult>;
+  /** Resolve a public token to a servable object; the access-control seam (ADR 0005 D4). */
+  read(token: MediaToken): Promise<MediaReadResult>;
 }

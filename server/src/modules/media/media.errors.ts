@@ -115,3 +115,29 @@ export class MediaIngestError extends Error {
     return new MediaIngestError("source_failed", "Upload stream ended before completing");
   }
 }
+
+// ─── Read errors (ADR 0005 — Decisions 3 & 4) ────────────────────────────────
+
+export type MediaReadErrorCode = "not_found" | "gone";
+
+export class MediaReadError extends Error {
+  public readonly code: MediaReadErrorCode;
+
+  constructor(code: MediaReadErrorCode, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "MediaReadError";
+    // Preserve the prototype chain for `instanceof` across the transpile target.
+    Object.setPrototypeOf(this, MediaReadError.prototype);
+  }
+
+  /** No servable object for the token — unknown, not-yet-ready, or bytes unavailable. */
+  static notFound(): MediaReadError {
+    return new MediaReadError("not_found", "Media not available");
+  }
+
+  /** The object was deleted — a permanent failure (the token is never reissued). */
+  static gone(): MediaReadError {
+    return new MediaReadError("gone", "Media has been deleted");
+  }
+}
