@@ -27,6 +27,7 @@ const user: User = {
   name: "Ada Lovelace",
   email: "ada@example.com",
   profileImage: null,
+  avatar: null,
   bio: "",
   createdAt: "2026-01-01T00:00:00.000Z",
 };
