@@ -8,7 +8,8 @@ export interface UserDto {
   username: string;
   name: string;
   email: string;
-  profileImage: string | null;
+  profileImage: string | null; // DEPRECATED (always null) — superseded by `avatar`
+  avatar: { token: string } | null;
   bio: string;
   createdAt: string;
 }

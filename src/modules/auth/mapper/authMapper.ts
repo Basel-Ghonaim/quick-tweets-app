@@ -8,6 +8,7 @@ export const authMapper = (): AuthMapper => ({
       name: data.user.name,
       email: data.user.email,
       profileImage: data.user.profileImage,
+      avatar: data.user.avatar ?? null,
       bio: data.user.bio,
       createdAt: data.user.createdAt,
     },
