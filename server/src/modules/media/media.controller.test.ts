@@ -6,11 +6,11 @@
  * and domain-error → HTTP-status mapping are all exercised.
  */
 
-import { Readable } from "node:stream";
+import { Readable, Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
 
 import { AppError } from "../../shared/errors/index.js";
-import { MediaGrantError, MediaValidationError } from "./media.errors";
+import { MediaGrantError, MediaReadError, MediaValidationError } from "./media.errors";
 import { createMediaController } from "./media.controller";
 import type { IMediaService, IngestEvidence, IngestResult } from "./media.types";
 
@@ -63,12 +63,17 @@ const runIngest = (
     createMediaController(service).ingest(req as never, res as never, next);
   });
 
+const unusedRead: IMediaService["read"] = async () => {
+  throw new Error("read not used in this test");
+};
+
 const okService = (capture?: (e: IngestEvidence) => void): IMediaService => ({
   ingest: async (file, evidence): Promise<IngestResult> => {
     capture?.(evidence);
     for await (const _ of file) { /* drain */ }
     return { token: "TOKEN123abc" as never, contentType: "image/png", size: 3 };
   },
+  read: unusedRead,
 });
 
 const throwingService = (err: unknown): IMediaService => ({
@@ -76,7 +81,41 @@ const throwingService = (err: unknown): IMediaService => ({
     for await (const _ of file) { /* drain */ }
     throw err;
   },
+  read: unusedRead,
 });
+
+const readOnly = (read: IMediaService["read"]): IMediaService => ({
+  ingest: async () => { throw new Error("ingest not used in this test"); },
+  read,
+});
+
+/** A minimal writable response that records headers and collects the piped body. */
+class MockReadRes extends Writable {
+  headers: Record<string, string> = {};
+  private chunks: Buffer[] = [];
+  setHeader(key: string, value: string): void { this.headers[key] = value; }
+  override _write(chunk: Buffer, _enc: BufferEncoding, cb: (e?: Error | null) => void): void {
+    this.chunks.push(Buffer.from(chunk));
+    cb();
+  }
+  body(): Buffer { return Buffer.concat(this.chunks); }
+}
+
+interface ReadOutcome {
+  status?: number;
+  headers?: Record<string, string>;
+  body?: Buffer;
+  error?: unknown;
+}
+
+const runRead = (service: IMediaService, token: string): Promise<ReadOutcome> =>
+  new Promise((resolve) => {
+    const req = { params: { token } };
+    const res = new MockReadRes();
+    res.on("finish", () => resolve({ status: 200, headers: res.headers, body: res.body() }));
+    const next = (error?: unknown) => resolve({ error });
+    createMediaController(service).read(req as never, res as never, next);
+  });
 
 describe("media controller — ingest", () => {
   it("ingests under an authenticated principal and returns 201", async () => {
@@ -106,7 +145,7 @@ describe("media controller — ingest", () => {
 
   it("rejects a request with no evidence (401) without invoking the service", async () => {
     let called = false;
-    const out = await runIngest({ ingest: async () => { called = true; throw new Error(); } }, {});
+    const out = await runIngest({ ingest: async () => { called = true; throw new Error(); }, read: unusedRead }, {});
     expect(out.error).toBeInstanceOf(AppError);
     expect((out.error as AppError).statusCode).toBe(401);
     expect(called).toBe(false);
@@ -143,5 +182,45 @@ describe("media controller — ingest", () => {
       headers: { "x-upload-grant": "g" },
     });
     expect((invalid.error as AppError).statusCode).toBe(401);
+  });
+});
+
+describe("media controller — read", () => {
+  const VALID_TOKEN = "Nk3v9qYw1kPz-XG27RODaQ"; // 22-char base64url, passes mediaToken()
+
+  it("streams a ready object with the full security envelope", async () => {
+    const svc = readOnly(async () => ({
+      contentType: "image/png",
+      size: 5,
+      stream: Readable.from([Buffer.from("hello")]),
+    }));
+    const out = await runRead(svc, VALID_TOKEN);
+
+    expect(out.status).toBe(200);
+    expect(out.headers?.["Content-Type"]).toBe("image/png"); // content-derived
+    expect(out.headers?.["X-Content-Type-Options"]).toBe("nosniff");
+    expect(out.headers?.["Content-Disposition"]).toBe("inline");
+    expect(out.headers?.["Content-Length"]).toBe("5");
+    expect(out.headers?.["Cache-Control"]).toBe("public, max-age=3600");
+    expect(out.body?.toString()).toBe("hello");
+    // storage detail never leaks into the response headers.
+    expect(JSON.stringify(out.headers)).not.toMatch(/storage|objects\//i);
+  });
+
+  it("returns 410 Gone for a deleted object", async () => {
+    const out = await runRead(readOnly(async () => { throw MediaReadError.gone(); }), VALID_TOKEN);
+    expect((out.error as AppError).statusCode).toBe(410);
+  });
+
+  it("returns 404 for a not-available object (unknown / pending / divergence)", async () => {
+    const out = await runRead(readOnly(async () => { throw MediaReadError.notFound(); }), VALID_TOKEN);
+    expect((out.error as AppError).statusCode).toBe(404);
+  });
+
+  it("returns 404 for a malformed token without invoking the service", async () => {
+    let called = false;
+    const out = await runRead(readOnly(async () => { called = true; throw new Error(); }), "has/slash");
+    expect((out.error as AppError).statusCode).toBe(404);
+    expect(called).toBe(false);
   });
 });

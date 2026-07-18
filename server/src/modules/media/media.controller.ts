@@ -25,12 +25,14 @@ import { sendSuccess } from "../../shared/response/index.js";
 import {
   MediaGrantError,
   MediaIngestError,
+  MediaReadError,
   MediaValidationError,
 } from "./media.errors.js";
 import { mintUploadGrant } from "./media.grants.js";
 import { createMediaService } from "./media.service.js";
+import { mediaToken } from "./media.tokens.js";
 import { MEDIA_MAX_SIZE_BYTES } from "./media.validation.js";
-import type { IMediaService, IngestEvidence } from "./media.types.js";
+import type { IMediaService, IngestEvidence, MediaToken } from "./media.types.js";
 
 /** Map Media domain errors to the app's typed HTTP errors (reserved statuses). */
 const toHttpError = (err: unknown): unknown => {
@@ -46,6 +48,11 @@ const toHttpError = (err: unknown): unknown => {
   }
   if (err instanceof MediaIngestError) {
     return AppError.badRequest("Upload stream ended before completing");
+  }
+  if (err instanceof MediaReadError) {
+    return err.code === "gone"
+      ? AppError.gone("This media has been deleted")
+      : AppError.notFound("Media");
   }
   return err;
 };
@@ -144,5 +151,34 @@ export const createMediaController = (
     });
 
     req.pipe(parser);
+  },
+
+  // ── GET /media/:token (public read) ──
+
+  read: (req: Request, res: Response, next: NextFunction): void => {
+    const rawToken = req.params.token;
+    let token: MediaToken;
+    try {
+      token = mediaToken(typeof rawToken === "string" ? rawToken : "");
+    } catch {
+      next(AppError.notFound("Media")); // malformed token → uniform 404 (no info leak)
+      return;
+    }
+    service
+      .read(token)
+      .then(({ contentType, size, stream }) => {
+        // Security envelope (ADR 0005 D7): serve the content-derived type,
+        // non-sniffable, so the endpoint never serves active content from the
+        // app origin. Cache-Control is bounded (not `immutable`) so a future
+        // deletion propagates out of caches within the window.
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Content-Disposition", "inline");
+        res.setHeader("Content-Length", String(size));
+        res.setHeader("Cache-Control", "public, max-age=3600");
+        stream.on("error", () => res.destroy()); // mid-stream failure after headers
+        stream.pipe(res);
+      })
+      .catch((err: unknown) => next(toHttpError(err)));
   },
 });
