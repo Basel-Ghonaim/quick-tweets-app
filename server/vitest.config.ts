@@ -9,6 +9,7 @@ export default defineConfig({
     env: {
       DATABASE_URL: "postgresql://test:test@localhost:5432/quick_tweets_test",
       JWT_SECRET: "vitest-only-signing-secret",
+      MEDIA_GRANT_SECRET: "vitest-only-grant-secret",
     },
   },
 });
