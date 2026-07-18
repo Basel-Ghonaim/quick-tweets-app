@@ -19,6 +19,7 @@
 import busboy from "busboy";
 import type { Request, Response, NextFunction } from "express";
 import type { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 
 import { AppError } from "../../shared/errors/index.js";
 import { sendSuccess } from "../../shared/response/index.js";
@@ -56,6 +57,13 @@ const toHttpError = (err: unknown): unknown => {
   }
   return err;
 };
+
+/** A client that aborted mid-response — routine, not a failure worth logging. */
+const isPrematureClose = (err: unknown): boolean =>
+  typeof err === "object" &&
+  err !== null &&
+  "code" in err &&
+  (err as { code?: unknown }).code === "ERR_STREAM_PREMATURE_CLOSE";
 
 // ─── Controller Factory ──────────────────────────────────────────────────────
 
@@ -176,8 +184,22 @@ export const createMediaController = (
         res.setHeader("Content-Disposition", "inline");
         res.setHeader("Content-Length", String(size));
         res.setHeader("Cache-Control", "public, max-age=3600");
-        stream.on("error", () => res.destroy()); // mid-stream failure after headers
-        stream.pipe(res);
+        // `pipeline` (not a bare `pipe`) so the source byte stream is destroyed —
+        // and its file descriptor closed — when the client aborts mid-download:
+        // `pipe` would only unpipe it, leaking the fd on this public, high-volume
+        // endpoint. A client abort settles as ERR_STREAM_PREMATURE_CLOSE (routine,
+        // not logged); any other post-header failure — a mid-read I/O fault, or a
+        // registry↔storage divergence that escaped the pre-stream check — is logged
+        // so it stays observable, then the connection resets (the headers are
+        // already sent, so the status can no longer change).
+        pipeline(stream, res).catch((err: unknown) => {
+          if (!isPrematureClose(err)) {
+            console.error(
+              "[Media] read stream failed after response headers were sent",
+              { token, err },
+            );
+          }
+        });
       })
       .catch((err: unknown) => next(toHttpError(err)));
   },

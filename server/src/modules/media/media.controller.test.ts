@@ -7,7 +7,7 @@
  */
 
 import { Readable, Writable } from "node:stream";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { AppError } from "../../shared/errors/index.js";
 import { MediaGrantError, MediaReadError, MediaValidationError } from "./media.errors";
@@ -222,5 +222,38 @@ describe("media controller — read", () => {
     const out = await runRead(readOnly(async () => { called = true; throw new Error(); }), "has/slash");
     expect((out.error as AppError).statusCode).toBe(404);
     expect(called).toBe(false);
+  });
+
+  it("destroys the source byte stream when the client aborts mid-download (no fd leak)", async () => {
+    const source = new Readable({ read() { /* never ends on its own */ } });
+    const svc = readOnly(async () => ({ contentType: "image/png", size: 100, stream: source }));
+    const res = new MockReadRes();
+    const sourceClosed = new Promise<void>((resolve) => source.once("close", () => resolve()));
+
+    createMediaController(svc).read({ params: { token: VALID_TOKEN } } as never, res as never, () => {});
+    // Let service.read()'s continuation attach the pipeline, then simulate the
+    // client disconnecting mid-transfer.
+    await new Promise((r) => setImmediate(r));
+    res.destroy();
+
+    // pipeline must tear the source down; a bare pipe would leave it open and
+    // this await would hang until the test times out.
+    await sourceClosed;
+    expect(source.destroyed).toBe(true);
+  });
+
+  it("logs a post-header stream failure so I/O faults / divergence stay observable", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const source = new Readable({ read() { this.destroy(new Error("mid-read I/O fault")); } });
+    const svc = readOnly(async () => ({ contentType: "image/png", size: 100, stream: source }));
+    const res = new MockReadRes();
+    const resClosed = new Promise<void>((resolve) => res.once("close", () => resolve()));
+
+    createMediaController(svc).read({ params: { token: VALID_TOKEN } } as never, res as never, () => {});
+    await resClosed; // the source error propagates through pipeline and destroys res
+    await new Promise((r) => setImmediate(r)); // let pipeline's rejection handler run
+
+    expect(spy).toHaveBeenCalled(); // a genuine failure is logged (client aborts are not)
+    spy.mockRestore();
   });
 });
