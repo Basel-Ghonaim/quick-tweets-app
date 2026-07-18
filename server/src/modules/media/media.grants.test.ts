@@ -38,30 +38,58 @@ describe("upload grants", () => {
     );
   });
 
-  it("rejects an auth access token presented as a grant (forward wall)", () => {
-    const accessToken = generateAccessToken(1);
-    expect(() => verifyUploadGrant(accessToken)).toThrow(MediaGrantError);
+  // ── Cross-domain separation: the security property is the SIGNING KEY, not
+  //    the payload shape. Each token below carries userId AND typ, so both
+  //    shape checks would pass — only the key differs, and that alone rejects.
+
+  it("key separation: a grant-key token that satisfies BOTH shape checks fails access-token verification", () => {
+    const crossToken = jwt.sign(
+      { userId: 99, gid: "abc123", typ: "media_upload_grant" },
+      env.MEDIA_GRANT_SECRET,
+      { algorithm: "HS256", expiresIn: 60 },
+    );
+    // verifyAccessToken uses JWT_SECRET → signature fails before any payload check.
+    expect(() => verifyAccessToken(crossToken)).toThrow(AppError);
   });
 
-  it("rejects a grant presented as an access token (reverse wall — the DoS guard)", () => {
-    // A grant has no numeric userId, so access-token verification must reject
-    // it — otherwise an anonymously-minted grant would pass authGuard.
-    const { grant } = mintUploadGrant();
-    expect(() => verifyAccessToken(grant)).toThrow(AppError);
+  it("key separation: an auth-key token that satisfies BOTH shape checks fails grant verification", () => {
+    const crossToken = jwt.sign(
+      { userId: 1, gid: "abc123", typ: "media_upload_grant" },
+      env.JWT_SECRET,
+      { algorithm: "HS256", expiresIn: 60 },
+    );
+    // verifyUploadGrant uses MEDIA_GRANT_SECRET → signature fails first.
+    expect(() => verifyUploadGrant(crossToken)).toThrow(MediaGrantError);
   });
 
-  it("rejects a token with the wrong typ even when validly signed", () => {
-    const forged = jwt.sign({ gid: "abc123", typ: "something_else" }, env.JWT_SECRET, {
+  it("rejects a real access token presented as a grant, and a real grant presented as an access token", () => {
+    expect(() => verifyUploadGrant(generateAccessToken(1))).toThrow(MediaGrantError);
+    expect(() => verifyAccessToken(mintUploadGrant().grant)).toThrow(AppError);
+  });
+
+  // ── Defense in depth: within a single key domain, the payload-shape checks
+  //    still reject the wrong shape.
+
+  it("defense in depth: a grant-key token with the wrong typ is rejected", () => {
+    const forged = jwt.sign({ gid: "abc123", typ: "something_else" }, env.MEDIA_GRANT_SECRET, {
       algorithm: "HS256",
       expiresIn: 60,
     });
     expect(() => verifyUploadGrant(forged)).toThrow(MediaGrantError);
   });
 
+  it("defense in depth: an auth-key token lacking a numeric userId is rejected", () => {
+    const forged = jwt.sign({ typ: "media_upload_grant" }, env.JWT_SECRET, {
+      algorithm: "HS256",
+      expiresIn: 60,
+    });
+    expect(() => verifyAccessToken(forged)).toThrow(AppError);
+  });
+
   it("rejects an expired grant", () => {
     const expired = jwt.sign(
       { gid: "abc123", typ: "media_upload_grant" },
-      env.JWT_SECRET,
+      env.MEDIA_GRANT_SECRET,
       { algorithm: "HS256", expiresIn: -10 },
     );
     const err = ((): unknown => {

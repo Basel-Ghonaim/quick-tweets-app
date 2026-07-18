@@ -8,8 +8,10 @@
  * under an *identified* episode, never anonymously (ADR 0005 Decision 5).
  *
  * Representation (implementation choice per ADR 0007): a stateless HMAC-signed
- * JWT carrying a random grant id and a `typ` claim that separates it from auth
- * access tokens — the same signing key can never make one pass as the other.
+ * JWT carrying a random grant id and a `typ` claim. It is signed with a
+ * dedicated key (`MEDIA_GRANT_SECRET`), separate from the auth signing key, so
+ * a grant and an access token cannot cross-verify — the signature check fails
+ * before any payload is inspected; the `typ` claim is kept as defense in depth.
  * Statelessness keeps minting write-free; the grant's liveness stays derivable
  * from Media's own state because ingest records `grantId` + `grantExpiresAt`
  * on the object (ADR 0007's abandonment-computability obligation).
@@ -44,7 +46,7 @@ export interface UploadGrant {
 export const mintUploadGrant = (): { grant: string; expiresAt: Date } => {
   const id = randomBytes(16).toString("base64url");
   const expiresAt = new Date(Date.now() + GRANT_TTL_SECONDS * 1000);
-  const grant = jwt.sign({ gid: id, typ: GRANT_TYP }, env.JWT_SECRET, {
+  const grant = jwt.sign({ gid: id, typ: GRANT_TYP }, env.MEDIA_GRANT_SECRET, {
     algorithm: "HS256",
     expiresIn: GRANT_TTL_SECONDS,
   });
@@ -58,7 +60,7 @@ export const mintUploadGrant = (): { grant: string; expiresAt: Date } => {
  */
 export const verifyUploadGrant = (token: string): UploadGrant => {
   try {
-    const payload = jwt.verify(token, env.JWT_SECRET, {
+    const payload = jwt.verify(token, env.MEDIA_GRANT_SECRET, {
       algorithms: ["HS256"],
     }) as { gid?: unknown; typ?: unknown; exp?: unknown };
 
