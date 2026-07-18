@@ -59,6 +59,11 @@ export class AppError extends Error {
     return new AppError("conflict", message, 409);
   }
 
+  /** 410 — Resource permanently gone (e.g., deleted media) */
+  static gone(message = "Gone") {
+    return new AppError("gone", message, 410);
+  }
+
   /** 413 — File or payload exceeds size limit */
   static payloadTooLarge(message = "Payload too large") {
     return new AppError("payload_too_large", message, 413);
