@@ -199,6 +199,9 @@ describe("media controller — read", () => {
     expect(out.status).toBe(200);
     expect(out.headers?.["Content-Type"]).toBe("image/png"); // content-derived
     expect(out.headers?.["X-Content-Type-Options"]).toBe("nosniff");
+    // Route-scoped override of helmet's global `same-origin` so the public,
+    // embeddable asset can be loaded cross-origin (e.g. in `<img src>`).
+    expect(out.headers?.["Cross-Origin-Resource-Policy"]).toBe("cross-origin");
     expect(out.headers?.["Content-Disposition"]).toBe("inline");
     expect(out.headers?.["Content-Length"]).toBe("5");
     expect(out.headers?.["Cache-Control"]).toBe("public, max-age=3600");

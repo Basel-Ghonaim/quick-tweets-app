@@ -181,6 +181,12 @@ export const createMediaController = (
         // deletion propagates out of caches within the window.
         res.setHeader("Content-Type", contentType);
         res.setHeader("X-Content-Type-Options", "nosniff");
+        // This object is public-by-token and the top-level mount exists to be
+        // embeddable (e.g. `<img src>`). Override helmet's global `same-origin`
+        // default for THIS response only, so cross-origin embedding works. CORP
+        // is not an authorization mechanism here — a direct GET already bypasses
+        // it; media access posture remains the deferred, seam-owned decision.
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
         res.setHeader("Content-Disposition", "inline");
         res.setHeader("Content-Length", String(size));
         res.setHeader("Cache-Control", "public, max-age=3600");

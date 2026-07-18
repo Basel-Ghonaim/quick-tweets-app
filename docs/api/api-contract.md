@@ -943,6 +943,7 @@ Resolves the token and streams the bytes under a fixed security envelope. Not ra
 |---|---|---|
 | `Content-Type` | the object's **content-derived** verified type (e.g. `image/png`) | never a client-declared type |
 | `X-Content-Type-Options` | `nosniff` | the browser can't sniff to active content |
+| `Cross-Origin-Resource-Policy` | `cross-origin` | public-by-token, embeddable asset — route-scoped override of the global `same-origin` default; not an authorization control (a direct GET bypasses it) |
 | `Content-Disposition` | `inline` | displayed in-page |
 | `Content-Length` | byte size | |
 | `Cache-Control` | `public, max-age=3600` | media bytes are immutable, so a short-lived cached copy is always correct; the bounded (non-`immutable`) window lets a future deletion propagate out of caches |
