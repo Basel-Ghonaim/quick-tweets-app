@@ -67,6 +67,9 @@ POST   /api/v1/follows/:username
 DELETE /api/v1/follows/:username
 GET    /api/v1/follows/:username/followers
 GET    /api/v1/follows/:username/following
+
+POST   /api/v1/media/grants
+POST   /api/v1/media
 ```
 
 > **Health check:** `GET /health` (outside `/api/v1`) returns `{ status, db, timestamp }` — `200` when the database ping (`SELECT 1`) succeeds, `503` when it fails. Used for infrastructure monitoring; not part of the versioned API.
@@ -199,6 +202,7 @@ interface ErrorBody {
 |---|---|---|---|
 | Auth | `/auth/login`, `/auth/register` | 10 req / 15 min | "Too many login attempts. For your security, please wait 15 minutes before trying again." |
 | Refresh | `/auth/refresh` | 30 req / 15 min | "Too many refresh requests. Please wait a few minutes before continuing." |
+| Media mint | `/media/grants` | 20 req / 15 min | "Too many upload requests. Please wait a few minutes before trying again." |
 | API | All other routes | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
 
 ### Auth Modes
@@ -206,7 +210,8 @@ interface ErrorBody {
 | Mode         | Header                                     | Behavior                                                                                 |
 | ------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | **Required** | `Authorization: Bearer <token>`            | 401 if missing or invalid                                                                |
-| **Optional** | `Authorization: Bearer <token>` (optional) | If present, attaches `userId`. If missing, continues as guest. Used for `isLiked` / `isFollowing` fields. |
+| **Optional** | `Authorization: Bearer <token>` (optional) | If present, attaches `userId`. If missing, continues as guest. Used e.g. for `isLiked` / `isFollowing` fields. |
+| **Bearer-or-Grant** | `Authorization: Bearer <token>` **or** `X-Upload-Grant: <grant>` | At least one is required (401 if neither); the Bearer token takes precedence. Used by `POST /media`. |
 | **None**     | —                                          | No auth needed                                                                           |
 
 ---
@@ -858,4 +863,67 @@ interface ErrorBody {
 
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "User not found" } }
+```
+
+---
+
+## Media
+
+Media upload follows the **upload-then-submit-reference** pattern: a client uploads bytes to Media's ingest endpoint, receives an opaque **media token** (the stable reference), and submits *that token* — never file bytes — to feature endpoints (the feature attach endpoints that accept it arrive with their own Work Items). Feature endpoints do not accept multipart. The token becomes publicly resolvable when the media read endpoint is implemented; until then it is a stored reference only. Governing decisions: [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) (boundary) and [ADR 0007](../architecture/decisions/0007-pre-auth-ingest-upload-grant-model.md) (pre-auth upload grants).
+
+### `POST /media/grants` — Mint an upload grant
+
+**Auth:** None (strictly rate-limited — see Rate Limiting)
+
+Issues a short-lived **upload grant** for pre-auth flows (e.g. register-with-avatar): a bearer capability that authorizes a bounded number of uploads (currently **1**) within its lifetime (`expiresAt`), presented via the `X-Upload-Grant` header on `POST /media`.
+
+```jsonc
+// Response 201
+{
+  "success": true,
+  "data": {
+    "grant": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", // opaque bearer string
+    "expiresAt": "2026-07-17T15:15:00.000Z"
+  }
+}
+```
+
+### `POST /media` — Upload a media object (multipart)
+
+**Auth:** `Authorization: Bearer <token>` **or** `X-Upload-Grant: <grant>` — at least one is required; if both are present the Bearer token takes precedence (the grant is ignored and left unspent). A request with neither is rejected `401`.
+
+**Request:** `multipart/form-data` with a single file field named `file`. The declared content type and file extension are **advisory only** — the effective type is derived server-side from the file's bytes. Allowed types: `image/png`, `image/jpeg`, `image/webp`, `image/gif`. Size limit: **5 MiB** (inclusive). The 16 kB JSON body cap does not apply to this route.
+
+```jsonc
+// Response 201
+{
+  "success": true,
+  "data": {
+    "token": "Nk3v9qYw1kPz-XG27ROD_Q",   // the stable media reference — submit this to feature endpoints
+    "contentType": "image/png",           // the verified, content-derived type (authoritative)
+    "size": 34712                          // bytes stored
+  }
+}
+
+// Response 400 — malformed request. One of:
+//   "Expected a multipart/form-data request"      (wrong Content-Type)
+//   "A multipart field named 'file' is required"  (multipart, but no file part)
+//   "Malformed multipart request"                 (parse error)
+//   "Upload stream ended before completing"        (client aborted / truncated mid-upload)
+{ "success": false, "error": { "type": "bad_request", "message": "A multipart field named 'file' is required" } }
+
+// Response 401 — no evidence presented
+{ "success": false, "error": { "type": "unauthorized", "message": "Authentication or an upload grant is required" } }
+
+// Response 401 — the presented upload grant is invalid or expired
+{ "success": false, "error": { "type": "unauthorized", "message": "Invalid or expired upload grant" } }
+
+// Response 403 — the grant's bounded upload count is already used
+{ "success": false, "error": { "type": "forbidden", "message": "Upload grant is exhausted" } }
+
+// Response 413 — file exceeds the size limit
+{ "success": false, "error": { "type": "payload_too_large", "message": "File exceeds the media size limit" } }
+
+// Response 415 — content does not verify as an allowed image type
+{ "success": false, "error": { "type": "unsupported_media_type", "message": "File content is not an allowed image type" } }
 ```
