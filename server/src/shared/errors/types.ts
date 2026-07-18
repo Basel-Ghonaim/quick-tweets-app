@@ -3,6 +3,7 @@ export type ErrorType =
   | "unauthorized"
   | "forbidden"
   | "not_found"
+  | "gone"
   | "conflict"
   | "bad_request"
   | "too_many_requests"

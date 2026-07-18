@@ -16,7 +16,13 @@ import { randomBytes } from "node:crypto";
 import { Transform, type TransformCallback } from "node:stream";
 
 import { isPrismaError } from "../../shared/utils/index.js";
-import { MediaGrantError, MediaIngestError, MediaValidationError } from "./media.errors.js";
+import {
+  MediaGrantError,
+  MediaIngestError,
+  MediaReadError,
+  MediaStorageError,
+  MediaValidationError,
+} from "./media.errors.js";
 import { GRANT_MAX_OBJECTS, verifyUploadGrant } from "./media.grants.js";
 import { storageKey } from "./media.keys.js";
 import { createMediaRepository } from "./media.repository.js";
@@ -145,6 +151,35 @@ export const createMediaService = (
         }
         throw err;
       }
+    },
+
+    read: async (token) => {
+      const object = await repo.findByToken(token);
+      if (object === null) throw MediaReadError.notFound();
+
+      if (object.status === "ready") {
+        try {
+          const stream = await storage.createReadStream(object.storageKey);
+          return { contentType: object.contentType, size: object.size, stream };
+        } catch (err) {
+          // Registry↔storage divergence: a ready row whose bytes are absent.
+          // Fail safe for the client, but keep it observable; reconciliation
+          // (quarantine, physical cleanup) belongs to the reclamation Work Item,
+          // and is deliberately not done here.
+          if (err instanceof MediaStorageError && err.code === "not_found") {
+            console.error(
+              "[Media] registry/storage divergence: a ready object has no stored bytes",
+              { token, storageKey: object.storageKey },
+            );
+            throw MediaReadError.notFound();
+          }
+          throw err;
+        }
+      }
+
+      if (object.status === "deleted") throw MediaReadError.gone();
+      // pending (not-yet-servable), or any unexpected status → not served.
+      throw MediaReadError.notFound();
     },
   };
 };

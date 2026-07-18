@@ -70,6 +70,7 @@ GET    /api/v1/follows/:username/following
 
 POST   /api/v1/media/grants
 POST   /api/v1/media
+GET    /media/:token             (top-level, outside /api/v1 — a stable public read URL)
 ```
 
 > **Health check:** `GET /health` (outside `/api/v1`) returns `{ status, db, timestamp }` — `200` when the database ping (`SELECT 1`) succeeds, `503` when it fails. Used for infrastructure monitoring; not part of the versioned API.
@@ -165,6 +166,7 @@ interface ErrorBody {
     | "unauthorized"
     | "forbidden"
     | "not_found"
+    | "gone"
     | "conflict"
     | "validation"
     | "rate_limit"            // emitted by the rate-limiter middleware (429)
@@ -185,6 +187,7 @@ interface ErrorBody {
 | 403         | `forbidden`             | Authenticated but not authorized (e.g., deleting someone else's tweet) |
 | 404         | `not_found`             | Resource doesn't exist                                                 |
 | 409         | `conflict`              | Duplicate resource                                                     |
+| 410         | `gone`                  | Resource permanently deleted (e.g., media)                             |
 | 413         | `payload_too_large`     | File or payload exceeds size limit                                     |
 | 415         | `unsupported_media_type`| Wrong file format uploaded                                             |
 | 422         | `validation`            | Invalid request body or query params (field-level errors)              |
@@ -926,4 +929,29 @@ Issues a short-lived **upload grant** for pre-auth flows (e.g. register-with-ava
 
 // Response 415 — content does not verify as an allowed image type
 { "success": false, "error": { "type": "unsupported_media_type", "message": "File content is not an allowed image type" } }
+```
+
+### `GET /media/:token` — Read a media object
+
+**Auth:** None (public). Mounted **top-level, outside `/api/v1`** so the URL is stable and embeddable (e.g. in `<img src>`). The `:token` is the opaque reference returned by `POST /media`.
+
+Resolves the token and streams the bytes under a fixed security envelope. Not rate-limited (cacheable, high-volume by design).
+
+**Success `200`** — the object's bytes, with headers:
+
+| Header | Value | Why |
+|---|---|---|
+| `Content-Type` | the object's **content-derived** verified type (e.g. `image/png`) | never a client-declared type |
+| `X-Content-Type-Options` | `nosniff` | the browser can't sniff to active content |
+| `Cross-Origin-Resource-Policy` | `cross-origin` | public-by-token, embeddable asset — route-scoped override of the global `same-origin` default; not an authorization control (a direct GET bypasses it) |
+| `Content-Disposition` | `inline` | displayed in-page |
+| `Content-Length` | byte size | |
+| `Cache-Control` | `public, max-age=3600` | media bytes are immutable, so a short-lived cached copy is always correct; the bounded (non-`immutable`) window lets a future deletion propagate out of caches |
+
+```jsonc
+// Response 404 — unknown token, malformed token, not-yet-servable, or bytes unavailable
+{ "success": false, "error": { "type": "not_found", "message": "Media not found" } }
+
+// Response 410 — the object was permanently deleted (the token is never reissued)
+{ "success": false, "error": { "type": "gone", "message": "This media has been deleted" } }
 ```
