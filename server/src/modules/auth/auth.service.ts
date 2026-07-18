@@ -2,34 +2,51 @@
  * Auth service — business logic for authentication.
  *
  * Current purpose:
- * - register(): validate uniqueness → hash password → create user → generate tokens
- * - login(): find user → compare password → generate tokens
+ * - register(): validate uniqueness → hash password → create user (adopting the
+ *   avatar atomically when one is submitted) → generate tokens
+ * - login(): find user → compare password → generate tokens → resolve avatar
  * - logout(): delete refresh token from database
  * - refreshToken(): validate token → rotate (delete old, create new) → return new tokens
+ * - getMe(): load the user and resolve its avatar read token
  *
- * Future expansion:
- * - forgotPassword(): generate reset token → send email
- * - resetPassword(): validate reset token → update password
- * - changePassword(): verify old password → update to new
- * - verifyEmail(): validate email verification token
+ * Register-with-avatar (M6 / ADR 0007): when the request carries avatar grant
+ * evidence, **create-user + adopt + link run inside one interactive transaction**
+ * (Auth owns the unit-of-work; Media owns and enforces the adoption semantics
+ * through its published interface). A failed conditional adoption throws and
+ * rolls the whole transaction back — never an account without the chosen avatar,
+ * never an adopted object without the account. The grant is spent only by a
+ * *successful* adoption, so an otherwise-failed registration leaves the object
+ * adoptable for a retry with the same reference + grant.
  *
  * Principle: SRP — only authentication business rules, no HTTP or database concerns.
- * Principle: DIP — depends on IAuthRepository and ITokenRepository interfaces, not Prisma.
- * Principle: Factory Pattern — createAuthService(authRepo, tokenRepo) for DI and testability.
+ * Principle: DIP — depends on repository/adoption interfaces, not Prisma directly.
+ * Principle: Factory Pattern — createAuthService(...) for DI and testability.
  */
 
 import bcrypt from "bcrypt";
 import { AppError } from "../../shared/errors/index.js";
 import { generateAccessToken, generateRefreshToken } from "../../shared/utils/index.js";
+import {
+  runInTransaction as defaultRunInTransaction,
+  type RunInTransaction,
+} from "../../shared/database/index.js";
+import {
+  mediaAdoption as defaultMediaAdoption,
+  MediaAdoptionError,
+  type IMediaAdoption,
+} from "../media/index.js";
+import type { User } from "../../generated/prisma/client.js";
 import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
 import type {
   IAuthRepository,
   ITokenRepository,
   IAuthService,
+  CreateUserData,
   RegisterInput,
   LoginInput,
   AuthResult,
   TokenRefreshResult,
+  MeResult,
 } from "./auth.types.js";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -43,154 +60,198 @@ const REFRESH_TOKEN_DAYS = 7;
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
- * Creates an IAuthService with injected repository dependencies.
+ * Creates an IAuthService with injected dependencies.
  *
  * @param authRepo - User database operations (defaults to Prisma implementation)
  * @param tokenRepo - Refresh token operations (defaults to Prisma implementation)
- * @returns IAuthService implementation
- *
- * Usage:
- *   const authService = createAuthService();              // production
- *   const authService = createAuthService(mockRepo, ...); // testing
+ * @param media - Media adoption surface (defaults to the published implementation)
+ * @param runInTransaction - Interactive-transaction runner (defaults to Prisma's;
+ *   injectable so register-with-avatar is testable without a live database)
  */
 export const createAuthService = (
   authRepo: IAuthRepository = createAuthRepository(),
   tokenRepo: ITokenRepository = createTokenRepository(),
-): IAuthService => ({
+  media: IMediaAdoption = defaultMediaAdoption,
+  runInTransaction: RunInTransaction = defaultRunInTransaction,
+): IAuthService => {
+  /** Resolve a user's avatar reference to its public read token (null when unset). */
+  const resolveAvatar = (referenceId: number | null): Promise<string | null> =>
+    referenceId === null ? Promise.resolve(null) : media.resolveAvatarToken(referenceId);
 
-  // ─── Register ────────────────────────────────────────────────────────
+  return {
+    // ─── Register ────────────────────────────────────────────────────────
 
-  register: async (data: RegisterInput): Promise<AuthResult> => {
-    // 1. Check username uniqueness
-    const existingUsername = await authRepo.findByUsername(data.username);
-    if (existingUsername) {
-      throw AppError.conflict("Username already taken");
-    }
+    register: async (data: RegisterInput): Promise<AuthResult> => {
+      // 1. Check username uniqueness (fast, clear 409 — before any write).
+      const existingUsername = await authRepo.findByUsername(data.username);
+      if (existingUsername) {
+        throw AppError.conflict("Username already taken");
+      }
 
-    // 2. Check email uniqueness
-    const existingEmail = await authRepo.findByEmail(data.email);
-    if (existingEmail) {
-      throw AppError.conflict("Email already in use");
-    }
+      // 2. Check email uniqueness.
+      const existingEmail = await authRepo.findByEmail(data.email);
+      if (existingEmail) {
+        throw AppError.conflict("Email already in use");
+      }
 
-    // 3. Hash password with bcrypt
-    const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+      // 3. Hash password with bcrypt.
+      const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
 
-    // 4. Create user in database
-    const user = await authRepo.create({
-      username: data.username,
-      name: data.name,
-      email: data.email,
-      passwordHash,
-      profileImage: data.profileImage ?? null,
-    });
+      const newUser: CreateUserData = {
+        username: data.username,
+        name: data.name,
+        email: data.email,
+        passwordHash,
+      };
 
-    // 5. Generate tokens
-    const accessToken = generateAccessToken(user.id);
-    const refreshTokenValue = generateRefreshToken();
+      // 4. Create the user. When an avatar was submitted, adopt it in the SAME
+      //    transaction — create-user, adopt, and link the reference commit or
+      //    roll back together. A guard failure in adoption throws, rolling back
+      //    the user too (fail-loud, no orphan account, no silently-lost avatar).
+      let user: User;
+      let avatarToken: string | null = null;
 
-    // 6. Store refresh token in database
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
-    await tokenRepo.createRefreshToken(user.id, refreshTokenValue, expiresAt);
+      if (data.avatar) {
+        const avatar = data.avatar;
+        try {
+          const outcome = await runInTransaction(async (tx) => {
+            const created = await authRepo.create(newUser, tx);
+            const adopted = await media.adopt(
+              { token: avatar.token, grant: avatar.grant, ownerId: created.id },
+              tx,
+            );
+            await authRepo.setAvatarReference(created.id, adopted.referenceId, tx);
+            return { user: { ...created, avatarMediaId: adopted.referenceId }, token: adopted.token };
+          });
+          user = outcome.user;
+          avatarToken = outcome.token;
+        } catch (err) {
+          // Adoption failed → the whole transaction rolled back (no account
+          // created, grant unspent). Map Media's domain error to the reserved
+          // HTTP statuses so the client sees a clear failure, never a 500.
+          if (err instanceof MediaAdoptionError) {
+            throw err.code === "already_adopted"
+              ? AppError.conflict("This avatar has already been claimed")
+              : AppError.validation("Registration failed", {
+                  avatar: ["The selected avatar could not be attached; please re-upload and try again"],
+                });
+          }
+          throw err;
+        }
+      } else {
+        user = await authRepo.create(newUser);
+      }
 
-    return { user, accessToken, refreshToken: refreshTokenValue };
-  },
+      // 5. Generate tokens.
+      const accessToken = generateAccessToken(user.id);
+      const refreshTokenValue = generateRefreshToken();
 
-  // ─── Login ───────────────────────────────────────────────────────────
+      // 6. Store refresh token (a session artifact — kept outside the account
+      //    transaction so a token-write hiccup cannot undo a valid account).
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
+      await tokenRepo.createRefreshToken(user.id, refreshTokenValue, expiresAt);
 
-  login: async (data: LoginInput): Promise<AuthResult> => {
-    // 1. Find user by username
-    const user = await authRepo.findByUsername(data.username);
-    if (!user) {
-      // Generic message — don't reveal whether username exists
-      throw AppError.unauthorized("Invalid credentials");
-    }
+      return { user, accessToken, refreshToken: refreshTokenValue, avatarToken };
+    },
 
-    // 2. Compare password with stored hash
-    const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
-    if (!isPasswordValid) {
-      throw AppError.unauthorized("Invalid credentials");
-    }
+    // ─── Login ───────────────────────────────────────────────────────────
 
-    // 3. Generate tokens
-    const accessToken = generateAccessToken(user.id);
-    const refreshTokenValue = generateRefreshToken();
+    login: async (data: LoginInput): Promise<AuthResult> => {
+      // 1. Find user by username.
+      const user = await authRepo.findByUsername(data.username);
+      if (!user) {
+        // Generic message — don't reveal whether username exists.
+        throw AppError.unauthorized("Invalid credentials");
+      }
 
-    // 4. Store refresh token in database
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
-    await tokenRepo.createRefreshToken(user.id, refreshTokenValue, expiresAt);
+      // 2. Compare password with stored hash.
+      const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
+      if (!isPasswordValid) {
+        throw AppError.unauthorized("Invalid credentials");
+      }
 
-    return { user, accessToken, refreshToken: refreshTokenValue };
-  },
+      // 3. Generate tokens.
+      const accessToken = generateAccessToken(user.id);
+      const refreshTokenValue = generateRefreshToken();
 
-  // ─── Logout ──────────────────────────────────────────────────────────
+      // 4. Store refresh token in database.
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
+      await tokenRepo.createRefreshToken(user.id, refreshTokenValue, expiresAt);
 
-  logout: async (refreshToken: string): Promise<void> => {
-    // Delete the refresh token — user can no longer refresh, must re-login
-    await tokenRepo.deleteRefreshToken(refreshToken);
-  },
+      const avatarToken = await resolveAvatar(user.avatarMediaId);
+      return { user, accessToken, refreshToken: refreshTokenValue, avatarToken };
+    },
 
-  // ─── Logout All Devices ────────────────────────────────────────────────
+    // ─── Logout ──────────────────────────────────────────────────────────
 
-  logoutAll: async (userId: number): Promise<void> => {
-    // Delete ALL refresh tokens for this user — forces re-login on every device
-    await tokenRepo.deleteAllUserTokens(userId);
-  },
+    logout: async (refreshToken: string): Promise<void> => {
+      // Delete the refresh token — user can no longer refresh, must re-login.
+      await tokenRepo.deleteRefreshToken(refreshToken);
+    },
 
-  // ─── Refresh Token ───────────────────────────────────────────────────
+    // ─── Logout All Devices ────────────────────────────────────────────────
 
-  refreshToken: async (token: string): Promise<TokenRefreshResult> => {
-    // 1. Find the refresh token in database
-    const storedToken = await tokenRepo.findRefreshToken(token);
-    if (!storedToken) {
-      throw AppError.unauthorized("Invalid refresh token");
-    }
+    logoutAll: async (userId: number): Promise<void> => {
+      // Delete ALL refresh tokens for this user — forces re-login on every device.
+      await tokenRepo.deleteAllUserTokens(userId);
+    },
 
-    // 2. Check if token has expired
-    if (new Date() > storedToken.expiresAt) {
-      // Clean up expired token
-      await tokenRepo.deleteRefreshToken(token);
-      throw AppError.unauthorized("Refresh token expired");
-    }
+    // ─── Refresh Token ───────────────────────────────────────────────────
 
-    // 3. Atomic token rotation: delete old + create new in one transaction
-    const newAccessToken = generateAccessToken(storedToken.userId);
-    const newRefreshTokenValue = generateRefreshToken();
+    refreshToken: async (token: string): Promise<TokenRefreshResult> => {
+      // 1. Find the refresh token in database.
+      const storedToken = await tokenRepo.findRefreshToken(token);
+      if (!storedToken) {
+        throw AppError.unauthorized("Invalid refresh token");
+      }
 
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
+      // 2. Check if token has expired.
+      if (new Date() > storedToken.expiresAt) {
+        await tokenRepo.deleteRefreshToken(token);
+        throw AppError.unauthorized("Refresh token expired");
+      }
 
-    await tokenRepo.rotateRefreshToken(
-      token,
-      storedToken.userId,
-      newRefreshTokenValue,
-      expiresAt,
-    );
+      // 3. Atomic token rotation: delete old + create new in one transaction.
+      const newAccessToken = generateAccessToken(storedToken.userId);
+      const newRefreshTokenValue = generateRefreshToken();
 
-    // Load the user so refresh returns the full session (token + identity),
-    // consistent with login/register. The client restores from the server with
-    // no local persistence. See #258.
-    const user = await authRepo.findById(storedToken.userId);
-    if (!user) {
-      throw AppError.unauthorized("Invalid refresh token");
-    }
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
 
-    return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshTokenValue,
-      user,
-    };
-  },
+      await tokenRepo.rotateRefreshToken(
+        token,
+        storedToken.userId,
+        newRefreshTokenValue,
+        expiresAt,
+      );
 
-  // ─── Get Me ────────────────────────────────────────────────────────────
+      // Load the user so refresh returns the full session (token + identity),
+      // consistent with login/register. See #258.
+      const user = await authRepo.findById(storedToken.userId);
+      if (!user) {
+        throw AppError.unauthorized("Invalid refresh token");
+      }
 
-  getMe: async (userId: number) => {
-    const user = await authRepo.findById(userId);
-    if (!user) {
-      throw AppError.notFound("User");
-    }
-    return user;
-  },
-});
+      const avatarToken = await resolveAvatar(user.avatarMediaId);
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshTokenValue,
+        user,
+        avatarToken,
+      };
+    },
+
+    // ─── Get Me ────────────────────────────────────────────────────────────
+
+    getMe: async (userId: number): Promise<MeResult> => {
+      const user = await authRepo.findById(userId);
+      if (!user) {
+        throw AppError.notFound("User");
+      }
+      const avatarToken = await resolveAvatar(user.avatarMediaId);
+      return { user, avatarToken };
+    },
+  };
+};
