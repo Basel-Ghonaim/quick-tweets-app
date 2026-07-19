@@ -24,9 +24,9 @@ const expectedUser: User = { ...userDto };
 
 describe("restAuth.refresh — returns the full session (#261, #258)", () => {
   it("POSTs to /auth/refresh (no body) and returns { user, accessToken }", async () => {
-    const post = vi
-      .fn()
-      .mockResolvedValue({ data: { user: userDto, accessToken: "tok-abc" } });
+    const post = vi.fn().mockResolvedValue({
+      data: { success: true, data: { user: userDto, accessToken: "tok-abc" } },
+    });
     const repo = restAuth({ post } as unknown as Parameters<typeof restAuth>[0]);
 
     const session = await repo.refresh();
@@ -48,7 +48,10 @@ describe("restAuth.register — upload-then-submit-reference (M6, #256)", () => 
 
   it("uploads the avatar and submits { token, grant } as adoption evidence", async () => {
     const post = vi.fn().mockResolvedValue({
-      data: { user: { ...userDto, avatar: { token: "TOK" } }, accessToken: "acc" },
+      data: {
+        success: true,
+        data: { user: { ...userDto, avatar: { token: "TOK" } }, accessToken: "acc" },
+      },
     });
     const upload = vi.fn().mockResolvedValue({ token: "TOK", grant: "GRANT" });
     const repo = restAuth(asClient({ post }), upload);
@@ -64,7 +67,9 @@ describe("restAuth.register — upload-then-submit-reference (M6, #256)", () => 
   });
 
   it("registers without an avatar when none was chosen (no upload)", async () => {
-    const post = vi.fn().mockResolvedValue({ data: { user: userDto, accessToken: "acc" } });
+    const post = vi.fn().mockResolvedValue({
+      data: { success: true, data: { user: userDto, accessToken: "acc" } },
+    });
     const upload = vi.fn();
     const repo = restAuth(asClient({ post }), upload);
 
