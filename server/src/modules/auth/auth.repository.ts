@@ -16,7 +16,7 @@
  * Principle: Factory Pattern — createAuthRepository(db?) enables mock injection in tests.
  */
 
-import { prisma } from "../../shared/database/index.js";
+import { prisma, type DbClient } from "../../shared/database/index.js";
 import type {
   IAuthRepository,
   ITokenRepository,
@@ -38,6 +38,7 @@ const userSafeSelect = {
   name: true,
   email: true,
   profileImage: true,
+  avatarMediaId: true,
   bio: true,
   createdAt: true,
   updatedAt: true,
@@ -60,7 +61,14 @@ export const createAuthRepository = (
   findById: (id) =>
     db.user.findUnique({ where: { id }, select: userSafeSelect }),
 
-  create: (data: CreateUserData) => db.user.create({ data }),
+  create: (data: CreateUserData, client: DbClient = db) => client.user.create({ data }),
+
+  setAvatarReference: async (userId, referenceId, client: DbClient = db) => {
+    await client.user.update({
+      where: { id: userId },
+      data: { avatarMediaId: referenceId },
+    });
+  },
 });
 
 // ─── Token Repository ────────────────────────────────────────────────────────

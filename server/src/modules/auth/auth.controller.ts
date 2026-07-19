@@ -53,12 +53,19 @@ const REFRESH_COOKIE_OPTIONS = {
  * Strips sensitive fields (passwordHash) from User before sending to client.
  * This acts as a simple response mapper (DTO).
  */
-const toUserResponse = (user: { id: number; username: string; name: string; email: string; profileImage: string | null; bio: string; createdAt: Date }) => ({
+const toUserResponse = (
+  user: { id: number; username: string; name: string; email: string; profileImage: string | null; bio: string; createdAt: Date },
+  avatarToken: string | null,
+) => ({
   id: user.id,
   username: user.username,
   name: user.name,
   email: user.email,
-  profileImage: user.profileImage,
+  profileImage: user.profileImage, // DEPRECATED (always null) — superseded by `avatar`
+  // The avatar's public read token, resolved from the internal reference. The
+  // client renders it via GET /media/:token; the numeric reference never leaves
+  // the server.
+  avatar: avatarToken !== null ? { token: avatarToken } : null,
   bio: user.bio,
   createdAt: user.createdAt,
 });
@@ -86,7 +93,7 @@ export const createAuthController = (
       res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
       sendSuccess(res, {
-        user: toUserResponse(result.user),
+        user: toUserResponse(result.user, result.avatarToken),
         accessToken: result.accessToken,
       }, 201);
     } catch (err) {
@@ -106,7 +113,7 @@ export const createAuthController = (
       res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
 
       sendSuccess(res, {
-        user: toUserResponse(result.user),
+        user: toUserResponse(result.user, result.avatarToken),
         accessToken: result.accessToken,
       });
     } catch (err) {
@@ -170,7 +177,7 @@ export const createAuthController = (
 
       sendSuccess(res, {
         accessToken: result.accessToken,
-        user: toUserResponse(result.user),
+        user: toUserResponse(result.user, result.avatarToken),
       });
     } catch (err) {
       next(err);
@@ -185,10 +192,10 @@ export const createAuthController = (
   me: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.userId!;
-      const user = await service.getMe(userId);
+      const { user, avatarToken } = await service.getMe(userId);
 
       sendSuccess(res, {
-        user: toUserResponse(user),
+        user: toUserResponse(user, avatarToken),
       });
     } catch (err) {
       next(err);

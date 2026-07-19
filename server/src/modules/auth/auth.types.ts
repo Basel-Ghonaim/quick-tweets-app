@@ -17,6 +17,7 @@
  */
 
 import type { User, RefreshToken } from "../../generated/prisma/client.js";
+import type { DbClient } from "../../shared/database/index.js";
 
 // ─── Data Shapes ─────────────────────────────────────────────────────────────
 
@@ -26,7 +27,8 @@ export interface CreateUserData {
   name: string;
   email: string;
   passwordHash: string;
-  profileImage?: string | null;
+  // No avatar here: the avatar is a Media Reference filled by *adoption* after
+  // the user exists (M6), never a create-time field.
 }
 
 /** User without passwordHash — used by /me and other non-auth queries. */
@@ -34,6 +36,16 @@ export type UserSafe = Omit<User, "passwordHash">;
 
 /** RefreshToken record as returned from the database. */
 export type RefreshTokenRecord = RefreshToken;
+
+/**
+ * Grant evidence a registrant submits to adopt a pre-uploaded avatar (ADR 0007):
+ * the object's read token plus the upload grant that ingested it. Both are
+ * required together; adoption verifies and binds them (Media owns the rules).
+ */
+export interface AvatarEvidence {
+  token: string;
+  grant: string;
+}
 
 // ─── Repository Interfaces ──────────────────────────────────────────────────
 
@@ -47,7 +59,13 @@ export interface IAuthRepository {
   findByUsername(username: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   findById(id: number): Promise<UserSafe | null>;
-  create(data: CreateUserData): Promise<User>;
+  /** Create a user; runs in `client` when part of a transaction (register-with-avatar). */
+  create(data: CreateUserData, client?: DbClient): Promise<User>;
+  /**
+   * Link a user to its avatar Media Reference (M6). Runs in the caller's `client`
+   * so it commits or rolls back atomically with user-create + adoption.
+   */
+  setAvatarReference(userId: number, referenceId: number, client?: DbClient): Promise<void>;
 }
 
 /**
@@ -80,6 +98,8 @@ export interface AuthResult {
   user: User;
   accessToken: string;
   refreshToken: string;
+  /** The user's avatar public read token, resolved from its reference — or null. */
+  avatarToken: string | null;
 }
 
 /** Result returned by token refresh operations. */
@@ -87,6 +107,14 @@ export interface TokenRefreshResult {
   accessToken: string;
   refreshToken: string;
   user: UserSafe;
+  /** The user's avatar public read token, resolved from its reference — or null. */
+  avatarToken: string | null;
+}
+
+/** The authenticated user's own profile view (`GET /me`), avatar resolved. */
+export interface MeResult {
+  user: UserSafe;
+  avatarToken: string | null;
 }
 
 /** Login credentials received from the client. */
@@ -101,7 +129,8 @@ export interface RegisterInput {
   name: string;
   email: string;
   password: string;
-  profileImage?: string | null;
+  /** Optional avatar to adopt onto the new account (grant evidence; ADR 0007). */
+  avatar?: AvatarEvidence;
 }
 
 /**
@@ -116,5 +145,5 @@ export interface IAuthService {
   logout(refreshToken: string): Promise<void>;
   logoutAll(userId: number): Promise<void>;
   refreshToken(token: string): Promise<TokenRefreshResult>;
-  getMe(userId: number): Promise<UserSafe>;
+  getMe(userId: number): Promise<MeResult>;
 }

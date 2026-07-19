@@ -8,15 +8,17 @@
  * the module — never exported from `index.ts`, since features consume Media only
  * through its published interface (Decision 2).
  *
- * It exposes no mutator: immutability-once-ready is encoded by the absence of an
- * update path (replacing media mints a new object). Physical deletion, status
- * transitions, and the one-time adoption write belong to later Work Items.
+ * Content is immutable-once-ready: no path rewrites a stored object's bytes,
+ * type, size, or token. The one admissible mutation is adoption's one-time
+ * *ownership* fill (`adoptById`, M6 / ADR 0007) — a conditional write that turns
+ * grant provenance into an owner. Physical deletion and status transitions still
+ * belong to later Work Items (M11).
  *
  * Principle: SRP — only database queries, no business logic.
  * Principle: Factory Pattern — createMediaRepository(db?) enables mock injection.
  */
 
-import { prisma } from "../../shared/database/index.js";
+import { prisma, type DbClient } from "../../shared/database/index.js";
 import { storageKey } from "./media.keys.js";
 import { mediaToken, mintToken } from "./media.tokens.js";
 import type {
@@ -85,10 +87,30 @@ export const createMediaRepository = (
     return toMediaObject(row);
   },
 
-  findByToken: async (token) => {
-    const row = await db.mediaObject.findUnique({ where: { token } });
+  findByToken: async (token, client: DbClient = db) => {
+    const row = await client.mediaObject.findUnique({ where: { token } });
     return row === null ? null : toMediaObject(row);
   },
 
   countByGrant: (grantId) => db.mediaObject.count({ where: { grantId } }),
+
+  adoptById: async (referenceId, ownerId, expectedGrantId, client: DbClient = db) => {
+    // Conditional atomic adopt: fill `uploaderId` only while still null AND the
+    // recorded grant matches. `updateMany` reports how many rows matched — a
+    // replay or a concurrent second adoption matches zero (the guard for
+    // "a grant is spent by adoption, exactly once"; ADR 0007).
+    const { count } = await client.mediaObject.updateMany({
+      where: { id: referenceId, uploaderId: null, grantId: expectedGrantId },
+      data: { uploaderId: ownerId },
+    });
+    return count === 1;
+  },
+
+  findTokenById: async (referenceId, client: DbClient = db) => {
+    const row = await client.mediaObject.findUnique({
+      where: { id: referenceId },
+      select: { token: true },
+    });
+    return row === null ? null : mediaToken(row.token);
+  },
 });

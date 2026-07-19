@@ -115,7 +115,8 @@ interface AuthorEmbed {
   id: number;
   username: string;
   name: string;
-  profileImage: string | null;
+  profileImage: string | null; // DEPRECATED (always null) — author-avatar display migrates
+                               // to the Media Reference model in a later Work Item.
 }
 ```
 
@@ -231,7 +232,15 @@ interface ErrorBody {
   "username": "basel",      // 4-20 chars, alphanumeric/underscores
   "name": "Basel",          // 1-50 chars
   "email": "test@test.com", // valid email
-  "password": "Password1!"  // 8-72 chars, upper, lower, digit, special char
+  "password": "Password1!", // 8-72 chars, upper, lower, digit, special char
+
+  // OPTIONAL — attach a pre-uploaded avatar (upload-then-submit-reference; ADR 0007).
+  // Obtain both parts first: POST /media/grants → POST /media (X-Upload-Grant) → { token }.
+  // Both fields are required together; omit "avatar" entirely to register without one.
+  "avatar": {
+    "token": "Nk3v9qYw1kPz-XG27RODaQ", // the object's read token from POST /media
+    "grant": "eyJhbGciOiJIUzI1NiI..."   // the upload grant that ingested it (grant evidence)
+  }
 }
 
 // Response 201
@@ -243,7 +252,8 @@ interface ErrorBody {
       "username": "basel",
       "name": "Basel",
       "email": "test@test.com",
-      "profileImage": null,
+      "profileImage": null,                             // DEPRECATED (always null) — superseded by "avatar"
+      "avatar": { "token": "Nk3v9qYw1kPz-XG27RODaQ" },  // null when no avatar; render via GET /media/:token
       "bio": "",
       "createdAt": "2026-05-10T12:00:00.000Z"
     },
@@ -252,11 +262,14 @@ interface ErrorBody {
 }
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
 
-// Response 409 — username or email already taken
+// Response 409 — username or email already taken, OR the submitted avatar was already claimed
 { "success": false, "error": { "type": "conflict", "message": "Username already taken" } }
 
-// Response 422 — validation failed (field-level errors)
-{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "password": ["Password must contain at least one uppercase letter"] } } }
+// Response 422 — validation failed (field-level errors). A submitted avatar that cannot
+// be adopted (invalid/expired grant, unknown or mismatched reference) surfaces here as an
+// `avatar` field error; the account is NOT created (adoption is atomic and fail-loud, and
+// a failed attempt does not spend the grant — the same avatar can be retried while it lives).
+{ "success": false, "error": { "type": "validation", "message": "Registration failed", "errors": { "avatar": ["The selected avatar could not be attached; please re-upload and try again"] } } }
 ```
 
 ### `POST /auth/login` — Authenticate user
@@ -314,7 +327,8 @@ interface ErrorBody {
       "username": "johndoe",
       "name": "John Doe",
       "email": "john@example.com",
-      "profileImage": null,
+      "profileImage": null,   // DEPRECATED (always null) — superseded by "avatar"
+      "avatar": null,         // { token } when set; render via GET /media/:token
       "bio": "",
       "createdAt": "2026-01-01T00:00:00.000Z"
     }
@@ -337,13 +351,21 @@ interface ErrorBody {
       "username": "basel",
       "name": "Basel",
       "email": "test@test.com",
-      "profileImage": null,
+      "profileImage": null,   // DEPRECATED (always null) — superseded by "avatar"
+      "avatar": null,         // { token } when set; render via GET /media/:token
       "bio": "",
       "createdAt": "2026-05-10T12:00:00.000Z"
     }
   }
 }
 ```
+
+> **`avatar` vs `profileImage`.** The authenticated user's own shape (register/login/refresh/me)
+> carries `avatar: { token } | null` — the avatar's public read token, resolved at the boundary
+> from an internal numeric Media Reference. `profileImage` is retained only for backward
+> compatibility (always `null`) and is retired when author-avatar display migrates to the
+> reference model. The embedded author shape ([AuthorEmbed](#authorembed)) still exposes the
+> legacy field until then.
 
 ---
 

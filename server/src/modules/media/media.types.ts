@@ -17,6 +17,8 @@
 
 import type { Readable } from "node:stream";
 
+import type { DbClient } from "../../shared/database/index.js";
+
 declare const brand: unique symbol;
 
 /** Nominal-typing helper: a `T` tagged with a compile-time-only brand `B`. */
@@ -74,7 +76,8 @@ export type MediaStatus = "pending" | "ready" | "deleted";
  * reference/token), because it carries storage detail the boundary must not leak.
  */
 export interface MediaObject {
-  /** Internal reference — the numeric identity feature tables point at (via a real FK, added by their own Work Items). */
+  /** Internal reference — the numeric identity feature tables point at as a bare
+   * scalar (no DB foreign key: Decision 9 keeps MediaObject unaware of its referrers). */
   id: number;
   token: MediaToken;
   storageKey: StorageKey;
@@ -109,17 +112,36 @@ export interface NewMediaObject {
 
 /**
  * The registry's data-access contract. Internal to Media (never published) —
- * consumed by Media's own boundaries (ingest, read), never by features. It
- * exposes no path that mutates a stored row: immutability-once-ready is encoded
- * by the *absence* of a mutator (replacing media mints a new object).
+ * consumed by Media's own boundaries (ingest, read, adoption), never by features.
+ * Content immutability-once-ready holds: no path rewrites a stored object's bytes,
+ * type, size, or token. The one admissible mutation is adoption's one-time
+ * *ownership* fill (`adoptById`) — a conditional write that turns grant provenance
+ * into an owner (ADR 0007), never a content change.
+ *
+ * Read/adopt methods take an optional `client` so they can run inside a caller's
+ * interactive transaction (register-with-avatar is atomic across auth + media).
  */
 export interface IMediaRepository {
   /** Register a newly-stored, validated object; mints its token and returns the entry. */
   create(input: NewMediaObject): Promise<MediaObject>;
   /** Resolve a public token to its registry entry, or `null` if none exists. */
-  findByToken(token: MediaToken): Promise<MediaObject | null>;
+  findByToken(token: MediaToken, client?: DbClient): Promise<MediaObject | null>;
   /** How many objects a grant has ingested (per-grant bound enforcement). */
   countByGrant(grantId: string): Promise<number>;
+  /**
+   * Atomically adopt a grant-provenance object onto `ownerId` — the concurrency
+   * guard for adoption. Sets `uploaderId` only where it is still `null` AND the
+   * recorded `grantId` equals `expectedGrantId`; returns `true` iff exactly one
+   * row changed (a replay or a second concurrent adoption changes none).
+   */
+  adoptById(
+    referenceId: number,
+    ownerId: number,
+    expectedGrantId: string,
+    client?: DbClient,
+  ): Promise<boolean>;
+  /** Resolve a numeric reference to its public read token (avatar rendering), or `null`. */
+  findTokenById(referenceId: number, client?: DbClient): Promise<MediaToken | null>;
 }
 
 // ─── Ingest boundary (ADR 0005 Decision 5 / ADR 0007) ────────────────────────

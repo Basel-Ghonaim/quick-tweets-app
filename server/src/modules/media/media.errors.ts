@@ -141,3 +141,38 @@ export class MediaReadError extends Error {
     return new MediaReadError("gone", "Media has been deleted");
   }
 }
+
+// ─── Adoption errors (ADR 0007 — attach with grant evidence, on the register path) ─
+
+export type MediaAdoptionErrorCode = "invalid_evidence" | "already_adopted";
+
+export class MediaAdoptionError extends Error {
+  public readonly code: MediaAdoptionErrorCode;
+
+  constructor(code: MediaAdoptionErrorCode, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "MediaAdoptionError";
+    // Preserve the prototype chain for `instanceof` across the transpile target.
+    Object.setPrototypeOf(this, MediaAdoptionError.prototype);
+  }
+
+  /**
+   * The adoption evidence does not authorize adopting this object — a bad or
+   * expired grant, an unknown reference, a grant that does not match the object's
+   * recorded provenance, or an object that is not grant-provenance. Deliberately
+   * one opaque code: the caller learns "this avatar cannot be adopted", never
+   * whether a given token exists (no enumeration oracle).
+   */
+  static invalidEvidence(): MediaAdoptionError {
+    return new MediaAdoptionError(
+      "invalid_evidence",
+      "The avatar upload could not be adopted (invalid or expired evidence)",
+    );
+  }
+
+  /** The object was already adopted (or lost the concurrent race) — a conflict. */
+  static alreadyAdopted(): MediaAdoptionError {
+    return new MediaAdoptionError("already_adopted", "This avatar has already been claimed");
+  }
+}
