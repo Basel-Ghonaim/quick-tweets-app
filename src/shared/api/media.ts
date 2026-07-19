@@ -4,6 +4,7 @@
 
 import { apiClient } from "./client";
 import { API_BASE_URL } from "./config";
+import { unwrap, type ApiEnvelope } from "./envelope";
 
 // The read endpoint is mounted top-level, outside /api/v1, so strip the version
 // prefix from the API base to build /media/:token URLs.
@@ -18,17 +19,6 @@ export interface AvatarUpload {
 }
 
 /**
- * Read the `{ success, data }` success envelope defensively — repositories in
- * this codebase read `res.data` as the inner payload, so accept both shapes.
- */
-const inner = <T>(body: unknown): T => {
-  if (body && typeof body === "object" && "data" in (body as Record<string, unknown>)) {
-    return (body as { data: T }).data;
-  }
-  return body as T;
-};
-
-/**
  * Upload an avatar under a freshly minted upload grant, returning the object's
  * read token plus the grant — the adoption evidence submitted with registration.
  * A failure here rejects, so the register flow surfaces it and never proceeds
@@ -38,15 +28,19 @@ export const uploadAvatar = async (
   file: File,
   client = apiClient,
 ): Promise<AvatarUpload> => {
-  const grantRes = await client.post("/media/grants");
-  const { grant } = inner<{ grant: string }>(grantRes.data);
+  const grantRes = await client.post<ApiEnvelope<{ grant: string; expiresAt: string }>>(
+    "/media/grants",
+  );
+  const { grant } = unwrap(grantRes);
 
   const form = new FormData();
   form.append("file", file);
-  const ingestRes = await client.post("/media", form, {
-    headers: { "X-Upload-Grant": grant },
-  });
-  const { token } = inner<{ token: string }>(ingestRes.data);
+  const ingestRes = await client.post<ApiEnvelope<{ token: string; contentType: string; size: number }>>(
+    "/media",
+    form,
+    { headers: { "X-Upload-Grant": grant } },
+  );
+  const { token } = unwrap(ingestRes);
 
   return { token, grant };
 };
