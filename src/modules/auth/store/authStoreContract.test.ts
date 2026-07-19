@@ -21,14 +21,11 @@ import { authReducer, authActions } from "./authSlice";
 import { createAppError } from "@shared/errors";
 import type { User } from "@shared/types";
 
-// serializableCheck is off only to keep the AppError dispatch (a class instance,
-// intentionally non-serializable) from emitting dev warnings; it does not affect
-// the reducer behavior under test.
+// serializableCheck stays ON (the default): the store now holds only the plain
+// SerializedAppError DTO, so the check passes — this locks that invariant.
 const makeStore = () =>
   configureStore({
     reducer: { auth: authReducer },
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware({ serializableCheck: false }),
   });
 
 const user: User = {
@@ -86,7 +83,7 @@ describe("auth store-access contract (#253)", () => {
 
   it("records the error and marks error on rejected (what useAuthFlow surfaces)", () => {
     const store = makeStore();
-    const error = createAppError("unknown", "boom");
+    const error = createAppError("unknown", "boom").toSerialized();
 
     store.dispatch(
       authActions.authRequestRejected({ requestType: "login", error }),
@@ -94,7 +91,8 @@ describe("auth store-access contract (#253)", () => {
 
     const requestState = store.getState().auth.requests.login;
     expect(requestState.status).toBe("error");
-    expect(requestState.error).toBe(error);
+    expect(requestState.error).toEqual(error);
+    expect(requestState.error).not.toBeInstanceOf(Error); // a plain DTO, not the AppError class
   });
 
   it("marks logout success without clearing identity in the slice", () => {

@@ -36,7 +36,8 @@ export const executeAuthFlow = async (
     );
   } catch (error) {
     const authError = authErrorHandler(error as AppError);
-    dispatch(authRequestRejected({ requestType, error: authError }));
+    // Store the plain, serializable projection (Redux state must be serializable);
+    dispatch(authRequestRejected({ requestType, error: authError.toSerialized() }));
     throw authError;
   }
 };

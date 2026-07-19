@@ -16,8 +16,6 @@ import type { User } from "@shared/types";
 const makeStore = () =>
   configureStore({
     reducer: { auth: authReducer },
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware({ serializableCheck: false }),
   });
 
 const user: User = {
@@ -64,7 +62,8 @@ describe("executeLogout — local sign-out only after the server confirms (#294)
     expect(auth.user).toEqual(user); // NOT signed out locally
     expect(auth.accessToken).toBe("tok");
     expect(auth.requests.logout.status).toBe("error");
-    expect(auth.requests.logout.error).toBe(serverError);
+    expect(auth.requests.logout.error).toMatchObject({ type: "network", message: "offline" });
+    expect(auth.requests.logout.error).not.toBeInstanceOf(Error); // stored as a plain DTO
   });
 
   it("signs out on a user retry after a prior failure", async () => {

@@ -17,8 +17,6 @@ import type { AuthResponse } from "../entity";
 const makeStore = () =>
   configureStore({
     reducer: { auth: authReducer },
-    middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware({ serializableCheck: false }),
   });
 
 const user: User = {
@@ -55,6 +53,8 @@ describe("executeAuthFlow — success is the server response, no persistence gat
 
     const { auth } = store.getState();
     expect(auth.requests.login.status).toBe("error");
+    expect(auth.requests.login.error).toMatchObject({ type: "unknown", message: "bad credentials" });
+    expect(auth.requests.login.error).not.toBeInstanceOf(Error); // stored as a plain DTO
     expect(auth.user).toBeNull();
     expect(auth.accessToken).toBeNull();
   });

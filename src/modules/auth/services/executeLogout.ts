@@ -22,7 +22,8 @@ export const executeLogout = async (
     dispatch(
       authActions.authRequestRejected({
         requestType: "logout",
-        error: authErrorHandler(error as AppError),
+        // Store the plain, serializable projection — never the AppError instance.
+        error: authErrorHandler(error as AppError).toSerialized(),
       }),
     );
   }
