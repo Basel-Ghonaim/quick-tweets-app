@@ -1,8 +1,10 @@
-import type { AppError } from "@shared/errors";
+import type { SerializedAppError } from "@shared/errors";
 
 export type RequestStatus = "idle" | "loading" | "success" | "error";
 
-export type RequestState<TError = AppError> = {
+// Redux state must be serializable, so a request's error defaults to the plain
+// SerializedAppError DTO — never the AppError class instance.
+export type RequestState<TError = SerializedAppError> = {
   status: RequestStatus;
   error: TError | null;
 };

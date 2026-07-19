@@ -1,6 +1,6 @@
 import { useAuthSelector } from "../store/hooks";
 import { useRequestState } from "@shared/hooks";
-import type { AppError } from "@shared/errors";
+import type { SerializedAppError } from "@shared/errors";
 import {
   useSchemaForm,
   type FormFieldConfig,
@@ -24,7 +24,7 @@ export interface AuthFlowReturn<
   isSubmitting: boolean;
   isSuccess: boolean;
   isError: boolean;
-  serverError: AppError | null;
+  serverError: SerializedAppError | null;
   handleChange: FormChangeHandler;
   handleSubmit: FormSubmitHandler;
 }
