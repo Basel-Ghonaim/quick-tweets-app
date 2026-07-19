@@ -1,7 +1,7 @@
 // Typed error class — carries type, status, and optional structured errors payload.
 
 import { errorConfigMap } from "./errorConfig";
-import { type ErrorType, type ErrorPayload } from "./types";
+import { type ErrorType, type ErrorPayload, type SerializedAppError } from "./types";
 
 export class AppError<T extends ErrorType = ErrorType> extends Error {
   public readonly type: T;
@@ -30,5 +30,18 @@ export class AppError<T extends ErrorType = ErrorType> extends Error {
         this.constructor as (...args: never[]) => unknown,
       );
     }
+  }
+
+  /**
+   * Plain, serializable projection for Redux/state boundaries — drops the `Error`
+   * machinery (prototype, stack) so it never trips the store's serializability check.
+   */
+  toSerialized(): SerializedAppError<T> {
+    return {
+      type: this.type,
+      message: this.message,
+      status: this.status,
+      errors: this.errors,
+    };
   }
 }

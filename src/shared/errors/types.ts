@@ -44,3 +44,15 @@ export type ValidationErrorsPayload = Record<string, string[]>;
 export type ErrorPayload<T extends ErrorType> = T extends "validation"
   ? ValidationErrorsPayload
   : unknown;
+
+/**
+ * The plain, serializable projection of an `AppError` — safe for Redux state and
+ * any serialized boundary. Mirrors an AppError's data (type, message, status,
+ * optional field-level errors) without the `Error` machinery (prototype, stack).
+ */
+export interface SerializedAppError<T extends ErrorType = ErrorType> {
+  type: T;
+  message: string;
+  status: number;
+  errors?: ErrorPayload<T>;
+}
