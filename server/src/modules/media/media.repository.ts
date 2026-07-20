@@ -113,4 +113,15 @@ export const createMediaRepository = (
     });
     return row === null ? null : mediaToken(row.token);
   },
+
+  usageFor: async (ownerId, client: DbClient = db) => {
+    // Owned + servable only: tombstones don't count, and ownerless
+    // grant-provenance objects belong to no principal (they are M11's concern).
+    const { _count, _sum } = await client.mediaObject.aggregate({
+      where: { uploaderId: ownerId, status: "ready" },
+      _count: { _all: true },
+      _sum: { size: true },
+    });
+    return { objectCount: _count._all, totalBytes: _sum.size ?? 0 };
+  },
 });

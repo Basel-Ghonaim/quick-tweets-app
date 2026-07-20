@@ -47,6 +47,7 @@ const makeRepo = (over: Partial<IMediaRepository> = {}): IMediaRepository => ({
   countByGrant: async () => 0,
   adoptById: async () => true,
   findTokenById: async () => null,
+  usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
   ...over,
 });
 

@@ -142,6 +142,18 @@ export interface IMediaRepository {
   ): Promise<boolean>;
   /** Resolve a numeric reference to its public read token (avatar rendering), or `null`. */
   findTokenById(referenceId: number, client?: DbClient): Promise<MediaToken | null>;
+  /** A principal's aggregate usage over owned, servable objects (accounting only). */
+  usageFor(ownerId: number, client?: DbClient): Promise<MediaUsage>;
+}
+
+/**
+ * A principal's media footprint, computed from the registry (ADR 0005 Decision 5).
+ * Only Media can compute it, so a quota would be enforceable at one owner — the
+ * quota policy itself is deliberately not built.
+ */
+export interface MediaUsage {
+  objectCount: number;
+  totalBytes: number;
 }
 
 // ─── Ingest boundary (ADR 0005 Decision 5 / ADR 0007) ────────────────────────
