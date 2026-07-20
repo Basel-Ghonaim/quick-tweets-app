@@ -58,7 +58,7 @@ export const authSlice = createSlice({
     },
 
     // Identity-only update for silent session hydration — startup restore
-    // (useInitAuth) and background token refresh (bootstrap.onTokenRefreshed).
+    // (useSessionRestore) and background token refresh (bootstrap.onTokenRefreshed).
     // Deliberately touches no request slot: those track user-initiated flows
     // (login/register/logout), so hydration must not mark `login` as succeeded.
     sessionHydrated: (state, action: PayloadAction<SessionHydratedPayload>) => {

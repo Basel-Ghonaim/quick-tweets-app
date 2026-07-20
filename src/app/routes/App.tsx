@@ -1,23 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { useInitAuth, AuthPage } from "@modules/auth";
+import { useSessionRestore, AuthPage } from "@modules/auth";
 
 export const App = () => {
-  const { isInitializing } = useInitAuth();
-
-  if (isInitializing) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  // Non-blocking, hint-gated identity restore — never gates render (Problem 3).
+  useSessionRestore();
 
   return (
     <BrowserRouter>
