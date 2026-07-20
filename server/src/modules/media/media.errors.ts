@@ -176,3 +176,28 @@ export class MediaAdoptionError extends Error {
     return new MediaAdoptionError("already_adopted", "This avatar has already been claimed");
   }
 }
+
+// ─── Attach errors (ADR 0005 Decision 5 — ownership authority) ───────────────
+
+export type MediaAttachErrorCode = "not_attachable";
+
+export class MediaAttachError extends Error {
+  public readonly code: MediaAttachErrorCode;
+
+  constructor(code: MediaAttachErrorCode, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "MediaAttachError";
+    // Preserve the prototype chain for `instanceof` across the transpile target.
+    Object.setPrototypeOf(this, MediaAttachError.prototype);
+  }
+
+  /**
+   * The principal may not attach this object — unknown reference, owned by someone
+   * else, still unadopted, or not servable. One opaque code by design: the caller
+   * never learns which (no enumeration oracle).
+   */
+  static notAttachable(): MediaAttachError {
+    return new MediaAttachError("not_attachable", "This media cannot be attached");
+  }
+}
