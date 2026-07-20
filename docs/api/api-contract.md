@@ -261,6 +261,7 @@ interface ErrorBody {
   }
 }
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
+// Set-Cookie: qt_session=1; Secure; SameSite=Strict; Path=/   (readable session hint — see "Session cookies" below)
 
 // Response 409 — username or email already taken, OR the submitted avatar was already claimed
 { "success": false, "error": { "type": "conflict", "message": "Username already taken" } }
@@ -271,6 +272,10 @@ interface ErrorBody {
 // a failed attempt does not spend the grant — the same avatar can be retried while it lives).
 { "success": false, "error": { "type": "validation", "message": "Registration failed", "errors": { "avatar": ["The selected avatar could not be attached; please re-upload and try again"] } } }
 ```
+
+> **Session cookies.** A session sets **two** cookies (on login / register / refresh) and clears both on logout / logout-all:
+> - `refreshToken` — `HttpOnly`, the session credential (JS cannot read it), `Path=/api/v1/auth`.
+> - `qt_session=1` — a **readable, non-secret hint** (`Path=/`) that a session probably exists, so the SPA can decide whether to attempt a silent restore **without firing a request for guests**. It is **non-authoritative** (auth truth is always the `HttpOnly` cookie + server) and carries no secret; forging it only triggers a refresh that fails harmlessly. Its client-side source is intentionally swappable if the app ever moves to a fully cross-domain FE/BE split (where a readable API-domain cookie would not be visible to the app domain).
 
 ### `POST /auth/login` — Authenticate user
 
@@ -285,6 +290,7 @@ interface ErrorBody {
 
 // Response 200 — same shape as /auth/register
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
+// Set-Cookie: qt_session=1; Secure; SameSite=Strict; Path=/   (readable session hint — see "Session cookies" below)
 
 // Response 401 — wrong username or password (generic message, no user enumeration)
 { "success": false, "error": { "type": "unauthorized", "message": "Invalid credentials" } }
@@ -299,6 +305,7 @@ interface ErrorBody {
 
 // Response 204 (No Content)
 // Set-Cookie: refreshToken=; Max-Age=0... (clears cookie)
+// Set-Cookie: qt_session=; Max-Age=0; Path=/ (clears the session hint)
 ```
 
 ### `POST /auth/logout-all` — Invalidate all sessions
@@ -308,6 +315,7 @@ interface ErrorBody {
 ```jsonc
 // Response 204 (No Content)
 // Set-Cookie: refreshToken=; Max-Age=0... (clears cookie on current device)
+// Set-Cookie: qt_session=; Max-Age=0; Path=/ (clears the session hint)
 ```
 
 ### `POST /auth/refresh` — Get new access token
@@ -335,6 +343,7 @@ interface ErrorBody {
   }
 }
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
+// Set-Cookie: qt_session=1; Secure; SameSite=Strict; Path=/   (readable session hint — see "Session cookies" below)
 ```
 
 ### `GET /auth/me` — Get current user profile

@@ -47,6 +47,35 @@ const REFRESH_COOKIE_OPTIONS = {
   maxAge: 7 * 24 * 60 * 60 * 1000,        // 7 days in milliseconds
 };
 
+// Client-readable, non-secret session-hint cookie (not httpOnly): lets the SPA
+// skip the restore request for guests. Non-authoritative — truth stays the
+// httpOnly refresh cookie + server. See the API contract for the two-cookie policy.
+const SESSION_HINT_NAME = "qt_session";
+
+const SESSION_HINT_BASE = {
+  httpOnly: false,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "strict" as const,
+  path: "/",
+} as const;
+
+const SESSION_HINT_OPTIONS = {
+  ...SESSION_HINT_BASE,
+  maxAge: 7 * 24 * 60 * 60 * 1000,        // tracks the refresh window
+};
+
+/** Set both session cookies: the httpOnly refresh token and the readable hint. */
+const setSessionCookies = (res: Response, refreshToken: string): void => {
+  res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
+  res.cookie(SESSION_HINT_NAME, "1", SESSION_HINT_OPTIONS);
+};
+
+/** Clear both session cookies (server-confirmed logout). */
+const clearSessionCookies = (res: Response): void => {
+  res.clearCookie("refreshToken", REFRESH_COOKIE_BASE);
+  res.clearCookie(SESSION_HINT_NAME, SESSION_HINT_BASE);
+};
+
 // ─── User Response Formatter ─────────────────────────────────────────────────
 
 /**
@@ -90,7 +119,7 @@ export const createAuthController = (
     try {
       const result = await service.register(req.body);
 
-      res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
+      setSessionCookies(res, result.refreshToken);
 
       sendSuccess(res, {
         user: toUserResponse(result.user, result.avatarToken),
@@ -110,7 +139,7 @@ export const createAuthController = (
     try {
       const result = await service.login(req.body);
 
-      res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
+      setSessionCookies(res, result.refreshToken);
 
       sendSuccess(res, {
         user: toUserResponse(result.user, result.avatarToken),
@@ -134,7 +163,7 @@ export const createAuthController = (
 
       // Clear cookie with matching flags — uses REFRESH_COOKIE_BASE
       // so any new flag added to the base is automatically picked up.
-      res.clearCookie("refreshToken", REFRESH_COOKIE_BASE);
+      clearSessionCookies(res);
       sendSuccess(res, null, 204);
     } catch (err) {
       next(err);
@@ -152,7 +181,7 @@ export const createAuthController = (
       await service.logoutAll(userId);
 
       // Clear cookie on current device
-      res.clearCookie("refreshToken", REFRESH_COOKIE_BASE);
+      clearSessionCookies(res);
       sendSuccess(res, null, 204);
     } catch (err) {
       next(err);
@@ -173,7 +202,7 @@ export const createAuthController = (
 
       const result = await service.refreshToken(refreshToken);
 
-      res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
+      setSessionCookies(res, result.refreshToken);
 
       sendSuccess(res, {
         accessToken: result.accessToken,
