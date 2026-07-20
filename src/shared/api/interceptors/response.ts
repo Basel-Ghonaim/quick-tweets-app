@@ -12,6 +12,7 @@ export interface TokenRefreshCallbacks {
 export const responseInterceptor = (
   client: AxiosInstance,
   callbacks?: TokenRefreshCallbacks,
+  getAccessToken?: () => string | null,
 ) => {
   // Refresh state scoped per client instance
   let isRefreshing = false;
@@ -51,6 +52,12 @@ export const responseInterceptor = (
 
       if (originalRequest.url?.includes("/auth/refresh")) {
         callbacks.onSessionExpired();
+        return Promise.reject(normalizedError);
+      }
+
+      // A 401 with no access token means "not signed in" (e.g. a failed login),
+      // not an expired session — there is nothing to refresh.
+      if (getAccessToken && !getAccessToken()) {
         return Promise.reject(normalizedError);
       }
 

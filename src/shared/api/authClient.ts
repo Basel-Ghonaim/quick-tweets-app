@@ -22,5 +22,5 @@ export const setupAuthClient = (
 ) => {
   attachTokenInterceptor(authClient, getAccessToken);
   retryInterceptor(authClient);
-  responseInterceptor(authClient, refreshCallbacks);
+  responseInterceptor(authClient, refreshCallbacks, getAccessToken);
 };
