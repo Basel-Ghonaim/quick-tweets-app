@@ -78,6 +78,9 @@ const makeRepo = (grantCounts: Record<string, number> = {}) => {
     adoptById: async () => false,
     findTokenById: async () => null,
     usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
+    addReference: async () => {},
+    removeReference: async () => {},
+    countReferences: async () => 0,
   };
   return { repo, creates };
 };
@@ -247,6 +250,9 @@ describe("media ingest service", () => {
       adoptById: async () => false,
       findTokenById: async () => null,
       usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
+      addReference: async () => {},
+      removeReference: async () => {},
+      countReferences: async () => 0,
     };
     const service = createMediaService(adapter, repo);
 
@@ -287,6 +293,9 @@ describe("media service — read (resolution)", () => {
       adoptById: async () => false,
       findTokenById: async () => null,
       usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
+      addReference: async () => {},
+      removeReference: async () => {},
+      countReferences: async () => 0,
     };
     const storage: StorageAdapter = {
       save: async () => {},
