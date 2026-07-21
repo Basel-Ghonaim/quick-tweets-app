@@ -140,7 +140,7 @@ interface TweetMediaEmbed {
 
 The numeric Media Reference and the stored ordering position are deliberately **not** exposed: the reference is internal to Media, and exposing a position alongside array order would give ordering two sources of truth.
 
-Currently **always empty** — attaching media when composing a tweet has not shipped yet.
+Attach media by submitting these tokens on `POST`/`PATCH /tweets` — see those endpoints. Every token returned here is **servable**: a reference that no longer resolves to a readable object is omitted rather than returned, so a client never receives a token it cannot fetch.
 
 ### CursorPaginationMeta
 
@@ -415,7 +415,7 @@ interface ErrorBody {
     {
       "id": 5,
       "body": "Hello world!",
-      "media": [],                // Ordered media attachments — see Tweet Media. Empty until compose media ships.
+      "media": [],                // Ordered media attachments — see TweetMediaEmbed.
       "author": {
         "id": 1,
         "username": "basel",
@@ -514,7 +514,11 @@ interface ErrorBody {
 ```jsonc
 // Request body
 {
-  "body": "Hello world!"    // required, 1-280 characters
+  "body": "Hello world!",   // required, 1-280 characters
+  "media": ["<token>"]      // optional, ordered; up to 4 media read tokens.
+                            // Array order is display order. Each must be an
+                            // object you uploaded and have not yet attached
+                            // elsewhere; duplicates within one tweet are rejected.
 }
 
 // Response 201
@@ -523,7 +527,7 @@ interface ErrorBody {
   "data": {
     "id": 13,
     "body": "Hello world!",
-    "media": [],                // Ordered media attachments — see Tweet Media.
+    "media": [],                // Ordered media attachments — see TweetMediaEmbed.
     "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 0,
     "commentsCount": 0,
@@ -549,7 +553,11 @@ interface ErrorBody {
 ```jsonc
 // Request body (at least one field required)
 {
-  "body": "Updated tweet!"    // optional, 1-280 characters
+  "body": "Updated tweet!",   // optional, 1-280 characters
+  "media": ["<token>"]        // optional — FULL REPLACEMENT, not a delta.
+                              // Omit to leave the tweet's media untouched;
+                              // send [] to remove all of it. The array you
+                              // send becomes the tweet's media, in order.
 }
 
 // Response 200

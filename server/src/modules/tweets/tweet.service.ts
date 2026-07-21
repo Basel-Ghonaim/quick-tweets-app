@@ -23,9 +23,11 @@ import {
 import {
   mediaOwnership,
   mediaReferences,
+  mediaResolution,
   MediaAttachError,
   type IMediaOwnership,
   type IMediaReferences,
+  type IMediaResolution,
 } from "../media/index.js";
 import { createTweetRepository } from "./tweet.repository.js";
 import type {
@@ -33,6 +35,7 @@ import type {
   ITweetService,
   TweetMediaRef,
   TweetResponse,
+  TweetWithRelations,
 } from "./tweet.types.js";
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import { isPrismaError } from "../../shared/utils/index.js";
@@ -44,11 +47,13 @@ import { toTweetResponse } from "./tweet.mapper.js";
 export interface TweetMediaPort {
   ownership: IMediaOwnership;
   references: IMediaReferences;
+  resolution: IMediaResolution;
 }
 
 const defaultMediaPort: TweetMediaPort = {
   ownership: mediaOwnership,
   references: mediaReferences,
+  resolution: mediaResolution,
 };
 
 /**
@@ -108,6 +113,25 @@ const coordinateRefChange = async (
   }
 };
 
+/**
+ * Resolve every media reference across a page of tweets in **one** query, then
+ * map. Resolving per tweet — or per object — would be an N+1 over a feed.
+ */
+const toResponses = async (
+  media: TweetMediaPort,
+  tweets: TweetWithRelations[],
+): Promise<TweetResponse[]> => {
+  const referenceIds = tweets.flatMap((tweet) => tweet.media.map((ref) => ref.mediaId));
+  const tokens = await media.resolution.resolveTokens(referenceIds);
+  return tweets.map((tweet) => toTweetResponse(tweet, tokens));
+};
+
+/** One tweet, resolved through the same batched path. */
+const toResponse = async (
+  media: TweetMediaPort,
+  tweet: TweetWithRelations,
+): Promise<TweetResponse> => (await toResponses(media, [tweet]))[0]!;
+
 /** Media that could not be attached is a request problem, not a server fault. */
 const asAttachFailure = (err: unknown): unknown =>
   err instanceof MediaAttachError
@@ -155,7 +179,7 @@ export const createTweetService = (
     };
 
     return {
-      data: sliced.map(toTweetResponse),
+      data: await toResponses(media, sliced),
       meta,
     };
   },
@@ -182,7 +206,7 @@ export const createTweetService = (
     };
 
     return {
-      data: sliced.map(toTweetResponse),
+      data: await toResponses(media, sliced),
       meta,
     };
   },
@@ -212,7 +236,7 @@ export const createTweetService = (
     };
 
     return {
-      data: sliced.map(toTweetResponse),
+      data: await toResponses(media, sliced),
       meta,
     };
   },
@@ -226,7 +250,7 @@ export const createTweetService = (
       throw AppError.notFound("Tweet");
     }
 
-    return toTweetResponse(tweet);
+    return toResponse(media, tweet);
   },
 
   // ─── Create ─────────────────────────────────────────────────────────
@@ -237,7 +261,7 @@ export const createTweetService = (
     mediaTokens: string[] = [],
   ): Promise<TweetResponse> => {
     if (mediaTokens.length === 0) {
-      return toTweetResponse(await repo.create(authorId, body));
+      return toResponse(media, await repo.create(authorId, body));
     }
 
     // The tweet, its media rows, and Media's record of those references all
@@ -256,7 +280,7 @@ export const createTweetService = (
         }
         return created;
       });
-      return toTweetResponse(tweet);
+      return toResponse(media, tweet);
     } catch (err) {
       throw asAttachFailure(err);
     }
@@ -282,7 +306,7 @@ export const createTweetService = (
 
     // 3. Body-only edits leave media untouched and need no transaction.
     if (data.media === undefined) {
-      return toTweetResponse(await repo.update(id, { body: data.body }, userId));
+      return toResponse(media, await repo.update(id, { body: data.body }, userId));
     }
 
     // 4. Full replacement: the submitted array *is* the tweet's media. The body
@@ -296,7 +320,7 @@ export const createTweetService = (
         await coordinateRefChange(media, id, before, after, tx);
         return repo.update(id, { body: data.body }, userId, tx);
       });
-      return toTweetResponse(updated);
+      return toResponse(media, updated);
     } catch (err) {
       throw asAttachFailure(err);
     }

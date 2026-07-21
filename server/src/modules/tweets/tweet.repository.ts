@@ -40,6 +40,12 @@ const buildTweetInclude = (userId?: number) => ({
       comments: true,
     },
   },
+  // Ordered media references. Only the internal reference travels — resolving
+  // it to a public read token is Media's, done once per page by the service.
+  media: {
+    select: { mediaId: true, position: true },
+    orderBy: { position: "asc" as const },
+  },
   // If logged in, include whether this user liked the tweet
   ...(userId
     ? { likes: { where: { userId }, select: { userId: true } } }

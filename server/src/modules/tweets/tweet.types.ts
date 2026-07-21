@@ -79,6 +79,8 @@ export interface TweetWithRelations {
     comments: number;
   };
   likes?: { userId: number }[];
+  /** Ordered media references — internal ids only; Media resolves them to tokens. */
+  media: TweetMediaRef[];
 }
 
 /**

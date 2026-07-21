@@ -18,7 +18,7 @@ import type { ITweetRepository, TweetMediaRef } from "./tweet.types";
 const TX = { __tx: true } as never; // opaque sentinel for the transaction client
 const AUTHOR = 7;
 
-const rawTweet = (id: number) => ({
+const rawTweet = (id: number, media: TweetMediaRef[] = []) => ({
   id,
   body: "hello",
   authorId: AUTHOR,
@@ -26,6 +26,7 @@ const rawTweet = (id: number) => ({
   updatedAt: new Date(),
   author: { id: AUTHOR, username: "ada", name: "Ada", profileImage: null },
   _count: { likes: 0, comments: 0 },
+  media,
 });
 
 const makeWorld = () => {
@@ -42,9 +43,9 @@ const makeWorld = () => {
     findById: async () => null,
     create: async (authorId, body, client) => {
       calls.create.push(client);
-      return rawTweet(1) as never;
+      return rawTweet(1, stored.get(1) ?? []) as never;
     },
-    update: async () => rawTweet(1) as never,
+    update: async () => rawTweet(1, stored.get(1) ?? []) as never,
     delete: async () => {},
     findOwner: async () => ({ authorId: AUTHOR }),
     findMediaRefs: async (tweetId) => stored.get(tweetId) ?? [],
@@ -93,6 +94,10 @@ const makeMedia = (refs: Record<string, number>) => {
         ended.push({ mediaId, referrer, client });
       },
       isReferenced: async () => false,
+    },
+    resolution: {
+      resolveTokens: async (ids) => new Map(ids.map((id) => [id, `tok-${id}` as never])),
+      resolveToken: async (id) => `tok-${id}` as never,
     },
   };
   return { media, began, ended };
