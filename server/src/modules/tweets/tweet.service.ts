@@ -15,25 +15,94 @@
  */
 
 import { AppError } from "../../shared/errors/index.js";
+import {
+  runInTransaction as defaultRunInTransaction,
+  type DbClient,
+  type RunInTransaction,
+} from "../../shared/database/index.js";
+import {
+  mediaOwnership,
+  mediaReferences,
+  MediaAttachError,
+  type IMediaOwnership,
+  type IMediaReferences,
+} from "../media/index.js";
 import { createTweetRepository } from "./tweet.repository.js";
 import type {
   ITweetRepository,
   ITweetService,
+  TweetMediaRef,
   TweetResponse,
 } from "./tweet.types.js";
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import { isPrismaError } from "../../shared/utils/index.js";
 import { toTweetResponse } from "./tweet.mapper.js";
 
+// ─── Media port ──────────────────────────────────────────────────────────────
+
+/** The Media surfaces tweets consume, grouped into one injected dependency. */
+export interface TweetMediaPort {
+  ownership: IMediaOwnership;
+  references: IMediaReferences;
+}
+
+const defaultMediaPort: TweetMediaPort = {
+  ownership: mediaOwnership,
+  references: mediaReferences,
+};
+
+/**
+ * The referrer tag under which a tweet holds its media references. Derived from
+ * the immutable tweet id, so an end signal always matches its begin. Several
+ * objects on one tweet share the tag — the ledger keys on (object, referrer),
+ * and the same object cannot appear twice on one tweet.
+ */
+const tweetReferrer = (tweetId: number): string => `tweet:${tweetId}`;
+
+/**
+ * Authorize each submitted token against the author and turn it into an ordered
+ * internal reference. Array order becomes position. Any refusal throws, rolling
+ * back the caller's transaction — an attach is all-or-nothing.
+ */
+const authorizeRefs = async (
+  media: TweetMediaPort,
+  tokens: string[],
+  authorId: number,
+  tx: DbClient,
+): Promise<TweetMediaRef[]> => {
+  const refs: TweetMediaRef[] = [];
+  for (const [position, token] of tokens.entries()) {
+    const { referenceId } = await media.ownership.authorizeAttach(
+      { token, ownerId: authorId },
+      tx,
+    );
+    refs.push({ mediaId: referenceId, position });
+  }
+  return refs;
+};
+
+/** Media that could not be attached is a request problem, not a server fault. */
+const asAttachFailure = (err: unknown): unknown =>
+  err instanceof MediaAttachError
+    ? AppError.validation("Tweet could not be saved", {
+        media: ["One or more media items could not be attached; please re-upload and try again"],
+      })
+    : err;
+
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
- * Creates an ITweetService with injected repository dependency.
+ * Creates an ITweetService with injected dependencies.
  *
  * @param repo - Tweet database operations (defaults to Prisma implementation)
+ * @param media - The Media surfaces tweets consume (defaults to the published ones)
+ * @param runInTransaction - Interactive-transaction runner (defaults to Prisma's;
+ *   injectable so media coordination is testable without a live database)
  */
 export const createTweetService = (
   repo: ITweetRepository = createTweetRepository(),
+  media: TweetMediaPort = defaultMediaPort,
+  runInTransaction: RunInTransaction = defaultRunInTransaction,
 ): ITweetService => ({
   // ─── Feed (cursor-paginated) ────────────────────────────────────────
 
@@ -135,9 +204,35 @@ export const createTweetService = (
 
   // ─── Create ─────────────────────────────────────────────────────────
 
-  create: async (authorId: number, body: string): Promise<TweetResponse> => {
-    const tweet = await repo.create(authorId, body);
-    return toTweetResponse(tweet);
+  create: async (
+    authorId: number,
+    body: string,
+    mediaTokens: string[] = [],
+  ): Promise<TweetResponse> => {
+    if (mediaTokens.length === 0) {
+      return toTweetResponse(await repo.create(authorId, body));
+    }
+
+    // The tweet, its media rows, and Media's record of those references all
+    // commit together or not at all — a half-attached tweet would either show
+    // media nothing accounts for, or leak objects nothing will reclaim.
+    try {
+      const tweet = await runInTransaction(async (tx) => {
+        const created = await repo.create(authorId, body, tx);
+        const refs = await authorizeRefs(media, mediaTokens, authorId, tx);
+        await repo.replaceMediaRefs(created.id, refs, tx);
+        for (const ref of refs) {
+          await media.references.referenceBegan(
+            { mediaId: ref.mediaId, referrer: tweetReferrer(created.id) },
+            tx,
+          );
+        }
+        return created;
+      });
+      return toTweetResponse(tweet);
+    } catch (err) {
+      throw asAttachFailure(err);
+    }
   },
 
   // ─── Update (ownership check) ───────────────────────────────────────

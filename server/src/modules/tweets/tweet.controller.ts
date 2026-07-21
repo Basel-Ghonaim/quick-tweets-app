@@ -72,7 +72,7 @@ export const createTweetController = (
    */
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweet = await service.create(req.userId!, req.body.body);
+      const tweet = await service.create(req.userId!, req.body.body, req.body.media);
 
       sendSuccess(res, tweet, 201);
     } catch (err) {

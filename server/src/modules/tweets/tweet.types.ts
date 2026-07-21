@@ -11,7 +11,25 @@
  * Principle: ISP — repository and service contracts are separate.
  */
 
+import type { DbClient } from "../../shared/database/index.js";
 import type { AuthorEmbed, CursorParams, CursorMeta } from "../../shared/types/index.js";
+
+/**
+ * The maximum media objects one tweet may carry.
+ *
+ * **Provisional.** The value is a placeholder until the compose experience is
+ * designed — it is the display grid that will decide how many attachments are
+ * meaningful, so this is superseded by that design rather than by anything
+ * architectural. Enforced server-side regardless: the dropzone's own limit is
+ * client-side and untrusted.
+ */
+export const MAX_TWEET_MEDIA = 4;
+
+/** One ordered media reference on a tweet — the internal reference, never a token. */
+export interface TweetMediaRef {
+  mediaId: number;
+  position: number;
+}
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
@@ -86,11 +104,32 @@ export interface ITweetRepository {
 
   findById(id: number, userId?: number): Promise<TweetWithRelations | null>;
 
-  create(authorId: number, body: string): Promise<TweetWithRelations>;
+  create(authorId: number, body: string, client?: DbClient): Promise<TweetWithRelations>;
 
-  update(id: number, data: { body?: string }, userId?: number): Promise<TweetWithRelations>;
+  update(
+    id: number,
+    data: { body?: string },
+    userId?: number,
+    client?: DbClient,
+  ): Promise<TweetWithRelations>;
 
-  delete(id: number): Promise<void>;
+  delete(id: number, client?: DbClient): Promise<void>;
+
+  // ── Media association (M8 `TweetMedia`) ──
+
+  /** The tweet's current ordered media references. */
+  findMediaRefs(tweetId: number, client?: DbClient): Promise<TweetMediaRef[]>;
+
+  /**
+   * Replace the tweet's media rows with `refs`, in order. Wholesale replacement
+   * rather than an in-place edit: positions are unique per tweet, so shuffling
+   * them individually would collide mid-statement.
+   */
+  replaceMediaRefs(
+    tweetId: number,
+    refs: TweetMediaRef[],
+    client?: DbClient,
+  ): Promise<void>;
 
   /** Lightweight query — only fetches authorId for ownership checks. */
   findOwner(id: number): Promise<{ authorId: number } | null>;
@@ -133,12 +172,13 @@ export interface ITweetService {
 
   getById(id: number, userId?: number): Promise<TweetResponse>;
 
-  create(authorId: number, body: string): Promise<TweetResponse>;
+  /** `media` are public read tokens, in display order; each is attach-authorized. */
+  create(authorId: number, body: string, media?: string[]): Promise<TweetResponse>;
 
   update(
     id: number,
     userId: number,
-    data: { body?: string },
+    data: { body?: string; media?: string[] },
   ): Promise<TweetResponse>;
 
   delete(id: number, userId: number): Promise<void>;
