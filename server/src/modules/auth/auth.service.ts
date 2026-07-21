@@ -31,9 +31,11 @@ import {
   type RunInTransaction,
 } from "../../shared/database/index.js";
 import {
-  mediaAdoption as defaultMediaAdoption,
+  mediaAdoption,
+  mediaResolution,
   MediaAdoptionError,
   type IMediaAdoption,
+  type IMediaResolution,
 } from "../media/index.js";
 import type { User } from "../../generated/prisma/client.js";
 import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
@@ -57,6 +59,23 @@ const SALT_ROUNDS = 12;
 /** Refresh token validity period in days. */
 const REFRESH_TOKEN_DAYS = 7;
 
+// ─── Media port ──────────────────────────────────────────────────────────────
+
+/**
+ * The Media surfaces auth consumes, grouped into one injected dependency.
+ * Auth needs several of them (adopt an avatar, resolve it for display), and a
+ * parameter per surface would make the factory signature grow with every one.
+ */
+export interface AuthMediaPort {
+  adoption: IMediaAdoption;
+  resolution: IMediaResolution;
+}
+
+const defaultMediaPort: AuthMediaPort = {
+  adoption: mediaAdoption,
+  resolution: mediaResolution,
+};
+
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
@@ -64,19 +83,20 @@ const REFRESH_TOKEN_DAYS = 7;
  *
  * @param authRepo - User database operations (defaults to Prisma implementation)
  * @param tokenRepo - Refresh token operations (defaults to Prisma implementation)
- * @param media - Media adoption surface (defaults to the published implementation)
+ * @param media - The Media surfaces auth consumes, grouped so the dependency
+ *   list does not grow a parameter per surface (defaults to the published ones)
  * @param runInTransaction - Interactive-transaction runner (defaults to Prisma's;
  *   injectable so register-with-avatar is testable without a live database)
  */
 export const createAuthService = (
   authRepo: IAuthRepository = createAuthRepository(),
   tokenRepo: ITokenRepository = createTokenRepository(),
-  media: IMediaAdoption = defaultMediaAdoption,
+  media: AuthMediaPort = defaultMediaPort,
   runInTransaction: RunInTransaction = defaultRunInTransaction,
 ): IAuthService => {
   /** Resolve a user's avatar reference to its public read token (null when unset). */
   const resolveAvatar = (referenceId: number | null): Promise<string | null> =>
-    referenceId === null ? Promise.resolve(null) : media.resolveAvatarToken(referenceId);
+    referenceId === null ? Promise.resolve(null) : media.resolution.resolveToken(referenceId);
 
   return {
     // ─── Register ────────────────────────────────────────────────────────
@@ -116,7 +136,7 @@ export const createAuthService = (
         try {
           const outcome = await runInTransaction(async (tx) => {
             const created = await authRepo.create(newUser, tx);
-            const adopted = await media.adopt(
+            const adopted = await media.adoption.adopt(
               { token: avatar.token, grant: avatar.grant, ownerId: created.id },
               tx,
             );

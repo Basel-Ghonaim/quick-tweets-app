@@ -37,6 +37,11 @@ export type {
   AttachableMedia,
 } from "./media.ownership.js";
 
+// Reference resolution (ADR 0005 Decision 3) — internal references back to
+// public read tokens. Batched; servable objects only. See media.resolution.ts.
+export { createMediaResolution, mediaResolution } from "./media.resolution.js";
+export type { IMediaResolution } from "./media.resolution.js";
+
 // Reference coordination (ADR 0005 Decision 8) — the feature signals that a
 // reference begins/ends; Media owns the write. See media.references.ts.
 export { createMediaReferences, mediaReferences } from "./media.references.js";

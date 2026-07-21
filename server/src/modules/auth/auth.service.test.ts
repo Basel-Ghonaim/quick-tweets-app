@@ -18,7 +18,8 @@ import { describe, expect, it } from "vitest";
 
 import { AppError } from "../../shared/errors/index.js";
 import { MediaAdoptionError } from "../media/index.js";
-import type { AdoptMediaInput, IMediaAdoption } from "../media/index.js";
+import type { AdoptMediaInput } from "../media/index.js";
+import type { AuthMediaPort } from "./auth.service.js";
 import type { RunInTransaction } from "../../shared/database/index.js";
 import { createAuthService } from "./auth.service";
 import type { IAuthRepository, ITokenRepository } from "./auth.types";
@@ -89,13 +90,18 @@ const makeMedia = (
   adopt: (input: AdoptMediaInput) => Promise<{ referenceId: number; token: string }>,
 ) => {
   const calls: { input: AdoptMediaInput; client: unknown }[] = [];
-  const media: IMediaAdoption = {
-    adopt: async (input, client) => {
-      calls.push({ input, client });
-      const r = await adopt(input);
-      return { referenceId: r.referenceId, token: r.token as never };
+  const media: AuthMediaPort = {
+    adoption: {
+      adopt: async (input, client) => {
+        calls.push({ input, client });
+        const r = await adopt(input);
+        return { referenceId: r.referenceId, token: r.token as never };
+      },
     },
-    resolveAvatarToken: async (id) => `token-${id}` as never,
+    resolution: {
+      resolveTokens: async (ids) => new Map(ids.map((id) => [id, `token-${id}` as never])),
+      resolveToken: async (id) => `token-${id}` as never,
+    },
   };
   return { media, calls };
 };

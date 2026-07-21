@@ -140,8 +140,16 @@ export interface IMediaRepository {
     expectedGrantId: string,
     client?: DbClient,
   ): Promise<boolean>;
-  /** Resolve a numeric reference to its public read token (avatar rendering), or `null`. */
-  findTokenById(referenceId: number, client?: DbClient): Promise<MediaToken | null>;
+  /**
+   * Resolve numeric references to their public read tokens, keyed by reference.
+   * **Servable objects only** — a non-`ready` reference is simply absent from the
+   * result, so a caller can never surface a token that would fail to read.
+   * Batched because a feed page resolves many references at once.
+   */
+  findTokensByIds(
+    referenceIds: number[],
+    client?: DbClient,
+  ): Promise<Map<number, MediaToken>>;
   /** A principal's aggregate usage over owned, servable objects (accounting only). */
   usageFor(ownerId: number, client?: DbClient): Promise<MediaUsage>;
   /**

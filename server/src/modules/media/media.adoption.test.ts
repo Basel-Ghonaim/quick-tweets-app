@@ -46,7 +46,7 @@ const makeRepo = (over: Partial<IMediaRepository> = {}): IMediaRepository => ({
   findByToken: async () => null,
   countByGrant: async () => 0,
   adoptById: async () => true,
-  findTokenById: async () => null,
+  findTokensByIds: async () => new Map(),
   usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
   addReference: async () => {},
   removeReference: async () => {},
@@ -156,11 +156,5 @@ describe("media adoption", () => {
       .catch((e: unknown) => e);
 
     expect((err as MediaAdoptionError).code).toBe("already_adopted");
-  });
-
-  it("resolves a numeric reference to its public read token", async () => {
-    const token = mintToken();
-    const adoption = createMediaAdoption(makeRepo({ findTokenById: async () => token }));
-    expect(await adoption.resolveAvatarToken(7)).toBe(token);
   });
 });
