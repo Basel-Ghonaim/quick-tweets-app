@@ -124,4 +124,23 @@ export const createMediaRepository = (
     });
     return { objectCount: _count._all, totalBytes: _sum.size ?? 0 };
   },
+
+  addReference: async ({ mediaId, referrer }, client: DbClient = db) => {
+    // Idempotent by construction: the (media_id, referrer) uniqueness makes a
+    // retried signal a no-op rather than a duplicate row.
+    await client.mediaReference.upsert({
+      where: { mediaId_referrer: { mediaId, referrer } },
+      create: { mediaId, referrer },
+      update: {},
+    });
+  },
+
+  removeReference: async ({ mediaId, referrer }, client: DbClient = db) => {
+    // deleteMany, not delete: an absent row is a no-op, so an end signal is
+    // safe to replay and never throws on a reference that is already gone.
+    await client.mediaReference.deleteMany({ where: { mediaId, referrer } });
+  },
+
+  countReferences: (mediaId, client: DbClient = db) =>
+    client.mediaReference.count({ where: { mediaId } }),
 });

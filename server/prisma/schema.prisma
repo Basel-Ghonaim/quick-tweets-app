@@ -201,7 +201,8 @@ model MediaObject {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  uploader User? @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  uploader   User?            @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  references MediaReference[]
 
   // Constraints & Indexes
   // @@unique on grantId is the atomic backstop for GRANT_MAX_OBJECTS = 1
@@ -209,4 +210,43 @@ model MediaObject {
   // unaffected); if that bound ever rises, this becomes a plain index.
   @@unique([grantId])
   @@map("media_objects")
+}
+
+// ─── MediaReference ──────────────────────────────────────────────────────────
+// Media's own record that *something* holds a reference to an object — the
+// state Decision 8 requires: "Media determines what is still referenced from
+// its own state, never by reaching into feature schemas."
+//
+// `referrer` is an OPAQUE tag: the feature composes it, Media stores and
+// matches it, and Media never parses or interprets it. That is what keeps
+// Decision 9's "a MediaObject is unaware of its referrers" intact — Media
+// learns *that* a reference exists, never *what* refers to it. The dependency
+// direction is untouched: no foreign key points at a feature table, and Media
+// still imports no feature module.
+//
+// Deliberately model-neutral. Whether an object may carry more than one
+// reference — a reusable asset versus a disposable one-time upload — is an
+// open PRODUCT decision, so this shape forces neither: multiple referrers are
+// simply multiple rows, and exclusivity, if ever chosen, becomes a uniqueness
+// constraint layered on top rather than a different mechanism. (A boolean
+// marker was rejected for exactly this reason: it is silently wrong the moment
+// a second referrer exists.)
+
+model MediaReference {
+  id        Int      @id @default(autoincrement())
+  mediaId   Int      @map("media_id")
+  referrer  String // opaque referrer tag — stored, matched, never interpreted
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  // Within Media's own boundary, so a real FK is appropriate — unlike the
+  // feature side, which holds a bare reference. Restrict enforces reclamation's
+  // invariant at the database: an object still referenced cannot be removed.
+  media MediaObject @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  // Constraints & Indexes
+  // One referrer holds one reference to one object: makes a repeated "begin"
+  // idempotent rather than duplicating, and makes "end" exact.
+  @@unique([mediaId, referrer])
+  @@map("media_references")
 }

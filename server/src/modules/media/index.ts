@@ -37,6 +37,12 @@ export type {
   AttachableMedia,
 } from "./media.ownership.js";
 
+// Reference coordination (ADR 0005 Decision 8) — the feature signals that a
+// reference begins/ends; Media owns the write. See media.references.ts.
+export { createMediaReferences, mediaReferences } from "./media.references.js";
+export type { IMediaReferences } from "./media.references.js";
+export type { MediaReferenceInput } from "./media.types.js";
+
 /**
  * Build the configured storage adapter. The backend is local-disk for now
  * (rooted at `UPLOAD_DIR`); selecting a different backend later happens here,

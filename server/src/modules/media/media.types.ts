@@ -144,6 +144,30 @@ export interface IMediaRepository {
   findTokenById(referenceId: number, client?: DbClient): Promise<MediaToken | null>;
   /** A principal's aggregate usage over owned, servable objects (accounting only). */
   usageFor(ownerId: number, client?: DbClient): Promise<MediaUsage>;
+  /**
+   * Record that `referrer` holds a reference to `mediaId`. Idempotent: a repeat
+   * for the same pair changes nothing (the replay guard for a retried signal).
+   */
+  addReference(ref: MediaReferenceInput, client?: DbClient): Promise<void>;
+  /** Drop `referrer`'s reference to `mediaId`. Idempotent: a missing row is a no-op. */
+  removeReference(ref: MediaReferenceInput, client?: DbClient): Promise<void>;
+  /** How many referrers currently hold `mediaId` — referenced-ness from Media's own state. */
+  countReferences(mediaId: number, client?: DbClient): Promise<number>;
+}
+
+/**
+ * One reference relationship, as Media records it (ADR 0005 Decision 8).
+ *
+ * `referrer` is deliberately **opaque**: the feature composes it, Media stores
+ * and matches it, and never parses it. Media therefore learns *that* an object
+ * is referenced, never *what* refers to it — which is how Decision 9's "a
+ * MediaObject is unaware of its referrers" survives Media keeping this state.
+ */
+export interface MediaReferenceInput {
+  /** The numeric Media Reference the feature persists. */
+  mediaId: number;
+  /** Opaque referrer tag, unique per referring slot. Never interpreted by Media. */
+  referrer: string;
 }
 
 /**
