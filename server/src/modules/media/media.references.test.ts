@@ -12,7 +12,7 @@ const makeRepo = (over: Partial<IMediaRepository> = {}): IMediaRepository => ({
   findByToken: async () => null,
   countByGrant: async () => 0,
   adoptById: async () => false,
-  findTokenById: async () => null,
+  findTokensByIds: async () => new Map(),
   usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
   addReference: async () => {},
   removeReference: async () => {},

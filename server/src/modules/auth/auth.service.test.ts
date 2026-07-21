@@ -18,7 +18,8 @@ import { describe, expect, it } from "vitest";
 
 import { AppError } from "../../shared/errors/index.js";
 import { MediaAdoptionError } from "../media/index.js";
-import type { AdoptMediaInput, IMediaAdoption } from "../media/index.js";
+import type { AdoptMediaInput } from "../media/index.js";
+import type { AuthMediaPort } from "./auth.service.js";
 import type { RunInTransaction } from "../../shared/database/index.js";
 import { createAuthService } from "./auth.service";
 import type { IAuthRepository, ITokenRepository } from "./auth.types";
@@ -89,15 +90,28 @@ const makeMedia = (
   adopt: (input: AdoptMediaInput) => Promise<{ referenceId: number; token: string }>,
 ) => {
   const calls: { input: AdoptMediaInput; client: unknown }[] = [];
-  const media: IMediaAdoption = {
-    adopt: async (input, client) => {
-      calls.push({ input, client });
-      const r = await adopt(input);
-      return { referenceId: r.referenceId, token: r.token as never };
+  const signals: { mediaId: number; referrer: string; client: unknown }[] = [];
+  const media: AuthMediaPort = {
+    adoption: {
+      adopt: async (input, client) => {
+        calls.push({ input, client });
+        const r = await adopt(input);
+        return { referenceId: r.referenceId, token: r.token as never };
+      },
     },
-    resolveAvatarToken: async (id) => `token-${id}` as never,
+    resolution: {
+      resolveTokens: async (ids) => new Map(ids.map((id) => [id, `token-${id}` as never])),
+      resolveToken: async (id) => `token-${id}` as never,
+    },
+    references: {
+      referenceBegan: async ({ mediaId, referrer }, client) => {
+        signals.push({ mediaId, referrer, client });
+      },
+      referenceEnded: async () => {},
+      isReferenced: async () => false,
+    },
   };
-  return { media, calls };
+  return { media, calls, signals };
 };
 
 describe("auth register-with-avatar", () => {
@@ -132,6 +146,31 @@ describe("auth register-with-avatar", () => {
     expect(calls[0]!.client).toBe(TX);
     expect(w.calls.setAvatar[0]!.client).toBe(TX);
     expect(w.calls.setAvatar[0]!.referenceId).toBe(42);
+  });
+
+  it("S3: the avatar reference is signalled to Media, inside the same transaction", async () => {
+    // Without this signal the object looks unreferenced and reclamation would
+    // eventually destroy a live avatar.
+    const w = makeWorld();
+    const { media, signals } = makeMedia(async () => ({ referenceId: 42, token: "tok" }));
+    const svc = createAuthService(w.authRepo, w.tokenRepo, media, w.runInTransaction);
+
+    await svc.register({ ...REG, avatar: { ...AVATAR } });
+
+    const created = w.users[0]!;
+    expect(signals).toEqual([
+      { mediaId: 42, referrer: `user-avatar:${created.id}`, client: TX },
+    ]);
+  });
+
+  it("S1: no avatar means no reference signal", async () => {
+    const w = makeWorld();
+    const { media, signals } = makeMedia(async () => { throw new Error("must not adopt"); });
+    const svc = createAuthService(w.authRepo, w.tokenRepo, media, w.runInTransaction);
+
+    await svc.register({ ...REG });
+
+    expect(signals).toHaveLength(0);
   });
 
   it("S3: a failed conditional adoption rolls the whole transaction back (no orphan account)", async () => {

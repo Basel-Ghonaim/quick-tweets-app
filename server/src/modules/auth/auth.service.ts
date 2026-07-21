@@ -10,7 +10,7 @@
  * - getMe(): load the user and resolve its avatar read token
  *
  * Register-with-avatar (M6 / ADR 0007): when the request carries avatar grant
- * evidence, **create-user + adopt + link run inside one interactive transaction**
+ * evidence, **create-user + adopt + link + signal run inside one interactive transaction**
  * (Auth owns the unit-of-work; Media owns and enforces the adoption semantics
  * through its published interface). A failed conditional adoption throws and
  * rolls the whole transaction back — never an account without the chosen avatar,
@@ -31,9 +31,13 @@ import {
   type RunInTransaction,
 } from "../../shared/database/index.js";
 import {
-  mediaAdoption as defaultMediaAdoption,
+  mediaAdoption,
+  mediaResolution,
+  mediaReferences,
   MediaAdoptionError,
   type IMediaAdoption,
+  type IMediaResolution,
+  type IMediaReferences,
 } from "../media/index.js";
 import type { User } from "../../generated/prisma/client.js";
 import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
@@ -57,6 +61,31 @@ const SALT_ROUNDS = 12;
 /** Refresh token validity period in days. */
 const REFRESH_TOKEN_DAYS = 7;
 
+// ─── Media port ──────────────────────────────────────────────────────────────
+
+/**
+ * The Media surfaces auth consumes, grouped into one injected dependency.
+ * Auth needs several of them (adopt an avatar, resolve it for display), and a
+ * parameter per surface would make the factory signature grow with every one.
+ */
+export interface AuthMediaPort {
+  adoption: IMediaAdoption;
+  resolution: IMediaResolution;
+  references: IMediaReferences;
+}
+
+const defaultMediaPort: AuthMediaPort = {
+  adoption: mediaAdoption,
+  resolution: mediaResolution,
+  references: mediaReferences,
+};
+
+/**
+ * The referrer tag under which an avatar holds its media reference. Derived
+ * from the immutable user id, so an end signal always matches its begin.
+ */
+const avatarReferrer = (userId: number): string => `user-avatar:${userId}`;
+
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
@@ -64,19 +93,20 @@ const REFRESH_TOKEN_DAYS = 7;
  *
  * @param authRepo - User database operations (defaults to Prisma implementation)
  * @param tokenRepo - Refresh token operations (defaults to Prisma implementation)
- * @param media - Media adoption surface (defaults to the published implementation)
+ * @param media - The Media surfaces auth consumes, grouped so the dependency
+ *   list does not grow a parameter per surface (defaults to the published ones)
  * @param runInTransaction - Interactive-transaction runner (defaults to Prisma's;
  *   injectable so register-with-avatar is testable without a live database)
  */
 export const createAuthService = (
   authRepo: IAuthRepository = createAuthRepository(),
   tokenRepo: ITokenRepository = createTokenRepository(),
-  media: IMediaAdoption = defaultMediaAdoption,
+  media: AuthMediaPort = defaultMediaPort,
   runInTransaction: RunInTransaction = defaultRunInTransaction,
 ): IAuthService => {
   /** Resolve a user's avatar reference to its public read token (null when unset). */
   const resolveAvatar = (referenceId: number | null): Promise<string | null> =>
-    referenceId === null ? Promise.resolve(null) : media.resolveAvatarToken(referenceId);
+    referenceId === null ? Promise.resolve(null) : media.resolution.resolveToken(referenceId);
 
   return {
     // ─── Register ────────────────────────────────────────────────────────
@@ -116,11 +146,18 @@ export const createAuthService = (
         try {
           const outcome = await runInTransaction(async (tx) => {
             const created = await authRepo.create(newUser, tx);
-            const adopted = await media.adopt(
+            const adopted = await media.adoption.adopt(
               { token: avatar.token, grant: avatar.grant, ownerId: created.id },
               tx,
             );
             await authRepo.setAvatarReference(created.id, adopted.referenceId, tx);
+            // Tell Media the reference exists, in the same transaction as the
+            // reference itself. Without this the object looks unreferenced and
+            // reclamation would eventually destroy a live avatar.
+            await media.references.referenceBegan(
+              { mediaId: adopted.referenceId, referrer: avatarReferrer(created.id) },
+              tx,
+            );
             return { user: { ...created, avatarMediaId: adopted.referenceId }, token: adopted.token };
           });
           user = outcome.user;

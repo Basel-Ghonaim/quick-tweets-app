@@ -49,7 +49,7 @@ export interface AdoptedMedia {
   token: MediaToken;
 }
 
-/** Media's published adoption + reference-resolution surface (feature-facing). */
+/** Media's published adoption surface (feature-facing). */
 export interface IMediaAdoption {
   /**
    * Adopt a grant-provenance object onto `ownerId`, within the caller's
@@ -58,8 +58,6 @@ export interface IMediaAdoption {
    * rolls the caller's transaction back.
    */
   adopt(input: AdoptMediaInput, client: DbClient): Promise<AdoptedMedia>;
-  /** Resolve a persisted numeric reference to its public read token, or `null`. */
-  resolveAvatarToken(referenceId: number, client?: DbClient): Promise<MediaToken | null>;
 }
 
 // ─── Factory ─────────────────────────────────────────────────────────────────
@@ -106,8 +104,6 @@ export const createMediaAdoption = (
 
     return { referenceId: object.id, token: object.token };
   },
-
-  resolveAvatarToken: (referenceId, client) => repo.findTokenById(referenceId, client),
 });
 
 // A default, ready-to-use instance for feature consumers that do not inject.

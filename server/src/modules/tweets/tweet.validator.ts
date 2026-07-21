@@ -14,6 +14,23 @@
 
 import { z } from "zod";
 import { cursorQuerySchema } from "../../shared/validators/index.js";
+import { MAX_TWEET_MEDIA } from "./tweet.types.js";
+
+// ─── Media references ────────────────────────────────────────────────────────
+
+/**
+ * Ordered media read tokens. Array order is display order.
+ *
+ * Only shape and count are checked here — whether a token exists and whether
+ * the author may attach it is Media's to answer, and asking here would both
+ * duplicate that authority and leak whether a token exists.
+ */
+const mediaTokensSchema = z
+  .array(z.string().trim().min(1, "A media reference cannot be empty"))
+  .max(MAX_TWEET_MEDIA, `A tweet may carry at most ${MAX_TWEET_MEDIA} media items`)
+  .refine((tokens) => new Set(tokens).size === tokens.length, {
+    message: "The same media item cannot be attached twice to one tweet",
+  });
 
 // ─── Feed Query ──────────────────────────────────────────────────────────────
 
@@ -29,6 +46,7 @@ export const createTweetSchema = z.object({
     .min(1, "Tweet body cannot be empty")
     .max(280, "Tweet body must be at most 280 characters")
     .trim(),
+  media: mediaTokensSchema.optional(),
 });
 
 // ─── Update Tweet ────────────────────────────────────────────────────────────
@@ -41,7 +59,10 @@ export const updateTweetSchema = z
       .max(280, "Tweet body must be at most 280 characters")
       .trim()
       .optional(),
+    // Full replacement: the complete ordered array, not a delta. Omitted leaves
+    // the tweet's media untouched; an empty array removes all of it.
+    media: mediaTokensSchema.optional(),
   })
-  .refine((data) => data.body !== undefined, {
+  .refine((data) => data.body !== undefined || data.media !== undefined, {
     message: "At least one field must be provided",
   });

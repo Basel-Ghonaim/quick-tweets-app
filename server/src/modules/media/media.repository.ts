@@ -106,12 +106,13 @@ export const createMediaRepository = (
     return count === 1;
   },
 
-  findTokenById: async (referenceId, client: DbClient = db) => {
-    const row = await client.mediaObject.findUnique({
-      where: { id: referenceId },
-      select: { token: true },
+  findTokensByIds: async (referenceIds, client: DbClient = db) => {
+    if (referenceIds.length === 0) return new Map();
+    const rows = await client.mediaObject.findMany({
+      where: { id: { in: referenceIds }, status: "ready" },
+      select: { id: true, token: true },
     });
-    return row === null ? null : mediaToken(row.token);
+    return new Map(rows.map((row) => [row.id, mediaToken(row.token)]));
   },
 
   usageFor: async (ownerId, client: DbClient = db) => {

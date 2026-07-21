@@ -13,12 +13,36 @@ const rawTweet = (over: Partial<TweetWithRelations> = {}): TweetWithRelations =>
   updatedAt: new Date(),
   author: { id: 42, username: "ada", name: "Ada", profileImage: null },
   _count: { likes: 2, comments: 1 },
+  media: [],
   ...over,
 });
 
 describe("toTweetResponse — media", () => {
-  it("exposes an ordered media collection, empty until a write path exists", () => {
+  it("exposes an empty collection when the tweet carries no media", () => {
     expect(toTweetResponse(rawTweet()).media).toEqual([]);
+  });
+
+  it("maps references to their resolved tokens, preserving stored order", () => {
+    const tweet = rawTweet({
+      media: [{ mediaId: 11, position: 0 }, { mediaId: 22, position: 1 }],
+    });
+    const tokens = new Map([[11, "tok-a"], [22, "tok-b"]]);
+
+    expect(toTweetResponse(tweet, tokens).media).toEqual([
+      { token: "tok-a" },
+      { token: "tok-b" },
+    ]);
+  });
+
+  it("omits a reference that did not resolve, rather than emitting a dead token", () => {
+    // Media resolves servable objects only, so an unresolved reference would be
+    // a token the client could never read.
+    const tweet = rawTweet({
+      media: [{ mediaId: 11, position: 0 }, { mediaId: 22, position: 1 }],
+    });
+    const tokens = new Map([[22, "tok-b"]]);
+
+    expect(toTweetResponse(tweet, tokens).media).toEqual([{ token: "tok-b" }]);
   });
 
   it("no longer emits the retired image field", () => {

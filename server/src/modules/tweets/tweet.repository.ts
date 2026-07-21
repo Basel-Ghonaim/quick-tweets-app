@@ -13,7 +13,7 @@
  * Principle: Factory Pattern — createTweetRepository(db?) enables mock injection.
  */
 
-import { prisma } from "../../shared/database/index.js";
+import { prisma, type DbClient } from "../../shared/database/index.js";
 import type { ITweetRepository } from "./tweet.types.js";
 import type { CursorParams } from "../../shared/types/index.js";
 
@@ -39,6 +39,12 @@ const buildTweetInclude = (userId?: number) => ({
       likes: true,
       comments: true,
     },
+  },
+  // Ordered media references. Only the internal reference travels — resolving
+  // it to a public read token is Media's, done once per page by the service.
+  media: {
+    select: { mediaId: true, position: true },
+    orderBy: { position: "asc" as const },
   },
   // If logged in, include whether this user liked the tweet
   ...(userId
@@ -102,8 +108,8 @@ export const createTweetRepository = (
 
   // ── Create ──
 
-  create: (authorId, body) =>
-    db.tweet.create({
+  create: (authorId, body, client: DbClient = db) =>
+    client.tweet.create({
       data: { authorId, body },
       // No userId — isLiked is always false on a newly created tweet
       include: buildTweetInclude(),
@@ -111,8 +117,8 @@ export const createTweetRepository = (
 
   // ── Update ──
 
-  update: (id, data, userId?) =>
-    db.tweet.update({
+  update: (id, data, userId?, client: DbClient = db) =>
+    client.tweet.update({
       where: { id },
       data,
       include: buildTweetInclude(userId),
@@ -120,8 +126,28 @@ export const createTweetRepository = (
 
   // ── Delete ──
 
-  delete: async (id) => {
-    await db.tweet.delete({ where: { id } });
+  delete: async (id, client: DbClient = db) => {
+    await client.tweet.delete({ where: { id } });
+  },
+
+  // ── Media association ──
+
+  findMediaRefs: (tweetId, client: DbClient = db) =>
+    client.tweetMedia.findMany({
+      where: { tweetId },
+      select: { mediaId: true, position: true },
+      orderBy: { position: "asc" },
+    }),
+
+  replaceMediaRefs: async (tweetId, refs, client: DbClient = db) => {
+    // Delete-then-insert rather than an in-place edit: (tweetId, position) is
+    // unique, so reordering row by row would collide before the statement ends.
+    await client.tweetMedia.deleteMany({ where: { tweetId } });
+    if (refs.length > 0) {
+      await client.tweetMedia.createMany({
+        data: refs.map((ref) => ({ tweetId, mediaId: ref.mediaId, position: ref.position })),
+      });
+    }
   },
 
   // ── Ownership Check (lightweight) ──

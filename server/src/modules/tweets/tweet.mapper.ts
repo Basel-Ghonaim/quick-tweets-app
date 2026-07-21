@@ -16,12 +16,27 @@
 
 import type { TweetWithRelations, TweetResponse } from "./tweet.types.js";
 
-export const toTweetResponse = (tweet: TweetWithRelations): TweetResponse => ({
+/**
+ * Resolved read tokens, keyed by internal media reference. Supplied by the
+ * caller rather than looked up here: resolution is one batched query per page,
+ * and the mapper stays pure and synchronous.
+ *
+ * A reference missing from the map is **omitted** from the response — Media
+ * only resolves servable objects, so surfacing it would hand the client a token
+ * that cannot be read.
+ */
+export type ResolvedMediaTokens = ReadonlyMap<number, string>;
+
+export const toTweetResponse = (
+  tweet: TweetWithRelations,
+  tokens: ResolvedMediaTokens = new Map(),
+): TweetResponse => ({
   id: tweet.id,
   body: tweet.body,
-  // No write path attaches media yet (M9), so no tweet can carry any. Resolving
-  // references to read tokens is M9's, designed against its real query.
-  media: [],
+  media: tweet.media.flatMap((ref) => {
+    const token = tokens.get(ref.mediaId);
+    return token === undefined ? [] : [{ token }];
+  }),
   author: tweet.author,
   likesCount: tweet._count.likes,
   commentsCount: tweet._count.comments,
