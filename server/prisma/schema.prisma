@@ -64,19 +64,56 @@ model RefreshToken {
 model Tweet {
   id        Int      @id @default(autoincrement())
   body      String   @db.VarChar(280)
-  image     String?
   authorId  Int      @map("author_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author   User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments Comment[]
   likes    Like[]
+  media    TweetMedia[]
 
   // Indexes
   @@index([authorId])
   @@map("tweets")
+}
+
+// ─── TweetMedia ──────────────────────────────────────────────────────────────
+// The tweets-domain association to media (ADR 0005 Decision 9 — fit the model
+// to cardinality): a tweet carries an *ordered* collection of references, so
+// the association is its own table rather than a scalar on Tweet.
+//
+// `mediaId` is a bare numeric Media Reference (MediaObject.id) with NO Prisma
+// relation and NO foreign key — exactly as User.avatarMediaId. MediaObject
+// stays unaware of its referrers, and Media owns reference integrity from its
+// own state, never gated by a feature-table FK (M11).
+//
+// onDelete: Restrict on the *tweet* side is deliberate, and not the Cascade its
+// sibling associations (comments, likes) use — those are owned data, whereas
+// this is a reference to an object another module owns. Cascade would drop
+// these rows while the registry still believed the objects were referenced, so
+// they would never be reclaimed: a silent, permanent leak. Restrict is inert
+// today (no write path exists), and becomes a loud failure the moment M9
+// attaches real media — at exactly the point the reference-end coordination
+// contract is due. That contract supersedes this posture.
+
+model TweetMedia {
+  id        Int      @id @default(autoincrement())
+  tweetId   Int      @map("tweet_id")
+  mediaId   Int      @map("media_id") // bare Media Reference — no FK by design
+  position  Int // ordering key, not a dense index: gaps are harmless
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  tweet Tweet @relation(fields: [tweetId], references: [id], onDelete: Restrict)
+
+  // Constraints & Indexes
+  // No @@index([mediaId]): the only query it serves is "which tweets reference
+  // this object" — the feature-schema scan M11 forbids Media from performing.
+  @@unique([tweetId, position]) // no two media share a slot in one tweet
+  @@unique([tweetId, mediaId]) // the same object is not attached twice
+  @@map("tweet_media")
 }
 
 // ─── Comment ─────────────────────────────────────────────────────────────────
