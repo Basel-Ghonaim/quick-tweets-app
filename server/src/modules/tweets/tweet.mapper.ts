@@ -19,7 +19,9 @@ import type { TweetWithRelations, TweetResponse } from "./tweet.types.js";
 export const toTweetResponse = (tweet: TweetWithRelations): TweetResponse => ({
   id: tweet.id,
   body: tweet.body,
-  image: tweet.image,
+  // No write path attaches media yet (M9), so no tweet can carry any. Resolving
+  // references to read tokens is M9's, designed against its real query.
+  media: [],
   author: tweet.author,
   likesCount: tweet._count.likes,
   commentsCount: tweet._count.comments,

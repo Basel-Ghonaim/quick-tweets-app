@@ -14,6 +14,14 @@
 - **Breaking changes** (e.g., modifying response shapes, removing fields, renaming endpoints) will result in a new version (`v2`).
 - **Additive changes** (e.g., adding new optional fields like `updatedAt` or new endpoints) will be added to the current version and documented here.
 
+### Pre-release Contract Exceptions
+
+`v1` is not yet released to any consumer. Where a change would formally require `v2` but no consumer can possibly depend on the field being removed, it is taken **in `v1` as a recorded exception** rather than forcing a premature version bump. Every such exception is listed here — the deviation is stated, never silent. This section closes once `v1` has a released consumer.
+
+| Change | Why an exception rather than `v2` |
+|---|---|
+| Tweet responses: `image` removed, superseded by the ordered `media` array | The field was documented as *"Reserved for future use. Always null in v1"* and never had a write path, so it never carried a value anything could depend on. No client reads it — the tweets UI has not been built. |
+
 ---
 
 ## Migration Note — Flat Route Reform
@@ -119,6 +127,20 @@ interface AuthorEmbed {
                                // to the Media Reference model in a later Work Item.
 }
 ```
+
+### TweetMediaEmbed
+
+Embedded in tweet responses as an **ordered** array — the array order *is* the display order.
+
+```typescript
+interface TweetMediaEmbed {
+  token: string; // opaque read handle — GET /media/:token
+}
+```
+
+The numeric Media Reference and the stored ordering position are deliberately **not** exposed: the reference is internal to Media, and exposing a position alongside array order would give ordering two sources of truth.
+
+Currently **always empty** — attaching media when composing a tweet has not shipped yet.
 
 ### CursorPaginationMeta
 
@@ -393,7 +415,7 @@ interface ErrorBody {
     {
       "id": 5,
       "body": "Hello world!",
-      "image": null,              // Reserved for future use (file uploads). Always null in v1.
+      "media": [],                // Ordered media attachments — see Tweet Media. Empty until compose media ships.
       "author": {
         "id": 1,
         "username": "basel",
@@ -453,7 +475,7 @@ interface ErrorBody {
   "data": {
     "id": 5,
     "body": "Hello world!",
-    "image": null,
+    "media": [],
     "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 3,
     "commentsCount": 2,
@@ -469,7 +491,7 @@ interface ErrorBody {
   "data": {
     "id": 5,
     "body": "Hello world!",
-    "image": null,
+    "media": [],
     "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 3,
     "commentsCount": 2,
@@ -501,7 +523,7 @@ interface ErrorBody {
   "data": {
     "id": 13,
     "body": "Hello world!",
-    "image": null,              // Reserved for future use. Always null in v1.
+    "media": [],                // Ordered media attachments — see Tweet Media.
     "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 0,
     "commentsCount": 0,
@@ -536,7 +558,7 @@ interface ErrorBody {
   "data": {
     "id": 5,
     "body": "Updated tweet!",
-    "image": null,
+    "media": [],
     "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "likesCount": 3,
     "commentsCount": 2,
