@@ -10,7 +10,7 @@
  * - getMe(): load the user and resolve its avatar read token
  *
  * Register-with-avatar (M6 / ADR 0007): when the request carries avatar grant
- * evidence, **create-user + adopt + link run inside one interactive transaction**
+ * evidence, **create-user + adopt + link + signal run inside one interactive transaction**
  * (Auth owns the unit-of-work; Media owns and enforces the adoption semantics
  * through its published interface). A failed conditional adoption throws and
  * rolls the whole transaction back — never an account without the chosen avatar,
@@ -33,9 +33,11 @@ import {
 import {
   mediaAdoption,
   mediaResolution,
+  mediaReferences,
   MediaAdoptionError,
   type IMediaAdoption,
   type IMediaResolution,
+  type IMediaReferences,
 } from "../media/index.js";
 import type { User } from "../../generated/prisma/client.js";
 import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
@@ -69,12 +71,20 @@ const REFRESH_TOKEN_DAYS = 7;
 export interface AuthMediaPort {
   adoption: IMediaAdoption;
   resolution: IMediaResolution;
+  references: IMediaReferences;
 }
 
 const defaultMediaPort: AuthMediaPort = {
   adoption: mediaAdoption,
   resolution: mediaResolution,
+  references: mediaReferences,
 };
+
+/**
+ * The referrer tag under which an avatar holds its media reference. Derived
+ * from the immutable user id, so an end signal always matches its begin.
+ */
+const avatarReferrer = (userId: number): string => `user-avatar:${userId}`;
 
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
@@ -141,6 +151,13 @@ export const createAuthService = (
               tx,
             );
             await authRepo.setAvatarReference(created.id, adopted.referenceId, tx);
+            // Tell Media the reference exists, in the same transaction as the
+            // reference itself. Without this the object looks unreferenced and
+            // reclamation would eventually destroy a live avatar.
+            await media.references.referenceBegan(
+              { mediaId: adopted.referenceId, referrer: avatarReferrer(created.id) },
+              tx,
+            );
             return { user: { ...created, avatarMediaId: adopted.referenceId }, token: adopted.token };
           });
           user = outcome.user;
