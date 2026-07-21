@@ -15,11 +15,23 @@ import type { AuthorEmbed, CursorParams, CursorMeta } from "../../shared/types/i
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
+/**
+ * A media item attached to a tweet, in display order.
+ *
+ * Only the public read token is exposed: the numeric Media Reference stays
+ * internal (ADR 0005 Decision 3), and array order *is* the ordering — position
+ * is deliberately not on the wire, so ordering has a single source of truth.
+ */
+export interface TweetMediaResponse {
+  token: string;
+}
+
 /** Tweet shape returned to the frontend. */
 export interface TweetResponse {
   id: number;
   body: string;
-  image: string | null;
+  /** Ordered media attachments. Always empty until a write path exists (M9). */
+  media: TweetMediaResponse[];
   author: AuthorEmbed;
   likesCount: number;
   commentsCount: number;
@@ -35,7 +47,6 @@ export interface TweetResponse {
 export interface TweetWithRelations {
   id: number;
   body: string;
-  image: string | null;
   authorId: number;
   createdAt: Date;
   updatedAt: Date;
