@@ -81,6 +81,33 @@ const authorizeRefs = async (
   return refs;
 };
 
+/**
+ * Coordinate a tweet's media set changing from `before` to `after`.
+ *
+ * Signals fire on the **set difference only**. Rows are replaced wholesale, so
+ * an object that merely moved position is written again — but it never stopped
+ * being referenced, and ending then re-beginning it would be churn that
+ * misrepresents what happened.
+ */
+const coordinateRefChange = async (
+  media: TweetMediaPort,
+  tweetId: number,
+  before: TweetMediaRef[],
+  after: TweetMediaRef[],
+  tx: DbClient,
+): Promise<void> => {
+  const referrer = tweetReferrer(tweetId);
+  const had = new Set(before.map((ref) => ref.mediaId));
+  const has = new Set(after.map((ref) => ref.mediaId));
+
+  for (const mediaId of had) {
+    if (!has.has(mediaId)) await media.references.referenceEnded({ mediaId, referrer }, tx);
+  }
+  for (const mediaId of has) {
+    if (!had.has(mediaId)) await media.references.referenceBegan({ mediaId, referrer }, tx);
+  }
+};
+
 /** Media that could not be attached is a request problem, not a server fault. */
 const asAttachFailure = (err: unknown): unknown =>
   err instanceof MediaAttachError
@@ -240,7 +267,7 @@ export const createTweetService = (
   update: async (
     id: number,
     userId: number,
-    data: { body?: string },
+    data: { body?: string; media?: string[] },
   ): Promise<TweetResponse> => {
     // 1. Lightweight ownership check — only fetch authorId, not full relations
     const owner = await repo.findOwner(id);
@@ -253,9 +280,26 @@ export const createTweetService = (
       throw AppError.forbidden("You can only edit your own tweets");
     }
 
-    // 3. Update and return (pass userId for correct isLiked in response)
-    const updated = await repo.update(id, data, userId);
-    return toTweetResponse(updated);
+    // 3. Body-only edits leave media untouched and need no transaction.
+    if (data.media === undefined) {
+      return toTweetResponse(await repo.update(id, { body: data.body }, userId));
+    }
+
+    // 4. Full replacement: the submitted array *is* the tweet's media. The body
+    //    edit, the new rows, and the coordination all commit together.
+    const mediaTokens = data.media;
+    try {
+      const updated = await runInTransaction(async (tx) => {
+        const before = await repo.findMediaRefs(id, tx);
+        const after = await authorizeRefs(media, mediaTokens, userId, tx);
+        await repo.replaceMediaRefs(id, after, tx);
+        await coordinateRefChange(media, id, before, after, tx);
+        return repo.update(id, { body: data.body }, userId, tx);
+      });
+      return toTweetResponse(updated);
+    } catch (err) {
+      throw asAttachFailure(err);
+    }
   },
 
   // ─── Delete (ownership check) ───────────────────────────────────────
@@ -272,8 +316,17 @@ export const createTweetService = (
       throw AppError.forbidden("You can only delete your own tweets");
     }
 
-    // 3. Delete (cascade handles comments/likes)
-    await repo.delete(id);
+    // 3. Deleting a tweet ends every reference it holds — the tweets domain
+    //    removes references, never bytes; Media reclaims what nothing holds.
+    //    Order matters: end the references and drop the rows *before* the tweet,
+    //    so TweetMedia's Restrict stays a backstop and never actually fires.
+    //    Comments and likes still cascade — they are owned data, not references.
+    await runInTransaction(async (tx) => {
+      const refs = await repo.findMediaRefs(id, tx);
+      await repo.replaceMediaRefs(id, [], tx);
+      await coordinateRefChange(media, id, refs, [], tx);
+      await repo.delete(id, tx);
+    });
   },
 
   // ─── Toggle Like ────────────────────────────────────────────────────

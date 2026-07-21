@@ -160,3 +160,120 @@ describe("tweet create with media", () => {
     expect(began).toHaveLength(0);
   });
 });
+
+describe("tweet edit — full replacement", () => {
+  it("signals only the difference: removed ends, added begins", async () => {
+    const w = makeWorld();
+    w.stored.set(1, [{ mediaId: 11, position: 0 }, { mediaId: 22, position: 1 }]);
+    const { media, began, ended } = makeMedia({ tokB: 22, tokC: 33 });
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    await svc.update(1, AUTHOR, { media: ["tokB", "tokC"] }); // 11 out, 33 in
+
+    expect(ended).toEqual([{ mediaId: 11, referrer: "tweet:1", client: TX }]);
+    expect(began).toEqual([{ mediaId: 33, referrer: "tweet:1", client: TX }]);
+  });
+
+  it("signals nothing when media is only reordered", async () => {
+    // Rows are rewritten wholesale, but a reordered object never stopped being
+    // referenced — ending and re-beginning it would misrepresent what happened.
+    const w = makeWorld();
+    w.stored.set(1, [{ mediaId: 11, position: 0 }, { mediaId: 22, position: 1 }]);
+    const { media, began, ended } = makeMedia({ tokA: 11, tokB: 22 });
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    await svc.update(1, AUTHOR, { media: ["tokB", "tokA"] });
+
+    expect(began).toHaveLength(0);
+    expect(ended).toHaveLength(0);
+    expect(w.stored.get(1)).toEqual([
+      { mediaId: 22, position: 0 },
+      { mediaId: 11, position: 1 },
+    ]);
+  });
+
+  it("an empty array removes every reference", async () => {
+    const w = makeWorld();
+    w.stored.set(1, [{ mediaId: 11, position: 0 }]);
+    const { media, ended } = makeMedia({});
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    await svc.update(1, AUTHOR, { media: [] });
+
+    expect(ended).toEqual([{ mediaId: 11, referrer: "tweet:1", client: TX }]);
+    expect(w.stored.get(1)).toEqual([]);
+  });
+
+  it("omitting media leaves the existing references untouched", async () => {
+    const w = makeWorld();
+    w.stored.set(1, [{ mediaId: 11, position: 0 }]);
+    const { media, began, ended } = makeMedia({});
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    await svc.update(1, AUTHOR, { body: "edited" });
+
+    expect(began).toHaveLength(0);
+    expect(ended).toHaveLength(0);
+    expect(w.stored.get(1)).toEqual([{ mediaId: 11, position: 0 }]);
+  });
+
+  it("rolls back and signals nothing when a replacement is not attachable", async () => {
+    const w = makeWorld();
+    w.stored.set(1, [{ mediaId: 11, position: 0 }]);
+    const { media, began, ended } = makeMedia({});
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    await svc.update(1, AUTHOR, { media: ["not-mine"] }).catch(() => {});
+
+    expect(w.stored.get(1)).toEqual([{ mediaId: 11, position: 0 }]);
+    expect(began).toHaveLength(0);
+    expect(ended).toHaveLength(0);
+  });
+});
+
+describe("tweet delete", () => {
+  it("ends every reference the tweet held, before the tweet row goes", async () => {
+    const w = makeWorld();
+    w.stored.set(1, [{ mediaId: 11, position: 0 }, { mediaId: 22, position: 1 }]);
+    const { media, ended } = makeMedia({});
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    await svc.delete(1, AUTHOR);
+
+    expect(ended).toEqual([
+      { mediaId: 11, referrer: "tweet:1", client: TX },
+      { mediaId: 22, referrer: "tweet:1", client: TX },
+    ]);
+    // Rows dropped inside the same transaction, so TweetMedia's Restrict — the
+    // backstop that would otherwise refuse the delete — never fires.
+    expect(w.stored.get(1)).toEqual([]);
+  });
+
+  it("deletes a tweet with no media without signalling anything", async () => {
+    const w = makeWorld();
+    const { media, ended } = makeMedia({});
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    await svc.delete(1, AUTHOR);
+
+    expect(ended).toHaveLength(0);
+  });
+});
+
+describe("tweet create — no-media path", () => {
+  it("takes the plain path when no media is submitted", async () => {
+    const w = makeWorld();
+    const { media, began } = makeMedia({});
+    let opened = 0;
+    const runInTransaction: RunInTransaction = async (fn) => {
+      opened += 1;
+      return w.runInTransaction(fn);
+    };
+    const svc = createTweetService(w.repo, media, runInTransaction);
+
+    await svc.create(AUTHOR, "hello");
+
+    expect(opened).toBe(0); // no media, no transaction
+    expect(began).toHaveLength(0);
+  });
+});
