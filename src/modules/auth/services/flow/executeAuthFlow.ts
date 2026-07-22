@@ -1,8 +1,8 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import type { AppError } from "@shared/errors";
-import { authActions, type AuthRequestType } from "../store";
-import type { AuthResponse } from "../entity";
-import { authErrorHandler } from "./authErrorHandler";
+import { authActions, type AuthRequestType } from "../../store";
+import type { AuthResponse } from "../../entity";
+import { authErrorHandler } from "../authErrorHandler";
 
 /**
  * The shared login / register flow.
