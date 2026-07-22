@@ -1,0 +1,7 @@
+# Verification fixtures are binary — never normalize line endings or diff them.
+*.png binary
+*.gif binary
+*.jpg binary
+*.webp binary
+# not-an-image.png is deliberately text, but the .png rule above keeps git from
+# mangling it; that is fine — its content is what matters, not its encoding.

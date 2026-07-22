@@ -39,6 +39,7 @@ This is the **map** of the project's documentation — every document, what it o
 - [setup.md](development/setup.md) — running the project locally.
 - [engineering-principles.md](development/engineering-principles.md) — code-design principles (SOLID, data/architectural patterns, naming).
 - [engineering-execution-standard.md](development/engineering-execution-standard.md) — how work is executed: the Git lifecycle, scope control, review, and decision authority.
+- [verification/](development/verification/) — the manual verification harness (Postman collection + pgAdmin checkpoints) for the Media subsystem and core flows; see its [README](development/verification/README.md).
 
 ### `plans/` — execution-oriented plans
 - [plans/](plans/) — migration, execution, refactoring, and release plans: a lifecycle-governed artifact class (`Draft → Active → Historical`), separate from the permanent reference docs, each enumerated in the directory's Plan Index. Includes the historical [documentation-migration-plan.md](plans/documentation-migration-plan.md) that consolidated the earlier scattered docs into this set. See [ADR 0006](architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
