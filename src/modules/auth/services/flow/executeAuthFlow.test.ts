@@ -8,11 +8,11 @@
  */
 import { describe, it, expect } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer } from "../store";
+import { authReducer } from "../../store";
 import { executeAuthFlow } from "./executeAuthFlow";
 import { createAppError } from "@shared/errors";
 import type { User } from "@shared/types";
-import type { AuthResponse } from "../entity";
+import type { AuthResponse } from "../../entity";
 
 const makeStore = () =>
   configureStore({

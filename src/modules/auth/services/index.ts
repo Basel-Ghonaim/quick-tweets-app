@@ -1,4 +1,4 @@
 export * from "./authErrorHandler";
-export * from "./executeAuthFlow";
-export * from "./executeLogout";
-export * from "./restoreSession";
+export * from "./flow/executeAuthFlow";
+export * from "./flow/executeLogout";
+export * from "./session/restoreSession";

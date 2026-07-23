@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 
-import { authReducer, authActions } from "../store";
+import { authReducer, authActions } from "../../store";
 import { restoreSession } from "./restoreSession";
 import type { User } from "@shared/types";
 
