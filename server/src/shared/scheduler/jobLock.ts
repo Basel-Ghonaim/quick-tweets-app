@@ -21,7 +21,7 @@
  * when its connection closes, including a process crash — no TTL, no heartbeat.
  */
 
-import pg from "pg";
+import pg, { type QueryResultRow } from "pg";
 
 /**
  * Namespaces this application's job locks away from any other advisory-lock
@@ -41,21 +41,60 @@ export interface JobLock {
 }
 
 /**
- * A `JobLock` backed by one dedicated Postgres connection. The connection is
- * opened lazily on first use and reused for every acquire/release, so a lock
- * taken on it can always be released on it.
+ * A `JobLock` backed by one dedicated Postgres connection, opened lazily and
+ * reused so a lock taken on it can always be released on it.
+ *
+ * The connection is treated as **disposable**: a long-lived client emits an
+ * `'error'` event when its connection drops (DB restart, an idle-connection
+ * timeout, a network blip). Without a listener that is an *unhandled* error and
+ * crashes the whole process, so the error is absorbed and the dead client is
+ * discarded; the next call reconnects. Losing the connection releases its
+ * advisory locks anyway, so a job that was holding one simply re-contends on
+ * the next tick — correctness is preserved, availability is not sacrificed.
  */
 export const createPostgresJobLock = (
   connectionString: string = process.env.DATABASE_URL ?? "",
 ): JobLock => {
-  const client = new pg.Client({ connectionString });
-  let connected: Promise<void> | null = null;
-  const ready = (): Promise<void> => (connected ??= client.connect().then(() => undefined));
+  let client: pg.Client | null = null;
+  let connecting: Promise<void> | null = null;
+
+  const connect = (): Promise<void> => {
+    const c = new pg.Client({ connectionString });
+    // Absorb async connection errors — otherwise an unhandled 'error' crashes
+    // the process. Drop the dead client so the next call reconnects.
+    c.on("error", (err) => {
+      if (client === c) {
+        client = null;
+        connecting = null;
+      }
+      console.warn("[jobs] lock connection error — will reconnect", err);
+    });
+    client = c;
+    return c.connect().then(
+      () => undefined,
+      (err: unknown) => {
+        // A failed connect must not be cached forever; reset so the next call retries.
+        if (client === c) {
+          client = null;
+          connecting = null;
+        }
+        throw err;
+      },
+    );
+  };
+
+  /** Run a query on the live connection, connecting first if needed. */
+  const run = async <T extends QueryResultRow>(sql: string, params: unknown[]): Promise<T[]> => {
+    connecting ??= connect();
+    await connecting;
+    if (client === null) throw new Error("job lock connection unavailable");
+    const { rows } = await client.query<T>(sql, params);
+    return rows;
+  };
 
   return {
     tryAcquire: async (job) => {
-      await ready();
-      const { rows } = await client.query<{ acquired: boolean }>(
+      const rows = await run<{ acquired: boolean }>(
         "SELECT pg_try_advisory_lock($1, hashtext($2)) AS acquired",
         [LOCK_NAMESPACE, job],
       );
@@ -63,13 +102,18 @@ export const createPostgresJobLock = (
     },
 
     release: async (job) => {
-      await ready();
-      await client.query("SELECT pg_advisory_unlock($1, hashtext($2))", [LOCK_NAMESPACE, job]);
+      await run<{ pg_advisory_unlock: boolean }>(
+        "SELECT pg_advisory_unlock($1, hashtext($2))",
+        [LOCK_NAMESPACE, job],
+      );
     },
 
     close: async () => {
-      // Only end a connection we actually opened; closing releases its locks.
-      if (connected !== null) await client.end();
+      const c = client;
+      client = null;
+      connecting = null;
+      // Ending releases the connection's locks; tolerate an already-dead client.
+      if (c !== null) await c.end().catch(() => undefined);
     },
   };
 };

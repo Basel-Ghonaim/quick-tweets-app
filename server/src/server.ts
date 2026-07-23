@@ -60,20 +60,26 @@ const start = async () => {
     // Stop accepting new connections
     server.close(async () => {
       console.log("   HTTP server closed");
+      // Wrapped so a failed teardown step still reaches a deterministic exit
+      // rather than surfacing as an unhandled rejection from this async callback.
+      try {
+        // Stop the scheduler and await any in-flight job *before* disconnecting,
+        // so a running job's DB work — and its lock release — can complete.
+        await scheduler.stop();
+        console.log("   Scheduler stopped");
 
-      // Stop the scheduler and await any in-flight job *before* disconnecting,
-      // so a running job's DB work — and its lock release — can complete.
-      await scheduler.stop();
-      console.log("   Scheduler stopped");
+        // Close the dedicated lock connection (also releases any held lock),
+        // then disconnect Prisma (return connections to pool).
+        await jobLock.close();
+        await prisma.$disconnect();
+        console.log("   Database disconnected");
+        console.log("✅ Shutdown complete\n");
 
-      // Close the dedicated lock connection (also releases any held lock),
-      // then disconnect Prisma (return connections to pool).
-      await jobLock.close();
-      await prisma.$disconnect();
-      console.log("   Database disconnected");
-      console.log("✅ Shutdown complete\n");
-
-      process.exit(0);
+        process.exit(0);
+      } catch (error) {
+        console.error("❌ Error during shutdown:", error);
+        process.exit(1);
+      }
     });
 
     // Force exit if graceful shutdown takes too long (10s)

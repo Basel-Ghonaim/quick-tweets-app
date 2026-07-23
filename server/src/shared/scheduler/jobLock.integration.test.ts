@@ -8,6 +8,7 @@
  * because CI has no database.
  */
 
+import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createPostgresJobLock, type JobLock } from "./jobLock";
@@ -66,5 +67,36 @@ describe.runIf(true)("job lock — real Postgres", () => {
     const next = make();
     expect(await next.tryAcquire(JOB)).toBe(true); // the lock was freed by the drop, no TTL wait
     await next.release(JOB);
+  });
+
+  it("survives an UNEXPECTED backend termination and reconnects (no unhandled crash)", async () => {
+    if (!reachable) return;
+    // Tag this lock's connection so an admin session can find and kill it. This
+    // is the case a graceful .end() cannot exercise: an out-of-band drop that
+    // makes node-postgres emit 'error' on the client — unhandled, that crashes
+    // the process (the #344 class). The fix must absorb it and reconnect.
+    const appName = `qt_joblock_drop_${process.pid}`;
+    const sep = CONN.includes("?") ? "&" : "?";
+    const lock = createPostgresJobLock(`${CONN}${sep}application_name=${appName}`);
+    locks.push(lock);
+    const dropJob = `${JOB}-drop`;
+
+    expect(await lock.tryAcquire(dropJob)).toBe(true); // opens the tagged connection
+
+    // Kill that backend from a separate admin session — an unexpected drop.
+    const admin = new pg.Client({ connectionString: CONN });
+    await admin.connect();
+    await admin.query(
+      "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = $1 AND pid <> pg_backend_pid()",
+      [appName],
+    );
+    await admin.end();
+
+    await new Promise((r) => setTimeout(r, 200)); // let the client receive + absorb 'error'
+
+    // Still alive (an unhandled 'error' would have killed the test process), and
+    // the lock reconnects transparently — the terminated backend freed its lock.
+    expect(await lock.tryAcquire(dropJob)).toBe(true);
+    await lock.release(dropJob);
   });
 });
