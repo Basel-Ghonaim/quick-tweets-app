@@ -122,8 +122,21 @@ export const createMediaService = (
       // request, not a server error — wrap it so the boundary maps it to 4xx.
       file.on("error", () => inspector.destroy(MediaIngestError.sourceFailed()));
 
+      const source = file.pipe(inspector);
+      // The inspector can reject *fast* — a small non-image, or an over-limit
+      // head — before `storage.save` attaches its reader across the unavoidable
+      // async gap (directory creation). Without a listener here that `'error'`
+      // is unhandled, which crashes the whole process, not just the request.
+      // Capture it synchronously so it becomes an ordinary request failure; the
+      // storage read still rejects too, and the catch prefers this typed cause
+      // over the generic stream-teardown error it surfaces.
+      let inspectError: unknown = null;
+      source.on("error", (err: unknown) => {
+        inspectError ??= err;
+      });
+
       try {
-        await storage.save(key, file.pipe(inspector));
+        await storage.save(key, source);
         // Authoritative check on the completed content (covers heads shorter
         // than the fail-fast threshold and pins the verified stored type).
         const contentType = verifyMediaContent(inspector.head(), inspector.size());
@@ -143,13 +156,16 @@ export const createMediaService = (
         // and registered (delete is idempotent; a cleanup failure must not
         // mask the original error — reclamation covers stragglers).
         await storage.delete(key).catch(() => undefined);
+        // Prefer the inspector's typed rejection (validation/size/source) over
+        // the generic teardown error `save` raises once its source is dead.
+        const cause = inspectError ?? err;
         // The per-grant unique constraint is the atomic backstop for the
         // count bound under concurrency (the pre-check races); a violation
         // means the grant already spent its allowance.
-        if (isPrismaError(err, "P2002")) {
+        if (isPrismaError(cause, "P2002")) {
           throw MediaGrantError.exhausted();
         }
-        throw err;
+        throw cause;
       }
     },
 

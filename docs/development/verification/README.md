@@ -49,11 +49,22 @@ optional.
 Two fixtures you generate **locally** (not committed — one is large, one is
 trivial):
 
-- **Oversize (>5 MiB)** for the `413` test (MED-10). On Windows PowerShell:
-  ```powershell
-  $f = [System.IO.File]::Create("$PWD\oversize.png"); $f.SetLength(6MB); $f.Close()
+- **Oversize (>5 MiB) for the `413` test (MED-10).** It must carry a **valid
+  image signature**, then exceed the size limit — the signature *head* is
+  inspected first, so a zero-filled or random oversize file is rejected `415`
+  (unsupported type) **before** the size check ever runs. Prepend a real PNG
+  magic and pad past 5 MiB:
+  ```bash
+  # bash (Git Bash): 8-byte PNG magic, then pad to 6 MiB
+  printf '\x89\x50\x4e\x47\x0d\x0a\x1a\x0a' > big.png
+  head -c 6291456 /dev/zero >> big.png
   ```
-  (It only needs to exceed the byte limit; validation checks size before content.)
+  ```powershell
+  # PowerShell equivalent
+  $sig = [byte[]](0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a)
+  $f = [System.IO.File]::Create("$PWD\big.png"); $f.Write($sig,0,8); $f.SetLength(6MB); $f.Close()
+  ```
+  Uploading it must return **`413 payload_too_large`** with the server healthy.
 - **JPEG / WebP** — any real small image you have on hand, if you want to exercise
   those two allowed types beyond PNG and GIF.
 
