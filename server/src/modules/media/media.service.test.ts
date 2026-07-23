@@ -6,7 +6,8 @@
  * partial-object cleanup, provenance recording, and per-grant bounds.
  */
 
-import { Readable } from "node:stream";
+import { Readable, Writable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { describe, expect, it, vi } from "vitest";
 
 import { generateAccessToken } from "../../shared/utils/jwt.js";
@@ -189,6 +190,63 @@ describe("media ingest service", () => {
     expect(deleted).toHaveLength(1);
     expect(saved.size).toBe(0);
     expect(creates).toHaveLength(0);
+  });
+
+  // Regression (#344): a fast inspector rejection must not crash the process.
+  // The earlier `makeStorage` consumes the stream *synchronously*, so it never
+  // exercised the real adapter's shape — an async step (mkdir) BEFORE the reader
+  // attaches. In that gap the inspector's `'error'` had no listener and an
+  // unhandled stream error terminated the server. This adapter reproduces the
+  // gap; the ingest must reject cleanly (415) instead.
+  const makeGappyStorage = () => {
+    const deleted: string[] = [];
+    const adapter: StorageAdapter = {
+      // Mirror the real local-disk adapter: an async step (mkdir) BEFORE the
+      // reader attaches, and `pipeline` (not `for await`) as that reader — the
+      // combination that turned a fast inspector rejection into an unhandled
+      // process crash. `for await` would mask it; `pipeline` reproduces it.
+      save: async (_key, data) => {
+        await new Promise((resolve) => setImmediate(resolve)); // the mkdir gap
+        await pipeline(data, new Writable({ write: (_c, _e, cb) => cb() }));
+      },
+      createReadStream: async () => Readable.from([]),
+      exists: async () => false,
+      delete: async (key) => {
+        deleted.push(key);
+      },
+    };
+    return { adapter, deleted };
+  };
+
+  it("rejects invalid content without crashing when the storage reader attaches late (#344)", async () => {
+    const { adapter, deleted } = makeGappyStorage();
+    const { repo, creates } = makeRepo();
+    const service = createMediaService(adapter, repo);
+
+    const err = await service
+      .ingest(Readable.from([Buffer.from("<!DOCTYPE html><script>")]), { kind: "user", userId: 1 })
+      .catch((e: unknown) => e);
+
+    // The typed cause survives — not a generic stream-teardown error — and the
+    // test process is still alive to make these assertions (the bug crashed it).
+    expect(err).toBeInstanceOf(MediaValidationError);
+    expect((err as MediaValidationError).code).toBe("unsupported_type");
+    expect(deleted).toHaveLength(1); // partial-object cleanup still ran
+    expect(creates).toHaveLength(0);
+  });
+
+  it("still ingests a valid file when the storage reader attaches late (#344)", async () => {
+    const { adapter } = makeGappyStorage();
+    const { repo, creates } = makeRepo();
+    const service = createMediaService(adapter, repo);
+
+    const result = await service.ingest(Readable.from([PNG_HEAD, Buffer.alloc(50)]), {
+      kind: "user",
+      userId: 7,
+    });
+
+    expect(result.contentType).toBe("image/png");
+    expect(creates).toHaveLength(1);
   });
 
   it("rejects a truncated head (shorter than any full signature) via the final check", async () => {
