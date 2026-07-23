@@ -56,10 +56,10 @@
 | MED-04 | MED-02 | Read `GET /media/:token` | 200; body is the bytes; `Content-Type: image/*`; `X-Content-Type-Options: nosniff` | — | — | |
 | MED-05 | — | Upload with no auth and no grant | 401 `unauthorized` | no row | — | |
 | MED-06 | — | Upload with invalid grant | 401 | no row | — | |
-| MED-07 | Login A | Upload `not-an-image.png` (text) | 415 `unsupported_media_type` (rejected by **content signature**, not extension) | no row | — | |
+| MED-07 | Login A | Upload `not-an-image.png` (text) | 415 `unsupported_media_type` (rejected by **content signature**, not extension) | no row | — | ✅ **415, server healthy** (2026-07-23, after #344 fix — previously crashed the process) |
 | MED-08 | — | Read unknown token | 404 / 410 (not served) | — | — | |
 | MED-09 | MED-02 (grant spent) | Re-upload under the **same** grant | 401 / 403 (grant is single-use, `GRANT_MAX_OBJECTS=1`) | no second row for that grant | — | |
-| MED-10 | Local oversize fixture | Upload a >5 MiB file | 413 `payload_too_large` | no row | — | |
+| MED-10 | Local oversize fixture — **valid signature** + >5 MiB (see README) | Upload a >5 MiB file | 413 `payload_too_large` | no row | — | ✅ **413, server healthy** (2026-07-23). Note: a *random/zero* oversize file returns 415 (signature checked before size) — the fixture must carry a real image signature. |
 
 > **Checkpoint A** (runbook) confirms MED-02/03 provenance.
 
@@ -151,3 +151,21 @@ After **TWT-08**, the ex-media are **unreferenced** (owned, no ledger row). Afte
 grant upload that is never adopted (**MED-02** left as-is), the object is
 **abandoned** (never owned). Both are M11 targets; they are reached by different
 paths and must be labelled distinctly in any notes.
+
+---
+
+## Verification run — observations & resolutions (2026-07-23)
+
+The first full manual pass (Media, Avatar, Tweets, Reference Coordination,
+rollback, ledger) passed **except** for four observations. Their dispositions:
+
+| # | Observation | Class | Resolution |
+|---|---|---|---|
+| 1 | logout / logout-all "succeed while logged out" | **Expected** | Contract-correct: `logout` is `Auth: None` (idempotent, cookie-based); `logout-all` is `Auth: Required` — it passed only because the 15-min access JWT was still valid. No change. |
+| 2 | failed-login `refreshToken` cookie in the browser | **Expected** | A failed login never sets the cookie (server sets it only on success); the cookie is residue from a prior successful auth or a background session-restore refresh. The #332 "no refresh on failed login" fix is intact. No change. |
+| 3 | invalid upload **crashes the server** | **Bug (DoS)** — fixed | An unhandled stream error in an async gap during ingest ([#344](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/344)). Fixed; **MED-07 re-verified 415 with the server healthy**, plus a regression test. |
+| 4 | >5 MiB upload not sent by Postman | **Tooling → now verified** | Exercised against the backend with a valid-signature 6 MiB file: **413, server healthy** (MED-10). Fixture guidance corrected in the README. |
+
+Observations 1 and 2 need no code change. 3 and 4 were the two gates on closing
+this phase; both now pass. With M1–M9 verified and these resolved, Verification
+is **complete** — M10/M11 may unfreeze.
