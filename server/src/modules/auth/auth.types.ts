@@ -83,6 +83,8 @@ export interface ITokenRepository {
   findRefreshToken(token: string): Promise<RefreshTokenRecord | null>;
   deleteRefreshToken(token: string): Promise<void>;
   deleteAllUserTokens(userId: number): Promise<void>;
+  /** Delete every refresh token whose `expiresAt` is before `now`; returns the count removed. */
+  deleteExpired(now: Date): Promise<number>;
   rotateRefreshToken(
     oldToken: string,
     userId: number,

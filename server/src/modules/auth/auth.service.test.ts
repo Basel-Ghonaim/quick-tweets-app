@@ -70,6 +70,7 @@ const makeWorld = (existingUsernames: string[] = []) => {
     deleteRefreshToken: async () => {},
     deleteAllUserTokens: async () => {},
     rotateRefreshToken: async () => ({}) as never,
+    deleteExpired: async () => 0,
   };
 
   // A transaction runner that actually rolls the store back on failure.

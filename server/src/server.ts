@@ -10,16 +10,20 @@
  *   On SIGTERM/SIGINT, the server:
  *   1. Stops accepting new connections
  *   2. Waits for in-flight requests to complete
- *   3. Disconnects Prisma (returns connection pool to DB)
- *   4. Exits cleanly
+ *   3. Stops the background scheduler and awaits any in-flight job
+ *   4. Closes the job-lock connection, then disconnects Prisma
+ *   5. Exits cleanly
  *
  *   Without this, deployment restarts (Railway, Render, Docker) would
- *   terminate in-flight requests and leak database connections.
+ *   terminate in-flight requests, abandon a running job mid-work, and leak
+ *   database connections.
  */
 
 import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { prisma } from "./shared/database/index.js";
+import { createPostgresJobLock, createScheduler } from "./shared/scheduler/index.js";
+import { createRefreshTokenCleanupJob } from "./modules/auth/refreshTokenCleanup.job.js";
 
 // ─── Startup ─────────────────────────────────────────────────────────────────
 
@@ -40,6 +44,14 @@ const start = async () => {
     console.log(`   Environment: ${env.NODE_ENV}\n`);
   });
 
+  // 3. Background jobs — the scheduler runs the refresh-token cleanup (M10).
+  //    A dedicated lock connection gives cross-instance single-run.
+  const jobLock = createPostgresJobLock();
+  const scheduler = createScheduler({ lock: jobLock });
+  scheduler.register(createRefreshTokenCleanupJob());
+  scheduler.start();
+  console.log("   Background scheduler started");
+
   // ─── Graceful Shutdown ───────────────────────────────────────────────
 
   const shutdown = async (signal: string) => {
@@ -48,13 +60,26 @@ const start = async () => {
     // Stop accepting new connections
     server.close(async () => {
       console.log("   HTTP server closed");
+      // Wrapped so a failed teardown step still reaches a deterministic exit
+      // rather than surfacing as an unhandled rejection from this async callback.
+      try {
+        // Stop the scheduler and await any in-flight job *before* disconnecting,
+        // so a running job's DB work — and its lock release — can complete.
+        await scheduler.stop();
+        console.log("   Scheduler stopped");
 
-      // Disconnect Prisma (return connections to pool)
-      await prisma.$disconnect();
-      console.log("   Database disconnected");
-      console.log("✅ Shutdown complete\n");
+        // Close the dedicated lock connection (also releases any held lock),
+        // then disconnect Prisma (return connections to pool).
+        await jobLock.close();
+        await prisma.$disconnect();
+        console.log("   Database disconnected");
+        console.log("✅ Shutdown complete\n");
 
-      process.exit(0);
+        process.exit(0);
+      } catch (error) {
+        console.error("❌ Error during shutdown:", error);
+        process.exit(1);
+      }
     });
 
     // Force exit if graceful shutdown takes too long (10s)
