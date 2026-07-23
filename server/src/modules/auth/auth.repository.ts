@@ -96,6 +96,13 @@ export const createTokenRepository = (
     await db.refreshToken.deleteMany({ where: { userId } });
   },
 
+  deleteExpired: async (now) => {
+    const { count } = await db.refreshToken.deleteMany({
+      where: { expiresAt: { lt: now } },
+    });
+    return count;
+  },
+
   rotateRefreshToken: async (oldToken, userId, newToken, expiresAt) => {
     // Atomic: delete old + create new in one transaction.
     // If the server crashes mid-operation, both roll back — no lockout.
