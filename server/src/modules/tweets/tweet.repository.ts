@@ -152,8 +152,8 @@ export const createTweetRepository = (
 
   // ── Ownership Check (lightweight) ──
 
-  findOwner: (id) =>
-    db.tweet.findUnique({ where: { id }, select: { authorId: true } }),
+  findOwner: (id, client: DbClient = db) =>
+    client.tweet.findUnique({ where: { id }, select: { authorId: true } }),
 
   // ── Like Operations ──
 

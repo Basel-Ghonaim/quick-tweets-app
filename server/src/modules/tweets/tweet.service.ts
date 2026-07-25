@@ -328,29 +328,28 @@ export const createTweetService = (
 
   // ─── Delete (ownership check) ───────────────────────────────────────
 
-  delete: async (id: number, userId: number): Promise<void> => {
-    // 1. Lightweight ownership check — only fetch authorId, not full relations
-    const owner = await repo.findOwner(id);
+  // ─── Delete — split into an ownership assertion and a deletion primitive,
+  //     so the tweet-deletion use-case can authorize and delete a tweet and its
+  //     dependent comments inside one transaction it owns. ──
+
+  assertOwner: async (id: number, userId: number, client?: DbClient): Promise<void> => {
+    const owner = await repo.findOwner(id, client);
     if (!owner) {
       throw AppError.notFound("Tweet");
     }
-
-    // 2. Check ownership — only the author can delete
     if (owner.authorId !== userId) {
       throw AppError.forbidden("You can only delete your own tweets");
     }
+  },
 
-    // 3. Deleting a tweet ends every reference it holds — the tweets domain
-    //    removes references, never bytes; Media reclaims what nothing holds.
-    //    Order matters: end the references and drop the rows *before* the tweet,
-    //    so TweetMedia's Restrict stays a backstop and never actually fires.
-    //    Comments and likes still cascade — they are owned data, not references.
-    await runInTransaction(async (tx) => {
-      const refs = await repo.findMediaRefs(id, tx);
-      await repo.replaceMediaRefs(id, [], tx);
-      await coordinateRefChange(media, id, refs, [], tx);
-      await repo.delete(id, tx);
-    });
+  deleteWithMedia: async (id: number, client: DbClient): Promise<void> => {
+    // End every reference the tweet holds, then drop the rows *before* the tweet
+    // row, so TweetMedia's Restrict stays a backstop that never fires. Likes and
+    // other owned data still cascade at the database — they hold no references.
+    const refs = await repo.findMediaRefs(id, client);
+    await repo.replaceMediaRefs(id, [], client);
+    await coordinateRefChange(media, id, refs, [], client);
+    await repo.delete(id, client);
   },
 
   // ─── Toggle Like ────────────────────────────────────────────────────

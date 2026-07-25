@@ -236,32 +236,43 @@ describe("tweet edit — full replacement", () => {
   });
 });
 
-describe("tweet delete", () => {
-  it("ends every reference the tweet held, before the tweet row goes", async () => {
+describe("tweet delete primitives", () => {
+  it("deleteWithMedia ends every reference the tweet held, before the row goes", async () => {
     const w = makeWorld();
     w.stored.set(1, [{ mediaId: 11, position: 0 }, { mediaId: 22, position: 1 }]);
     const { media, ended } = makeMedia({});
     const svc = createTweetService(w.repo, media, w.runInTransaction);
 
-    await svc.delete(1, AUTHOR);
+    // Runs in the caller's transaction (the use-case's), passed as TX.
+    await svc.deleteWithMedia(1, TX);
 
     expect(ended).toEqual([
       { mediaId: 11, referrer: "tweet:1", client: TX },
       { mediaId: 22, referrer: "tweet:1", client: TX },
     ]);
-    // Rows dropped inside the same transaction, so TweetMedia's Restrict — the
-    // backstop that would otherwise refuse the delete — never fires.
+    // Rows dropped in that transaction, so TweetMedia's Restrict never fires.
     expect(w.stored.get(1)).toEqual([]);
   });
 
-  it("deletes a tweet with no media without signalling anything", async () => {
+  it("deleteWithMedia signals nothing for a tweet with no media", async () => {
     const w = makeWorld();
     const { media, ended } = makeMedia({});
     const svc = createTweetService(w.repo, media, w.runInTransaction);
 
-    await svc.delete(1, AUTHOR);
+    await svc.deleteWithMedia(1, TX);
 
     expect(ended).toHaveLength(0);
+  });
+
+  it("assertOwner passes for the author and forbids a non-owner", async () => {
+    const w = makeWorld();
+    const { media } = makeMedia({});
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    await expect(svc.assertOwner(1, AUTHOR, TX)).resolves.toBeUndefined();
+
+    const err = await svc.assertOwner(1, 999, TX).catch((e: unknown) => e);
+    expect((err as AppError).statusCode).toBe(403);
   });
 });
 
