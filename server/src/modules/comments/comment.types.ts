@@ -11,14 +11,22 @@
  * Principle: ISP — repository and service contracts are separate.
  */
 
+import type { DbClient } from "../../shared/database/index.js";
 import type { AuthorEmbed } from "../../shared/types/index.js";
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
+
+/** The single media file on a comment — the public read token, never the internal reference. */
+export interface CommentMediaResponse {
+  token: string;
+}
 
 /** Comment shape returned to the frontend. */
 export interface CommentResponse {
   id: number;
   body: string;
+  /** The comment's single media file, or `null`. Resolved from the internal reference. */
+  media: CommentMediaResponse | null;
   author: AuthorEmbed;
   tweetId: number;
   createdAt: Date;
@@ -50,6 +58,8 @@ export interface CommentWithRelations {
   body: string;
   authorId: number;
   tweetId: number;
+  /** Internal media reference (MediaObject.id) or null; resolved to a token at the boundary. */
+  mediaId: number | null;
   createdAt: Date;
   author: {
     id: number;
@@ -76,14 +86,24 @@ export interface ICommentRepository {
 
   findById(id: number): Promise<CommentWithRelations | null>;
 
-  create(authorId: number, tweetId: number, body: string): Promise<CommentWithRelations>;
+  create(
+    authorId: number,
+    tweetId: number,
+    body: string,
+    mediaId?: number | null,
+    client?: DbClient,
+  ): Promise<CommentWithRelations>;
 
-  update(id: number, data: { body?: string }): Promise<CommentWithRelations>;
+  update(
+    id: number,
+    data: { body?: string; mediaId?: number | null },
+    client?: DbClient,
+  ): Promise<CommentWithRelations>;
 
-  delete(id: number): Promise<void>;
+  delete(id: number, client?: DbClient): Promise<void>;
 
-  /** Lightweight query — only fetches authorId for ownership checks. */
-  findOwner(id: number): Promise<{ authorId: number } | null>;
+  /** Lightweight query — authorId (ownership) + the current media reference (to end it). */
+  findOwner(id: number, client?: DbClient): Promise<{ authorId: number; mediaId: number | null } | null>;
 }
 
 // ─── Service Interface ───────────────────────────────────────────────────────
@@ -100,13 +120,30 @@ export interface ICommentService {
     params: OffsetParams,
   ): Promise<{ data: CommentResponse[]; meta: OffsetMeta }>;
 
-  create(authorId: number, tweetId: number, body: string): Promise<CommentResponse>;
+  /** `mediaToken` is the public read token of a file the author uploaded; attach-authorized. */
+  create(
+    authorId: number,
+    tweetId: number,
+    body: string,
+    mediaToken?: string,
+  ): Promise<CommentResponse>;
 
   update(
     commentId: number,
     userId: number,
-    data: { body?: string },
+    data: CommentUpdate,
   ): Promise<CommentResponse>;
 
   delete(commentId: number, userId: number): Promise<void>;
+}
+
+/**
+ * A comment edit. `media` follows full-replacement semantics:
+ * - **absent** (`undefined`) → media left unchanged;
+ * - `{ token }` → set or replace the file;
+ * - `null` → remove the file.
+ */
+export interface CommentUpdate {
+  body?: string;
+  media?: CommentMediaResponse | null;
 }

@@ -15,7 +15,7 @@
  * Principle: Factory Pattern — createCommentRepository(db?) enables mock injection.
  */
 
-import { prisma } from "../../shared/database/index.js";
+import { prisma, type DbClient } from "../../shared/database/index.js";
 import type { ICommentRepository } from "./comment.types.js";
 
 type PrismaInstance = typeof prisma;
@@ -72,24 +72,24 @@ export const createCommentRepository = (
 
   // ── Single Comment ──
 
-  findById: (id) =>
-    db.comment.findUnique({
+  findById: (id, client: DbClient = db) =>
+    client.comment.findUnique({
       where: { id },
       include: commentInclude,
     }),
 
   // ── Create ──
 
-  create: (authorId, tweetId, body) =>
-    db.comment.create({
-      data: { authorId, tweetId, body },
+  create: (authorId, tweetId, body, mediaId = null, client: DbClient = db) =>
+    client.comment.create({
+      data: { authorId, tweetId, body, mediaId },
       include: commentInclude,
     }),
 
   // ── Update ──
 
-  update: (id, data) =>
-    db.comment.update({
+  update: (id, data, client: DbClient = db) =>
+    client.comment.update({
       where: { id },
       data,
       include: commentInclude,
@@ -97,15 +97,15 @@ export const createCommentRepository = (
 
   // ── Delete ──
 
-  delete: async (id) => {
-    await db.comment.delete({ where: { id } });
+  delete: async (id, client: DbClient = db) => {
+    await client.comment.delete({ where: { id } });
   },
 
   // ── Ownership Check (lightweight) ──
 
-  findOwner: (id) =>
-    db.comment.findUnique({
+  findOwner: (id, client: DbClient = db) =>
+    client.comment.findUnique({
       where: { id },
-      select: { authorId: true },
+      select: { authorId: true, mediaId: true },
     }),
 });

@@ -54,7 +54,7 @@ export const createCommentController = (
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const tweetId = parseId(req.body.tweetId as string, "Tweet ID");
-      const comment = await service.create(req.userId!, tweetId, req.body.body);
+      const comment = await service.create(req.userId!, tweetId, req.body.body, req.body.media?.token);
 
       sendSuccess(res, comment, 201);
     } catch (err) {
