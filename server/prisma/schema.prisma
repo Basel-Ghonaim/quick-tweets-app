@@ -134,7 +134,14 @@ model Comment {
 
   // Relations
   author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  tweet  Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  // onDelete: Restrict — a comment may hold a media reference, and a DB cascade
+  // would drop the row while the registry still believed the object referenced,
+  // leaking it. Restrict forces tweet deletion through the coordinated
+  // application use-case (which ends comment:{id} references and deletes the
+  // comments first), turning a silent leak into a loud failure on any bypass.
+  // The author (User) relation stays Cascade — the account-deletion path is
+  // dormant (no route) and is coordinated separately (its own Issue).
+  tweet  Tweet @relation(fields: [tweetId], references: [id], onDelete: Restrict)
 
   // Indexes
   @@index([tweetId])
