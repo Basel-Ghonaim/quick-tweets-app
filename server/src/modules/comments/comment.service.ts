@@ -89,6 +89,33 @@ const toCommentResponse = (
   createdAt: comment.createdAt,
 });
 
+/**
+ * Resolve every media reference across a page of comments in **one** query,
+ * then map. Resolving per comment would be an N+1 over a page. An unresolvable
+ * reference (non-servable) is surfaced as `null` — Media resolves only servable
+ * objects, so a referenced-but-unservable object is a divergence, logged.
+ */
+const toResponses = async (
+  media: CommentMediaPort,
+  comments: CommentWithRelations[],
+): Promise<CommentResponse[]> => {
+  const referenceIds = comments
+    .map((comment) => comment.mediaId)
+    .filter((id): id is number => id !== null);
+  const tokens = await media.resolution.resolveTokens(referenceIds);
+  return comments.map((comment) => {
+    if (comment.mediaId === null) return toCommentResponse(comment);
+    const token = tokens.get(comment.mediaId);
+    if (token === undefined) {
+      console.error("[comments] a referenced media object did not resolve (divergence)", {
+        commentId: comment.id,
+        mediaId: comment.mediaId,
+      });
+    }
+    return toCommentResponse(comment, token ?? null);
+  });
+};
+
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
@@ -137,9 +164,7 @@ export const createCommentService = (
     };
 
     return {
-      // Media tokens are resolved and surfaced on read in a later step; until
-      // then the mapper emits `media: null`.
-      data: comments.map((comment) => toCommentResponse(comment)),
+      data: await toResponses(media, comments),
       meta,
     };
   },

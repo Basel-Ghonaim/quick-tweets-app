@@ -193,3 +193,26 @@ describe("comment edit media (full replacement)", () => {
     expect(result.media).toEqual({ token: "tok-44" }); // existing reference resolved
   });
 });
+
+describe("comment list — media resolution", () => {
+  it("resolves each comment's media reference to a token, in one batched query", async () => {
+    const w = makeWorld();
+    let resolveCalls = 0;
+    const { media } = makeMedia({});
+    media.resolution.resolveTokens = async (ids) => {
+      resolveCalls += 1;
+      return new Map(ids.map((id) => [id, `tok-${id}` as never]));
+    };
+    w.repo.findMany = async () => [
+      rawComment({ id: 1, mediaId: 100 }),
+      rawComment({ id: 2, mediaId: null }),
+    ];
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    const { data } = await svc.getComments(TWEET, { page: 1, limit: 20 });
+
+    expect(data[0]!.media).toEqual({ token: "tok-100" });
+    expect(data[1]!.media).toBeNull();
+    expect(resolveCalls).toBe(1); // batched — one query for the whole page
+  });
+});
