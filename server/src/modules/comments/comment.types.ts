@@ -104,6 +104,15 @@ export interface ICommentRepository {
 
   /** Lightweight query — authorId (ownership) + the current media reference (to end it). */
   findOwner(id: number, client?: DbClient): Promise<{ authorId: number; mediaId: number | null } | null>;
+
+  /** The tweet's comments that hold a media reference — so each can be ended before deletion. */
+  findMediaRefsByTweet(
+    tweetId: number,
+    client?: DbClient,
+  ): Promise<{ id: number; mediaId: number }[]>;
+
+  /** Delete every comment on a tweet (bulk); returns the number removed. */
+  deleteByTweet(tweetId: number, client?: DbClient): Promise<number>;
 }
 
 // ─── Service Interface ───────────────────────────────────────────────────────
@@ -135,6 +144,14 @@ export interface ICommentService {
   ): Promise<CommentResponse>;
 
   delete(commentId: number, userId: number): Promise<void>;
+
+  /**
+   * Delete every comment on a tweet, ending each comment's media reference
+   * first — the dependent-deletion primitive the tweet-deletion use-case calls
+   * (comments own their `comment:{id}` references; no other feature composes
+   * that tag). Runs in the **caller's** transaction.
+   */
+  deleteForTweet(tweetId: number, client: DbClient): Promise<void>;
 }
 
 /**

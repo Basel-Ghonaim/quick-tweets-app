@@ -108,4 +108,17 @@ export const createCommentRepository = (
       where: { id },
       select: { authorId: true, mediaId: true },
     }),
+
+  // ── Dependent-deletion helpers (used by the tweet-deletion use-case) ──
+
+  findMediaRefsByTweet: (tweetId, client: DbClient = db) =>
+    client.comment.findMany({
+      where: { tweetId, mediaId: { not: null } },
+      select: { id: true, mediaId: true },
+    }) as Promise<{ id: number; mediaId: number }[]>,
+
+  deleteByTweet: async (tweetId, client: DbClient = db) => {
+    const { count } = await client.comment.deleteMany({ where: { tweetId } });
+    return count;
+  },
 });

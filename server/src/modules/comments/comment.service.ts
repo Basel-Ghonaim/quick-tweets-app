@@ -280,7 +280,7 @@ export const createCommentService = (
     commentId: number,
     userId: number,
   ): Promise<void> => {
-    // 1. Lightweight ownership check — only fetch authorId
+    // 1. Lightweight ownership check — authorId (+ current media reference)
     const owner = await repo.findOwner(commentId);
     if (!owner) {
       throw AppError.notFound("Comment");
@@ -291,7 +291,38 @@ export const createCommentService = (
       throw AppError.forbidden("You can only delete your own comments");
     }
 
-    // 4. Delete
-    await repo.delete(commentId);
+    // 3. No media — a plain delete.
+    const mediaId = owner.mediaId;
+    if (mediaId === null) {
+      await repo.delete(commentId);
+      return;
+    }
+
+    // 4. With media — end the reference and delete the row together.
+    await runInTransaction(async (tx) => {
+      await media.references.referenceEnded(
+        { mediaId, referrer: commentReferrer(commentId) },
+        tx,
+      );
+      await repo.delete(commentId, tx);
+    });
+  },
+
+  // ─── Delete every comment on a tweet (dependent-deletion primitive) ──
+  //
+  // Called by the tweet-deletion use-case inside its transaction: end each
+  // comment's media reference (comments own the comment:{id} tag), then bulk
+  // delete the rows. No ownership check here — the use-case authorizes the
+  // tweet deletion; the comments are the tweet's dependents.
+
+  deleteForTweet: async (tweetId, client) => {
+    const withMedia = await repo.findMediaRefsByTweet(tweetId, client);
+    for (const { id, mediaId } of withMedia) {
+      await media.references.referenceEnded(
+        { mediaId, referrer: commentReferrer(id) },
+        client,
+      );
+    }
+    await repo.deleteByTweet(tweetId, client);
   },
 });

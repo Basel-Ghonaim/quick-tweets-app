@@ -46,17 +46,26 @@ const makeWorld = (ownerMediaId: number | null = null) => {
       updates.push({ id, data });
       return rawComment({ id, body: data.body ?? "nice", mediaId: data.mediaId ?? ownerMediaId });
     },
-    delete: async () => {},
+    delete: async (id, client) => {
+      deletes.push({ id, client });
+    },
     findOwner: async () => ({ authorId: AUTHOR, mediaId: ownerMediaId }),
+    findMediaRefsByTweet: async () => [],
+    deleteByTweet: async (tweetId, client) => {
+      deletedByTweet.push({ tweetId, client });
+      return 0;
+    },
   };
 
+  const deletes: { id: number; client: unknown }[] = [];
+  const deletedByTweet: { tweetId: number; client: unknown }[] = [];
   let opened = 0;
   const runInTransaction: RunInTransaction = async (fn) => {
     opened += 1;
     return fn(TX);
   };
 
-  return { repo, created, updates, runInTransaction, opened: () => opened };
+  return { repo, created, updates, deletes, deletedByTweet, runInTransaction, opened: () => opened };
 };
 
 /** A media port that authorizes tokens by a fixed token→reference map. */
@@ -214,5 +223,48 @@ describe("comment list — media resolution", () => {
     expect(data[0]!.media).toEqual({ token: "tok-100" });
     expect(data[1]!.media).toBeNull();
     expect(resolveCalls).toBe(1); // batched — one query for the whole page
+  });
+});
+
+describe("comment delete — coordination", () => {
+  it("deletes a comment with no media directly, no transaction", async () => {
+    const w = makeWorld(null);
+    const { media, ended } = makeMedia({});
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    await svc.delete(1, AUTHOR);
+
+    expect(w.opened()).toBe(0);
+    expect(ended).toHaveLength(0);
+    expect(w.deletes).toHaveLength(1);
+  });
+
+  it("ends the reference and deletes the row together, for a comment with media", async () => {
+    const w = makeWorld(77); // has reference 77
+    const { media, ended } = makeMedia({});
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    await svc.delete(1, AUTHOR);
+
+    expect(ended).toEqual([{ mediaId: 77, referrer: "comment:1", client: TX }]);
+    expect(w.deletes[0]).toMatchObject({ id: 1, client: TX }); // same transaction
+  });
+
+  it("deleteForTweet ends every comment's reference, then bulk-deletes — in the caller's transaction", async () => {
+    const w = makeWorld();
+    w.repo.findMediaRefsByTweet = async () => [
+      { id: 10, mediaId: 100 },
+      { id: 11, mediaId: 200 },
+    ];
+    const { media, ended } = makeMedia({});
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    await svc.deleteForTweet(TWEET, TX); // the use-case passes its own tx client
+
+    expect(ended).toEqual([
+      { mediaId: 100, referrer: "comment:10", client: TX },
+      { mediaId: 200, referrer: "comment:11", client: TX },
+    ]);
+    expect(w.deletedByTweet).toEqual([{ tweetId: TWEET, client: TX }]);
   });
 });
