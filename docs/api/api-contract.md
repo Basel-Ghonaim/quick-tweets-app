@@ -649,6 +649,7 @@ interface ErrorBody {
     {
       "id": 1,
       "body": "Nice tweet!",
+      "media": null,              // a single media file { "token": "…" }, or null
       "author": {
         "id": 2,
         "username": "ahmed",
@@ -691,7 +692,8 @@ interface ErrorBody {
 // Request body
 {
   "tweetId": 5,             // required — which tweet to comment on
-  "body": "Nice tweet!"     // required, 1-280 characters
+  "body": "Nice tweet!",    // required, 1-280 characters
+  "media": { "token": "<token>" }  // optional — a single media file you uploaded (its read token)
 }
 
 // Response 201
@@ -700,6 +702,7 @@ interface ErrorBody {
   "data": {
     "id": 8,
     "body": "Nice tweet!",
+    "media": { "token": "<token>" },  // the attached file, or null
     "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
     "tweetId": 5,
     "createdAt": "2026-05-10T14:35:00.000Z"
@@ -723,9 +726,13 @@ interface ErrorBody {
 **Auth:** Required
 
 ```jsonc
-// Request body
+// Request body (at least one field required)
 {
-  "body": "Updated comment!"    // required, 1-280 characters
+  "body": "Updated comment!",   // optional, 1-280 characters
+  "media": { "token": "<token>" }  // optional — full replacement:
+                                   //   omit  → media unchanged
+                                   //   { token } → set/replace the file
+                                   //   null  → remove the file
 }
 
 // Response 200
@@ -734,6 +741,7 @@ interface ErrorBody {
   "data": {
     "id": 1,
     "body": "Updated comment!",
+    "media": null,                // the comment's single media file, or null
     "author": { "id": 2, "username": "ahmed", "name": "Ahmed", "profileImage": null },
     "tweetId": 5,
     "createdAt": "2026-05-10T12:05:00.000Z"

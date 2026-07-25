@@ -123,11 +123,25 @@ model Comment {
   body      String   @db.VarChar(280)
   authorId  Int      @map("author_id")
   tweetId   Int      @map("tweet_id")
+  // A single optional media file, held as a bare numeric Media Reference
+  // (MediaObject.id): deliberately NO Prisma relation and NO DB foreign key,
+  // exactly as User.avatarMediaId. MediaObject stays unaware of its referrers
+  // (ADR 0005 Decision 9); Media owns reference integrity from its own registry
+  // (M11). Resolved to the public read token at the API boundary; set/cleared by
+  // attach-authorized coordination on create/edit (referrer tag `comment:{id}`).
+  mediaId   Int?     @map("media_id")
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
   author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  tweet  Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+  // onDelete: Restrict — a comment may hold a media reference, and a DB cascade
+  // would drop the row while the registry still believed the object referenced,
+  // leaking it. Restrict forces tweet deletion through the coordinated
+  // application use-case (which ends comment:{id} references and deletes the
+  // comments first), turning a silent leak into a loud failure on any bypass.
+  // The author (User) relation stays Cascade — the account-deletion path is
+  // dormant (no route) and is coordinated separately (its own Issue).
+  tweet  Tweet @relation(fields: [tweetId], references: [id], onDelete: Restrict)
 
   // Indexes
   @@index([tweetId])

@@ -134,7 +134,7 @@ export interface ITweetRepository {
   ): Promise<void>;
 
   /** Lightweight query — only fetches authorId for ownership checks. */
-  findOwner(id: number): Promise<{ authorId: number } | null>;
+  findOwner(id: number, client?: DbClient): Promise<{ authorId: number } | null>;
 
   // ── Like Operations ──
   findLike(userId: number, tweetId: number): Promise<{ id: number } | null>;
@@ -183,7 +183,20 @@ export interface ITweetService {
     data: { body?: string; media?: string[] },
   ): Promise<TweetResponse>;
 
-  delete(id: number, userId: number): Promise<void>;
+  /**
+   * Assert `userId` may delete tweet `id` — throws `not_found` / `forbidden`
+   * otherwise. Runs in the caller's transaction so the check and the deletion
+   * share one boundary (the tweet-deletion use-case authorizes here, first).
+   */
+  assertOwner(id: number, userId: number, client?: DbClient): Promise<void>;
+
+  /**
+   * Delete a tweet, ending its `tweet:{id}` media references first — the
+   * tweet-side deletion primitive. No ownership check (the caller asserts it)
+   * and no own transaction (runs in the caller's). Likes and other owned data
+   * still cascade at the database.
+   */
+  deleteWithMedia(id: number, client: DbClient): Promise<void>;
 
   toggleLike(
     userId: number,

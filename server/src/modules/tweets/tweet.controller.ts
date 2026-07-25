@@ -18,18 +18,23 @@
 import type { Request, Response, NextFunction } from "express";
 import { createTweetService } from "./tweet.service.js";
 import type { ITweetService } from "./tweet.types.js";
+import { createDeleteTweet, type DeleteTweet } from "../../application/deleteTweet.js";
 import { sendSuccess } from "../../shared/response/index.js";
 import { parseId } from "../../shared/utils/index.js";
 
 // ─── Controller Factory ──────────────────────────────────────────────────────
 
 /**
- * Creates tweet controller handlers with injected service dependency.
+ * Creates tweet controller handlers with injected dependencies.
  *
  * @param service - Tweet service instance (defaults to production service)
+ * @param deleteTweet - The cross-aggregate tweet-deletion use-case (deletes a
+ *   tweet and its dependent comments, coordinating media references). Injected
+ *   so the composition — not the Tweets feature — owns the cross-feature wiring.
  */
 export const createTweetController = (
   service: ITweetService = createTweetService(),
+  deleteTweet: DeleteTweet = createDeleteTweet(),
 ) => ({
 
   /**
@@ -102,7 +107,7 @@ export const createTweetController = (
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = parseId(req.params.id, "Tweet ID");
-      await service.delete(id, req.userId!);
+      await deleteTweet(id, req.userId!);
 
       sendSuccess(res, null, 204);
     } catch (err) {
