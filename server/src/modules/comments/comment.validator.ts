@@ -48,8 +48,11 @@ export const updateCommentSchema = z
       .max(280, "Comment body must be at most 280 characters")
       .trim()
       .optional(),
+    // Full-replacement media: omitted → unchanged; `{ token }` → set/replace;
+    // `null` → remove. `.nullable().optional()` allows all three.
+    media: mediaRefSchema.nullable().optional(),
   })
-  .refine((data) => data.body !== undefined, {
+  .refine((data) => data.body !== undefined || data.media !== undefined, {
     message: "At least one field must be provided",
   });
 

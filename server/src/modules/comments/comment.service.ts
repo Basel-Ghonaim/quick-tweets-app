@@ -202,9 +202,51 @@ export const createCommentService = (
       throw AppError.forbidden("You can only edit your own comments");
     }
 
-    // 3. Media edits are coordinated in a later step; for now only the body edits.
-    const updated = await repo.update(commentId, { body: data.body });
-    return toCommentResponse(updated);
+    // 3a. Body-only edit (media omitted) — media untouched, no transaction. The
+    //     existing reference is resolved for the response.
+    if (data.media === undefined) {
+      const updated = await repo.update(commentId, { body: data.body });
+      const token =
+        owner.mediaId === null ? null : await media.resolution.resolveToken(owner.mediaId);
+      return toCommentResponse(updated, token);
+    }
+
+    // 3b. Media edit (set / replace / remove) — coordinate in one transaction.
+    //     Captured in a const so its narrowed type survives inside the closure.
+    const mediaEdit = data.media;
+    const oldMediaId = owner.mediaId;
+    const referrer = commentReferrer(commentId);
+    try {
+      const { updated, token } = await runInTransaction(async (tx) => {
+        let newMediaId: number | null = null;
+        let token: string | null = null;
+        if (mediaEdit !== null) {
+          const attached = await media.ownership.authorizeAttach(
+            { token: mediaEdit.token, ownerId: userId },
+            tx,
+          );
+          newMediaId = attached.referenceId;
+          token = attached.token;
+        }
+
+        // Signal only a genuine change (single-ref set difference): a resubmit of
+        // the same object neither ends nor re-begins.
+        if (oldMediaId !== newMediaId) {
+          if (oldMediaId !== null) {
+            await media.references.referenceEnded({ mediaId: oldMediaId, referrer }, tx);
+          }
+          if (newMediaId !== null) {
+            await media.references.referenceBegan({ mediaId: newMediaId, referrer }, tx);
+          }
+        }
+
+        const updated = await repo.update(commentId, { body: data.body, mediaId: newMediaId }, tx);
+        return { updated, token };
+      });
+      return toCommentResponse(updated, token);
+    } catch (err) {
+      throw asAttachFailure(err);
+    }
   },
 
   // ─── Delete Comment (ownership check) ───────────────────────

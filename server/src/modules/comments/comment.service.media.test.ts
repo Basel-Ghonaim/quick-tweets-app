@@ -30,8 +30,9 @@ const rawComment = (over: Partial<CommentWithRelations> = {}): CommentWithRelati
   ...over,
 });
 
-const makeWorld = () => {
+const makeWorld = (ownerMediaId: number | null = null) => {
   const created: { body: string; mediaId: number | null; client: unknown }[] = [];
+  const updates: { id: number; data: { body?: string; mediaId?: number | null } }[] = [];
   const repo: ICommentRepository = {
     tweetExists: async () => true,
     findMany: async () => [],
@@ -41,9 +42,12 @@ const makeWorld = () => {
       created.push({ body, mediaId, client });
       return rawComment({ id: 1, body, mediaId });
     },
-    update: async (id, data) => rawComment({ id, ...data }),
+    update: async (id, data) => {
+      updates.push({ id, data });
+      return rawComment({ id, body: data.body ?? "nice", mediaId: data.mediaId ?? ownerMediaId });
+    },
     delete: async () => {},
-    findOwner: async () => ({ authorId: AUTHOR, mediaId: null }),
+    findOwner: async () => ({ authorId: AUTHOR, mediaId: ownerMediaId }),
   };
 
   let opened = 0;
@@ -52,7 +56,7 @@ const makeWorld = () => {
     return fn(TX);
   };
 
-  return { repo, created, runInTransaction, opened: () => opened };
+  return { repo, created, updates, runInTransaction, opened: () => opened };
 };
 
 /** A media port that authorizes tokens by a fixed token→reference map. */
@@ -123,5 +127,69 @@ describe("comment create with media", () => {
     expect((err as AppError).statusCode).toBe(422);
     expect(JSON.stringify(err)).not.toContain("someone-elses"); // opaque
     expect(began).toHaveLength(0);
+  });
+});
+
+describe("comment edit media (full replacement)", () => {
+  it("sets media on a comment that had none — begins, no end", async () => {
+    const w = makeWorld(null); // no existing media
+    const { media, began, ended } = makeMedia({ tok: 55 });
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    const result = await svc.update(1, AUTHOR, { media: { token: "tok" } });
+
+    expect(result.media).toEqual({ token: "tok" });
+    expect(began).toEqual([{ mediaId: 55, referrer: "comment:1", client: TX }]);
+    expect(ended).toHaveLength(0);
+    expect(w.updates[0]!.data).toMatchObject({ mediaId: 55 });
+  });
+
+  it("replaces existing media — ends the old, begins the new", async () => {
+    const w = makeWorld(11); // had reference 11
+    const { media, began, ended } = makeMedia({ tok2: 22 });
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    const result = await svc.update(1, AUTHOR, { media: { token: "tok2" } });
+
+    expect(result.media).toEqual({ token: "tok2" });
+    expect(ended).toEqual([{ mediaId: 11, referrer: "comment:1", client: TX }]);
+    expect(began).toEqual([{ mediaId: 22, referrer: "comment:1", client: TX }]);
+  });
+
+  it("removes media with null — ends the reference, sets it null", async () => {
+    const w = makeWorld(11);
+    const { media, began, ended } = makeMedia({});
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    const result = await svc.update(1, AUTHOR, { media: null });
+
+    expect(result.media).toBeNull();
+    expect(ended).toEqual([{ mediaId: 11, referrer: "comment:1", client: TX }]);
+    expect(began).toHaveLength(0);
+    expect(w.updates[0]!.data).toMatchObject({ mediaId: null });
+  });
+
+  it("resubmitting the same object signals nothing (set-difference)", async () => {
+    const w = makeWorld(33); // already reference 33
+    const { media, began, ended } = makeMedia({ same: 33 });
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    await svc.update(1, AUTHOR, { media: { token: "same" } });
+
+    expect(began).toHaveLength(0);
+    expect(ended).toHaveLength(0);
+  });
+
+  it("omitting media leaves the reference untouched (no transaction)", async () => {
+    const w = makeWorld(44);
+    const { media, began, ended } = makeMedia({});
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    const result = await svc.update(1, AUTHOR, { body: "edited" });
+
+    expect(w.opened()).toBe(0); // no media change → no transaction
+    expect(began).toHaveLength(0);
+    expect(ended).toHaveLength(0);
+    expect(result.media).toEqual({ token: "tok-44" }); // existing reference resolved
   });
 });
