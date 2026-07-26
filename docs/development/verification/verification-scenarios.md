@@ -108,6 +108,39 @@
 | CMT-05 | Comment by A; login B | B updates A's comment | 403 | unchanged | — | |
 | CMT-06 | Tweet T deleted | List comments for T | comments cascade-removed with the tweet | no `comments` rows for T | — | |
 
+## 5b · Comment media — Attach, Coordination, Cascade (Comment Media)
+
+> The third media producer: **one** file per comment, full-replacement semantics
+> (`omit` = unchanged, `{token}` = set/replace, `null` = remove) — the same
+> contract tweets use, single-valued. Its unique surface is the **transitive
+> cascade**: deleting a tweet ends its comments' `comment:{id}` references too.
+>
+> Referrer tag: `comment:{commentId}`. Media column: `comments.media_id`.
+> Each row maps to one isolated scenario in Postman folder **08 · Comment Media**
+> (the letter/step in parentheses); each scenario mints its **own** media and its
+> **own** comment, so no row's state can carry into the next. Run **08 · 0 · Setup**
+> once first (creates `{{cmTweetId}}`, uploads `{{cmMediaB}}`).
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| CMT-M01 | Setup; A owns fresh media (A1) | Create comment WITH media on the host tweet (A2) | 201; `media.token` present | `comments` row with `media_id`; **ledger: one `comment:{id}` row** (CM-1) | reset | |
+| CMT-M02 | CMT-M01 | List comments `?tweetId` (A3) | 200; the comment's `media` is a servable token | — | — | |
+| CMT-M03 | Setup; comment created **without** media (B1); A owns "set" object (B2) | PATCH **set** (none → set) (B4) | 200; `media.token` present | ledger: begin — **one** `comment:{id}` row (CM-2) | — | |
+| CMT-M04 | CMT-M03; A owns "replace" object (B3) | PATCH **replace** (set → replace) (B5) | 200; new token | ledger: end set + begin replace — **still one** row; the set object is now **unreferenced** (CM-2) | — | |
+| CMT-M05 | CMT-M04 | PATCH **resubmit the same** object (B6) | 200; media unchanged | ledger: **UNCHANGED** — no end, no begin (CM-2) | — | |
+| CMT-M06 | CMT-M04/05 | PATCH **remove** `null` (B7) | 200; `media:null` | ledger: end — **zero** `comment:{id}` rows; the replace object is now **unreferenced** (CM-2) | — | |
+| CMT-M07 | CMT-M06 | PATCH `body` only, **omit** `media` (B8) | 200; `media` stays `null` | ledger **untouched** (still zero) — proves `omit ≠ null` | — | |
+| CMT-M08 | Setup; A owns fresh media (C1); a comment holds it (C2) | Delete the comment (C3) | 204 | `comment:{id}` ledger gone; the object survives `status=ready`, `uploader_id` set → **unreferenced** (CM-3) | — | |
+| CMT-M09 | Setup; B owns object `{{cmMediaB}}` (S2) | A creates a comment attaching **B's** object (D1) | 422; error **does not name** the token | **rollback**: no comment, no `comment:{id}` ledger row for B's object (CM-4) | — | |
+| CMT-M10 | Cascade tweet carries tweet-media (E2) **and** a comment on it carries comment-media (E4) | Delete the **tweet** (E5) | 204 | comment + tweet gone; **both** `comment:{id}` **and** `tweet:{id}` ended in one tx; both objects survive **unreferenced** (CM-5) | — | |
+| CMT-M11 | A tweet with a comment on it (F1/F2) | **In pgAdmin**, raw `DELETE FROM tweets WHERE id = …` | DB **refuses**: FK violation on `comments_tweet_id_fkey` (`ON DELETE RESTRICT`) | tweet + comment untouched (wrap in `BEGIN … ROLLBACK`) (CM-6) | ROLLBACK | |
+| CMT-M12 | After every comment scenario | Run the **global invariant** (Checkpoint F, extended for comments) | — | all four counts = 0 | — | |
+
+> **Checkpoints CM-1 … CM-6** and the extended Checkpoint F are defined in the
+> [runbook](verification-runbook.md#comment-media-checkpoints-cm-1--cm-6). **CMT-M11**
+> is DB-only: the API delete path (`deleteTweet`) removes comments *first*, so the
+> `Restrict` FK never fires there — the raw `DELETE` proves the backstop is real.
+
 ## 6 · Likes
 
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
@@ -133,24 +166,31 @@
 
 ### Transactions / Rollback
 Scenarios **TWT-07** and **TWT-09** are the transaction proofs: a failure mid-attach
-must leave **no** tweet, **no** `tweet_media`, and **no** ledger row. **AVA-03**
-proves adoption's atomicity (a spent grant leaves the object untouched). Confirm
-each with the DB checkpoint, not just the HTTP status — a 422 with a half-written
-row would be the exact bug this phase exists to catch.
+must leave **no** tweet, **no** `tweet_media`, and **no** ledger row. **CMT-M09** is
+the comment equivalent (a cross-principal attach must persist no comment and no
+`comment:{id}` row). **AVA-03** proves adoption's atomicity (a spent grant leaves
+the object untouched). Confirm each with the DB checkpoint, not just the HTTP
+status — a 422 with a half-written row would be the exact bug this phase exists to
+catch.
 
 ### Reference Coordination
 The heart of the phase, spread across **AVA-01** (begin, avatar), **TWT-01**
 (begin, tweet), **TWT-03/04/05** (the set-difference: end, no-op, remove-all),
-**TWT-08** (delete ends all), and **TWT-13** (the global invariant). If every one
-of these matches its ledger checkpoint, the M11 precondition — *every
+**TWT-08** (delete ends all), and **TWT-13** (the global invariant). Comment media
+adds the same shape single-valued — **CMT-M01** (begin), **CMT-M03→M06** (set /
+replace / resubmit-no-op / remove), **CMT-M08** (delete ends) — plus the surface
+tweets do not have: **CMT-M10**, where deleting a **tweet** ends its comments'
+`comment:{id}` references *and* its own `tweet:{id}` references in one transaction.
+**CMT-M12** re-runs the global invariant with comments included. If every one of
+these matches its ledger checkpoint, the M11 precondition — *every
 reference-creating consumer participates, and Media's state is consistent* — is
 verified by hand.
 
 ### Terminology check (do not conflate)
-After **TWT-08**, the ex-media are **unreferenced** (owned, no ledger row). After a
-grant upload that is never adopted (**MED-02** left as-is), the object is
-**abandoned** (never owned). Both are M11 targets; they are reached by different
-paths and must be labelled distinctly in any notes.
+After **TWT-08**, **CMT-M08**, and **CMT-M10**, the ex-media are **unreferenced**
+(owned, no ledger row). After a grant upload that is never adopted (**MED-02** left
+as-is), the object is **abandoned** (never owned). Both are M11 targets; they are
+reached by different paths and must be labelled distinctly in any notes.
 
 ---
 
@@ -169,3 +209,23 @@ rollback, ledger) passed **except** for four observations. Their dispositions:
 Observations 1 and 2 need no code change. 3 and 4 were the two gates on closing
 this phase; both now pass. With M1–M9 verified and these resolved, Verification
 is **complete** — M10/M11 may unfreeze.
+
+## Verification run — Comment Media (2026-07-26)
+
+Folder **08 · Comment Media** was executed top-to-bottom against the running
+system, every API assertion and DB checkpoint confirmed in pgAdmin. **All of
+CMT-M01 … CMT-M12 passed; all of CM-1 … CM-6 matched.** No divergence between the
+implementation and this catalogue.
+
+| Scenario | Result |
+|---|---|
+| CMT-M01/M02 — create with media, read surfaces token | ✅ CM-1: one `comment:{id}` row, object ready/owned |
+| CMT-M03→M07 — PATCH set / replace / resubmit-no-op / remove / omit≠null | ✅ CM-2 after each: set-difference exact; resubmit a true no-op; omit untouched |
+| CMT-M08 — delete with media | ✅ CM-3: reference ended; object survives ready, owned, **unreferenced** |
+| CMT-M09 — cross-principal attach | ✅ 422 opaque, full rollback; CM-4: no comment, no ledger residue |
+| CMT-M10 — transitive cascade (delete tweet) | ✅ CM-5: `comment:{id}` **and** `tweet:{id}` ended in one tx; both objects unreferenced |
+| CMT-M11 — Restrict backstop | ✅ CM-6: raw `DELETE` refused by `comments_tweet_id_fkey`; rolled back |
+| CMT-M12 — global invariant | ✅ Checkpoint F (extended): all four counts = 0 |
+
+Comment Media is verified by hand. The remaining Media milestone, **M11
+(reclamation)**, may proceed when scheduled.

@@ -1,9 +1,11 @@
-# Verification Runbook — Media Subsystem & Core Flows (M1–M9)
+# Verification Runbook — Media Subsystem & Core Flows (M1–M9 + Comment Media)
 
 > A **manual** verification pass over the running system, before the destructive
-> lifecycle work (M10 substrate, M11 reclamation) is built. It exists because the
-> most important thing to verify — **Reference Coordination** — has no API and is
-> only observable in the database.
+> lifecycle work (**M11 reclamation**) runs. The M10 background substrate now
+> exists but performs no deletion, so the pass is still non-destructive. It exists
+> because the most important thing to verify — **Reference Coordination** — has no
+> API and is only observable in the database. Comment Media is the third reference
+> producer (after tweets and avatars); its scenarios live in folder 08.
 >
 > - **Postman drives** state transitions and asserts what the API exposes.
 > - **pgAdmin verifies** coordination: that the `media_references` ledger moved
@@ -165,7 +167,8 @@ LIMIT 10;
 
 ### Checkpoint F — The global invariant (run anytime)
 ```sql
--- The M11 precondition, both directions. All three MUST be 0.
+-- The M11 precondition, both directions, across ALL THREE reference families
+-- (tweet, avatar, comment). All four MUST be 0.
 SELECT
   (SELECT count(*) FROM tweet_media tm
      WHERE NOT EXISTS (SELECT 1 FROM media_references r
@@ -176,14 +179,23 @@ SELECT
        AND NOT EXISTS (SELECT 1 FROM media_references r
                        WHERE r.media_id = u.avatar_media_id
                          AND r.referrer = 'user-avatar:' || u.id))             AS avatars_missing_ledger,
+  (SELECT count(*) FROM comments c
+     WHERE c.media_id IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM media_references r
+                       WHERE r.media_id = c.media_id
+                         AND r.referrer = 'comment:' || c.id))                 AS comments_missing_ledger,
   (SELECT count(*) FROM media_references r
      WHERE NOT EXISTS (SELECT 1 FROM users u
                        WHERE u.avatar_media_id = r.media_id
                          AND r.referrer = 'user-avatar:' || u.id)
        AND NOT EXISTS (SELECT 1 FROM tweet_media tm
                        WHERE tm.media_id = r.media_id
-                         AND r.referrer = 'tweet:' || tm.tweet_id))            AS orphan_ledger_rows;
--- All three = 0 → every real reference is recorded and no ledger row is stale.
+                         AND r.referrer = 'tweet:' || tm.tweet_id)
+       AND NOT EXISTS (SELECT 1 FROM comments c
+                       WHERE c.media_id = r.media_id
+                         AND r.referrer = 'comment:' || c.id))                 AS orphan_ledger_rows;
+-- All four = 0 → every real reference (tweet, avatar, comment) is recorded and
+-- no ledger row is stale.
 ```
 
 ### Checkpoint G — Rollback proof (after "cross-principal attach" failure)
@@ -198,6 +210,94 @@ SELECT
 -- Both = 0.
 ```
 
+## Comment media checkpoints (CM-1 … CM-6)
+
+> For Postman folder **08 · Comment Media**. Referrer tag `comment:{commentId}`,
+> media column `comments.media_id`. Substitute the `:cm…` placeholders with the
+> values the scenario's requests captured (visible in the environment quick-look).
+> The **final** invariant for comments is **Checkpoint F** above (now extended) —
+> run it as **CMT-M12**.
+
+### CM-1 — Create with media (after **A2**)
+```sql
+-- Exactly one ledger row for the new comment, pointing at a ready, A-owned object.
+SELECT r.referrer, r.media_id, m.status, m.uploader_id
+FROM media_references r
+JOIN media_objects m ON m.id = r.media_id
+WHERE r.referrer = 'comment:' || :cmCreateCommentId;
+-- Expect: ONE row; status='ready'; uploader_id = User A.
+```
+
+### CM-2 — PATCH set-difference (after **B4 / B5 / B6 / B7**)
+```sql
+-- A comment holds AT MOST ONE media reference (single attachment).
+SELECT media_id FROM media_references
+WHERE referrer = 'comment:' || :cmPatchCommentId;
+-- After B4 (set none→set):     one row  = {{cmMediaSet}}'s object.
+-- After B5 (replace set→repl):  one row  = {{cmMediaReplace}}'s object (set object now unreferenced).
+-- After B6 (resubmit same):     UNCHANGED — same single row (no end, no begin).
+-- After B7 (remove null):       ZERO rows (replace object now unreferenced).
+```
+> B6 is the sharp one: resubmitting the object already attached must be a true
+> no-op — the row's `media_id` is identical before and after, with no intervening
+> end/begin. B7 then drops it to zero.
+
+### CM-3 — Delete ends the reference, object survives (after **C3**)
+```sql
+-- The comment's ledger row is gone; the object it carried is now UNREFERENCED
+-- (owned, status='ready', zero ledger rows) — an M11 target, bytes untouched.
+SELECT count(*) FROM media_references
+WHERE referrer = 'comment:' || :cmDeleteCommentId;                       -- expect 0
+SELECT m.status, m.uploader_id,
+       (SELECT count(*) FROM media_references r WHERE r.media_id = m.id) AS ref_count
+FROM media_objects m
+WHERE m.token = :cmMediaDelete;   -- status='ready', uploader_id = A, ref_count = 0
+```
+
+### CM-4 — Cross-principal attach rolled back (after **D1**)
+```sql
+-- The rejected create persisted NOTHING that references B's object.
+SELECT
+  (SELECT count(*) FROM comments c
+     JOIN media_objects m ON m.id = c.media_id
+     WHERE m.token = :cmMediaB)                                    AS stray_comments,
+  (SELECT count(*) FROM media_references r
+     JOIN media_objects m ON m.id = r.media_id
+     WHERE m.token = :cmMediaB AND r.referrer LIKE 'comment:%')    AS strays_for_B_object;
+-- Both = 0.
+```
+
+### CM-5 — Transitive cascade ends BOTH families (after **E5**)
+```sql
+-- Deleting the tweet removed the comment and the tweet, and ended BOTH the
+-- comment:{id} and the tweet:{id} references — in one transaction.
+SELECT
+  (SELECT count(*) FROM comments WHERE tweet_id = :cmCascadeTweetId)                         AS comments_left,     -- 0
+  (SELECT count(*) FROM tweets   WHERE id       = :cmCascadeTweetId)                         AS tweet_left,        -- 0
+  (SELECT count(*) FROM media_references WHERE referrer = 'comment:' || :cmCascadeCommentId) AS comment_ref_left, -- 0
+  (SELECT count(*) FROM media_references WHERE referrer = 'tweet:'   || :cmCascadeTweetId)   AS tweet_ref_left;   -- 0
+-- Both ex-media survive unreferenced (owned, ready):
+SELECT m.token, m.status,
+       (SELECT count(*) FROM media_references r WHERE r.media_id = m.id) AS ref_count
+FROM media_objects m
+WHERE m.token IN (:cmCascadeTweetMedia, :cmCascadeCommentMedia);   -- both: status='ready', ref_count = 0
+```
+
+### CM-6 — Restrict backstop is real (after **F2**, run in pgAdmin)
+```sql
+-- The API path (deleteTweet) deletes comments FIRST, so this FK never fires there.
+-- A RAW delete, with a comment still pinning the tweet, must be REFUSED — proving
+-- the ON DELETE RESTRICT backstop guards a code path that ever forgets to.
+BEGIN;
+DELETE FROM tweets WHERE id = :cmRestrictTweetId;
+-- Expect: ERROR: update or delete on table "tweets" violates foreign key
+--         constraint "comments_tweet_id_fkey" on table "comments"
+ROLLBACK;   -- leaves the tweet + comment intact
+```
+> Likes still cascade (untouched by Comment Media); the restrict comment is
+> deliberately **media-free**, so `comments_tweet_id_fkey` is the *only* thing
+> that can refuse the delete — the proof is unambiguous.
+
 ## Incremental workflow
 
 Run **in folder order**, pausing at each checkpoint before proceeding. Do not run
@@ -209,12 +309,43 @@ the whole collection at once — the point is to inspect state between steps.
 | 2 — Media primitives | 02 | **A** |
 | 3 — Avatar adoption | 03 | **B** |
 | 4 — Tweet coordination | 04 | **C → D (×3) → E**, then **G** for the failure |
-| 5 — Invariant sweep | — | **F** (must be all-zero before declaring the phase clean) |
-| 6 — Social | 05, 06, 07 | none |
+| 5 — Social | 05, 06, 07 | none |
+| 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |
+| 7 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
 
 A phase is "green" only when its API assertions pass **and** its DB checkpoint
 matches. Record outcomes in [verification-scenarios.md](verification-scenarios.md)
 (the Result/Notes column).
+
+### Comment media — execution map (folder 08, top-to-bottom)
+
+Run **08 · 0 · Setup** once, then each lettered scenario in order. Every scenario
+mints its **own** media and its **own** comment, so nothing an earlier scenario
+leaves behind can make a later one pass or fail — the only shared, read-only state
+is `{{cmTweetId}}` (the host tweet, never mutated). Switch to pgAdmin only where a
+checkpoint is named.
+
+| Order | Postman | Creates | Reuses | API | pgAdmin |
+|---|---|---|---|---|---|
+| **Setup** | 0 · Setup (S1, S2) | `cmTweetId`, `cmMediaB` | — (needs `accessTokenA/B` from folder 01) | 201, 201 | — |
+| **A** Create | A1 → A2 → A3 | `cmMediaCreate`, `cmCreateCommentId` | `cmTweetId` | 201 / 201 / 200 | **CM-1** after A2 |
+| **B** PATCH | B1 → … → B8 | `cmPatchCommentId`, `cmMediaSet`, `cmMediaReplace` | `cmTweetId` | 201 then 200 ×7 | **CM-2** after each of B4·B5·B6·B7 |
+| **C** Delete | C1 → C2 → C3 | `cmMediaDelete`, `cmDeleteCommentId` | `cmTweetId` | 201 / 201 / 204 | **CM-3** after C3 |
+| **D** Cross-principal | D1 | — | `cmTweetId`, `cmMediaB` | **422** (opaque) | **CM-4** after D1 |
+| **E** Cascade | E1 → E2 → E3 → E4 → E5 | `cmCascadeTweetMedia`, `cmCascadeTweetId`, `cmCascadeCommentMedia`, `cmCascadeCommentId` | — (fresh tweet) | 201×4 / 204 | **CM-5** after E5 |
+| **F** Restrict | F1 → F2 | `cmRestrictTweetId`, `cmRestrictCommentId` | — (fresh tweet) | 201 / 201 | **CM-6** in pgAdmin (raw `DELETE … ROLLBACK`) |
+| **Close** | — | — | — | — | **Checkpoint F** (extended) → all four = 0 |
+
+**Fresh vs reused, stated plainly:**
+- **Fresh every scenario:** the media object(s) and the comment under test. Comment
+  media is a **Bearer** upload (no grant, no adoption), so "fresh media" = one
+  `POST /media` as User A — cheap, and it keeps each scenario's ledger unambiguous.
+- **Reused (read-only):** `cmTweetId`, the host tweet that scenarios A–D hang a
+  comment on. It is never edited or deleted, so it cannot skew a result.
+- **Scenario E and F create their own tweets** (`cmCascadeTweetId`,
+  `cmRestrictTweetId`) precisely because they delete / attempt-to-delete the tweet —
+  they must never touch the shared host tweet.
+- **No grant is ever needed** in folder 08 (grants are the avatar/pre-auth path).
 
 ## Reset strategy
 
