@@ -2455,6 +2455,1199 @@
           ]
         }
       ]
+    },
+    {
+      "name": "08 · Comment Media",
+      "description": "The third media producer (single file per comment) and its NEW path — the transitive cascade. Each lettered scenario is self-isolated: it mints its own media and its own comment, under a dedicated variable, so no scenario can leak state into another. DB checkpoints CM-1…CM-6 live in the runbook (§ Comment media checkpoints); the final invariant is Checkpoint F (extended for comments). Comment media is uploaded under Bearer (the authenticated author) — no grant, no adoption.",
+      "item": [
+        {
+          "name": "0 · Setup (shared)",
+          "description": "Run once before the lettered scenarios. Creates the host tweet the CRUD scenarios comment on, and uploads B's object for the cross-principal failure. Requires folder 01 to have set accessTokenA/accessTokenB.",
+          "item": [
+            {
+              "name": "S1 · Host tweet for comment CRUD",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/tweets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tweets"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"body\": \"Comment-media host tweet (never deleted)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Produces {{cmTweetId}}. Reused (read-only) by scenarios A, B, C, D. Never mutated or deleted."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmTweetId\", pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "S2 · Upload B's object (Bearer B)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/media",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "media"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenB}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "fixtures/sample.png"
+                    }
+                  ]
+                },
+                "description": "Produces {{cmMediaB}} — B's own object, used ONLY by scenario D (cross-principal)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmMediaB\", pm.response.json().data.token);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "A · Create with media",
+          "description": "CMT-M01/M02. Prereq: Setup. Fresh media → comment-with-media on the host tweet → read it back. DB: Checkpoint CM-1.",
+          "item": [
+            {
+              "name": "A1 · Upload media (Bearer A)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/media",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "media"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "fixtures/sample.png"
+                    }
+                  ]
+                },
+                "description": "Produces {{cmMediaCreate}} (fresh, this scenario only)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmMediaCreate\", pm.response.json().data.token);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "A2 · Create comment WITH media",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tweetId\": \"{{cmTweetId}}\",\n  \"body\": \"look at this\",\n  \"media\": {\n    \"token\": \"{{cmMediaCreate}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Consumes {{cmTweetId}}, {{cmMediaCreate}}. Produces {{cmCreateCommentId}}. → CHECKPOINT CM-1 in pgAdmin."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmCreateCommentId\", pm.response.json().data.id);",
+                      "pm.test(\"media attached\", () => pm.expect(pm.response.json().data.media).to.have.property(\"token\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "A3 · List comments — media surfaced",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments?tweetId={{cmTweetId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments"
+                  ],
+                  "query": [
+                    {
+                      "key": "tweetId",
+                      "value": "{{cmTweetId}}"
+                    }
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "description": "Consumes {{cmTweetId}}. Read-only; confirms the read path resolves the reference to a token."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"a comment carries media\", () => pm.expect(pm.response.json().data.some(c => c.media && c.media.token)).to.be.true);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "B · PATCH set / replace / remove",
+          "description": "CMT-M03…M06. Prereq: Setup. Its OWN comment (starts with NO media) and its OWN two objects, so the set-difference is unambiguous. DB: Checkpoint CM-2 after each PATCH.",
+          "item": [
+            {
+              "name": "B1 · Create comment WITHOUT media",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tweetId\": \"{{cmTweetId}}\",\n  \"body\": \"patch me\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Produces {{cmPatchCommentId}}. Deliberately media-free so B4 exercises the none→set branch."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmPatchCommentId\", pm.response.json().data.id);",
+                      "pm.test(\"no media yet\", () => pm.expect(pm.response.json().data.media).to.eql(null));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "B2 · Upload 'set' object (Bearer A)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/media",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "media"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "fixtures/sample.png"
+                    }
+                  ]
+                },
+                "description": "Produces {{cmMediaSet}}."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmMediaSet\", pm.response.json().data.token);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "B3 · Upload 'replace' object (Bearer A)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/media",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "media"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "fixtures/sample.png"
+                    }
+                  ]
+                },
+                "description": "Produces {{cmMediaReplace}}."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmMediaReplace\", pm.response.json().data.token);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "B4 · PATCH set (none → set)",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments/{{cmPatchCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments",
+                    "{{cmPatchCommentId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"media\": {\n    \"token\": \"{{cmMediaSet}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "none→set: begin only. → CHECKPOINT CM-2 (one row = set object)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"media set\", () => pm.expect(pm.response.json().data.media).to.have.property(\"token\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "B5 · PATCH replace (set → replace)",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments/{{cmPatchCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments",
+                    "{{cmPatchCommentId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"media\": {\n    \"token\": \"{{cmMediaReplace}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "set→replace: end set, begin replace. → CHECKPOINT CM-2 (one row = replace object; set object now unreferenced)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"media replaced\", () => pm.expect(pm.response.json().data.media).to.have.property(\"token\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "B6 · PATCH resubmit same (no-op)",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments/{{cmPatchCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments",
+                    "{{cmPatchCommentId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"media\": {\n    \"token\": \"{{cmMediaReplace}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Same object resubmitted: neither end nor begin. → CHECKPOINT CM-2 (UNCHANGED — same single row)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"still attached\", () => pm.expect(pm.response.json().data.media).to.have.property(\"token\"));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "B7 · PATCH remove (null)",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments/{{cmPatchCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments",
+                    "{{cmPatchCommentId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"media\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "replace→none: end only. → CHECKPOINT CM-2 (ZERO rows; replace object now unreferenced)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"media removed\", () => pm.expect(pm.response.json().data.media).to.eql(null));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "B8 · PATCH body only, media omitted",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments/{{cmPatchCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments",
+                    "{{cmPatchCommentId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"body\": \"edited, media untouched\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Omitted media leaves references untouched (here: still zero). Confirms omit ≠ null."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"still no media\", () => pm.expect(pm.response.json().data.media).to.eql(null));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "C · Delete with media",
+          "description": "CMT-M07. Prereq: Setup. Its OWN fresh media + comment, held right up to deletion. DB: Checkpoint CM-3.",
+          "item": [
+            {
+              "name": "C1 · Upload media (Bearer A)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/media",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "media"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "fixtures/sample.png"
+                    }
+                  ]
+                },
+                "description": "Produces {{cmMediaDelete}}."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmMediaDelete\", pm.response.json().data.token);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "C2 · Create comment WITH media",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tweetId\": \"{{cmTweetId}}\",\n  \"body\": \"delete me with media\",\n  \"media\": {\n    \"token\": \"{{cmMediaDelete}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Produces {{cmDeleteCommentId}} (carries {{cmMediaDelete}})."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmDeleteCommentId\", pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "C3 · Delete the comment",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments/{{cmDeleteCommentId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments",
+                    "{{cmDeleteCommentId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "description": "Ends comment:{id}. → CHECKPOINT CM-3 (row gone; object survives unreferenced)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 204\", () => pm.response.to.have.status(204));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "D · Cross-principal attach (failure)",
+          "description": "CMT-M08. Prereq: Setup (owns {{cmMediaB}}). A tries to attach B's object → 422, opaque, rolled back. DB: Checkpoint CM-4.",
+          "item": [
+            {
+              "name": "D1 · A attaches B's object",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tweetId\": \"{{cmTweetId}}\",\n  \"body\": \"steal\",\n  \"media\": {\n    \"token\": \"{{cmMediaB}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Consumes {{cmMediaB}}. Expect 422; response must NOT name the token. → CHECKPOINT CM-4 (no stray comment / ledger row)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                      "pm.test(\"opaque — does not name the token\", () => pm.expect(pm.response.text()).to.not.include(pm.environment.get(\"cmMediaB\")));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "E · Transitive cascade (tweet delete)",
+          "description": "CMT-M09 — the headline. A cascade tweet that carries its OWN media AND has a comment carrying its OWN media. Deleting the tweet must end tweet:{id} (via deleteWithMedia) AND comment:{id} (via deleteForTweet) in one transaction. DB: Checkpoint CM-5.",
+          "item": [
+            {
+              "name": "E1 · Upload tweet media (Bearer A)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/media",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "media"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "fixtures/sample.png"
+                    }
+                  ]
+                },
+                "description": "Produces {{cmCascadeTweetMedia}} — attached to the TWEET."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmCascadeTweetMedia\", pm.response.json().data.token);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "E2 · Create cascade tweet WITH media",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/tweets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tweets"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"body\": \"cascade host\",\n  \"media\": [\n    \"{{cmCascadeTweetMedia}}\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Produces {{cmCascadeTweetId}} (carries {{cmCascadeTweetMedia}} → tweet:{id} ledger row)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmCascadeTweetId\", pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "E3 · Upload comment media (Bearer A)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/media",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "media"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "file",
+                      "type": "file",
+                      "src": "fixtures/sample.png"
+                    }
+                  ]
+                },
+                "description": "Produces {{cmCascadeCommentMedia}} — attached to the COMMENT."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmCascadeCommentMedia\", pm.response.json().data.token);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "E4 · Comment WITH media on the cascade tweet",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tweetId\": \"{{cmCascadeTweetId}}\",\n  \"body\": \"child comment\",\n  \"media\": {\n    \"token\": \"{{cmCascadeCommentMedia}}\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Produces {{cmCascadeCommentId}} (carries {{cmCascadeCommentMedia}} → comment:{id} ledger row)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmCascadeCommentId\", pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "E5 · DELETE the tweet → cascade",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/tweets/{{cmCascadeTweetId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tweets",
+                    "{{cmCascadeTweetId}}"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "description": "One transaction: comment deleted, comment:{id} ended, tweet deleted, tweet:{id} ended. → CHECKPOINT CM-5 (both families ended; both objects survive unreferenced)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 204\", () => pm.response.to.have.status(204));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "F · Restrict backstop (DB-only)",
+          "description": "CMT-M10. The API path deletes comments first, so the comments→tweet FK never fires there. This sets up a tweet+comment; the raw DELETE proof runs in pgAdmin (Checkpoint CM-6) to confirm the ON DELETE RESTRICT backstop is real.",
+          "item": [
+            {
+              "name": "F1 · Restrict tweet",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/tweets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "tweets"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"body\": \"restrict backstop host\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Produces {{cmRestrictTweetId}}."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmRestrictTweetId\", pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "F2 · Comment (no media) on it",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/comments",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "comments"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessTokenA}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tweetId\": \"{{cmRestrictTweetId}}\",\n  \"body\": \"i pin the tweet\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Produces {{cmRestrictCommentId}}. Media-free so the ONLY thing that can block a raw tweet delete is comments_tweet_id_fkey. → CHECKPOINT CM-6 (raw DELETE refused)."
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "pm.environment.set(\"cmRestrictCommentId\", pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "auth": {
