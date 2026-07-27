@@ -93,23 +93,19 @@ export interface MediaObject {
   contentType: string;
   size: number;
   status: MediaStatus;
-  /** Authenticated uploader / adopted owner; `null` while under grant provenance. */
+  /** The authenticated uploader that owns the object (the single provenance model,
+   * ADR 0008). Still nullable in the type until WI-7 adds the `NOT NULL` constraint. */
   uploaderId: number | null;
-  /** Pre-auth provenance: the upload grant that ingested the object (ADR 0007). */
-  grantId: string | null;
-  grantExpiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
 /**
- * Who an ingested object is accountable to (ADR 0005 Decision 5 / ADR 0007):
- * an authenticated uploader, or — for pre-auth ingest — the minting grant.
- * Exactly one form is present at creation; adoption later fills the owner.
+ * Who an ingested object is accountable to (ADR 0005 Decision 5, as amended by
+ * ADR 0008): the authenticated uploader — the single provenance model after the
+ * pre-auth grant was retired.
  */
-export type MediaProvenance =
-  | { uploaderId: number }
-  | { grantId: string; grantExpiresAt: Date };
+export type MediaProvenance = { uploaderId: number };
 
 /** Fields required to register a newly-stored object; the token is minted by the registry. */
 export interface NewMediaObject {
@@ -137,34 +133,19 @@ export interface LockedMediaObject {
 
 /**
  * The registry's data-access contract. Internal to Media (never published) —
- * consumed by Media's own boundaries (ingest, read, adoption), never by features.
+ * consumed by Media's own boundaries (ingest, read), never by features.
  * Content immutability-once-ready holds: no path rewrites a stored object's bytes,
- * type, size, or token. The one admissible mutation is adoption's one-time
- * *ownership* fill (`adoptById`) — a conditional write that turns grant provenance
- * into an owner (ADR 0007), never a content change.
+ * type, size, or token, and — since the pre-auth grant was retired (ADR 0008) —
+ * ownership is set once, at ingest, from the authenticated uploader.
  *
- * Read/adopt methods take an optional `client` so they can run inside a caller's
- * interactive transaction (register-with-avatar is atomic across auth + media).
+ * Read methods take an optional `client` so they can run inside a caller's
+ * interactive transaction.
  */
 export interface IMediaRepository {
   /** Register a newly-stored, validated object; mints its token and returns the entry. */
   create(input: NewMediaObject): Promise<MediaObject>;
   /** Resolve a public token to its registry entry, or `null` if none exists. */
   findByToken(token: MediaToken, client?: DbClient): Promise<MediaObject | null>;
-  /** How many objects a grant has ingested (per-grant bound enforcement). */
-  countByGrant(grantId: string): Promise<number>;
-  /**
-   * Atomically adopt a grant-provenance object onto `ownerId` — the concurrency
-   * guard for adoption. Sets `uploaderId` only where it is still `null` AND the
-   * recorded `grantId` equals `expectedGrantId`; returns `true` iff exactly one
-   * row changed (a replay or a second concurrent adoption changes none).
-   */
-  adoptById(
-    referenceId: number,
-    ownerId: number,
-    expectedGrantId: string,
-    client?: DbClient,
-  ): Promise<boolean>;
   /**
    * Resolve numeric references to their public read tokens, keyed by reference.
    * **Servable objects only** — a non-`ready` reference is simply absent from the
@@ -232,10 +213,9 @@ export interface MediaUsage {
 
 // ─── Ingest boundary (ADR 0005 Decision 5 / ADR 0007) ────────────────────────
 
-/** The two admissible authorization evidence types fixed by ADR 0007. */
-export type IngestEvidence =
-  | { kind: "user"; userId: number }
-  | { kind: "grant"; grant: string };
+/** Ingest authorization evidence — an authenticated user only (ADR 0008: the
+ * pre-auth grant evidence type was retired). */
+export type IngestEvidence = { kind: "user"; userId: number };
 
 /** What ingest returns to the client — the reference token plus display facts. */
 export interface IngestResult {

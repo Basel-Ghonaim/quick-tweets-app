@@ -132,27 +132,6 @@ describe("attach ↔ reclamation — real Postgres", () => {
     expect(obj?.status).toBe("ready");
   });
 
-  it("adoptById refuses a tombstoned grant object (status guard closes abandoned↔adoption)", async () => {
-    if (!reachable) return;
-    seq += 1;
-    const grantId = `${TAG}-grant-${seq}`;
-    const obj = await prisma.mediaObject.create({
-      data: {
-        token: mintToken(),
-        storageKey: `objects/${TAG}-${seq}`,
-        contentType: "image/png",
-        size: 10,
-        status: "deleted", // already reclaimed
-        grantId,
-        grantExpiresAt: new Date("2000-01-01T00:00:00.000Z"),
-      },
-    });
-
-    // Without the status guard this would resurrect the tombstone (uploaderId
-    // null + grantId match); the guard makes it match zero rows → false.
-    expect(await repo.adoptById(obj.id, userId, grantId)).toBe(false);
-  });
-
   it("authorizeAttach returns the object's authoritative contentType and size (WI-1)", async () => {
     if (!reachable) return;
     seq += 1;

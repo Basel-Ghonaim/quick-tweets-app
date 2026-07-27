@@ -21,8 +21,6 @@ const fakeRow = (over: Record<string, unknown> = {}) => ({
   size: 1234,
   status: "ready",
   uploaderId: null,
-  grantId: null,
-  grantExpiresAt: null,
   createdAt: new Date("2026-07-16T00:00:00.000Z"),
   updatedAt: new Date("2026-07-16T00:00:00.000Z"),
   ...over,
@@ -82,39 +80,4 @@ describe("media repository", () => {
     expect(missing).toBeNull();
   });
 
-  it("create() records grant provenance (no uploaderId) when given a grant", async () => {
-    let captured: { data: Record<string, unknown> } | undefined;
-    const db = {
-      mediaObject: {
-        create: async (args: { data: Record<string, unknown> }) => {
-          captured = args;
-          return fakeRow(args.data);
-        },
-        findUnique: async () => null,
-      },
-    };
-    const repo = createMediaRepository(db as never);
-    const grantExpiresAt = new Date("2026-07-17T15:15:00.000Z");
-    await repo.create({
-      storageKey: storageKey("objects/g"),
-      contentType: "image/png",
-      size: 10,
-      provenance: { grantId: "grant-1", grantExpiresAt },
-    });
-    expect(captured?.data.grantId).toBe("grant-1");
-    expect(captured?.data.grantExpiresAt).toBe(grantExpiresAt);
-    expect(captured?.data.uploaderId).toBeUndefined();
-  });
-
-  it("countByGrant() passes through to the count query", async () => {
-    const db = {
-      mediaObject: {
-        count: async (args: { where: { grantId: string } }) =>
-          args.where.grantId === "g1" ? 1 : 0,
-      },
-    };
-    const repo = createMediaRepository(db as never);
-    expect(await repo.countByGrant("g1")).toBe(1);
-    expect(await repo.countByGrant("other")).toBe(0);
-  });
 });

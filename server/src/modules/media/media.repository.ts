@@ -3,16 +3,14 @@
  *
  * Media's private authority for storage detail + identity (ADR 0005 Decision 3):
  * it persists a stored object's storage key, verified content type, size, status,
- * provenance (uploader or grant — ADR 0007), and its opaque token, and resolves
- * a token back to that record. Factory-DI in the project idiom; **internal** to
- * the module — never exported from `index.ts`, since features consume Media only
- * through its published interface (Decision 2).
+ * uploader provenance (ADR 0008: the single ownership model), and its opaque
+ * token, and resolves a token back to that record. Factory-DI in the project
+ * idiom; **internal** to the module — never exported from `index.ts`, since
+ * features consume Media only through its published interface (Decision 2).
  *
- * Content is immutable-once-ready: no path rewrites a stored object's bytes,
- * type, size, or token. The one admissible mutation is adoption's one-time
- * *ownership* fill (`adoptById`, M6 / ADR 0007) — a conditional write that turns
- * grant provenance into an owner. Physical deletion and status transitions still
- * belong to later Work Items (M11).
+ * Content is immutable-once-ready: no path rewrites a stored object's bytes, type,
+ * size, or token, and ownership is set once, at ingest, from the authenticated
+ * uploader. Physical deletion and status transitions belong to reclamation (M11).
  *
  * Principle: SRP — only database queries, no business logic.
  * Principle: Factory Pattern — createMediaRepository(db?) enables mock injection.
@@ -30,7 +28,7 @@ import type {
 
 type PrismaInstance = typeof prisma;
 
-/** A persisted registry row, before it is mapped to the branded domain `MediaObject`. */
+/** The registry-row fields this repository maps (a subset of the Prisma row). */
 interface MediaObjectRow {
   id: number;
   token: string;
@@ -39,8 +37,6 @@ interface MediaObjectRow {
   size: number;
   status: string;
   uploaderId: number | null;
-  grantId: string | null;
-  grantExpiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,8 +50,6 @@ const toMediaObject = (row: MediaObjectRow): MediaObject => ({
   size: row.size,
   status: row.status as MediaStatus,
   uploaderId: row.uploaderId,
-  grantId: row.grantId,
-  grantExpiresAt: row.grantExpiresAt,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });
@@ -77,12 +71,7 @@ export const createMediaRepository = (
         storageKey: input.storageKey,
         contentType: input.contentType,
         size: input.size,
-        ...("uploaderId" in input.provenance
-          ? { uploaderId: input.provenance.uploaderId }
-          : {
-              grantId: input.provenance.grantId,
-              grantExpiresAt: input.provenance.grantExpiresAt,
-            }),
+        uploaderId: input.provenance.uploaderId,
       },
     });
     return toMediaObject(row);
@@ -91,23 +80,6 @@ export const createMediaRepository = (
   findByToken: async (token, client: DbClient = db) => {
     const row = await client.mediaObject.findUnique({ where: { token } });
     return row === null ? null : toMediaObject(row);
-  },
-
-  countByGrant: (grantId) => db.mediaObject.count({ where: { grantId } }),
-
-  adoptById: async (referenceId, ownerId, expectedGrantId, client: DbClient = db) => {
-    // Conditional atomic adopt: fill `uploaderId` only while still null AND the
-    // recorded grant matches AND the object is still servable. `updateMany`
-    // reports how many rows matched — a replay or a concurrent second adoption
-    // matches zero (the guard for "a grant is spent by adoption, exactly once";
-    // ADR 0007). The `status: "ready"` guard makes a reclamation tombstone win
-    // cleanly if it lands first: adoption then matches zero rather than
-    // resurrecting a tombstoned object (M11 concurrency hardening).
-    const { count } = await client.mediaObject.updateMany({
-      where: { id: referenceId, uploaderId: null, grantId: expectedGrantId, status: "ready" },
-      data: { uploaderId: ownerId },
-    });
-    return count === 1;
   },
 
   findTokensByIds: async (referenceIds, client: DbClient = db) => {
