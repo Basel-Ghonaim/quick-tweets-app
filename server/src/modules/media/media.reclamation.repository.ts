@@ -1,18 +1,16 @@
 /**
- * Media reclamation — the registry-only selection queries (M11).
+ * Media reclamation — the registry-only selection query (M11).
  *
- * Reclamation finds two computed classes from **Media's own state** (ADR 0005
- * Decision 8; ADR 0007) and never reads a feature schema:
+ * Reclamation finds the single garbage class from **Media's own state** (ADR 0005
+ * Decision 8) and never reads a feature schema:
  *
- * - **Abandoned** — a grant-provenance object never adopted, whose grant is no
- *   longer live (`uploader_id IS NULL AND grant_expires_at < now`). The grant TTL
- *   *is* the opportunity window (ADR 0007 Decision 5), so no separate grace applies.
  * - **Unreferenced-owned** — an owned object (`uploader_id` set) with no ledger
  *   row that has been settled past the grace window (`created_at < now − grace`).
  *   The grace covers the upload→first-attach compose gap — the only window in
  *   which a live-to-be object legitimately has no reference yet.
  *
- * Both exclude non-servable rows (`status <> 'ready'`, i.e. tombstones) and
+ * (The abandoned-grant class was retired with the pre-auth grant — ADR 0008, WI-6.)
+ * Selection excludes non-servable rows (`status <> 'ready'`, i.e. tombstones) and
  * anything still referenced (`references: none`) — the latter is Media's own
  * ledger relation, not a feature table. A dedicated interface (not a bolt-on to
  * `IMediaRepository`) keeps the attach/ingest surface stable and this concern SRP.
@@ -69,8 +67,6 @@ export interface QuarantineEntry {
 
 /** Reclamation's read surface over the registry — no feature schema, ever. */
 export interface IReclamationRepository {
-  /** Never-adopted grant objects whose grant has expired. Ascending id, capped at `limit`. */
-  findAbandoned(now: Date, limit: number, client?: DbClient): Promise<ReclaimCandidate[]>;
   /** Owned objects with no reference, older than `olderThan` (now − grace). Ascending id, capped at `limit`. */
   findUnreferencedOwned(olderThan: Date, limit: number, client?: DbClient): Promise<ReclaimCandidate[]>;
   /**
@@ -101,30 +97,6 @@ const CANDIDATE_SELECT = { id: true, storageKey: true, size: true } as const;
 export const createReclamationRepository = (
   db: PrismaInstance = prisma,
 ): IReclamationRepository => ({
-  findAbandoned: async (now, limit, client: DbClient = db) => {
-    const rows = await client.mediaObject.findMany({
-      where: {
-        status: "ready",
-        uploaderId: null,
-        grantExpiresAt: { lt: now },
-        // `none` is Media's own ledger relation — belt-and-suspenders, since an
-        // unadopted object was never attached; still, never assume.
-        references: { none: {} },
-        // Never reclaim an object under an OPEN divergence quarantine.
-        quarantines: { none: { resolvedAt: null } },
-      },
-      select: CANDIDATE_SELECT,
-      orderBy: { id: "asc" },
-      take: limit,
-    });
-    return rows.map((row) => ({
-      id: row.id,
-      storageKey: storageKey(row.storageKey),
-      size: row.size,
-      reason: "abandoned" as const,
-    }));
-  },
-
   findUnreferencedOwned: async (olderThan, limit, client: DbClient = db) => {
     const rows = await client.mediaObject.findMany({
       where: {

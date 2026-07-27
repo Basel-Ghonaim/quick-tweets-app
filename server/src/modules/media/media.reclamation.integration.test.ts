@@ -20,12 +20,9 @@ const TAG = `it-select-${process.pid}-${Math.floor(process.hrtime()[1])}`;
 const repo = createReclamationRepository();
 
 // A fixed clock for the assertions; seed dates straddle GRACE_CUTOFF.
-const NOW = new Date("2026-07-27T00:00:00.000Z");
 const GRACE_CUTOFF = new Date("2026-07-20T00:00:00.000Z"); // now − ~7d
 const OLD = new Date("2026-07-01T00:00:00.000Z"); // before the cutoff → past grace
 const YOUNG = new Date("2026-07-26T12:00:00.000Z"); // after the cutoff → within grace
-const PAST_GRANT = new Date("2026-07-10T00:00:00.000Z"); // expired grant
-const FUTURE_GRANT = new Date("2027-01-01T00:00:00.000Z"); // still-live grant
 
 let reachable = false;
 let userId = 0;
@@ -34,7 +31,7 @@ const ids: Record<string, number> = {};
 
 const seed = async (
   key: string,
-  data: { uploaderId?: number; grantId?: string; grantExpiresAt?: Date; status?: string; createdAt?: Date; referenced?: boolean },
+  data: { uploaderId?: number; status?: string; createdAt?: Date; referenced?: boolean },
 ): Promise<void> => {
   seq += 1;
   const obj = await prisma.mediaObject.create({
@@ -45,8 +42,6 @@ const seed = async (
       size: 10,
       status: data.status ?? "ready",
       uploaderId: data.uploaderId ?? null,
-      grantId: data.grantId ?? null,
-      grantExpiresAt: data.grantExpiresAt ?? null,
       ...(data.createdAt ? { createdAt: data.createdAt } : {}),
     },
   });
@@ -69,10 +64,7 @@ beforeAll(async () => {
   });
   userId = user.id;
 
-  // Abandoned class
-  await seed("abandoned", { grantId: `${TAG}-g1`, grantExpiresAt: PAST_GRANT });
-  await seed("grantLive", { grantId: `${TAG}-g2`, grantExpiresAt: FUTURE_GRANT });
-  // Unreferenced-owned class
+  // Unreferenced-owned class (the single reclamation class after WI-6).
   await seed("ownedOld", { uploaderId: userId, createdAt: OLD });
   await seed("ownedReferenced", { uploaderId: userId, createdAt: OLD, referenced: true });
   await seed("ownedYoung", { uploaderId: userId, createdAt: YOUNG });
@@ -90,16 +82,6 @@ afterAll(async () => {
 });
 
 describe("reclamation selection — real Postgres boundaries", () => {
-  it("findAbandoned admits the expired-grant object and nothing else of this run", async () => {
-    if (!reachable) return;
-    const found = new Set((await repo.findAbandoned(NOW, 1_000_000)).map((c) => c.id));
-
-    expect(found.has(ids.abandoned!)).toBe(true);
-    expect(found.has(ids.grantLive!)).toBe(false); // grant still live → not yet abandoned
-    expect(found.has(ids.ownedOld!)).toBe(false); // owned, not grant-provenance
-    expect(found.has(ids.tombstone!)).toBe(false); // already reclaimed
-  });
-
   it("findUnreferencedOwned admits the owned-unreferenced-past-grace object only", async () => {
     if (!reachable) return;
     const found = new Set((await repo.findUnreferencedOwned(GRACE_CUTOFF, 1_000_000)).map((c) => c.id));
@@ -107,7 +89,6 @@ describe("reclamation selection — real Postgres boundaries", () => {
     expect(found.has(ids.ownedOld!)).toBe(true);
     expect(found.has(ids.ownedReferenced!)).toBe(false); // still referenced
     expect(found.has(ids.ownedYoung!)).toBe(false); // within the grace window
-    expect(found.has(ids.abandoned!)).toBe(false); // grant-provenance, not owned
     expect(found.has(ids.tombstone!)).toBe(false); // already reclaimed
   });
 
@@ -116,7 +97,7 @@ describe("reclamation selection — real Postgres boundaries", () => {
     const candidate = (await repo.findUnreferencedOwned(GRACE_CUTOFF, 1_000_000)).find(
       (c) => c.id === ids.ownedOld,
     );
-    expect(candidate?.storageKey).toBe(`objects/${TAG}-3`);
+    expect(candidate?.storageKey).toBe(`objects/${TAG}-1`); // ownedOld is the first seed now
     expect(candidate?.size).toBe(10);
     expect(candidate?.reason).toBe("unreferenced");
   });
