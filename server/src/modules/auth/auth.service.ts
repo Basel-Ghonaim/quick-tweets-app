@@ -2,55 +2,48 @@
  * Auth service — business logic for authentication.
  *
  * Current purpose:
- * - register(): validate uniqueness → hash password → create user (adopting the
- *   avatar atomically when one is submitted) → generate tokens
+ * - register(): validate uniqueness → hash password → create the account →
+ *   generate tokens. Registration is account creation only (ADR 0008 D1): the
+ *   avatar is no longer part of signup — it is an authenticated User/Profile
+ *   action, so a new account never carries one.
  * - login(): find user → compare password → generate tokens → resolve avatar
  * - logout(): delete refresh token from database
  * - refreshToken(): validate token → rotate (delete old, create new) → return new tokens
  * - getMe(): load the user and resolve its avatar read token
  *
- * Register-with-avatar (M6 / ADR 0007): when the request carries avatar grant
- * evidence, **create-user + adopt + link + signal run inside one interactive transaction**
- * (Auth owns the unit-of-work; Media owns and enforces the adoption semantics
- * through its published interface). A failed conditional adoption throws and
- * rolls the whole transaction back — never an account without the chosen avatar,
- * never an adopted object without the account. The grant is spent only by a
- * *successful* adoption, so an otherwise-failed registration leaves the object
- * adoptable for a retry with the same reference + grant.
- *
  * Principle: SRP — only authentication business rules, no HTTP or database concerns.
- * Principle: DIP — depends on repository/adoption interfaces, not Prisma directly.
+ * Principle: DIP — depends on repository/media interfaces, not Prisma directly.
  * Principle: Factory Pattern — createAuthService(...) for DI and testability.
  */
 
 import bcrypt from "bcrypt";
 import { AppError } from "../../shared/errors/index.js";
-import { generateAccessToken, generateRefreshToken } from "../../shared/utils/index.js";
 import {
-  runInTransaction as defaultRunInTransaction,
-  type RunInTransaction,
-} from "../../shared/database/index.js";
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../shared/utils/index.js";
 import {
   mediaAdoption,
-  mediaResolution,
   mediaReferences,
-  MediaAdoptionError,
+  mediaResolution,
   type IMediaAdoption,
-  type IMediaResolution,
   type IMediaReferences,
+  type IMediaResolution,
 } from "../media/index.js";
-import type { User } from "../../generated/prisma/client.js";
-import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
+import {
+  createAuthRepository,
+  createTokenRepository,
+} from "./auth.repository.js";
 import type {
-  IAuthRepository,
-  ITokenRepository,
-  IAuthService,
-  CreateUserData,
-  RegisterInput,
-  LoginInput,
   AuthResult,
-  TokenRefreshResult,
+  CreateUserData,
+  IAuthRepository,
+  IAuthService,
+  ITokenRepository,
+  LoginInput,
   MeResult,
+  RegisterInput,
+  TokenRefreshResult,
 } from "./auth.types.js";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -65,8 +58,11 @@ const REFRESH_TOKEN_DAYS = 7;
 
 /**
  * The Media surfaces auth consumes, grouped into one injected dependency.
- * Auth needs several of them (adopt an avatar, resolve it for display), and a
- * parameter per surface would make the factory signature grow with every one.
+ * Auth actively uses only `resolution` (to display a user's avatar on
+ * login/refresh/getMe). The `adoption` and `references` ports are now inert —
+ * registration no longer adopts an avatar (ADR 0008 D1) — and are removed when
+ * Auth becomes Media-free in WI-6; they are kept here until then so this WI's
+ * change stays scoped to de-avataring registration.
  */
 export interface AuthMediaPort {
   adoption: IMediaAdoption;
@@ -80,12 +76,6 @@ const defaultMediaPort: AuthMediaPort = {
   references: mediaReferences,
 };
 
-/**
- * The referrer tag under which an avatar holds its media reference. Derived
- * from the immutable user id, so an end signal always matches its begin.
- */
-const avatarReferrer = (userId: number): string => `user-avatar:${userId}`;
-
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
@@ -95,18 +85,17 @@ const avatarReferrer = (userId: number): string => `user-avatar:${userId}`;
  * @param tokenRepo - Refresh token operations (defaults to Prisma implementation)
  * @param media - The Media surfaces auth consumes, grouped so the dependency
  *   list does not grow a parameter per surface (defaults to the published ones)
- * @param runInTransaction - Interactive-transaction runner (defaults to Prisma's;
- *   injectable so register-with-avatar is testable without a live database)
  */
 export const createAuthService = (
   authRepo: IAuthRepository = createAuthRepository(),
   tokenRepo: ITokenRepository = createTokenRepository(),
   media: AuthMediaPort = defaultMediaPort,
-  runInTransaction: RunInTransaction = defaultRunInTransaction,
 ): IAuthService => {
   /** Resolve a user's avatar reference to its public read token (null when unset). */
   const resolveAvatar = (referenceId: number | null): Promise<string | null> =>
-    referenceId === null ? Promise.resolve(null) : media.resolution.resolveToken(referenceId);
+    referenceId === null
+      ? Promise.resolve(null)
+      : media.resolution.resolveToken(referenceId);
 
   return {
     // ─── Register ────────────────────────────────────────────────────────
@@ -134,62 +123,28 @@ export const createAuthService = (
         passwordHash,
       };
 
-      // 4. Create the user. When an avatar was submitted, adopt it in the SAME
-      //    transaction — create-user, adopt, and link the reference commit or
-      //    roll back together. A guard failure in adoption throws, rolling back
-      //    the user too (fail-loud, no orphan account, no silently-lost avatar).
-      let user: User;
-      let avatarToken: string | null = null;
-
-      if (data.avatar) {
-        const avatar = data.avatar;
-        try {
-          const outcome = await runInTransaction(async (tx) => {
-            const created = await authRepo.create(newUser, tx);
-            const adopted = await media.adoption.adopt(
-              { token: avatar.token, grant: avatar.grant, ownerId: created.id },
-              tx,
-            );
-            await authRepo.setAvatarReference(created.id, adopted.referenceId, tx);
-            // Tell Media the reference exists, in the same transaction as the
-            // reference itself. Without this the object looks unreferenced and
-            // reclamation would eventually destroy a live avatar.
-            await media.references.referenceBegan(
-              { mediaId: adopted.referenceId, referrer: avatarReferrer(created.id) },
-              tx,
-            );
-            return { user: { ...created, avatarMediaId: adopted.referenceId }, token: adopted.token };
-          });
-          user = outcome.user;
-          avatarToken = outcome.token;
-        } catch (err) {
-          // Adoption failed → the whole transaction rolled back (no account
-          // created, grant unspent). Map Media's domain error to the reserved
-          // HTTP statuses so the client sees a clear failure, never a 500.
-          if (err instanceof MediaAdoptionError) {
-            throw err.code === "already_adopted"
-              ? AppError.conflict("This avatar has already been claimed")
-              : AppError.validation("Registration failed", {
-                  avatar: ["The selected avatar could not be attached; please re-upload and try again"],
-                });
-          }
-          throw err;
-        }
-      } else {
-        user = await authRepo.create(newUser);
-      }
+      // 4. Create the account. Registration is account creation only (ADR 0008
+      //    D1): the avatar is no longer coupled to signup, so there is no
+      //    adoption, no reference signal, and no unit-of-work spanning Media —
+      //    a new account never carries an avatar.
+      const user = await authRepo.create(newUser);
 
       // 5. Generate tokens.
       const accessToken = generateAccessToken(user.id);
       const refreshTokenValue = generateRefreshToken();
 
-      // 6. Store refresh token (a session artifact — kept outside the account
-      //    transaction so a token-write hiccup cannot undo a valid account).
+      // 6. Store refresh token (a session artifact — kept outside account
+      //    creation so a token-write hiccup cannot undo a valid account).
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
       await tokenRepo.createRefreshToken(user.id, refreshTokenValue, expiresAt);
 
-      return { user, accessToken, refreshToken: refreshTokenValue, avatarToken };
+      return {
+        user,
+        accessToken,
+        refreshToken: refreshTokenValue,
+        avatarToken: null,
+      };
     },
 
     // ─── Login ───────────────────────────────────────────────────────────
@@ -203,7 +158,10 @@ export const createAuthService = (
       }
 
       // 2. Compare password with stored hash.
-      const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
+      const isPasswordValid = await bcrypt.compare(
+        data.password,
+        user.passwordHash,
+      );
       if (!isPasswordValid) {
         throw AppError.unauthorized("Invalid credentials");
       }
@@ -218,7 +176,12 @@ export const createAuthService = (
       await tokenRepo.createRefreshToken(user.id, refreshTokenValue, expiresAt);
 
       const avatarToken = await resolveAvatar(user.avatarMediaId);
-      return { user, accessToken, refreshToken: refreshTokenValue, avatarToken };
+      return {
+        user,
+        accessToken,
+        refreshToken: refreshTokenValue,
+        avatarToken,
+      };
     },
 
     // ─── Logout ──────────────────────────────────────────────────────────

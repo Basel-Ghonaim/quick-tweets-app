@@ -10,7 +10,7 @@ import { Readable, Writable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
 
 import { AppError } from "../../shared/errors/index.js";
-import { MediaGrantError, MediaReadError, MediaValidationError } from "./media.errors";
+import { MediaReadError, MediaValidationError } from "./media.errors";
 import { createMediaController } from "./media.controller";
 import type { IMediaService, IngestEvidence, IngestResult } from "./media.types";
 
@@ -126,24 +126,22 @@ describe("media controller — ingest", () => {
     expect(out.body).toMatchObject({ success: true, data: { contentType: "image/png" } });
   });
 
-  it("ingests under an X-Upload-Grant header when unauthenticated", async () => {
-    let evidence: IngestEvidence | undefined;
-    await runIngest(okService((e) => (evidence = e)), {
-      headers: { "x-upload-grant": "grant-abc" },
-    });
-    expect(evidence).toEqual({ kind: "grant", grant: "grant-abc" });
+  it("ignores an X-Upload-Grant header — the grant path no longer exists (401)", async () => {
+    // ADR 0008: authenticated-only ingest. A leftover grant header is not
+    // evidence of anything; without a Bearer principal the request is rejected.
+    let called = false;
+    const out = await runIngest(
+      { ingest: async () => { called = true; throw new Error(); }, read: unusedRead },
+      { headers: { "x-upload-grant": "grant-abc" } },
+    );
+    expect((out.error as AppError).statusCode).toBe(401);
+    expect(called).toBe(false);
   });
 
-  it("prefers the Bearer principal when both evidences are present", async () => {
-    let evidence: IngestEvidence | undefined;
-    await runIngest(okService((e) => (evidence = e)), {
-      userId: 7,
-      headers: { "x-upload-grant": "ignored" },
-    });
-    expect(evidence).toEqual({ kind: "user", userId: 7 });
-  });
-
-  it("rejects a request with no evidence (401) without invoking the service", async () => {
+  // Invariant 1 (ADR 0008 Decision 11): no path may create a `uploaderId IS NULL`
+  // object. An unauthenticated ingest is rejected 401 before the file is parsed,
+  // so the service — the only thing that persists an object — is never invoked.
+  it("rejects an unauthenticated request (401) without invoking the service", async () => {
     let called = false;
     const out = await runIngest({ ingest: async () => { called = true; throw new Error(); }, read: unusedRead }, {});
     expect(out.error).toBeInstanceOf(AppError);
@@ -170,18 +168,6 @@ describe("media controller — ingest", () => {
 
     const badType = await runIngest(throwingService(MediaValidationError.unsupportedType()), { userId: 1 });
     expect((badType.error as AppError).statusCode).toBe(415);
-  });
-
-  it("maps an exhausted grant to 403 and an invalid grant to 401", async () => {
-    const exhausted = await runIngest(throwingService(MediaGrantError.exhausted()), {
-      headers: { "x-upload-grant": "g" },
-    });
-    expect((exhausted.error as AppError).statusCode).toBe(403);
-
-    const invalid = await runIngest(throwingService(MediaGrantError.invalid()), {
-      headers: { "x-upload-grant": "g" },
-    });
-    expect((invalid.error as AppError).statusCode).toBe(401);
   });
 });
 

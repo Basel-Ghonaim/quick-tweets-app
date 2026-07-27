@@ -3,11 +3,10 @@
  * Media layer).
  *
  * Purpose:
- * - mintGrant(): issue an upload grant (ADR 0007) for pre-auth flows
  * - ingest(): parse the multipart request (busboy, streaming — no whole-file
- *   buffering), resolve the authorization evidence (authenticated principal or
- *   `X-Upload-Grant` header), hand the file stream to the service, and map the
- *   module's domain errors to the reserved HTTP statuses (415/413/403/401/400)
+ *   buffering), require an authenticated principal, hand the file stream to the
+ *   service, and map the module's domain errors to the reserved HTTP statuses
+ *   (415/413/401/400)
  *
  * The 16 kB JSON body cap does not apply here: multipart bypasses
  * `express.json`, and the upload's own limit is enforced mid-stream by the
@@ -24,12 +23,10 @@ import { pipeline } from "node:stream/promises";
 import { AppError } from "../../shared/errors/index.js";
 import { sendSuccess } from "../../shared/response/index.js";
 import {
-  MediaGrantError,
   MediaIngestError,
   MediaReadError,
   MediaValidationError,
 } from "./media.errors.js";
-import { mintUploadGrant } from "./media.grants.js";
 import { createMediaService } from "./media.service.js";
 import { mediaToken } from "./media.tokens.js";
 import { MEDIA_MAX_SIZE_BYTES } from "./media.validation.js";
@@ -41,11 +38,6 @@ const toHttpError = (err: unknown): unknown => {
     return err.code === "too_large"
       ? AppError.payloadTooLarge("File exceeds the media size limit")
       : AppError.unsupportedMediaType("File content is not an allowed image type");
-  }
-  if (err instanceof MediaGrantError) {
-    return err.code === "grant_exhausted"
-      ? AppError.forbidden("Upload grant is exhausted")
-      : AppError.unauthorized("Invalid or expired upload grant");
   }
   if (err instanceof MediaIngestError) {
     return AppError.badRequest("Upload stream ended before completing");
@@ -70,28 +62,19 @@ const isPrematureClose = (err: unknown): boolean =>
 export const createMediaController = (
   service: IMediaService = createMediaService(),
 ) => ({
-  // ── POST /media/grants ──
-
-  mintGrant: (_req: Request, res: Response): void => {
-    const { grant, expiresAt } = mintUploadGrant();
-    sendSuccess(res, { grant, expiresAt }, 201);
-  },
-
   // ── POST /media (multipart, field "file") ──
 
   ingest: (req: Request, res: Response, next: NextFunction): void => {
-    // Resolve authorization evidence first — no evidence, no parsing.
-    let evidence: IngestEvidence;
-    if (req.userId !== undefined) {
-      evidence = { kind: "user", userId: req.userId };
-    } else {
-      const grantHeader = req.headers["x-upload-grant"];
-      if (typeof grantHeader !== "string" || grantHeader.length === 0) {
-        next(AppError.unauthorized("Authentication or an upload grant is required"));
-        return;
-      }
-      evidence = { kind: "grant", grant: grantHeader };
+    // Require an authenticated principal first — no owner, no parsing. The route
+    // mounts `authGuard`, which already rejects unauthenticated requests; this
+    // guard is the in-controller invariant that ingest never runs owner-less
+    // (ADR 0008: authenticated-only ownership — no `uploaderId IS NULL` object
+    // can be created).
+    if (req.userId === undefined) {
+      next(AppError.unauthorized("Authentication is required"));
+      return;
     }
+    const evidence: IngestEvidence = { kind: "user", userId: req.userId };
 
     let parser: ReturnType<typeof busboy>;
     try {

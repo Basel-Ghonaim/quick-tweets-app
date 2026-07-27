@@ -76,33 +76,6 @@ export const refreshLimiter = rateLimit({
 
 // ─── API Limiter (general) ───────────────────────────────────────────────────
 
-// ─── Media Mint Limiter (upload grants) ──────────────────────────────────────
-
-/**
- * Strict limiter for upload-grant minting (ADR 0007): minting is where the
- * grant model's abuse economics are controlled, and the endpoint is
- * unauthenticated by design (it serves pre-auth flows like register-with-avatar).
- *
- * Applied to: POST /media/grants
- * Limit: 20 requests per 15 minutes per IP
- */
-export const mediaMintLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  limit: 20,
-  standardHeaders: "draft-8",
-  legacyHeaders: false,
-  message: {
-    success: false,
-    error: {
-      type: "rate_limit",
-      message:
-        "Too many upload requests. Please wait a few minutes before trying again.",
-    },
-  },
-});
-
-// ─── API Limiter (general) ───────────────────────────────────────────────────
-
 /**
  * General limiter for all API routes.
  * Prevents spam and abuse on tweets, comments, user endpoints.

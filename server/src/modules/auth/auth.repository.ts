@@ -62,13 +62,6 @@ export const createAuthRepository = (
     db.user.findUnique({ where: { id }, select: userSafeSelect }),
 
   create: (data: CreateUserData, client: DbClient = db) => client.user.create({ data }),
-
-  setAvatarReference: async (userId, referenceId, client: DbClient = db) => {
-    await client.user.update({
-      where: { id: userId },
-      data: { avatarMediaId: referenceId },
-    });
-  },
 });
 
 // ─── Token Repository ────────────────────────────────────────────────────────
