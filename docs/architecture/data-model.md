@@ -29,6 +29,8 @@ Every relationship deletes with its parent (`onDelete: Cascade`):
 
 The rationale: the model has no meaningful orphan — a comment without its tweet, or a like without its user, is noise. Cascade enforces referential integrity in the database rather than in application code, so a missed cleanup path cannot leave dangling rows (defense in depth).
 
+**Media relationships are the deliberate exception.** A feature's link to a `MediaObject` is a *reference to an object another module owns*, not owned data, so those foreign keys use **`onDelete: Restrict`**, not Cascade: `tweet_media`, and a media-carrying `comment`, refuse to vanish silently, and Media's own `media_references` / `media_quarantine` refuse to drop an object that is still referenced or under review. Deleting a tweet **ends** its media references (through the coordinated application use-case that removes the comments first), and **Media reclaims** any now-unreferenced object from its own registry state — an object is never deleted by a database cascade. Reclamation (M11) runs **report-only first**, tombstones (`status='deleted'`) rather than hard-deleting, and **quarantines** any registry↔storage divergence rather than deleting on it. Field-level truth lives in [`schema.prisma`](../../server/prisma/schema.prisma); the full mechanism is owned by the media platform doc when the subsystem is reconciled (`docs/backend/media.md`, M12).
+
 ## Indexing
 
 Indexes exist to serve the product's hot read paths; each maps to a query the application actually runs:
