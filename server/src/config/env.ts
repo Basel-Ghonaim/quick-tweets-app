@@ -33,6 +33,17 @@ const envSchema = z
     // Dedicated signing key for upload grants (ADR 0007) — separate from
     // JWT_SECRET so a grant and an access token can never cross-verify.
     MEDIA_GRANT_SECRET: z.string().min(16),
+    // Media reclamation (M11). `report` is the FAIL-SAFE default: physical
+    // deletion runs only when MEDIA_RECLAMATION_MODE is EXACTLY "destructive"
+    // (see resolveReclamationMode) — a missing, empty, mis-cased, or misspelled
+    // value resolves to `report`, so bad config can never silently enable
+    // deletion. A permissive `string` (not an enum) so an unexpected value warns
+    // and stays report rather than crashing. Window/cadence/batch are operational
+    // tunables, not architectural invariants.
+    MEDIA_RECLAMATION_MODE: z.string().default("report"),
+    RECLAMATION_GRACE_MS: z.coerce.number().int().nonnegative().default(24 * 60 * 60 * 1000),
+    RECLAMATION_INTERVAL_MS: z.coerce.number().int().positive().default(6 * 60 * 60 * 1000),
+    RECLAMATION_BATCH: z.coerce.number().int().positive().default(100),
   })
   .refine((e) => e.MEDIA_GRANT_SECRET !== e.JWT_SECRET, {
     message:
