@@ -129,6 +129,10 @@ export interface LockedMediaObject {
   token: MediaToken;
   uploaderId: number | null;
   status: MediaStatus;
+  /** Authoritative, content-derived type — the fact a consumer's policy evaluates. */
+  contentType: string;
+  /** Authoritative byte size — the fact a consumer's policy evaluates. */
+  size: number;
 }
 
 /**

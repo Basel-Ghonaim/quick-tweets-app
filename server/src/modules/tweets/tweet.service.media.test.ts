@@ -82,13 +82,13 @@ const makeMedia = (refs: Record<string, number>) => {
       authorizeAttach: async ({ token }) => {
         const referenceId = refs[token];
         if (referenceId === undefined) throw MediaAttachError.notAttachable();
-        return { referenceId, token: token as never };
+        return { referenceId, token: token as never, contentType: "image/png", size: 1 };
       },
       authorizeAttachMany: async (inputs) =>
         inputs.map(({ token }) => {
           const referenceId = refs[token];
           if (referenceId === undefined) throw MediaAttachError.notAttachable();
-          return { referenceId, token: token as never };
+          return { referenceId, token: token as never, contentType: "image/png", size: 1 };
         }),
       usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
     },

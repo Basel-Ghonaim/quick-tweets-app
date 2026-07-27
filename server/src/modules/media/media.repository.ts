@@ -159,9 +159,17 @@ export const createMediaRepository = (
     // an attach against a tombstone (M11).
     const placeholders = tokens.map((_, i) => `$${i + 1}`).join(", ");
     const rows = await client.$queryRawUnsafe<
-      { id: number; token: string; uploaderId: number | null; status: string }[]
+      {
+        id: number;
+        token: string;
+        uploaderId: number | null;
+        status: string;
+        contentType: string;
+        size: number;
+      }[]
     >(
-      `SELECT id, token, uploader_id AS "uploaderId", status
+      `SELECT id, token, uploader_id AS "uploaderId", status,
+              content_type AS "contentType", size
          FROM media_objects
         WHERE token IN (${placeholders})
         ORDER BY id
@@ -173,6 +181,8 @@ export const createMediaRepository = (
       token: mediaToken(row.token),
       uploaderId: row.uploaderId,
       status: row.status as MediaStatus,
+      contentType: row.contentType,
+      size: row.size,
     }));
   },
 });

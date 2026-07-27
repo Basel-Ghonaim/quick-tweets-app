@@ -799,7 +799,8 @@ interface ErrorBody {
     "id": 1,
     "username": "basel",
     "name": "Basel",
-    "profileImage": null,
+    "profileImage": null,                 // DEPRECATED (always null) — superseded by "avatar"
+    "avatar": { "token": "Nk3v9qYw1kPz-XG27RODaQ" },  // null when unset; render via GET /media/:token
     "bio": "",
     "tweetsCount": 12,
     "likesCount": 34,
@@ -815,11 +816,36 @@ interface ErrorBody {
 ```
 
 **Notes:**
+- `avatar`: `{ token } | null` — the resolved avatar read token (ADR 0008); `profileImage` is retained `null` for backward compatibility and is removed with the #335 tail.
 - `tweetsCount`: total tweets authored by this user
 - `likesCount`: total likes received across all their tweets
 - `followersCount` / `followingCount`: computed via `COUNT()` on follows table
 - `isFollowing`: `true` if the authenticated user follows this profile, `false` for guests
-- **Future Scope:** Profile modification (`PATCH /users/:username`) is outside the scope of v1.
+
+### `GET /users/me` — Own profile
+
+**Auth:** Required. Returns the authenticated user's own profile — the same shape as `GET /users/:username` (with `isFollowing: false`). `me` is a reserved self-alias resolved from the token.
+
+### `PATCH /users/me` — Update own profile
+
+**Auth:** Required. Updates any subset of `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). Returns the updated profile (same shape as above).
+
+```jsonc
+// Request — any subset; at least one field. Avatar is full-replacement:
+//   omitted   → unchanged
+//   { token } → set / replace   (token from POST /media, uploaded under Bearer)
+//   null      → remove
+{ "name": "Basel G.", "bio": "hello", "avatar": { "token": "Nk3v9qYw1kPz-XG27RODaQ" } }
+
+// Response 422 — validation, or the avatar could not be attached / violates the
+// avatar policy (JPEG or PNG only, ≤ 1 MiB). Opaque: never names the token.
+{ "success": false, "error": { "type": "validation", "message": "Avatar does not meet the requirements",
+    "details": { "avatar": ["Avatar must be a JPEG or PNG image"] } } }
+```
+
+**Notes:**
+- The avatar is an authenticated Media producer: upload under `POST /media` (Bearer), then submit its `token` here. The **avatar policy** (JPEG/PNG, ≤ 1 MiB) is enforced server-side over Media's authoritative type/size — stricter than the global media limits.
+- An uploaded object that is never attached (or is rejected here) is left owned-but-unreferenced and is reclaimed later by the background media reclamation — no request-level deletion.
 
 ---
 

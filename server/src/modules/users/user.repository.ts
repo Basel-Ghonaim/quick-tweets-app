@@ -2,10 +2,10 @@
  * User repository — Prisma implementation of IUserRepository.
  *
  * Purpose:
- * - findByUsernameWithCounts: profile with _count (tweets, followers, following)
- * - findIdByUsername: lightweight lookup for cross-module queries
+ * - findByUsernameWithCounts / findByIdWithCounts: profile with _count
  * - isFollowing: check if one user follows another
  * - countLikesReceived: nested aggregate — total likes across all user's tweets
+ * - findAvatar / updateProfile: the avatar/profile write path (WI-2)
  *
  * Note on likesCount:
  *   Prisma's _count can't compute nested aggregates (User → Tweets → Likes).
@@ -16,10 +16,29 @@
  * Principle: Factory Pattern — createUserRepository(db?) enables mock injection.
  */
 
-import { prisma } from "../../shared/database/index.js";
+import { prisma, type DbClient } from "../../shared/database/index.js";
+import type { Prisma } from "../../generated/prisma/client.js";
 import type { IUserRepository } from "./user.types.js";
 
 type PrismaInstance = typeof prisma;
+
+/** The profile projection shared by the username / id / update reads. */
+const profileSelect = {
+  id: true,
+  username: true,
+  name: true,
+  profileImage: true,
+  avatarMediaId: true,
+  bio: true,
+  createdAt: true,
+  _count: {
+    select: {
+      tweets: true,
+      followers: true,   // people who follow ME
+      following: true,   // people I follow
+    },
+  },
+} satisfies Prisma.UserSelect;
 
 // ─── User Repository ─────────────────────────────────────────────────────────
 
@@ -34,24 +53,10 @@ export const createUserRepository = (
   // ── Profile with Counts ──
 
   findByUsernameWithCounts: (username) =>
-    db.user.findUnique({
-      where: { username },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        profileImage: true,
-        bio: true,
-        createdAt: true,
-        _count: {
-          select: {
-            tweets: true,
-            followers: true,   // people who follow ME
-            following: true,   // people I follow
-          },
-        },
-      },
-    }),
+    db.user.findUnique({ where: { username }, select: profileSelect }),
+
+  findByIdWithCounts: (userId) =>
+    db.user.findUnique({ where: { id: userId }, select: profileSelect }),
 
   // ── Follow Check ──
 
@@ -70,5 +75,23 @@ export const createUserRepository = (
   countLikesReceived: (userId) =>
     db.like.count({
       where: { tweet: { authorId: userId } },
+    }),
+
+  // ── Avatar / Profile Write ──
+
+  findAvatar: (userId, client: DbClient = db) =>
+    client.user.findUnique({ where: { id: userId }, select: { avatarMediaId: true } }),
+
+  updateProfile: (userId, data, client: DbClient = db) =>
+    client.user.update({
+      where: { id: userId },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.bio !== undefined ? { bio: data.bio } : {}),
+        // Set the avatar reference exactly when provided — including to `null`
+        // (remove). Omitted leaves it untouched.
+        ...(data.avatarMediaId !== undefined ? { avatarMediaId: data.avatarMediaId } : {}),
+      },
+      select: profileSelect,
     }),
 });
