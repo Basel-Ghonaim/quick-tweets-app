@@ -22,6 +22,8 @@ const lockedRow = (
   token,
   uploaderId: OWNER,
   status: "ready",
+  contentType: "image/png",
+  size: 100,
   ...over,
 });
 
@@ -53,7 +55,7 @@ describe("media ownership — authorizeAttach", () => {
 
     const result = await ownership.authorizeAttach({ token, ownerId: OWNER });
 
-    expect(result).toEqual({ referenceId: 7, token });
+    expect(result).toEqual({ referenceId: 7, token, contentType: "image/png", size: 100 });
   });
 
   it("refuses a cross-principal attach (another principal's object)", async () => {
@@ -121,9 +123,22 @@ describe("media ownership — authorizeAttachMany", () => {
     ]);
 
     expect(result).toEqual([
-      { referenceId: 5, token: t1 },
-      { referenceId: 2, token: t2 },
+      { referenceId: 5, token: t1, contentType: "image/png", size: 100 },
+      { referenceId: 2, token: t2, contentType: "image/png", size: 100 },
     ]);
+  });
+
+  it("carries the object's authoritative contentType and size for the consumer's policy", async () => {
+    const token = mintToken();
+    const ownership = createMediaOwnership(
+      makeRepo({
+        lockAndFetchByTokens: async () => [lockedRow(token, { contentType: "image/jpeg", size: 2048 })],
+      }),
+    );
+
+    const [result] = await ownership.authorizeAttachMany([{ token, ownerId: OWNER }]);
+
+    expect(result).toMatchObject({ contentType: "image/jpeg", size: 2048 });
   });
 
   it("refuses the whole batch if any one object is not attachable", async () => {

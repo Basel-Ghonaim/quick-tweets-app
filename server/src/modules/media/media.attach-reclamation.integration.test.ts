@@ -152,4 +152,26 @@ describe("attach ↔ reclamation — real Postgres", () => {
     // null + grantId match); the guard makes it match zero rows → false.
     expect(await repo.adoptById(obj.id, userId, grantId)).toBe(false);
   });
+
+  it("authorizeAttach returns the object's authoritative contentType and size (WI-1)", async () => {
+    if (!reachable) return;
+    seq += 1;
+    const token = mintToken();
+    await prisma.mediaObject.create({
+      data: {
+        token,
+        storageKey: `objects/${TAG}-${seq}`,
+        contentType: "image/jpeg",
+        size: 4321,
+        status: "ready",
+        uploaderId: userId,
+      },
+    });
+
+    // The metadata travels with the reference from the same locked read — so a
+    // consumer evaluates policy over Media's authoritative facts (ADR 0008 D6).
+    const [attached] = await ownership.authorizeAttachMany([{ token, ownerId: userId }]);
+
+    expect(attached).toMatchObject({ contentType: "image/jpeg", size: 4321 });
+  });
 });

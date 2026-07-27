@@ -25,10 +25,15 @@ export interface AttachMediaInput {
   ownerId: number;
 }
 
-/** An authorized attach: the reference the feature persists, plus the read token. */
+/** An authorized attach: the reference the feature persists, the read token, and
+ *  the object's authoritative metadata for the consumer's own policy check. */
 export interface AttachableMedia {
   referenceId: number;
   token: MediaToken;
+  /** Content-derived type (e.g. `image/png`) — Media's authoritative fact. */
+  contentType: string;
+  /** Byte size — Media's authoritative fact. */
+  size: number;
 }
 
 /** Media's published ownership surface (feature-facing). */
@@ -89,7 +94,10 @@ export const createMediaOwnership = (
       if (row === undefined || row.uploaderId !== p.ownerId || row.status !== "ready") {
         throw MediaAttachError.notAttachable();
       }
-      return { referenceId: row.id, token: row.token };
+      // The authoritative metadata travels with the reference, under the same
+      // lock, so a consumer can evaluate its own policy without re-reading bytes
+      // and without a validation↔attach TOCTOU (ADR 0008 Decision 6).
+      return { referenceId: row.id, token: row.token, contentType: row.contentType, size: row.size };
     });
   };
 
