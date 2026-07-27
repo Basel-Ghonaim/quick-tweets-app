@@ -54,6 +54,16 @@ export interface IReclamationRepository {
    * an orphan, so "any status" is deliberate).
    */
   keysWithRow(keys: string[], client?: DbClient): Promise<Set<string>>;
+  /**
+   * Reclaim object `id` **within the caller's transaction**: lock it `FOR UPDATE`
+   * (conflicting with the attach path's own `FOR UPDATE`, so the two serialize),
+   * re-check under the lock that it is still `ready` **and** unreferenced, and if
+   * so tombstone it (`status='deleted'`). Returns whether it tombstoned — `false`
+   * means it lost the race (a reference began, or it was already reclaimed) and
+   * must be left alone. The byte delete is the caller's, after commit (tombstone
+   * before bytes). Registry-only; no feature schema.
+   */
+  tombstoneIfReclaimable(id: number, client: DbClient): Promise<boolean>;
 }
 
 const CANDIDATE_SELECT = { id: true, storageKey: true, size: true } as const;
@@ -110,5 +120,28 @@ export const createReclamationRepository = (
       select: { storageKey: true },
     });
     return new Set(rows.map((row) => row.storageKey));
+  },
+
+  tombstoneIfReclaimable: async (id, client: DbClient) => {
+    // Lock the row FOR UPDATE. This conflicts with the attach path's own
+    // FOR UPDATE (media.ownership), so an attach that raced this reclaim either
+    // already committed its reference (caught by the re-count below) or blocks
+    // until this commits and then sees the tombstone and refuses (M11 Step 0).
+    const locked = await client.$queryRawUnsafe<{ status: string }[]>(
+      `SELECT status FROM media_objects WHERE id = $1 FOR UPDATE`,
+      id,
+    );
+    if (locked.length === 0 || locked[0]!.status !== "ready") return false;
+
+    // Re-check referenced-ness UNDER the lock — the TOCTOU guard the grace window
+    // alone cannot give. A reference that began since selection makes this > 0.
+    const refs = await client.mediaReference.count({ where: { mediaId: id } });
+    if (refs > 0) return false;
+
+    const { count } = await client.mediaObject.updateMany({
+      where: { id, status: "ready" },
+      data: { status: "deleted" },
+    });
+    return count === 1;
   },
 });

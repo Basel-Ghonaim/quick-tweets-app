@@ -19,6 +19,10 @@
  * Both are counted here and (in a later commit) flagged for review, never deleted.
  */
 
+import {
+  runInTransaction as defaultRunInTransaction,
+  type RunInTransaction,
+} from "../../shared/database/index.js";
 import type { StorageAdapter } from "./media.types.js";
 import {
   createReclamationRepository,
@@ -56,6 +60,7 @@ export interface ReclamationDeps {
   /** report (default everywhere) | destructive. */
   mode: ReclamationMode;
   repo?: IReclamationRepository;
+  runInTransaction?: RunInTransaction;
   now?: () => Date;
   log?: (line: string) => void;
 }
@@ -90,9 +95,29 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
 
   const wouldReclaimBytes = intact.reduce((sum, c) => sum + c.size, 0);
 
-  // 4. Report-only: mutate nothing. The destructive branch (tombstone + byte
-  //    delete of `intact`) is added dark in a later commit, gated on mode.
-  const reclaimed = 0;
+  // 4. Reclaim — DARK. Only when explicitly in destructive mode; report mutates
+  //    nothing (this branch is skipped entirely). Each object is its own recovery
+  //    unit: lock + re-check + tombstone in one transaction, then delete bytes
+  //    (tombstone before bytes; the delete is idempotent). A per-object failure
+  //    is isolated and logged, so one bad object never blocks the rest.
+  let reclaimed = 0;
+  if (deps.mode === "destructive") {
+    const runInTransaction = deps.runInTransaction ?? defaultRunInTransaction;
+    for (const candidate of intact) {
+      try {
+        const tombstoned = await runInTransaction((tx) =>
+          repo.tombstoneIfReclaimable(candidate.id, tx),
+        );
+        if (tombstoned) {
+          await deps.storage.delete(candidate.storageKey);
+          reclaimed += 1;
+        }
+      } catch (err) {
+        log(`[jobs] media-reclamation — object ${candidate.id} failed to reclaim: ${String(err)}`);
+      }
+    }
+  }
+
   const quarantined = rowWithoutBytes + orphanBytes;
 
   const report: ReclamationReport = {

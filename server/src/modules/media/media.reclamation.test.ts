@@ -30,8 +30,12 @@ const makeRepo = (over: Partial<IReclamationRepository> = {}): IReclamationRepos
   findAbandoned: async () => [],
   findUnreferencedOwned: async () => [],
   keysWithRow: async () => new Set<string>(),
+  tombstoneIfReclaimable: async () => true,
   ...over,
 });
+
+/** A fake transaction runner: invoke the callback with an opaque sentinel client. */
+const fakeTx: <T>(fn: (tx: never) => Promise<T>) => Promise<T> = (fn) => fn({} as never);
 
 const makeStorage = (over: Partial<StorageAdapter> = {}) => {
   const deleted: string[] = [];
@@ -87,6 +91,65 @@ describe("reclamation orchestrator — report mode", () => {
 
     expect(report.orphanBytes).toBe(1);
     expect(report.quarantined).toBe(1);
+  });
+});
+
+describe("reclamation orchestrator — destructive mode (dark path)", () => {
+  it("tombstones each intact candidate, then deletes its bytes (tombstone before bytes)", async () => {
+    const order: string[] = [];
+    const deleted: string[] = [];
+    const adapter: StorageAdapter = {
+      save: async () => {},
+      createReadStream: async () => Readable.from([]),
+      exists: async () => true,
+      enumerate: async () => [],
+      delete: async (k) => { order.push(`delete:${k}`); deleted.push(k); },
+    };
+    const repo = makeRepo({
+      findUnreferencedOwned: async () => [candidate(1, "unreferenced"), candidate(2, "unreferenced")],
+      tombstoneIfReclaimable: async (id) => { order.push(`tombstone:${id}`); return true; },
+    });
+
+    const report = await runReclamation({
+      storage: adapter, repo, graceMs: 0, batch: 100, mode: "destructive", runInTransaction: fakeTx, log: () => {},
+    });
+
+    expect(report.reclaimed).toBe(2);
+    expect(deleted).toEqual(["objects/1", "objects/2"]);
+    expect(order).toEqual(["tombstone:1", "delete:objects/1", "tombstone:2", "delete:objects/2"]);
+  });
+
+  it("skips a candidate whose re-check fails (a reference began) — never deletes its bytes", async () => {
+    const { adapter, deleted } = makeStorage({ exists: async () => true });
+    const repo = makeRepo({
+      findUnreferencedOwned: async () => [candidate(1, "unreferenced")],
+      tombstoneIfReclaimable: async () => false, // lost the race under the lock
+    });
+
+    const report = await runReclamation({
+      storage: adapter, repo, graceMs: 0, batch: 100, mode: "destructive", runInTransaction: fakeTx, log: () => {},
+    });
+
+    expect(report.reclaimed).toBe(0);
+    expect(deleted).toHaveLength(0);
+  });
+
+  it("never reclaims a divergent (row-without-bytes) candidate", async () => {
+    const tombstoned: number[] = [];
+    const { adapter, deleted } = makeStorage({ exists: async () => false }); // bytes gone → divergent
+    const repo = makeRepo({
+      findUnreferencedOwned: async () => [candidate(1, "unreferenced")],
+      tombstoneIfReclaimable: async (id) => { tombstoned.push(id); return true; },
+    });
+
+    const report = await runReclamation({
+      storage: adapter, repo, graceMs: 0, batch: 100, mode: "destructive", runInTransaction: fakeTx, log: () => {},
+    });
+
+    expect(report.rowWithoutBytes).toBe(1);
+    expect(report.reclaimed).toBe(0);
+    expect(tombstoned).toHaveLength(0); // divergent → excluded from `intact`, never tombstoned
+    expect(deleted).toHaveLength(0);
   });
 });
 
