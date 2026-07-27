@@ -267,8 +267,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
       "username": "basel",
       "name": "Basel",
       "email": "test@test.com",
-      "profileImage": null,   // DEPRECATED (always null) — superseded by "avatar"
-      "avatar": null,         // always null at registration; set later via PATCH /users/me
+      "profileImage": null,   // DEPRECATED (always null) — retired with #335
       "bio": "",
       "createdAt": "2026-05-10T12:00:00.000Z"
     },
@@ -347,8 +346,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
       "username": "johndoe",
       "name": "John Doe",
       "email": "john@example.com",
-      "profileImage": null,   // DEPRECATED (always null) — superseded by "avatar"
-      "avatar": null,         // { token } when set; render via GET /media/:token
+      "profileImage": null,   // DEPRECATED (always null) — retired with #335
       "bio": "",
       "createdAt": "2026-01-01T00:00:00.000Z"
     }
@@ -372,8 +370,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
       "username": "basel",
       "name": "Basel",
       "email": "test@test.com",
-      "profileImage": null,   // DEPRECATED (always null) — superseded by "avatar"
-      "avatar": null,         // { token } when set; render via GET /media/:token
+      "profileImage": null,   // DEPRECATED (always null) — retired with #335
       "bio": "",
       "createdAt": "2026-05-10T12:00:00.000Z"
     }
@@ -381,12 +378,13 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 }
 ```
 
-> **`avatar` vs `profileImage`.** The authenticated user's own shape (register/login/refresh/me)
-> carries `avatar: { token } | null` — the avatar's public read token, resolved at the boundary
-> from an internal numeric Media Reference. `profileImage` is retained only for backward
-> compatibility (always `null`) and is retired when author-avatar display migrates to the
-> reference model. The embedded author shape ([AuthorEmbed](#authorembed)) still exposes the
-> legacy field until then.
+> **Avatar & `profileImage`.** Auth responses (register / login / refresh / `GET /auth/me`) are
+> **Media-free** (ADR 0008 Decision 10): they carry token-derived identity only, never the avatar.
+> The authenticated user's avatar is served by the **User** domain — `GET /users/me` (and
+> `GET /users/:username`) carry `avatar: { token } | null`, the public read token resolved at the
+> boundary from an internal numeric Media Reference. `profileImage` is retained only for backward
+> compatibility (always `null`) and is retired with #335; the embedded author shape
+> ([AuthorEmbed](#authorembed)) still exposes the legacy field until then.
 
 ---
 
