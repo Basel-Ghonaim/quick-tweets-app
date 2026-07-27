@@ -18,6 +18,11 @@ dist-ssr
 server/.env
 server/src/generated
 
+# WI-5 legacy-cleanup sensitive artifacts (contain media tokens / storage keys) — never commit.
+# The sanitized review report (wi5-review-report.json) is tokenless and safe to share/attach.
+server/wi5-manifest*.json
+server/wi5-run-report*.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
