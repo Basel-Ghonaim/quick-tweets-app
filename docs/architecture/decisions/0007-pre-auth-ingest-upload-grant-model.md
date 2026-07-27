@@ -1,6 +1,6 @@
 # ADR 0007: Pre-auth Ingest — the Upload-Grant Authorization Model
 
-> **Status:** Accepted
+> **Status:** Superseded by [ADR 0008](0008-auth-first-onboarding-grant-retirement.md)
 > **Date:** 2026-07-17
 > **Deciders:** Basel Ghonaim
 
