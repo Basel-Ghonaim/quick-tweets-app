@@ -116,13 +116,6 @@ const registerFields = {
     label: "I agree to the privacy policy rules",
     validators: [isRequired(VALIDATION_MESSAGES.privacy)],
   },
-  profileImage: {
-    name: "profileImage",
-    type: "file",
-    label: "Profile Image",
-    placeholder: "Upload your profile image",
-    validators: [],
-  },
 } satisfies Record<
   keyof RegisterCredentials,
   FormFieldConfig<RegisterCredentials>
@@ -130,8 +123,8 @@ const registerFields = {
 
 export const authFormSchemas = {
   loginFields,
+  // Registration is account creation only (auth-first, ADR 0008) — no avatar.
   registerFields: {
-    profileImage: { ...registerFields.profileImage, span: "full" },
     name: { ...registerFields.name, span: "half" },
     username: { ...registerFields.username, span: "half" },
     email: { ...registerFields.email, span: "full" },

@@ -8,5 +8,4 @@ export interface RegisterRequestDto {
   name: string;
   email: string;
   password: string;
-  avatar?: { token: string; grant: string };
 }

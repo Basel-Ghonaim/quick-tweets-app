@@ -37,57 +37,30 @@ describe("restAuth.refresh — returns the full session (#261, #258)", () => {
   });
 });
 
-describe("restAuth.register — upload-then-submit-reference (M6, #256)", () => {
-  const file = { name: "a.png" } as unknown as File;
+describe("restAuth.register — account creation only (auth-first, ADR 0008)", () => {
   const creds = {
     username: "ada", name: "Ada Lovelace", email: "ada@example.com",
     password: "Passw0rd!", confirmPassword: "Passw0rd!", privacy: true,
-    profileImage: null as File | null,
   };
   const asClient = (post: unknown) => post as Parameters<typeof restAuth>[0];
 
-  it("uploads the avatar and submits { token, grant } as adoption evidence", async () => {
-    const post = vi.fn().mockResolvedValue({
-      data: {
-        success: true,
-        data: { user: { ...userDto, avatar: { token: "TOK" } }, accessToken: "acc" },
-      },
-    });
-    const upload = vi.fn().mockResolvedValue({ token: "TOK", grant: "GRANT" });
-    const repo = restAuth(asClient({ post }), upload);
-
-    const session = await repo.register({ ...creds, profileImage: file });
-
-    expect(upload).toHaveBeenCalledWith(file);
-    expect(post).toHaveBeenCalledWith(
-      "/auth/register",
-      expect.objectContaining({ username: "ada", avatar: { token: "TOK", grant: "GRANT" } }),
-    );
-    expect(session.user.avatar).toEqual({ token: "TOK" });
-  });
-
-  it("registers without an avatar when none was chosen (no upload)", async () => {
+  it("POSTs the account fields to /auth/register — no avatar, no grant, no upload", async () => {
     const post = vi.fn().mockResolvedValue({
       data: { success: true, data: { user: userDto, accessToken: "acc" } },
     });
-    const upload = vi.fn();
-    const repo = restAuth(asClient({ post }), upload);
+    const repo = restAuth(asClient({ post }));
 
-    await repo.register({ ...creds, profileImage: null });
+    const session = await repo.register(creds);
 
-    expect(upload).not.toHaveBeenCalled();
+    expect(post).toHaveBeenCalledWith(
+      "/auth/register",
+      expect.objectContaining({ username: "ada", name: "Ada Lovelace", email: "ada@example.com" }),
+    );
+    // The avatar is not part of signup anymore — the request must not carry it.
     expect(post).toHaveBeenCalledWith(
       "/auth/register",
       expect.not.objectContaining({ avatar: expect.anything() }),
     );
-  });
-
-  it("does not attempt registration when the avatar upload fails (no silent discard)", async () => {
-    const post = vi.fn();
-    const upload = vi.fn().mockRejectedValue(new Error("upload failed"));
-    const repo = restAuth(asClient({ post }), upload);
-
-    await expect(repo.register({ ...creds, profileImage: file })).rejects.toThrow("upload failed");
-    expect(post).not.toHaveBeenCalled();
+    expect(session.accessToken).toBe("acc");
   });
 });

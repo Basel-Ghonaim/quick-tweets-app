@@ -65,7 +65,7 @@ This plan translates **[ADR 0008 — Auth-First Onboarding and Retirement of the
 
 **Phase 2 — Frontend cutover**
 
-- **WI-3 · Signup/onboarding UI → auth-first.** *(D1, D2, F; deps: WI-2)* Cut the existing signup client from the grant flow to: register (no avatar) → authenticated `POST /media` (Bearer) → `PATCH /users/me { avatar: { token } }`; remove all grant usage from the client. **Gate:** after this WI, **no client consumes the grant path.** *Why:* invariant 2 — the frontend must stop speaking grant before the backend drops it.
+- **WI-3 · Auth-first signup cutover.** *(D1, D2, F; deps: WI-2)* **Registration is account creation only** (ADR 0008 D1): remove the avatar input from the signup form, remove **all** frontend grant usage (`uploadAvatar` mint + `X-Upload-Grant`, and the `avatar` field on the register request), register with `{ username, name, email, password }`, and establish the session normally — with **no** post-registration avatar upload, wizard, or profile step. Avatar/profile **editing** is a separate future frontend surface ([#362](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/362)); avatar **display** migration + `profileImage` retirement is [#335](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/335). **Gate:** after this WI, **no client consumes the grant path** (proven by grep). *Why:* invariant 2 — the frontend must stop speaking grant before the backend drops it; scoping signup to account-only is also the most faithful reading of D1 (no avatar coupled to registration).
 
 **Phase 3 — Stop producing NULL owners**
 
