@@ -6,7 +6,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
@@ -73,6 +73,22 @@ describe("local-disk storage adapter", () => {
     expect(() => storageKey("a/../b")).toThrow(MediaStorageError);
     expect(() => storageKey("/absolute")).toThrow(MediaStorageError);
     expect(() => storageKey("")).toThrow(MediaStorageError);
+  });
+
+  it("enumerate returns an empty list for a store with no objects", async () => {
+    expect(await storage.enumerate()).toEqual([]);
+  });
+
+  it("enumerate lists every stored key (including nested) and skips non-Media files", async () => {
+    await storage.save(storageKey("objects/a"), fromString("1"));
+    await storage.save(storageKey("objects/sub/b"), fromString("2"));
+    // A stray file whose name is not a valid storage key (space + dot) — it was
+    // never a Media object, so the divergence sweep must not surface it as bytes.
+    await writeFile(path.join(baseDir, "stray file.txt"), "x");
+
+    const keys = new Set(await storage.enumerate());
+
+    expect(keys).toEqual(new Set(["objects/a", "objects/sub/b"]));
   });
 
   it("never resolves a raw unsafe key outside the base directory", async () => {

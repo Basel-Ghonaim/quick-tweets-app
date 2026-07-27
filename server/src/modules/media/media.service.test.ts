@@ -48,6 +48,7 @@ const makeStorage = () => {
       saved.delete(key);
       deleted.push(key);
     },
+    enumerate: async () => [...saved.keys()] as never,
   };
   return { adapter, saved, deleted };
 };
@@ -215,6 +216,7 @@ describe("media ingest service", () => {
       delete: async (key) => {
         deleted.push(key);
       },
+      enumerate: async () => [],
     };
     return { adapter, deleted };
   };
@@ -366,6 +368,7 @@ describe("media service — read (resolution)", () => {
       },
       exists: async () => true,
       delete: async () => {},
+      enumerate: async () => [],
     };
     return createMediaService(storage, repo);
   };

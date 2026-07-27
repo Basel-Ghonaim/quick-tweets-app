@@ -50,6 +50,15 @@ export interface StorageAdapter {
   exists(key: StorageKey): Promise<boolean>;
   /** Remove the object at `key`; a no-op if already absent (idempotent). */
   delete(key: StorageKey): Promise<void>;
+  /**
+   * Enumerate every stored object's key. Illustrative in ADR 0005 Decision 6
+   * ("enumerate by key"), realized here for reclamation's divergence sweep (M11):
+   * comparing stored bytes against the registry surfaces **orphan bytes** (a key
+   * with no `ready` row). Keys not in the module's storage-key format are skipped
+   * — they were never Media objects. May be costly on a large store, so the
+   * caller (the reclaimer) bounds how often it runs.
+   */
+  enumerate(): Promise<StorageKey[]>;
 }
 
 // ─── Registry: identity & the MediaObject record (ADR 0005 — Decision 3) ──────
