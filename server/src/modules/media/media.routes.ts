@@ -3,27 +3,23 @@
  * arrives with its own Work Item).
  *
  * Purpose:
- * - POST /grants → mediaMintLimiter → controller.mintGrant   (pre-auth upload grant, ADR 0007)
- * - POST /      → optionalAuth → controller.ingest           (single Media-owned ingest boundary)
+ * - POST / → authGuard → controller.ingest   (single Media-owned ingest boundary)
  *
  * Auth:
- * - /grants is unauthenticated by design (it serves pre-auth flows) and
- *   strictly rate-limited — minting is where the grant model's abuse economics
- *   are controlled.
- * - / (ingest) accepts an authenticated principal (optionalAuth Bearer) or an
- *   X-Upload-Grant header; the controller rejects requests with neither.
+ * - / (ingest) requires an authenticated principal (authGuard Bearer). Every
+ *   ingested object therefore has an owner — there is no unauthenticated /
+ *   grant-evidenced ingest path (ADR 0008: authenticated-only ownership).
  *
  * Principle: SRP — only route definitions, no logic.
  */
 
 import { Router } from "express";
-import { optionalAuth } from "../../middleware/optionalAuth.js";
-import { apiLimiter, mediaMintLimiter } from "../../middleware/rateLimiter.js";
+import { authGuard } from "../../middleware/authGuard.js";
+import { apiLimiter } from "../../middleware/rateLimiter.js";
 import { createMediaController } from "./media.controller.js";
 
 const controller = createMediaController();
 
 export const mediaRoutes = Router();
 
-mediaRoutes.post("/grants", mediaMintLimiter, controller.mintGrant);
-mediaRoutes.post("/", apiLimiter, optionalAuth, controller.ingest);
+mediaRoutes.post("/", apiLimiter, authGuard, controller.ingest);
