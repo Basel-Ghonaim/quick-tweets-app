@@ -76,8 +76,7 @@ DELETE /api/v1/follows/:username
 GET    /api/v1/follows/:username/followers
 GET    /api/v1/follows/:username/following
 
-POST   /api/v1/media/grants
-POST   /api/v1/media
+POST   /api/v1/media            (authenticated)
 GET    /media/:token             (top-level, outside /api/v1 — a stable public read URL)
 ```
 
@@ -228,7 +227,6 @@ interface ErrorBody {
 |---|---|---|---|
 | Auth | `/auth/login`, `/auth/register` | 10 req / 15 min | "Too many login attempts. For your security, please wait 15 minutes before trying again." |
 | Refresh | `/auth/refresh` | 30 req / 15 min | "Too many refresh requests. Please wait a few minutes before continuing." |
-| Media mint | `/media/grants` | 20 req / 15 min | "Too many upload requests. Please wait a few minutes before trying again." |
 | API | All other routes | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
 
 ### Auth Modes
@@ -237,7 +235,6 @@ interface ErrorBody {
 | ------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | **Required** | `Authorization: Bearer <token>`            | 401 if missing or invalid                                                                |
 | **Optional** | `Authorization: Bearer <token>` (optional) | If present, attaches `userId`. If missing, continues as guest. Used e.g. for `isLiked` / `isFollowing` fields. |
-| **Bearer-or-Grant** | `Authorization: Bearer <token>` **or** `X-Upload-Grant: <grant>` | At least one is required (401 if neither); the Bearer token takes precedence. Used by `POST /media`. |
 | **None**     | —                                          | No auth needed                                                                           |
 
 ---
@@ -248,21 +245,17 @@ interface ErrorBody {
 
 **Auth:** None
 
+Registration is **account creation only** (ADR 0008): the request carries account fields
+only, and a new account never has an avatar. The avatar is an authenticated User/Profile
+action — set later via `PATCH /users/me` after uploading under `POST /media`.
+
 ```jsonc
 // Request body
 {
   "username": "basel",      // 4-20 chars, alphanumeric/underscores
   "name": "Basel",          // 1-50 chars
   "email": "test@test.com", // valid email
-  "password": "Password1!", // 8-72 chars, upper, lower, digit, special char
-
-  // OPTIONAL — attach a pre-uploaded avatar (upload-then-submit-reference; ADR 0007).
-  // Obtain both parts first: POST /media/grants → POST /media (X-Upload-Grant) → { token }.
-  // Both fields are required together; omit "avatar" entirely to register without one.
-  "avatar": {
-    "token": "Nk3v9qYw1kPz-XG27RODaQ", // the object's read token from POST /media
-    "grant": "eyJhbGciOiJIUzI1NiI..."   // the upload grant that ingested it (grant evidence)
-  }
+  "password": "Password1!"  // 8-72 chars, upper, lower, digit, special char
 }
 
 // Response 201
@@ -274,8 +267,8 @@ interface ErrorBody {
       "username": "basel",
       "name": "Basel",
       "email": "test@test.com",
-      "profileImage": null,                             // DEPRECATED (always null) — superseded by "avatar"
-      "avatar": { "token": "Nk3v9qYw1kPz-XG27RODaQ" },  // null when no avatar; render via GET /media/:token
+      "profileImage": null,   // DEPRECATED (always null) — superseded by "avatar"
+      "avatar": null,         // always null at registration; set later via PATCH /users/me
       "bio": "",
       "createdAt": "2026-05-10T12:00:00.000Z"
     },
@@ -285,14 +278,11 @@ interface ErrorBody {
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
 // Set-Cookie: qt_session=1; Secure; SameSite=Strict; Path=/   (readable session hint — see "Session cookies" below)
 
-// Response 409 — username or email already taken, OR the submitted avatar was already claimed
+// Response 409 — username or email already taken
 { "success": false, "error": { "type": "conflict", "message": "Username already taken" } }
 
-// Response 422 — validation failed (field-level errors). A submitted avatar that cannot
-// be adopted (invalid/expired grant, unknown or mismatched reference) surfaces here as an
-// `avatar` field error; the account is NOT created (adoption is atomic and fail-loud, and
-// a failed attempt does not spend the grant — the same avatar can be retried while it lives).
-{ "success": false, "error": { "type": "validation", "message": "Registration failed", "errors": { "avatar": ["The selected avatar could not be attached; please re-upload and try again"] } } }
+// Response 422 — validation failed (field-level errors)
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "password": ["Password must contain at least one special character (@$!%*?&#)"] } } }
 ```
 
 > **Session cookies.** A session sets **two** cookies (on login / register / refresh) and clears both on logout / logout-all:
@@ -967,28 +957,11 @@ interface ErrorBody {
 
 ## Media
 
-Media upload follows the **upload-then-submit-reference** pattern: a client uploads bytes to Media's ingest endpoint, receives an opaque **media token** (the stable reference), and submits *that token* — never file bytes — to feature endpoints (the feature attach endpoints that accept it arrive with their own Work Items). Feature endpoints do not accept multipart. The token becomes publicly resolvable when the media read endpoint is implemented; until then it is a stored reference only. Governing decisions: [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) (boundary) and [ADR 0007](../architecture/decisions/0007-pre-auth-ingest-upload-grant-model.md) (pre-auth upload grants).
-
-### `POST /media/grants` — Mint an upload grant
-
-**Auth:** None (strictly rate-limited — see Rate Limiting)
-
-Issues a short-lived **upload grant** for pre-auth flows (e.g. register-with-avatar): a bearer capability that authorizes a bounded number of uploads (currently **1**) within its lifetime (`expiresAt`), presented via the `X-Upload-Grant` header on `POST /media`.
-
-```jsonc
-// Response 201
-{
-  "success": true,
-  "data": {
-    "grant": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", // opaque bearer string
-    "expiresAt": "2026-07-17T15:15:00.000Z"
-  }
-}
-```
+Media upload follows the **upload-then-submit-reference** pattern: a client uploads bytes to Media's ingest endpoint, receives an opaque **media token** (the stable reference), and submits *that token* — never file bytes — to feature endpoints (the feature attach endpoints that accept it arrive with their own Work Items). Feature endpoints do not accept multipart. The token becomes publicly resolvable when the media read endpoint is implemented; until then it is a stored reference only. Governing decisions: [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) (boundary) and [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) (authenticated-only ingest; the pre-auth upload grant is retired).
 
 ### `POST /media` — Upload a media object (multipart)
 
-**Auth:** `Authorization: Bearer <token>` **or** `X-Upload-Grant: <grant>` — at least one is required; if both are present the Bearer token takes precedence (the grant is ignored and left unspent). A request with neither is rejected `401`.
+**Auth:** Required (`Authorization: Bearer <token>`). A request without a valid Bearer token is rejected `401`. Every uploaded object is owned by the authenticated uploader — there is no unauthenticated or grant-evidenced ingest path (ADR 0008: authenticated-only ownership).
 
 **Request:** `multipart/form-data` with a single file field named `file`. The declared content type and file extension are **advisory only** — the effective type is derived server-side from the file's bytes. Allowed types: `image/png`, `image/jpeg`, `image/webp`, `image/gif`. Size limit: **5 MiB** (inclusive). The 16 kB JSON body cap does not apply to this route.
 
@@ -1010,14 +983,8 @@ Issues a short-lived **upload grant** for pre-auth flows (e.g. register-with-ava
 //   "Upload stream ended before completing"        (client aborted / truncated mid-upload)
 { "success": false, "error": { "type": "bad_request", "message": "A multipart field named 'file' is required" } }
 
-// Response 401 — no evidence presented
-{ "success": false, "error": { "type": "unauthorized", "message": "Authentication or an upload grant is required" } }
-
-// Response 401 — the presented upload grant is invalid or expired
-{ "success": false, "error": { "type": "unauthorized", "message": "Invalid or expired upload grant" } }
-
-// Response 403 — the grant's bounded upload count is already used
-{ "success": false, "error": { "type": "forbidden", "message": "Upload grant is exhausted" } }
+// Response 401 — no valid Bearer token presented
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
 
 // Response 413 — file exceeds the size limit
 { "success": false, "error": { "type": "payload_too_large", "message": "File exceeds the media size limit" } }
