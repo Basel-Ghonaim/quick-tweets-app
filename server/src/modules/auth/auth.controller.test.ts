@@ -41,7 +41,7 @@ const user = {
   id: 1, username: "ada", name: "Ada", email: "a@x.com",
   profileImage: null, bio: "", createdAt: new Date(),
 };
-const authResult = { user, accessToken: "a", refreshToken: "r", avatarToken: null };
+const authResult = { user, accessToken: "a", refreshToken: "r" };
 
 const stubService = (): IAuthService =>
   ({
@@ -50,7 +50,7 @@ const stubService = (): IAuthService =>
     logout: async () => {},
     logoutAll: async () => {},
     refreshToken: async () => authResult,
-    getMe: async () => ({ user, avatarToken: null }),
+    getMe: async () => ({ user }),
   }) as never;
 
 const names = (calls: CookieCall[]) => calls.map((c) => c.name);
