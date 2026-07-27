@@ -48,6 +48,7 @@ const makeStorage = () => {
       saved.delete(key);
       deleted.push(key);
     },
+    enumerate: async () => [...saved.keys()] as never,
   };
   return { adapter, saved, deleted };
 };
@@ -82,6 +83,7 @@ const makeRepo = (grantCounts: Record<string, number> = {}) => {
     addReference: async () => {},
     removeReference: async () => {},
     countReferences: async () => 0,
+    lockAndFetchByTokens: async () => [],
   };
   return { repo, creates };
 };
@@ -214,6 +216,7 @@ describe("media ingest service", () => {
       delete: async (key) => {
         deleted.push(key);
       },
+      enumerate: async () => [],
     };
     return { adapter, deleted };
   };
@@ -311,6 +314,7 @@ describe("media ingest service", () => {
       addReference: async () => {},
       removeReference: async () => {},
       countReferences: async () => 0,
+    lockAndFetchByTokens: async () => [],
     };
     const service = createMediaService(adapter, repo);
 
@@ -354,6 +358,7 @@ describe("media service — read (resolution)", () => {
       addReference: async () => {},
       removeReference: async () => {},
       countReferences: async () => 0,
+    lockAndFetchByTokens: async () => [],
     };
     const storage: StorageAdapter = {
       save: async () => {},
@@ -363,6 +368,7 @@ describe("media service — read (resolution)", () => {
       },
       exists: async () => true,
       delete: async () => {},
+      enumerate: async () => [],
     };
     return createMediaService(storage, repo);
   };

@@ -1,27 +1,27 @@
 // Media ownership — attach-authorization guards (ADR 0005 D5) + usage accounting.
+//
+// authorizeAttach / authorizeAttachMany resolve tokens through a *locking* read
+// (`lockAndFetchByTokens`, `FOR UPDATE`) so an attach serializes against
+// reclamation (M11). These unit tests drive that repo method with fakes; the
+// real row-lock behaviour is proven in media.attach-reclamation.integration.test.ts.
 
 import { describe, expect, it, vi } from "vitest";
 
 import { MediaAttachError } from "./media.errors";
-import { storageKey } from "./media.keys";
 import { createMediaOwnership } from "./media.ownership";
 import { mintToken } from "./media.tokens";
-import type { IMediaRepository, MediaObject } from "./media.types";
+import type { IMediaRepository, LockedMediaObject, MediaToken } from "./media.types";
 
 const OWNER = 42;
 
-const ownedObject = (over: Partial<MediaObject> = {}): MediaObject => ({
+const lockedRow = (
+  token: MediaToken,
+  over: Partial<LockedMediaObject> = {},
+): LockedMediaObject => ({
   id: 7,
-  token: mintToken(),
-  storageKey: storageKey("objects/x"),
-  contentType: "image/png",
-  size: 120,
-  status: "ready",
+  token,
   uploaderId: OWNER,
-  grantId: null,
-  grantExpiresAt: null,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  status: "ready",
   ...over,
 });
 
@@ -35,6 +35,7 @@ const makeRepo = (over: Partial<IMediaRepository> = {}): IMediaRepository => ({
   addReference: async () => {},
   removeReference: async () => {},
   countReferences: async () => 0,
+  lockAndFetchByTokens: async () => [],
   ...over,
 });
 
@@ -45,52 +46,101 @@ const attach = (repo: IMediaRepository, token: string, ownerId = OWNER) =>
 
 describe("media ownership — authorizeAttach", () => {
   it("authorizes the owner attaching their own servable object", async () => {
-    const object = ownedObject();
-    const ownership = createMediaOwnership(makeRepo({ findByToken: async () => object }));
+    const token = mintToken();
+    const ownership = createMediaOwnership(
+      makeRepo({ lockAndFetchByTokens: async () => [lockedRow(token)] }),
+    );
 
-    const result = await ownership.authorizeAttach({ token: object.token, ownerId: OWNER });
+    const result = await ownership.authorizeAttach({ token, ownerId: OWNER });
 
-    expect(result).toEqual({ referenceId: object.id, token: object.token });
+    expect(result).toEqual({ referenceId: 7, token });
   });
 
   it("refuses a cross-principal attach (another principal's object)", async () => {
-    const object = ownedObject({ uploaderId: 99 });
+    const token = mintToken();
+    const repo = makeRepo({ lockAndFetchByTokens: async () => [lockedRow(token, { uploaderId: 99 })] });
 
-    const err = await attach(makeRepo({ findByToken: async () => object }), object.token);
+    const err = await attach(repo, token);
 
     expect(err).toBeInstanceOf(MediaAttachError);
     expect((err as MediaAttachError).code).toBe("not_attachable");
   });
 
   it("refuses an unadopted, grant-provenance object (it has no owner yet)", async () => {
-    const object = ownedObject({ uploaderId: null, grantId: "g1" });
+    const token = mintToken();
+    const repo = makeRepo({ lockAndFetchByTokens: async () => [lockedRow(token, { uploaderId: null })] });
 
-    const err = await attach(makeRepo({ findByToken: async () => object }), object.token);
+    const err = await attach(repo, token);
 
     expect((err as MediaAttachError).code).toBe("not_attachable");
   });
 
-  it("refuses a non-servable object (deleted tombstone)", async () => {
-    const object = ownedObject({ status: "deleted" });
+  it("refuses a non-servable object under the lock (a reclamation tombstone)", async () => {
+    const token = mintToken();
+    const repo = makeRepo({ lockAndFetchByTokens: async () => [lockedRow(token, { status: "deleted" })] });
 
-    const err = await attach(makeRepo({ findByToken: async () => object }), object.token);
+    const err = await attach(repo, token);
 
     expect((err as MediaAttachError).code).toBe("not_attachable");
   });
 
   it("refuses an unknown reference with the same opaque error", async () => {
-    const err = await attach(makeRepo({ findByToken: async () => null }), mintToken());
+    const err = await attach(makeRepo({ lockAndFetchByTokens: async () => [] }), mintToken());
 
     expect((err as MediaAttachError).code).toBe("not_attachable");
   });
 
-  it("refuses a malformed token before any lookup", async () => {
-    const findByToken = vi.fn(async () => null);
+  it("refuses a malformed token before taking any lock", async () => {
+    const lockAndFetchByTokens = vi.fn(async () => []);
 
-    const err = await attach(makeRepo({ findByToken }), "has/slash");
+    const err = await attach(makeRepo({ lockAndFetchByTokens }), "has/slash");
 
     expect((err as MediaAttachError).code).toBe("not_attachable");
-    expect(findByToken).not.toHaveBeenCalled();
+    expect(lockAndFetchByTokens).not.toHaveBeenCalled();
+  });
+});
+
+describe("media ownership — authorizeAttachMany", () => {
+  it("authorizes a batch and returns references in INPUT order (not lock order)", async () => {
+    const t1 = mintToken();
+    const t2 = mintToken();
+    // The repo locks/returns in ascending id order (t2 first); the result must
+    // still map back to the caller's input order (t1, t2) so positions hold.
+    const ownership = createMediaOwnership(
+      makeRepo({
+        lockAndFetchByTokens: async () => [
+          lockedRow(t2, { id: 2 }),
+          lockedRow(t1, { id: 5 }),
+        ],
+      }),
+    );
+
+    const result = await ownership.authorizeAttachMany([
+      { token: t1, ownerId: OWNER },
+      { token: t2, ownerId: OWNER },
+    ]);
+
+    expect(result).toEqual([
+      { referenceId: 5, token: t1 },
+      { referenceId: 2, token: t2 },
+    ]);
+  });
+
+  it("refuses the whole batch if any one object is not attachable", async () => {
+    const t1 = mintToken();
+    const t2 = mintToken();
+    const ownership = createMediaOwnership(
+      makeRepo({ lockAndFetchByTokens: async () => [lockedRow(t1)] }), // t2 absent
+    );
+
+    const err = await ownership
+      .authorizeAttachMany([
+        { token: t1, ownerId: OWNER },
+        { token: t2, ownerId: OWNER },
+      ])
+      .catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(MediaAttachError);
   });
 });
 

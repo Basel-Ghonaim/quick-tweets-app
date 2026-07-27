@@ -16,6 +16,7 @@ const makeRepo = (over: Partial<IMediaRepository> = {}): IMediaRepository => ({
   addReference: async () => {},
   removeReference: async () => {},
   countReferences: async () => 0,
+  lockAndFetchByTokens: async () => [],
   ...over,
 });
 

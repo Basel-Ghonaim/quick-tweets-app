@@ -215,8 +215,9 @@ model MediaObject {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  uploader   User?            @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
-  references MediaReference[]
+  uploader    User?             @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  references  MediaReference[]
+  quarantines MediaQuarantine[]
 
   // Constraints & Indexes
   // @@unique on grantId is the atomic backstop for GRANT_MAX_OBJECTS = 1
@@ -263,4 +264,52 @@ model MediaReference {
   // idempotent rather than duplicating, and makes "end" exact.
   @@unique([mediaId, referrer])
   @@map("media_references")
+}
+
+// ─── MediaReclamationAudit ───────────────────────────────────────────────────
+// The reclamation collector's append-only trail (M11). One row per candidate or
+// divergence per pass, written in BOTH modes: report mode records would_reclaim
+// / would_quarantine (nothing changed); destructive mode records reclaimed /
+// quarantined. This is the durable, queryable evidence a human reviews over the
+// report-only soak before the destructive gate is ever opened. Media-owned; no
+// foreign key to a feature table.
+
+model MediaReclamationAudit {
+  id         Int      @id @default(autoincrement())
+  mediaId    Int?     @map("media_id")     // null for orphan-bytes (no registry row)
+  storageKey String?  @map("storage_key")  // recorded for orphan-bytes
+  reason     String                         // abandoned | unreferenced | row_without_bytes | orphan_bytes
+  outcome    String                         // would_reclaim | reclaimed | would_quarantine | quarantined
+  bytes      Int      @default(0)
+  mode       String                         // report | destructive
+  runAt      DateTime @map("run_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([runAt])
+  @@map("media_reclamation_audit")
+}
+
+// ─── MediaQuarantine ─────────────────────────────────────────────────────────
+// A registry↔storage divergence held for human review (ADR 0005 Decision 8,
+// invariant 3) — never deleted on divergence alone. A *separate* record, so a
+// MediaObject stays immutable-once-ready: quarantine is Media's observation
+// *about* an object, not a mutation of it — and it also holds the orphan-bytes
+// case, which has no row to stamp. Reclamation selection excludes any object
+// with an OPEN (resolved_at IS NULL) quarantine row.
+
+model MediaQuarantine {
+  id         Int       @id @default(autoincrement())
+  mediaId    Int?      @map("media_id")     // null for orphan-bytes
+  storageKey String?   @map("storage_key")
+  kind       String                          // row_without_bytes | orphan_bytes
+  detail     String    @default("")
+  detectedAt DateTime  @map("detected_at")
+  resolvedAt DateTime? @map("resolved_at")   // OPEN while null
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  // Within Media's own boundary — a real FK. Nullable for the orphan-bytes case.
+  media MediaObject? @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([resolvedAt])
+  @@map("media_quarantine")
 }

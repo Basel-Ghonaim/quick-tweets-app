@@ -11,12 +11,13 @@
  */
 
 import { createReadStream, createWriteStream } from "node:fs";
-import { mkdir, rm, stat } from "node:fs/promises";
+import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import { MediaStorageError } from "../media.errors.js";
+import { storageKey } from "../media.keys.js";
 import type { StorageAdapter, StorageKey } from "../media.types.js";
 
 export interface LocalDiskStorageOptions {
@@ -70,6 +71,37 @@ export const createLocalDiskStorageAdapter = ({
 
     delete: async (key) => {
       await rm(resolveKeyPath(key), { force: true });
+    },
+
+    enumerate: async () => {
+      const keys: StorageKey[] = [];
+      const walk = async (dir: string): Promise<void> => {
+        let entries;
+        try {
+          entries = await readdir(dir, { withFileTypes: true });
+        } catch (err) {
+          if (isEnoent(err)) return; // no store written yet — nothing to enumerate
+          throw err;
+        }
+        for (const entry of entries) {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            await walk(full);
+            continue;
+          }
+          if (!entry.isFile()) continue;
+          // Relative path → forward-slashed storage key. A file whose name is not
+          // in the storage-key format was never a Media object; skip it.
+          const rel = path.relative(root, full).split(path.sep).join("/");
+          try {
+            keys.push(storageKey(rel));
+          } catch {
+            continue;
+          }
+        }
+      };
+      await walk(root);
+      return keys;
     },
   };
 };

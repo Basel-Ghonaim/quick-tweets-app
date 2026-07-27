@@ -1,0 +1,214 @@
+/**
+ * Media reclamation — the registry-only selection queries (M11).
+ *
+ * Reclamation finds two computed classes from **Media's own state** (ADR 0005
+ * Decision 8; ADR 0007) and never reads a feature schema:
+ *
+ * - **Abandoned** — a grant-provenance object never adopted, whose grant is no
+ *   longer live (`uploader_id IS NULL AND grant_expires_at < now`). The grant TTL
+ *   *is* the opportunity window (ADR 0007 Decision 5), so no separate grace applies.
+ * - **Unreferenced-owned** — an owned object (`uploader_id` set) with no ledger
+ *   row that has been settled past the grace window (`created_at < now − grace`).
+ *   The grace covers the upload→first-attach compose gap — the only window in
+ *   which a live-to-be object legitimately has no reference yet.
+ *
+ * Both exclude non-servable rows (`status <> 'ready'`, i.e. tombstones) and
+ * anything still referenced (`references: none`) — the latter is Media's own
+ * ledger relation, not a feature table. A dedicated interface (not a bolt-on to
+ * `IMediaRepository`) keeps the attach/ingest surface stable and this concern SRP.
+ *
+ * Internal to the module; never exported from `index.ts`.
+ */
+
+import { prisma, type DbClient } from "../../shared/database/index.js";
+import { storageKey } from "./media.keys.js";
+import type { StorageKey } from "./media.types.js";
+
+type PrismaInstance = typeof prisma;
+
+/** Why an object is a reclamation candidate — recorded on the audit trail (Step 5). */
+export type ReclaimReason = "abandoned" | "unreferenced";
+
+/**
+ * A registry object eligible for reclamation. Carries only what the collector
+ * needs: the id (to re-check and tombstone), the storage key (to check bytes /
+ * delete), the size (for the report), and the class.
+ */
+export interface ReclaimCandidate {
+  id: number;
+  storageKey: StorageKey;
+  size: number;
+  reason: ReclaimReason;
+}
+
+/** What happened to a candidate/divergence — report outcomes are the "would_" pair. */
+export type AuditOutcome = "would_reclaim" | "reclaimed" | "would_quarantine" | "quarantined";
+
+/** One append-only audit row — the durable evidence base for the soak review. */
+export interface ReclamationAuditRow {
+  mediaId: number | null;
+  storageKey: string | null;
+  reason: string; // abandoned | unreferenced | row_without_bytes | orphan_bytes
+  outcome: AuditOutcome;
+  bytes: number;
+  mode: string; // report | destructive
+  runAt: Date;
+}
+
+/** The two registry↔storage divergence kinds. */
+export type QuarantineKind = "row_without_bytes" | "orphan_bytes";
+
+/** A divergence to open for review (deduped against existing open rows). */
+export interface QuarantineEntry {
+  mediaId: number | null;
+  storageKey: string | null;
+  kind: QuarantineKind;
+  detail: string;
+  detectedAt: Date;
+}
+
+/** Reclamation's read surface over the registry — no feature schema, ever. */
+export interface IReclamationRepository {
+  /** Never-adopted grant objects whose grant has expired. Ascending id, capped at `limit`. */
+  findAbandoned(now: Date, limit: number, client?: DbClient): Promise<ReclaimCandidate[]>;
+  /** Owned objects with no reference, older than `olderThan` (now − grace). Ascending id, capped at `limit`. */
+  findUnreferencedOwned(olderThan: Date, limit: number, client?: DbClient): Promise<ReclaimCandidate[]>;
+  /**
+   * Which of `keys` have *any* registry row (any status). The divergence sweep
+   * diffs the store against this to find **orphan bytes** — stored keys with no
+   * row at all (a tombstoned row with lingering bytes is retryable cleanup, not
+   * an orphan, so "any status" is deliberate).
+   */
+  keysWithRow(keys: string[], client?: DbClient): Promise<Set<string>>;
+  /**
+   * Reclaim object `id` **within the caller's transaction**: lock it `FOR UPDATE`
+   * (conflicting with the attach path's own `FOR UPDATE`, so the two serialize),
+   * re-check under the lock that it is still `ready` **and** unreferenced, and if
+   * so tombstone it (`status='deleted'`). Returns whether it tombstoned — `false`
+   * means it lost the race (a reference began, or it was already reclaimed) and
+   * must be left alone. The byte delete is the caller's, after commit (tombstone
+   * before bytes). Registry-only; no feature schema.
+   */
+  tombstoneIfReclaimable(id: number, client: DbClient): Promise<boolean>;
+  /** Append audit rows (both modes) — the soak's durable, queryable evidence base. */
+  recordAudit(rows: ReclamationAuditRow[], client?: DbClient): Promise<void>;
+  /** Open a review record for each divergence not already open (deduped). */
+  openQuarantine(entries: QuarantineEntry[], client?: DbClient): Promise<void>;
+}
+
+const CANDIDATE_SELECT = { id: true, storageKey: true, size: true } as const;
+
+export const createReclamationRepository = (
+  db: PrismaInstance = prisma,
+): IReclamationRepository => ({
+  findAbandoned: async (now, limit, client: DbClient = db) => {
+    const rows = await client.mediaObject.findMany({
+      where: {
+        status: "ready",
+        uploaderId: null,
+        grantExpiresAt: { lt: now },
+        // `none` is Media's own ledger relation — belt-and-suspenders, since an
+        // unadopted object was never attached; still, never assume.
+        references: { none: {} },
+        // Never reclaim an object under an OPEN divergence quarantine.
+        quarantines: { none: { resolvedAt: null } },
+      },
+      select: CANDIDATE_SELECT,
+      orderBy: { id: "asc" },
+      take: limit,
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      storageKey: storageKey(row.storageKey),
+      size: row.size,
+      reason: "abandoned" as const,
+    }));
+  },
+
+  findUnreferencedOwned: async (olderThan, limit, client: DbClient = db) => {
+    const rows = await client.mediaObject.findMany({
+      where: {
+        status: "ready",
+        uploaderId: { not: null },
+        createdAt: { lt: olderThan },
+        references: { none: {} },
+        quarantines: { none: { resolvedAt: null } },
+      },
+      select: CANDIDATE_SELECT,
+      orderBy: { id: "asc" },
+      take: limit,
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      storageKey: storageKey(row.storageKey),
+      size: row.size,
+      reason: "unreferenced" as const,
+    }));
+  },
+
+  keysWithRow: async (keys, client: DbClient = db) => {
+    if (keys.length === 0) return new Set<string>();
+    const rows = await client.mediaObject.findMany({
+      where: { storageKey: { in: keys } },
+      select: { storageKey: true },
+    });
+    return new Set(rows.map((row) => row.storageKey));
+  },
+
+  tombstoneIfReclaimable: async (id, client: DbClient) => {
+    // Lock the row FOR UPDATE. This conflicts with the attach path's own
+    // FOR UPDATE (media.ownership), so an attach that raced this reclaim either
+    // already committed its reference (caught by the re-count below) or blocks
+    // until this commits and then sees the tombstone and refuses (M11 Step 0).
+    const locked = await client.$queryRawUnsafe<{ status: string }[]>(
+      `SELECT status FROM media_objects WHERE id = $1 FOR UPDATE`,
+      id,
+    );
+    if (locked.length === 0 || locked[0]!.status !== "ready") return false;
+
+    // Re-check referenced-ness UNDER the lock — the TOCTOU guard the grace window
+    // alone cannot give. A reference that began since selection makes this > 0.
+    const refs = await client.mediaReference.count({ where: { mediaId: id } });
+    if (refs > 0) return false;
+
+    const { count } = await client.mediaObject.updateMany({
+      where: { id, status: "ready" },
+      data: { status: "deleted" },
+    });
+    return count === 1;
+  },
+
+  recordAudit: async (rows, client: DbClient = db) => {
+    if (rows.length === 0) return;
+    await client.mediaReclamationAudit.createMany({ data: rows });
+  },
+
+  openQuarantine: async (entries, client: DbClient = db) => {
+    if (entries.length === 0) return;
+    const mediaIds = entries.map((e) => e.mediaId).filter((x): x is number => x !== null);
+    const keys = entries.map((e) => e.storageKey).filter((x): x is string => x !== null);
+    // Which targets already have an OPEN row — so re-detecting a divergence does
+    // not pile up duplicate review entries each pass.
+    const open = await client.mediaQuarantine.findMany({
+      where: { resolvedAt: null, OR: [{ mediaId: { in: mediaIds } }, { storageKey: { in: keys } }] },
+      select: { mediaId: true, storageKey: true },
+    });
+    const openIds = new Set(open.map((o) => o.mediaId).filter((x): x is number => x !== null));
+    const openKeys = new Set(open.map((o) => o.storageKey).filter((x): x is string => x !== null));
+    const fresh = entries.filter(
+      (e) =>
+        !(e.mediaId !== null && openIds.has(e.mediaId)) &&
+        !(e.storageKey !== null && openKeys.has(e.storageKey)),
+    );
+    if (fresh.length === 0) return;
+    await client.mediaQuarantine.createMany({
+      data: fresh.map((e) => ({
+        mediaId: e.mediaId,
+        storageKey: e.storageKey,
+        kind: e.kind,
+        detail: e.detail,
+        detectedAt: e.detectedAt,
+      })),
+    });
+  },
+});

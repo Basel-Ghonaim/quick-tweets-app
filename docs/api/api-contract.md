@@ -1024,3 +1024,9 @@ Resolves the token and streams the bytes under a fixed security envelope. Not ra
 // Response 410 — the object was permanently deleted (the token is never reissued)
 { "success": false, "error": { "type": "gone", "message": "This media has been deleted" } }
 ```
+
+> A `410` appears only after **reclamation** (M11) has tombstoned the object — a
+> background, Media-owned operation, never a client action. An unreferenced object
+> stays `200`-servable until then; reclamation runs **report-only** until the
+> destructive gate is met. See the reclamation model in
+> [data-model.md](../architecture/data-model.md).
