@@ -1,12 +1,9 @@
 import type { AuthRepository } from "./AuthRepository";
-import { authClient, uploadAvatar, unwrap, type ApiEnvelope } from "@shared/api";
+import { authClient, unwrap, type ApiEnvelope } from "@shared/api";
 import { authMapper } from "../mapper";
 import type { RegisterRequestDto, AuthResponseDto } from "../dto";
 
-export const restAuth = (
-  authApi = authClient,
-  upload = uploadAvatar,
-): AuthRepository => {
+export const restAuth = (authApi = authClient): AuthRepository => {
   const { toAuthResponse, loginCredentialsToDto, registerCredentialsToDto } =
     authMapper();
 
@@ -18,13 +15,11 @@ export const restAuth = (
       );
       return toAuthResponse(unwrap(res));
     },
+    // Auth-first (ADR 0008): registration is account creation only. The avatar is
+    // no longer part of signup — no grant, no pre-auth upload. Avatar management
+    // lives on the authenticated User/Profile surface (POST /media → PATCH /users/me).
     register: async (credentials) => {
       const dto: RegisterRequestDto = registerCredentialsToDto(credentials);
-      // Upload-then-submit-reference: when an avatar was chosen, upload it under a
-      if (credentials.profileImage) {
-        const { token, grant } = await upload(credentials.profileImage);
-        dto.avatar = { token, grant };
-      }
       const res = await authApi.post<ApiEnvelope<AuthResponseDto>>("/auth/register", dto);
       return toAuthResponse(unwrap(res));
     },
