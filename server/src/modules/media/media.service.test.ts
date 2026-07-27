@@ -82,6 +82,7 @@ const makeRepo = (grantCounts: Record<string, number> = {}) => {
     addReference: async () => {},
     removeReference: async () => {},
     countReferences: async () => 0,
+    lockAndFetchByTokens: async () => [],
   };
   return { repo, creates };
 };
@@ -311,6 +312,7 @@ describe("media ingest service", () => {
       addReference: async () => {},
       removeReference: async () => {},
       countReferences: async () => 0,
+    lockAndFetchByTokens: async () => [],
     };
     const service = createMediaService(adapter, repo);
 
@@ -354,6 +356,7 @@ describe("media service — read (resolution)", () => {
       addReference: async () => {},
       removeReference: async () => {},
       countReferences: async () => 0,
+    lockAndFetchByTokens: async () => [],
     };
     const storage: StorageAdapter = {
       save: async () => {},

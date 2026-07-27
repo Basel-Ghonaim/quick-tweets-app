@@ -111,6 +111,18 @@ export interface NewMediaObject {
 }
 
 /**
+ * A registry row locked for an attach decision — only the fields the attach
+ * guard needs. Returned by `lockAndFetchByTokens`, which takes the row lock that
+ * serializes an attach against reclamation (M11).
+ */
+export interface LockedMediaObject {
+  id: number;
+  token: MediaToken;
+  uploaderId: number | null;
+  status: MediaStatus;
+}
+
+/**
  * The registry's data-access contract. Internal to Media (never published) —
  * consumed by Media's own boundaries (ingest, read, adoption), never by features.
  * Content immutability-once-ready holds: no path rewrites a stored object's bytes,
@@ -161,6 +173,23 @@ export interface IMediaRepository {
   removeReference(ref: MediaReferenceInput, client?: DbClient): Promise<void>;
   /** How many referrers currently hold `mediaId` — referenced-ness from Media's own state. */
   countReferences(mediaId: number, client?: DbClient): Promise<number>;
+  /**
+   * Lock the objects behind `tokens` `FOR UPDATE` and return their current
+   * provenance + status, **ordered by id ascending** — so two concurrent
+   * multi-object attaches acquire the shared locks in the same order and cannot
+   * deadlock.
+   *
+   * The attach path calls this so an attach serializes against reclamation (M11):
+   * once a row is locked here, a concurrent reclaimer's own `FOR UPDATE` on it
+   * blocks until the attach commits (and vice-versa), and the returned `status`
+   * is re-checked under the lock — a tombstone a reclaimer set first is then seen
+   * and the attach refused. Only meaningful inside the caller's transaction;
+   * outside one the lock is a harmless autocommit no-op.
+   */
+  lockAndFetchByTokens(
+    tokens: string[],
+    client?: DbClient,
+  ): Promise<LockedMediaObject[]>;
 }
 
 /**

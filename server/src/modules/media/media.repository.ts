@@ -23,6 +23,7 @@ import { storageKey } from "./media.keys.js";
 import { mediaToken, mintToken } from "./media.tokens.js";
 import type {
   IMediaRepository,
+  LockedMediaObject,
   MediaObject,
   MediaStatus,
 } from "./media.types.js";
@@ -96,11 +97,14 @@ export const createMediaRepository = (
 
   adoptById: async (referenceId, ownerId, expectedGrantId, client: DbClient = db) => {
     // Conditional atomic adopt: fill `uploaderId` only while still null AND the
-    // recorded grant matches. `updateMany` reports how many rows matched — a
-    // replay or a concurrent second adoption matches zero (the guard for
-    // "a grant is spent by adoption, exactly once"; ADR 0007).
+    // recorded grant matches AND the object is still servable. `updateMany`
+    // reports how many rows matched — a replay or a concurrent second adoption
+    // matches zero (the guard for "a grant is spent by adoption, exactly once";
+    // ADR 0007). The `status: "ready"` guard makes a reclamation tombstone win
+    // cleanly if it lands first: adoption then matches zero rather than
+    // resurrecting a tombstoned object (M11 concurrency hardening).
     const { count } = await client.mediaObject.updateMany({
-      where: { id: referenceId, uploaderId: null, grantId: expectedGrantId },
+      where: { id: referenceId, uploaderId: null, grantId: expectedGrantId, status: "ready" },
       data: { uploaderId: ownerId },
     });
     return count === 1;
@@ -144,4 +148,31 @@ export const createMediaRepository = (
 
   countReferences: (mediaId, client: DbClient = db) =>
     client.mediaReference.count({ where: { mediaId } }),
+
+  lockAndFetchByTokens: async (tokens, client: DbClient = db): Promise<LockedMediaObject[]> => {
+    if (tokens.length === 0) return [];
+    // Prisma has no `FOR UPDATE` builder, so the lock is raw. Values are bound as
+    // parameters ($1..$n) — only fixed text and numbered placeholders are built,
+    // never interpolated data. `ORDER BY id` locks the rows in ascending-id order
+    // (deadlock-free across concurrent multi-attaches); `FOR UPDATE` conflicts
+    // with a reclaimer's `FOR UPDATE` on the same row, which is what serializes
+    // an attach against a tombstone (M11).
+    const placeholders = tokens.map((_, i) => `$${i + 1}`).join(", ");
+    const rows = await client.$queryRawUnsafe<
+      { id: number; token: string; uploaderId: number | null; status: string }[]
+    >(
+      `SELECT id, token, uploader_id AS "uploaderId", status
+         FROM media_objects
+        WHERE token IN (${placeholders})
+        ORDER BY id
+        FOR UPDATE`,
+      ...tokens,
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      token: mediaToken(row.token),
+      uploaderId: row.uploaderId,
+      status: row.status as MediaStatus,
+    }));
+  },
 });

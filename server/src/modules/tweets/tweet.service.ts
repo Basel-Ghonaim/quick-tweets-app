@@ -75,15 +75,14 @@ const authorizeRefs = async (
   authorId: number,
   tx: DbClient,
 ): Promise<TweetMediaRef[]> => {
-  const refs: TweetMediaRef[] = [];
-  for (const [position, token] of tokens.entries()) {
-    const { referenceId } = await media.ownership.authorizeAttach(
-      { token, ownerId: authorId },
-      tx,
-    );
-    refs.push({ mediaId: referenceId, position });
-  }
-  return refs;
+  // One batched, ascending-id-ordered `FOR UPDATE` authorize: the whole set is
+  // locked and validated atomically (deadlock-free) and serialized against
+  // reclamation. Input order is preserved, so the array index is the position.
+  const attached = await media.ownership.authorizeAttachMany(
+    tokens.map((token) => ({ token, ownerId: authorId })),
+    tx,
+  );
+  return attached.map(({ referenceId }, position) => ({ mediaId: referenceId, position }));
 };
 
 /**
