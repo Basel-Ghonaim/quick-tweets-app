@@ -11,7 +11,6 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "typecheck": "tsc --noEmit",
-    "media:legacy-cleanup": "tsx src/scripts/legacy-null-owner-cleanup.ts",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts"
   },
