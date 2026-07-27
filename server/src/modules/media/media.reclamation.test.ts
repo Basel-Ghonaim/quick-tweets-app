@@ -15,7 +15,13 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { runReclamation } from "./media.reclamation";
-import type { IReclamationRepository, ReclaimCandidate, ReclaimReason } from "./media.reclamation.repository";
+import type {
+  IReclamationRepository,
+  QuarantineEntry,
+  ReclaimCandidate,
+  ReclaimReason,
+  ReclamationAuditRow,
+} from "./media.reclamation.repository";
 import type { StorageAdapter, StorageKey } from "./media.types";
 
 const key = (s: string): StorageKey => s as StorageKey;
@@ -31,6 +37,8 @@ const makeRepo = (over: Partial<IReclamationRepository> = {}): IReclamationRepos
   findUnreferencedOwned: async () => [],
   keysWithRow: async () => new Set<string>(),
   tombstoneIfReclaimable: async () => true,
+  recordAudit: async () => {},
+  openQuarantine: async () => {},
   ...over,
 });
 
@@ -150,6 +158,62 @@ describe("reclamation orchestrator — destructive mode (dark path)", () => {
     expect(report.reclaimed).toBe(0);
     expect(tombstoned).toHaveLength(0); // divergent → excluded from `intact`, never tombstoned
     expect(deleted).toHaveLength(0);
+  });
+});
+
+describe("reclamation orchestrator — audit + quarantine persistence", () => {
+  it("report mode writes 'would_' audit rows and opens NO quarantine (evidence only)", async () => {
+    const audits: ReclamationAuditRow[] = [];
+    const quarantines: QuarantineEntry[] = [];
+    const { adapter } = makeStorage({
+      exists: async (k) => k !== "objects/9", // object 9 is a row-without-bytes divergence
+      enumerate: async () => [key("objects/orphan")],
+    });
+    const repo = makeRepo({
+      findUnreferencedOwned: async () => [candidate(1, "unreferenced"), candidate(9, "unreferenced")],
+      keysWithRow: async () => new Set<string>(), // orphan has no row
+      recordAudit: async (rows) => { audits.push(...rows); },
+      openQuarantine: async (entries) => { quarantines.push(...entries); },
+    });
+
+    await run(repo, adapter);
+
+    expect(quarantines).toHaveLength(0); // report opens no review rows
+    const outcomes = audits.map((a) => `${a.reason}:${a.outcome}`).sort();
+    expect(outcomes).toEqual([
+      "orphan_bytes:would_quarantine",
+      "row_without_bytes:would_quarantine",
+      "unreferenced:would_reclaim",
+    ]);
+  });
+
+  it("destructive mode audits 'reclaimed'/'quarantined' and opens the review queue", async () => {
+    const audits: ReclamationAuditRow[] = [];
+    const quarantines: QuarantineEntry[] = [];
+    const { adapter } = makeStorage({
+      exists: async (k) => k !== "objects/9",
+      enumerate: async () => [key("objects/orphan")],
+    });
+    const repo = makeRepo({
+      findUnreferencedOwned: async () => [candidate(1, "unreferenced"), candidate(9, "unreferenced")],
+      keysWithRow: async () => new Set<string>(),
+      tombstoneIfReclaimable: async () => true,
+      recordAudit: async (rows) => { audits.push(...rows); },
+      openQuarantine: async (entries) => { quarantines.push(...entries); },
+    });
+
+    await runReclamation({
+      storage: adapter, repo, graceMs: 0, batch: 100, mode: "destructive", runInTransaction: fakeTx, log: () => {},
+    });
+
+    // The divergences (row-without-bytes for object 9, and the orphan key) are queued.
+    expect(quarantines.map((q) => q.kind).sort()).toEqual(["orphan_bytes", "row_without_bytes"]);
+    const outcomes = audits.map((a) => `${a.reason}:${a.outcome}`).sort();
+    expect(outcomes).toEqual([
+      "orphan_bytes:quarantined",
+      "row_without_bytes:quarantined",
+      "unreferenced:reclaimed",
+    ]);
   });
 });
 

@@ -41,6 +41,32 @@ export interface ReclaimCandidate {
   reason: ReclaimReason;
 }
 
+/** What happened to a candidate/divergence — report outcomes are the "would_" pair. */
+export type AuditOutcome = "would_reclaim" | "reclaimed" | "would_quarantine" | "quarantined";
+
+/** One append-only audit row — the durable evidence base for the soak review. */
+export interface ReclamationAuditRow {
+  mediaId: number | null;
+  storageKey: string | null;
+  reason: string; // abandoned | unreferenced | row_without_bytes | orphan_bytes
+  outcome: AuditOutcome;
+  bytes: number;
+  mode: string; // report | destructive
+  runAt: Date;
+}
+
+/** The two registry↔storage divergence kinds. */
+export type QuarantineKind = "row_without_bytes" | "orphan_bytes";
+
+/** A divergence to open for review (deduped against existing open rows). */
+export interface QuarantineEntry {
+  mediaId: number | null;
+  storageKey: string | null;
+  kind: QuarantineKind;
+  detail: string;
+  detectedAt: Date;
+}
+
 /** Reclamation's read surface over the registry — no feature schema, ever. */
 export interface IReclamationRepository {
   /** Never-adopted grant objects whose grant has expired. Ascending id, capped at `limit`. */
@@ -64,6 +90,10 @@ export interface IReclamationRepository {
    * before bytes). Registry-only; no feature schema.
    */
   tombstoneIfReclaimable(id: number, client: DbClient): Promise<boolean>;
+  /** Append audit rows (both modes) — the soak's durable, queryable evidence base. */
+  recordAudit(rows: ReclamationAuditRow[], client?: DbClient): Promise<void>;
+  /** Open a review record for each divergence not already open (deduped). */
+  openQuarantine(entries: QuarantineEntry[], client?: DbClient): Promise<void>;
 }
 
 const CANDIDATE_SELECT = { id: true, storageKey: true, size: true } as const;
@@ -80,6 +110,8 @@ export const createReclamationRepository = (
         // `none` is Media's own ledger relation — belt-and-suspenders, since an
         // unadopted object was never attached; still, never assume.
         references: { none: {} },
+        // Never reclaim an object under an OPEN divergence quarantine.
+        quarantines: { none: { resolvedAt: null } },
       },
       select: CANDIDATE_SELECT,
       orderBy: { id: "asc" },
@@ -100,6 +132,7 @@ export const createReclamationRepository = (
         uploaderId: { not: null },
         createdAt: { lt: olderThan },
         references: { none: {} },
+        quarantines: { none: { resolvedAt: null } },
       },
       select: CANDIDATE_SELECT,
       orderBy: { id: "asc" },
@@ -143,5 +176,39 @@ export const createReclamationRepository = (
       data: { status: "deleted" },
     });
     return count === 1;
+  },
+
+  recordAudit: async (rows, client: DbClient = db) => {
+    if (rows.length === 0) return;
+    await client.mediaReclamationAudit.createMany({ data: rows });
+  },
+
+  openQuarantine: async (entries, client: DbClient = db) => {
+    if (entries.length === 0) return;
+    const mediaIds = entries.map((e) => e.mediaId).filter((x): x is number => x !== null);
+    const keys = entries.map((e) => e.storageKey).filter((x): x is string => x !== null);
+    // Which targets already have an OPEN row — so re-detecting a divergence does
+    // not pile up duplicate review entries each pass.
+    const open = await client.mediaQuarantine.findMany({
+      where: { resolvedAt: null, OR: [{ mediaId: { in: mediaIds } }, { storageKey: { in: keys } }] },
+      select: { mediaId: true, storageKey: true },
+    });
+    const openIds = new Set(open.map((o) => o.mediaId).filter((x): x is number => x !== null));
+    const openKeys = new Set(open.map((o) => o.storageKey).filter((x): x is string => x !== null));
+    const fresh = entries.filter(
+      (e) =>
+        !(e.mediaId !== null && openIds.has(e.mediaId)) &&
+        !(e.storageKey !== null && openKeys.has(e.storageKey)),
+    );
+    if (fresh.length === 0) return;
+    await client.mediaQuarantine.createMany({
+      data: fresh.map((e) => ({
+        mediaId: e.mediaId,
+        storageKey: e.storageKey,
+        kind: e.kind,
+        detail: e.detail,
+        detectedAt: e.detectedAt,
+      })),
+    });
   },
 });

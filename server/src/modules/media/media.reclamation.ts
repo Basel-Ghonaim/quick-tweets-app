@@ -26,8 +26,10 @@ import {
 import type { StorageAdapter } from "./media.types.js";
 import {
   createReclamationRepository,
+  type AuditOutcome,
   type IReclamationRepository,
   type ReclaimCandidate,
+  type ReclamationAuditRow,
 } from "./media.reclamation.repository.js";
 
 /** report = identify + account, mutate nothing. destructive = also physically reclaim. */
@@ -77,13 +79,13 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
   const unreferenced = await repo.findUnreferencedOwned(olderThan, deps.batch);
   const candidates: ReclaimCandidate[] = [...abandoned, ...unreferenced];
 
-  // 2. Integrity — a candidate whose bytes are already gone is a divergence
-  //    (ready row, no bytes), never reclaimed on divergence alone.
+  // 2. Integrity — partition candidates into intact vs a row-without-bytes
+  //    divergence (ready row, no bytes), never reclaimed on divergence alone.
   const intact: ReclaimCandidate[] = [];
-  let rowWithoutBytes = 0;
+  const rowWithoutBytes: ReclaimCandidate[] = [];
   for (const candidate of candidates) {
     if (await deps.storage.exists(candidate.storageKey)) intact.push(candidate);
-    else rowWithoutBytes += 1;
+    else rowWithoutBytes.push(candidate);
   }
 
   // 3. Orphan bytes — stored keys with no registry row at all. (Bounded by store
@@ -91,17 +93,17 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
   //    capped, so a future bound would be logged rather than hidden.)
   const storedKeys = await deps.storage.enumerate();
   const withRow = await repo.keysWithRow(storedKeys);
-  const orphanBytes = storedKeys.reduce((n, key) => (withRow.has(key) ? n : n + 1), 0);
+  const orphanKeys = storedKeys.filter((key) => !withRow.has(key));
 
   const wouldReclaimBytes = intact.reduce((sum, c) => sum + c.size, 0);
+  const destructive = deps.mode === "destructive";
 
-  // 4. Reclaim — DARK. Only when explicitly in destructive mode; report mutates
-  //    nothing (this branch is skipped entirely). Each object is its own recovery
-  //    unit: lock + re-check + tombstone in one transaction, then delete bytes
-  //    (tombstone before bytes; the delete is idempotent). A per-object failure
-  //    is isolated and logged, so one bad object never blocks the rest.
-  let reclaimed = 0;
-  if (deps.mode === "destructive") {
+  // 4. Reclaim — DARK. Only in destructive mode; report skips this branch and
+  //    mutates no media state. Each object is its own recovery unit: lock +
+  //    re-check + tombstone in one transaction, then delete bytes (tombstone
+  //    before bytes; idempotent). A per-object failure is isolated and logged.
+  const reclaimedIds = new Set<number>();
+  if (destructive) {
     const runInTransaction = deps.runInTransaction ?? defaultRunInTransaction;
     for (const candidate of intact) {
       try {
@@ -110,15 +112,59 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
         );
         if (tombstoned) {
           await deps.storage.delete(candidate.storageKey);
-          reclaimed += 1;
+          reclaimedIds.add(candidate.id);
         }
       } catch (err) {
         log(`[jobs] media-reclamation — object ${candidate.id} failed to reclaim: ${String(err)}`);
       }
     }
+    // Open the review queue for divergences (destructive only touches the queue;
+    // report surfaces them in the audit trail without opening rows).
+    await repo.openQuarantine([
+      ...rowWithoutBytes.map((c) => ({
+        mediaId: c.id, storageKey: c.storageKey as string, kind: "row_without_bytes" as const, detail: "", detectedAt: now,
+      })),
+      ...orphanKeys.map((key) => ({
+        mediaId: null, storageKey: key as string, kind: "orphan_bytes" as const, detail: "", detectedAt: now,
+      })),
+    ]);
   }
 
-  const quarantined = rowWithoutBytes + orphanBytes;
+  // 5. Audit trail — written in BOTH modes (the soak's durable evidence base).
+  //    Report records the "would_" outcomes; destructive records what it did.
+  const auditRows: ReclamationAuditRow[] = [
+    ...(destructive ? intact.filter((c) => reclaimedIds.has(c.id)) : intact).map((c) => ({
+      mediaId: c.id,
+      storageKey: c.storageKey as string,
+      reason: c.reason,
+      outcome: (destructive ? "reclaimed" : "would_reclaim") as AuditOutcome,
+      bytes: c.size,
+      mode: deps.mode,
+      runAt: now,
+    })),
+    ...rowWithoutBytes.map((c) => ({
+      mediaId: c.id,
+      storageKey: c.storageKey as string,
+      reason: "row_without_bytes",
+      outcome: (destructive ? "quarantined" : "would_quarantine") as AuditOutcome,
+      bytes: c.size,
+      mode: deps.mode,
+      runAt: now,
+    })),
+    ...orphanKeys.map((key) => ({
+      mediaId: null,
+      storageKey: key as string,
+      reason: "orphan_bytes",
+      outcome: (destructive ? "quarantined" : "would_quarantine") as AuditOutcome,
+      bytes: 0,
+      mode: deps.mode,
+      runAt: now,
+    })),
+  ];
+  await repo.recordAudit(auditRows);
+
+  const reclaimed = reclaimedIds.size;
+  const quarantined = rowWithoutBytes.length + orphanKeys.length;
 
   const report: ReclamationReport = {
     mode: deps.mode,
@@ -126,8 +172,8 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
     eligibleAbandoned: abandoned.length,
     eligibleUnreferenced: unreferenced.length,
     wouldReclaimBytes,
-    rowWithoutBytes,
-    orphanBytes,
+    rowWithoutBytes: rowWithoutBytes.length,
+    orphanBytes: orphanKeys.length,
     reclaimed,
     quarantined,
   };

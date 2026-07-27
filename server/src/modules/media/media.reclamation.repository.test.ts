@@ -43,6 +43,7 @@ describe("reclamation repository — selection queries", () => {
       uploaderId: null,
       grantExpiresAt: { lt: now },
       references: { none: {} },
+      quarantines: { none: { resolvedAt: null } },
     });
     expect(calls[0]!.orderBy).toEqual({ id: "asc" });
     expect(calls[0]!.take).toBe(50);
@@ -60,6 +61,7 @@ describe("reclamation repository — selection queries", () => {
       uploaderId: { not: null },
       createdAt: { lt: olderThan },
       references: { none: {} },
+      quarantines: { none: { resolvedAt: null } },
     });
     expect(out[0]!.reason).toBe("unreferenced");
   });
