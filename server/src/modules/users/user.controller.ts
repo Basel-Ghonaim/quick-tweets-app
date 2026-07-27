@@ -40,4 +40,32 @@ export const createUserController = (
       next(err);
     }
   },
+
+  /**
+   * GET /users/me
+   * The authenticated user's own profile (incl. resolved avatar). Requires authGuard.
+   */
+  getMe: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const profile = await service.getMe(req.userId!);
+
+      sendSuccess(res, profile);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * PATCH /users/me
+   * Updates own name / bio / avatar (atomic). Requires authGuard.
+   */
+  updateMe: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const profile = await service.updateMe(req.userId!, req.body);
+
+      sendSuccess(res, profile);
+    } catch (err) {
+      next(err);
+    }
+  },
 });
