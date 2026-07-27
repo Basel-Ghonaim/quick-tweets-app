@@ -28,7 +28,10 @@ export const registerSchema = z.object({
     .string({ error: "Username is required" })
     .min(4, "Username must be at least 4 characters")
     .max(20, "Username must be at most 20 characters")
-    .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores",
+    )
     .trim(),
 
   name: z
@@ -50,18 +53,10 @@ export const registerSchema = z.object({
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[0-9]/, "Password must contain at least one digit")
-    .regex(/[@$!%*?&#]/, "Password must contain at least one special character (@$!%*?&#)"),
-
-  // Optional avatar to adopt onto the new account (upload-then-submit-reference,
-  // ADR 0007). Both parts are required together; the values are content-checked
-  // downstream (the token is parsed and the grant is verified during adoption),
-  // so here we only assert presence.
-  avatar: z
-    .object({
-      token: z.string({ error: "Avatar token is required" }).min(1),
-      grant: z.string({ error: "Avatar grant is required" }).min(1),
-    })
-    .optional(),
+    .regex(
+      /[@$!%*?&#]/,
+      "Password must contain at least one special character (@$!%*?&#)",
+    ),
 });
 
 // ─── Login ───────────────────────────────────────────────────────────────────
