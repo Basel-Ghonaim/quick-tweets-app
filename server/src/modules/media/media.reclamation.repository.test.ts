@@ -73,4 +73,35 @@ describe("reclamation repository — selection queries", () => {
       createReclamationRepository(db as never).findUnreferencedOwned(new Date(), 10),
     ).resolves.toBeDefined();
   });
+
+  it("keysWithRow returns the subset of keys that have any registry row", async () => {
+    const db = {
+      mediaObject: {
+        findMany: async (args: { where: { storageKey: { in: string[] } } }) =>
+          args.where.storageKey.in
+            .filter((k) => k === "objects/a")
+            .map((storageKey) => ({ storageKey })),
+      },
+    };
+
+    const set = await createReclamationRepository(db as never).keysWithRow([
+      "objects/a",
+      "objects/b",
+    ]);
+
+    expect(set.has("objects/a")).toBe(true);
+    expect(set.has("objects/b")).toBe(false); // no row → an orphan byte
+  });
+
+  it("keysWithRow short-circuits on empty input (no query)", async () => {
+    const db = {
+      mediaObject: {
+        findMany: async () => {
+          throw new Error("should not query for an empty key set");
+        },
+      },
+    };
+
+    expect(await createReclamationRepository(db as never).keysWithRow([])).toEqual(new Set());
+  });
 });

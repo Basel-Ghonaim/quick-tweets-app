@@ -47,6 +47,13 @@ export interface IReclamationRepository {
   findAbandoned(now: Date, limit: number, client?: DbClient): Promise<ReclaimCandidate[]>;
   /** Owned objects with no reference, older than `olderThan` (now − grace). Ascending id, capped at `limit`. */
   findUnreferencedOwned(olderThan: Date, limit: number, client?: DbClient): Promise<ReclaimCandidate[]>;
+  /**
+   * Which of `keys` have *any* registry row (any status). The divergence sweep
+   * diffs the store against this to find **orphan bytes** — stored keys with no
+   * row at all (a tombstoned row with lingering bytes is retryable cleanup, not
+   * an orphan, so "any status" is deliberate).
+   */
+  keysWithRow(keys: string[], client?: DbClient): Promise<Set<string>>;
 }
 
 const CANDIDATE_SELECT = { id: true, storageKey: true, size: true } as const;
@@ -94,5 +101,14 @@ export const createReclamationRepository = (
       size: row.size,
       reason: "unreferenced" as const,
     }));
+  },
+
+  keysWithRow: async (keys, client: DbClient = db) => {
+    if (keys.length === 0) return new Set<string>();
+    const rows = await client.mediaObject.findMany({
+      where: { storageKey: { in: keys } },
+      select: { storageKey: true },
+    });
+    return new Set(rows.map((row) => row.storageKey));
   },
 });
