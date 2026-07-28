@@ -13,9 +13,9 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { prisma, runInTransaction } from "../../shared/database/index.js";
-import { createReclamationRepository } from "./media.reclamation.repository.js";
-import { mintToken } from "./media.tokens.js";
+import { prisma, runInTransaction } from "../../../shared/database/index.js";
+import { createReclamationRepository } from "./reclamation.repository.js";
+import { mintToken } from "../media.tokens.js";
 
 const TAG = `it-tomb-${process.pid}-${Math.floor(process.hrtime()[1])}`;
 const repo = createReclamationRepository();

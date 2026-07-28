@@ -18,9 +18,9 @@
  * Internal to the module; never exported from `index.ts`.
  */
 
-import { prisma, type DbClient } from "../../shared/database/index.js";
-import { storageKey } from "./media.keys.js";
-import type { StorageKey } from "./media.types.js";
+import { prisma, type DbClient } from "../../../shared/database/index.js";
+import { storageKey } from "../media.keys.js";
+import type { StorageKey } from "../media.types.js";
 
 type PrismaInstance = typeof prisma;
 

@@ -40,10 +40,10 @@ import {
   seedOwnedReady,
   seedUser,
 } from "./producers.js";
-import { storageKey } from "../media.keys.js";
-import { mintToken } from "../media.tokens.js";
-import { createReclamationRepository } from "../media.reclamation.repository.js";
-import { runReclamation, type ReclamationReport } from "../media.reclamation.js";
+import { storageKey } from "../../media.keys.js";
+import { mintToken } from "../../media.tokens.js";
+import { createReclamationRepository } from "../reclamation.repository.js";
+import { runReclamation, type ReclamationReport } from "../reclamation.js";
 
 const NOW = new Date("2026-07-28T12:00:00.000Z");
 const GRACE_MS = 24 * 60 * 60 * 1000;

@@ -18,8 +18,8 @@ import { createDisposableMediaEnv, type DisposableMediaEnv } from "./disposable-
 import { FaultInjectingStorage, faultTombstoneRepo } from "./fault-injection.js";
 import { assertNoDeletedReferenced, observe, type ObservedState } from "./oracle.js";
 import { seedOwnedReady, seedUser } from "./producers.js";
-import { createReclamationRepository } from "../media.reclamation.repository.js";
-import { runReclamation, type ReclamationReport } from "../media.reclamation.js";
+import { createReclamationRepository } from "../reclamation.repository.js";
+import { runReclamation, type ReclamationReport } from "../reclamation.js";
 
 const NOW = new Date("2026-07-28T12:00:00.000Z");
 const GRACE_MS = 24 * 60 * 60 * 1000;

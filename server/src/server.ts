@@ -24,7 +24,7 @@ import { env } from "./config/env.js";
 import { prisma } from "./shared/database/index.js";
 import { createPostgresJobLock, createScheduler } from "./shared/scheduler/index.js";
 import { createRefreshTokenCleanupJob } from "./modules/auth/refreshTokenCleanup.job.js";
-import { createMediaReclamationJob } from "./modules/media/media.reclamation.job.js";
+import { createMediaReclamationJob } from "./modules/media/reclamation/reclamation.job.js";
 
 // ─── Startup ─────────────────────────────────────────────────────────────────
 
