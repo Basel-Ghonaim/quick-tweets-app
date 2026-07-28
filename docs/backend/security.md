@@ -69,10 +69,12 @@ The exact windows, limits, and `429` messages are owned by the [API contract](..
 
 Applied once, at the edge, before any route:
 
-- **`helmet`** sets the standard security headers (CSP, `nosniff`, frame denial, HSTS, …);
+- **`helmet`** sets the standard security headers (CSP, `nosniff`, frame denial, HSTS, a **`same-origin` `Cross-Origin-Resource-Policy`** baseline, …);
 - **CORS** allows a **single configured origin** (an env var — not a wildcard, not hardcoded localhost) with credentials enabled so the cookie can travel cross-origin;
-- the JSON body parser caps payloads at **16 kB** to refuse memory-exhaustion payloads;
+- the JSON body parser caps payloads at **16 kB** to refuse memory-exhaustion payloads (the multipart **`POST /media`** ingest route is exempt — it streams and enforces its own media size limit, owned by [`backend/media.md`](media.md));
 - the server **fails fast** if it cannot reach the database at startup, **shuts down gracefully** (draining in-flight requests, then disconnecting the pool) on `SIGTERM`/`SIGINT`, and exposes a **health check that actually pings the database**.
+
+The **Media read route** (`GET /media/:token`) deliberately overrides the `same-origin` CORP baseline with a route-scoped `Cross-Origin-Resource-Policy: cross-origin`, so public, opaque-token media can be embedded cross-origin — this is not an authorization control (a direct GET bypasses it). That read-side security posture — the content-derived, non-sniffable served type, the CORP override, and the bounded cache window — is a Media mechanism owned by [`backend/media.md`](media.md).
 
 ## Principles applied
 

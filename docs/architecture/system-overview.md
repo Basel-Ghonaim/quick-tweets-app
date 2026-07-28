@@ -17,6 +17,8 @@ quick-tweets is a monorepo of three tiers communicating over HTTP/JSON:
 
 The dependency is one-directional: the frontend depends on the contract, the backend fulfils it, and the database sits behind the backend as an implementation detail. The contract between frontend and backend — endpoints, payloads, error shapes, pagination — is owned by the [API contract](../api/api-contract.md).
 
+Two concerns sit alongside this request/response spine, both owned by [`backend/media.md`](../backend/media.md): the **Media subsystem** — a platform module inside the backend that stores and serves file bytes through a storage-adapter port (its read endpoint `GET /media/:token` is mounted **top-level, outside `/api/v1`**, returning raw bytes rather than the JSON envelope) — and the **background-execution tier**, a scheduler the backend starts at boot that runs recurring, non-request-triggered jobs (media reclamation and refresh-token cleanup) under single-run safety.
+
 ## Request lifecycle
 
 A typical authenticated request travels end to end as follows:
@@ -28,6 +30,8 @@ A typical authenticated request travels end to end as follows:
 5. **Database.** Prisma executes the query against PostgreSQL and returns domain rows.
 6. **Response.** On success the result is wrapped in the standardized **response envelope** (`success` / `data` / optional `meta`). On failure any layer throws a typed **`AppError`**, which a single global error handler normalizes into the error envelope — so every response, success or failure, has one predictable shape (owned by the [API contract](../api/api-contract.md)).
 7. **Frontend handling.** The frontend normalizes the response — every error collapses to one typed shape — updates its state, and the component re-renders.
+
+**Lifecycle variants.** Two Media paths deviate from this spine deliberately: **`POST /media`** is `multipart/form-data`, so it bypasses JSON body parsing and the 16 kB cap — it streams and enforces its own media size limit — and **`GET /media/:token`** is public, mounted outside `/api/v1`, un-rate-limited, and returns **raw bytes under a fixed security envelope**, not the JSON response envelope. Reclamation is not request-triggered at all; it runs on the background scheduler. All three are owned by [`backend/media.md`](../backend/media.md).
 
 ## Cross-cutting architecture
 
@@ -45,6 +49,7 @@ This document owns the topology and lifecycle only; each subsystem's internals a
 | Endpoints, payloads, error shapes, pagination | [API contract](../api/api-contract.md) |
 | Entities, relationships, cascade, indexing | [`architecture/data-model.md`](data-model.md) |
 | Backend layering, response wrapper, validation, security mechanisms | [`backend/conventions.md`](../backend/conventions.md) + [`backend/security.md`](../backend/security.md) |
+| The Media subsystem, storage adapter, and reclamation lifecycle | [`backend/media.md`](../backend/media.md) |
 | Axios clients & interceptors, RTK Query, error normalization | [`frontend/api-client.md`](../frontend/api-client.md) + [`frontend/error-handling.md`](../frontend/error-handling.md) + `frontend/state-and-data.md` *(deferred)* |
 | A known deviation from this intended architecture | [Finding 0001 — schema-form ↔ design-system cycle](findings/0001-schema-form-design-system-cycle.md) |
 

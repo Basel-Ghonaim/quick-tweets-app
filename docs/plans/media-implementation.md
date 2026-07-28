@@ -3,9 +3,10 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-07-17
+> **Last Updated:** 2026-07-28
 > **Parent Issue:** [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305)
 > **Supersedes:** —
+> **Reconciliation note (M12, 2026-07-28):** The documentation reconciliation is complete — the durable Media mechanisms now live in [`backend/media.md`](../backend/media.md), with [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) retaining the boundary + rationale and cross-refs from the [data model](../architecture/data-model.md), [API contract](../api/api-contract.md), and [Backend Security](../backend/security.md). The plan stays **Active** (not yet `Historical`) solely because **M9b — the tweet-compose client** — remains deferred pending the tweets UI/UX: "the media effort is not complete until a user can attach media" (§ Phase 4, M9b).
 
 This plan translates **[ADR 0005 — Media / File Upload Architecture](../architecture/decisions/0005-media-file-upload-architecture.md)** into an ordered set of independently reviewable Work Items. ADR 0005 is **settled**: this plan **sequences its implementation and never reopens its boundaries, ownership, contracts, or invariants.** Where ADR 0005 deliberately left a *mechanism* open, this plan **surfaces it as a deferred decision** — resolved in its own record (a sub-ADR where architectural, otherwise the Work Item's Issue), never here.
 
