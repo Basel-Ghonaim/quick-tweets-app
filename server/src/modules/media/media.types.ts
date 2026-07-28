@@ -210,34 +210,3 @@ export interface MediaUsage {
   objectCount: number;
   totalBytes: number;
 }
-
-// ─── Ingest boundary (ADR 0005 Decision 5 / ADR 0007) ────────────────────────
-
-/** Ingest authorization evidence — an authenticated user only (ADR 0008: the
- * pre-auth grant evidence type was retired). */
-export type IngestEvidence = { kind: "user"; userId: number };
-
-/** What ingest returns to the client — the reference token plus display facts. */
-export interface IngestResult {
-  token: MediaToken;
-  contentType: string;
-  size: number;
-}
-
-/**
- * A servable object opened for reading: the header facts plus the byte stream.
- * Deliberately narrow — it carries no storage detail (the storage key stays
- * inside the module; the read boundary only needs the type, size, and bytes).
- */
-export interface MediaReadResult {
-  contentType: string;
-  size: number;
-  stream: Readable;
-}
-
-/** Media's orchestration contract — transport-agnostic (a `Readable`, never HTTP). */
-export interface IMediaService {
-  ingest(file: Readable, evidence: IngestEvidence): Promise<IngestResult>;
-  /** Resolve a public token to a servable object; the access-control seam (ADR 0005 D4). */
-  read(token: MediaToken): Promise<MediaReadResult>;
-}
