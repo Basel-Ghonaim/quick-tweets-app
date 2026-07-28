@@ -2,15 +2,12 @@
  * Media module — the single published interface (ADR 0005 — Decision 2).
  *
  * Feature modules consume Media *only* through this file. It exposes the
- * storage-adapter port and factory, the identifier constructors and error types,
- * and — for feature consumers — the attach, reference-coordination, and resolution
- * surfaces. The concrete backend, the registry, the key→path mapping, and every
- * other internal are deliberately not exported.
+ * storage-adapter port (type), the identifier constructors and error types, and —
+ * for feature consumers — the attach, reference-coordination, and resolution
+ * surfaces. The concrete backend, the registry, the storage-adapter *factory*
+ * (see `storage/index.ts`), the key→path mapping, and every other internal are
+ * deliberately not exported.
  */
-
-import { env } from "../../config/env.js";
-import { createLocalDiskStorageAdapter } from "./storage/local-disk.adapter.js";
-import type { StorageAdapter } from "./media.types.js";
 
 export type { StorageAdapter, StorageKey, MediaToken, MediaUsage } from "./media.types.js";
 export { storageKey } from "./media.keys.js";
@@ -40,12 +37,3 @@ export type { IMediaResolution } from "./media.resolution.js";
 export { createMediaReferences, mediaReferences } from "./media.references.js";
 export type { IMediaReferences } from "./media.references.js";
 export type { MediaReferenceInput } from "./media.types.js";
-
-/**
- * Build the configured storage adapter. The backend is local-disk for now
- * (rooted at `UPLOAD_DIR`); selecting a different backend later happens here,
- * behind this same signature — callers are unaffected.
- */
-export const createStorageAdapter = (
-  baseDir: string = env.UPLOAD_DIR,
-): StorageAdapter => createLocalDiskStorageAdapter({ baseDir });

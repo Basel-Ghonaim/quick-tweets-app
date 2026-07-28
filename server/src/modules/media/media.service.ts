@@ -30,7 +30,7 @@ import {
   detectMediaType,
   verifyMediaContent,
 } from "./media.validation.js";
-import { createStorageAdapter } from "./index.js";
+import { createStorageAdapter } from "./storage/index.js";
 import type {
   IMediaRepository,
   IMediaService,

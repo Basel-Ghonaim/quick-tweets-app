@@ -15,7 +15,7 @@
 
 import { env } from "../../../config/env.js";
 import type { JobDefinition } from "../../../shared/scheduler/index.js";
-import { createStorageAdapter } from "../index.js";
+import { createStorageAdapter } from "../storage/index.js";
 import {
   runReclamation,
   type ReclamationDeps,
