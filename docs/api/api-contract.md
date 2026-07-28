@@ -955,7 +955,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 ## Media
 
-Media upload follows the **upload-then-submit-reference** pattern: a client uploads bytes to Media's ingest endpoint, receives an opaque **media token** (the stable reference), and submits *that token* — never file bytes — to feature endpoints (the feature attach endpoints that accept it arrive with their own Work Items). Feature endpoints do not accept multipart. The token becomes publicly resolvable when the media read endpoint is implemented; until then it is a stored reference only. Governing decisions: [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) (boundary) and [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) (authenticated-only ingest; the pre-auth upload grant is retired).
+Media upload follows the **upload-then-submit-reference** pattern: a client uploads bytes to Media's ingest endpoint (`POST /media`), receives an opaque **media token** (the stable reference), and submits *that token* — never file bytes — to feature attach endpoints (`POST`/`PATCH /tweets` `media`, `POST`/`PATCH /comments` `media`, and `PATCH /users/me` `avatar`). Feature endpoints do not accept multipart. The token is publicly resolvable through the read endpoint (`GET /media/:token`). Governing decisions: [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) (boundary) and [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) (authenticated-only ingest; the pre-auth upload grant is retired). The subsystem's mechanisms are owned by [`backend/media.md`](../backend/media.md).
 
 ### `POST /media` — Upload a media object (multipart)
 
@@ -1019,5 +1019,5 @@ Resolves the token and streams the bytes under a fixed security envelope. Not ra
 > A `410` appears only after **reclamation** (M11) has tombstoned the object — a
 > background, Media-owned operation, never a client action. An unreferenced object
 > stays `200`-servable until then; reclamation runs **report-only** until the
-> destructive gate is met. See the reclamation model in
-> [data-model.md](../architecture/data-model.md).
+> destructive gate is met. The reclamation model is owned by
+> [`backend/media.md`](../backend/media.md).
