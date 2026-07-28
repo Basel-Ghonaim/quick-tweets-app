@@ -29,8 +29,8 @@ model User {
   // Prisma relation and NO DB foreign key. MediaObject stays unaware of its
   // referrers (ADR 0005 Decision 9), and Media owns reference integrity and
   // reclamation from its own state — never gated by a feature-table FK (M11).
-  // Resolved to the public read token at the API boundary; set only by
-  // grant-evidence adoption on the register path (M6 / ADR 0007).
+  // Resolved to the public read token at the API boundary; set by the
+  // authenticated User/Profile surface (PATCH /users/me — ADR 0008).
   avatarMediaId Int?     @map("avatar_media_id")
   bio           String   @default("")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -193,13 +193,11 @@ model Follow {
 // handle (GET /media/:token). No back-relation to referrers — a MediaObject is
 // unaware of who points at it (Decision 9). Owned by the Media platform module.
 //
-// Provenance (ADR 0005 Decision 5 + ADR 0007): every object records its
-// uploader — an authenticated user (uploader_id) or, for pre-auth ingest, the
-// upload grant that ingested it (grant_id + grant_expires_at, so abandonment
-// stays computable from Media's own state). Exactly one form is present at
-// creation; adoption (M6) later fills uploader_id for grant-ingested objects.
+// Provenance (ADR 0005 Decision 5, as amended by ADR 0008): every object records
+// its authenticated uploader in `uploader_id` (NOT NULL) — the single ownership
+// model after the pre-auth upload grant was retired (WI-6 / WI-7).
 // onDelete: Restrict — Cascade would drop registry rows while bytes remain
-// (the Decision-8 divergence); SetNull would un-record the uploader.
+// (the Decision-8 divergence).
 
 model MediaObject {
   id             Int       @id @default(autoincrement())
@@ -208,22 +206,16 @@ model MediaObject {
   contentType    String    @map("content_type")             // verified, content-derived type (set at ingest)
   size           Int                                         // byte count
   status         String    @default("ready")                // "ready" | "deleted" (tombstone; M11 drives deletion)
-  uploaderId     Int?      @map("uploader_id")              // authenticated uploader / adopted owner
-  grantId        String?   @map("grant_id")                 // pre-auth: the minting upload grant
-  grantExpiresAt DateTime? @map("grant_expires_at")         // pre-auth: grant liveness anchor
+  uploaderId     Int       @map("uploader_id")              // the authenticated uploader that owns the object (single provenance model, ADR 0008)
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
-  uploader    User?             @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
+  uploader    User              @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
   references  MediaReference[]
   quarantines MediaQuarantine[]
 
   // Constraints & Indexes
-  // @@unique on grantId is the atomic backstop for GRANT_MAX_OBJECTS = 1
-  // (Postgres allows unlimited NULLs, so uploader-provenance rows are
-  // unaffected); if that bound ever rises, this becomes a plain index.
-  @@unique([grantId])
   @@map("media_objects")
 }
 

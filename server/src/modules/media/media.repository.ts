@@ -36,7 +36,7 @@ interface MediaObjectRow {
   contentType: string;
   size: number;
   status: string;
-  uploaderId: number | null;
+  uploaderId: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -134,7 +134,7 @@ export const createMediaRepository = (
       {
         id: number;
         token: string;
-        uploaderId: number | null;
+        uploaderId: number;
         status: string;
         contentType: string;
         size: number;

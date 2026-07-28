@@ -66,15 +66,6 @@ describe("media ownership — authorizeAttach", () => {
     expect((err as MediaAttachError).code).toBe("not_attachable");
   });
 
-  it("refuses an unadopted, grant-provenance object (it has no owner yet)", async () => {
-    const token = mintToken();
-    const repo = makeRepo({ lockAndFetchByTokens: async () => [lockedRow(token, { uploaderId: null })] });
-
-    const err = await attach(repo, token);
-
-    expect((err as MediaAttachError).code).toBe("not_attachable");
-  });
-
   it("refuses a non-servable object under the lock (a reclamation tombstone)", async () => {
     const token = mintToken();
     const repo = makeRepo({ lockAndFetchByTokens: async () => [lockedRow(token, { status: "deleted" })] });

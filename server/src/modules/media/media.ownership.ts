@@ -80,9 +80,8 @@ export const createMediaOwnership = (
 
     // Lock + fetch every object under one `FOR UPDATE` (ascending id), then
     // validate each under the lock: owned by the attaching principal AND
-    // servable. A wrong owner, an unadopted grant object (null uploaderId), an
-    // unknown token, or a tombstone a concurrent reclaimer set all collapse to
-    // one opaque refusal.
+    // servable. A wrong owner, an unknown token, or a tombstone a concurrent
+    // reclaimer set all collapse to one opaque refusal.
     const locked = await repo.lockAndFetchByTokens(
       parsed.map((p) => p.token),
       client,

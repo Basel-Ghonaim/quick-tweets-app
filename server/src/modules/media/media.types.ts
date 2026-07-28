@@ -93,9 +93,9 @@ export interface MediaObject {
   contentType: string;
   size: number;
   status: MediaStatus;
-  /** The authenticated uploader that owns the object (the single provenance model,
-   * ADR 0008). Still nullable in the type until WI-7 adds the `NOT NULL` constraint. */
-  uploaderId: number | null;
+  /** The authenticated uploader that owns the object — the single provenance model
+   * (ADR 0008), `NOT NULL` at the database (WI-7). */
+  uploaderId: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -123,7 +123,7 @@ export interface NewMediaObject {
 export interface LockedMediaObject {
   id: number;
   token: MediaToken;
-  uploaderId: number | null;
+  uploaderId: number;
   status: MediaStatus;
   /** Authoritative, content-derived type — the fact a consumer's policy evaluates. */
   contentType: string;
