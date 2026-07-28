@@ -100,3 +100,13 @@ This harness verifies **M1–M9**. It deliberately does **not**:
 
 When every scenario passes — API assertions **and** DB checkpoints — the system is
 cleared to proceed to M10, then M11.
+
+## Automated: M11 destructive-path certification
+
+Separate from this manual M1–M9 harness, the M11 destructive reclamation path is
+certified by an **automated** controlled-verification suite — a disposable
+PostgreSQL database + isolated storage, the real unmodified reclaimer, an
+independent literal oracle, and the real Tweet/Comment/Avatar producers. Its
+result — a **Pre-production Engineering GO** that certifies the implementation
+**without enabling destructive mode** — is recorded in
+[reclamation-controlled-verification-go.md](reclamation-controlled-verification-go.md).
