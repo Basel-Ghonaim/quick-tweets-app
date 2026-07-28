@@ -133,8 +133,8 @@ export class MediaAttachError extends Error {
 
   /**
    * The principal may not attach this object — unknown reference, owned by someone
-   * else, still unadopted, or not servable. One opaque code by design: the caller
-   * never learns which (no enumeration oracle).
+   * else, or not servable. One opaque code by design: the caller never learns
+   * which (no enumeration oracle).
    */
   static notAttachable(): MediaAttachError {
     return new MediaAttachError("not_attachable", "This media cannot be attached");
