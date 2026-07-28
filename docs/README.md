@@ -23,6 +23,7 @@ This is the **map** of the project's documentation — every document, what it o
 ### `backend/` — server platform mechanisms
 - [conventions.md](backend/conventions.md) — module layering, the response envelope, the error model, validation, and pagination.
 - [security.md](backend/security.md) — the token model, password hashing, the auth cookie, rate limiting, and HTTP hardening.
+- [media.md](backend/media.md) — the Media subsystem: the storage-adapter port, the registry/reference model, ingest and content-authoritative validation, read/resolution, ownership/attach/reference coordination, and the reclamation lifecycle.
 
 ### `frontend/` — client platform subsystems
 - [architecture.md](frontend/architecture.md) — the feature-sliced zones, the dependency rule, the composition root, and the thin utilities.

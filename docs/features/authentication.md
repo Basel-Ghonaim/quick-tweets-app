@@ -12,7 +12,7 @@
 
 Authentication is the frontend's first — and currently only — fully built feature. It provides:
 
-- **Register** — account creation with username, full name, email, and password. The form also presents an avatar picker, but image upload is not implemented end-to-end (there is no upload path in the wire contract), so the account is created without the image — whether to implement or remove the field is under [#256](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/256).
+- **Register** — account creation with username, full name, email, and password. The form presents an avatar picker, but registration itself is **Media-free**: the account is created without an image, and an avatar is set separately through the authenticated profile update (`PATCH /users/me`), not at register. The pre-auth register-with-avatar path (the original [#256](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/256) concern) was retired in favour of authenticated-only media ([ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md)); the Media subsystem is owned by [`backend/media.md`](../backend/media.md).
 - **Login / Logout** — credential sign-in, and sign-out that revokes the server session.
 - **Silent session restore** — a returning user is signed back in on app startup, from the server, without re-entering credentials.
 - **The auth page** — a split-panel screen (brand panel + form card) whose sign-in/sign-up tabs are **URL-driven** (`/auth/signin`, `/auth/signup`); switching tabs navigates, so the active form is deep-linkable. The social-login buttons on the page are **visual placeholders** — no OAuth is implemented.
