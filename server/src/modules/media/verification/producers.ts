@@ -35,6 +35,7 @@ export const boundServices = (env: DisposableMediaEnv) => {
     resolution: createMediaResolution(mediaRepo),
   };
   return {
+    port,
     tweets: createTweetService(createTweetRepository(env.prisma), port, env.runInTransaction),
     comments: createCommentService(createCommentRepository(env.prisma), port, env.runInTransaction),
     users: createUserService(createUserRepository(env.prisma), port, env.runInTransaction),

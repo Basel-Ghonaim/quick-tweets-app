@@ -39,6 +39,8 @@ const MIGRATIONS_DIR = fileURLToPath(new URL("../../../../prisma/migrations", im
 export interface DisposableMediaEnv {
   readonly dbName: string;
   readonly devDbName: string;
+  /** Connection string bound to the disposable database (for raw `pg` clients in concurrency tests). */
+  readonly connectionString: string;
   readonly prisma: PrismaClient;
   readonly runInTransaction: RunInTransaction;
   readonly storage: StorageAdapter;
@@ -126,5 +128,8 @@ export const createDisposableMediaEnv = async (): Promise<DisposableMediaEnv> =>
     await rm(storageRoot, { recursive: true, force: true });
   };
 
-  return { dbName, devDbName, prisma, runInTransaction, storage, storageRoot, guard, teardown };
+  return {
+    dbName, devDbName, connectionString: dispConn, prisma, runInTransaction,
+    storage, storageRoot, guard, teardown,
+  };
 };
