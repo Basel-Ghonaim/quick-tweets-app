@@ -10,8 +10,6 @@
  * - JWT_EXPIRES_IN defaults to "15m" (not "7d") — short-lived access tokens
  * - NODE_ENV controls cookie secure flag and other production behaviors
  * - CORS_ORIGIN controls allowed frontend origin (no hardcoding)
- * - MEDIA_GRANT_SECRET signs upload grants with a key separate from JWT_SECRET,
- *   so the two token types cannot cross-verify (must differ; enforced at parse)
  *
  * Future expansion:
  * - Add REFRESH_TOKEN_SECRET for refresh token rotation
@@ -30,9 +28,6 @@ const envSchema = z
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
     CORS_ORIGIN: z.string().default("http://localhost:5173"),
     UPLOAD_DIR: z.string().default("./uploads"),
-    // Dedicated signing key for upload grants (ADR 0007) — separate from
-    // JWT_SECRET so a grant and an access token can never cross-verify.
-    MEDIA_GRANT_SECRET: z.string().min(16),
     // Media reclamation (M11). `report` is the FAIL-SAFE default: physical
     // deletion runs only when MEDIA_RECLAMATION_MODE is EXACTLY "destructive"
     // (see resolveReclamationMode) — a missing, empty, mis-cased, or misspelled
@@ -44,11 +39,6 @@ const envSchema = z
     RECLAMATION_GRACE_MS: z.coerce.number().int().nonnegative().default(24 * 60 * 60 * 1000),
     RECLAMATION_INTERVAL_MS: z.coerce.number().int().positive().default(6 * 60 * 60 * 1000),
     RECLAMATION_BATCH: z.coerce.number().int().positive().default(100),
-  })
-  .refine((e) => e.MEDIA_GRANT_SECRET !== e.JWT_SECRET, {
-    message:
-      "MEDIA_GRANT_SECRET must differ from JWT_SECRET (upload grants and auth tokens must not share a signing key)",
-    path: ["MEDIA_GRANT_SECRET"],
   });
 
 export const env = envSchema.parse(process.env);
