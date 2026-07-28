@@ -30,8 +30,6 @@ const lockedRow = (
 const makeRepo = (over: Partial<IMediaRepository> = {}): IMediaRepository => ({
   create: async () => { throw new Error("unused"); },
   findByToken: async () => null,
-  countByGrant: async () => 0,
-  adoptById: async () => false,
   findTokensByIds: async () => new Map(),
   usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
   addReference: async () => {},

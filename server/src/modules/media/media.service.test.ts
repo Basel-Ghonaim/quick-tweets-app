@@ -3,22 +3,19 @@
  *
  * The service is exercised with an in-memory StorageAdapter and repository so
  * every test drives real stream mechanics: head capture, mid-stream aborts,
- * partial-object cleanup, provenance recording, and per-grant bounds.
+ * partial-object cleanup, and provenance recording.
  */
 
 import { Readable, Writable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { describe, expect, it, vi } from "vitest";
 
-import { generateAccessToken } from "../../shared/utils/jwt.js";
 import {
-  MediaGrantError,
   MediaIngestError,
   MediaReadError,
   MediaStorageError,
   MediaValidationError,
 } from "./media.errors";
-import { mintUploadGrant } from "./media.grants";
 import { createMediaService } from "./media.service";
 import { storageKey } from "./media.keys";
 import { mintToken } from "./media.tokens";
@@ -53,13 +50,12 @@ const makeStorage = () => {
   return { adapter, saved, deleted };
 };
 
-/** In-memory repository capturing creates; injectable per-grant counts. */
-const makeRepo = (grantCounts: Record<string, number> = {}) => {
+/** In-memory repository capturing creates. */
+const makeRepo = () => {
   const creates: NewMediaObject[] = [];
   const repo: IMediaRepository = {
     create: async (input) => {
       creates.push(input);
-      const prov = input.provenance;
       const obj: MediaObject = {
         id: creates.length,
         token: mintToken(),
@@ -67,17 +63,13 @@ const makeRepo = (grantCounts: Record<string, number> = {}) => {
         contentType: input.contentType,
         size: input.size,
         status: "ready",
-        uploaderId: "uploaderId" in prov ? prov.uploaderId : null,
-        grantId: "grantId" in prov ? prov.grantId : null,
-        grantExpiresAt: "grantId" in prov ? prov.grantExpiresAt : null,
+        uploaderId: input.provenance.uploaderId,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
       return obj;
     },
     findByToken: async () => null,
-    countByGrant: async (grantId) => grantCounts[grantId] ?? 0,
-    adoptById: async () => false,
     findTokensByIds: async () => new Map(),
     usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
     addReference: async () => {},
@@ -108,51 +100,6 @@ describe("media ingest service", () => {
     expect(deleted).toHaveLength(0);
     // The storage key never leaves the module through the result.
     expect(Object.values(result)).not.toContain([...saved.keys()][0]);
-  });
-
-  it("ingests under a valid grant and records grant provenance", async () => {
-    const { adapter } = makeStorage();
-    const { repo, creates } = makeRepo();
-    const service = createMediaService(adapter, repo);
-    const { grant } = mintUploadGrant();
-
-    await service.ingest(Readable.from([PNG_HEAD]), { kind: "grant", grant });
-
-    const prov = creates[0]!.provenance;
-    expect("grantId" in prov && prov.grantId).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect("grantExpiresAt" in prov && prov.grantExpiresAt).toBeInstanceOf(Date);
-  });
-
-  it("rejects an exhausted grant before any byte is stored", async () => {
-    const { adapter, saved } = makeStorage();
-    const { grant } = mintUploadGrant();
-    // Whatever id the grant has, report it as already used.
-    const { repo } = makeRepo(new Proxy({}, { get: () => 1 }) as Record<string, number>);
-    const service = createMediaService(adapter, repo);
-
-    const err = await service
-      .ingest(Readable.from([PNG_HEAD]), { kind: "grant", grant })
-      .catch((e: unknown) => e);
-
-    expect(err).toBeInstanceOf(MediaGrantError);
-    expect((err as MediaGrantError).code).toBe("grant_exhausted");
-    expect(saved.size).toBe(0); // authorize-before-store
-  });
-
-  it("rejects an invalid grant (including an access token) before storing", async () => {
-    const { adapter, saved } = makeStorage();
-    const { repo } = makeRepo();
-    const service = createMediaService(adapter, repo);
-
-    const err = await service
-      .ingest(Readable.from([PNG_HEAD]), {
-        kind: "grant",
-        grant: generateAccessToken(7),
-      })
-      .catch((e: unknown) => e);
-
-    expect(err).toBeInstanceOf(MediaGrantError);
-    expect(saved.size).toBe(0);
   });
 
   it("aborts an oversized stream mid-flight and cleans up the partial object", async () => {
@@ -298,34 +245,6 @@ describe("media ingest service", () => {
     expect(deleted).toHaveLength(1);
   });
 
-  it("maps a unique-constraint violation (grant race backstop) to grant_exhausted", async () => {
-    const { adapter, deleted } = makeStorage();
-    const { grant } = mintUploadGrant();
-    // countByGrant passes (0 < 1), but the create loses the concurrent race.
-    const repo: IMediaRepository = {
-      create: async () => {
-        throw { code: "P2002" }; // Prisma unique-constraint shape
-      },
-      findByToken: async () => null,
-      countByGrant: async () => 0,
-      adoptById: async () => false,
-      findTokensByIds: async () => new Map(),
-      usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
-      addReference: async () => {},
-      removeReference: async () => {},
-      countReferences: async () => 0,
-    lockAndFetchByTokens: async () => [],
-    };
-    const service = createMediaService(adapter, repo);
-
-    const err = await service
-      .ingest(Readable.from([PNG_HEAD]), { kind: "grant", grant })
-      .catch((e: unknown) => e);
-
-    expect(err).toBeInstanceOf(MediaGrantError);
-    expect((err as MediaGrantError).code).toBe("grant_exhausted");
-    expect(deleted).toHaveLength(1); // partial object cleaned up
-  });
 });
 
 describe("media service — read (resolution)", () => {
@@ -337,8 +256,6 @@ describe("media service — read (resolution)", () => {
     size: 5,
     status: "ready",
     uploaderId: 1,
-    grantId: null,
-    grantExpiresAt: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...over,
@@ -351,8 +268,6 @@ describe("media service — read (resolution)", () => {
     const repo: IMediaRepository = {
       create: async () => { throw new Error("unused"); },
       findByToken: async () => object,
-      countByGrant: async () => 0,
-      adoptById: async () => false,
       findTokensByIds: async () => new Map(),
       usageFor: async () => ({ objectCount: 0, totalBytes: 0 }),
       addReference: async () => {},

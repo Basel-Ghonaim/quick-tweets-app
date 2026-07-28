@@ -69,32 +69,6 @@ export class MediaValidationError extends Error {
   }
 }
 
-// ─── Upload-grant errors (ADR 0007) ──────────────────────────────────────────
-
-export type MediaGrantErrorCode = "invalid_grant" | "grant_exhausted";
-
-export class MediaGrantError extends Error {
-  public readonly code: MediaGrantErrorCode;
-
-  constructor(code: MediaGrantErrorCode, message: string) {
-    super(message);
-    this.code = code;
-    this.name = "MediaGrantError";
-    // Preserve the prototype chain for `instanceof` across the transpile target.
-    Object.setPrototypeOf(this, MediaGrantError.prototype);
-  }
-
-  /** The grant is malformed, not an upload grant, or expired. */
-  static invalid(): MediaGrantError {
-    return new MediaGrantError("invalid_grant", "Invalid or expired upload grant");
-  }
-
-  /** The grant's bounded object count is already used up. */
-  static exhausted(): MediaGrantError {
-    return new MediaGrantError("grant_exhausted", "Upload grant is exhausted");
-  }
-}
-
 // ─── Ingest transport errors ─────────────────────────────────────────────────
 
 export type MediaIngestErrorCode = "source_failed";
@@ -139,41 +113,6 @@ export class MediaReadError extends Error {
   /** The object was deleted — a permanent failure (the token is never reissued). */
   static gone(): MediaReadError {
     return new MediaReadError("gone", "Media has been deleted");
-  }
-}
-
-// ─── Adoption errors (ADR 0007 — attach with grant evidence, on the register path) ─
-
-export type MediaAdoptionErrorCode = "invalid_evidence" | "already_adopted";
-
-export class MediaAdoptionError extends Error {
-  public readonly code: MediaAdoptionErrorCode;
-
-  constructor(code: MediaAdoptionErrorCode, message: string) {
-    super(message);
-    this.code = code;
-    this.name = "MediaAdoptionError";
-    // Preserve the prototype chain for `instanceof` across the transpile target.
-    Object.setPrototypeOf(this, MediaAdoptionError.prototype);
-  }
-
-  /**
-   * The adoption evidence does not authorize adopting this object — a bad or
-   * expired grant, an unknown reference, a grant that does not match the object's
-   * recorded provenance, or an object that is not grant-provenance. Deliberately
-   * one opaque code: the caller learns "this avatar cannot be adopted", never
-   * whether a given token exists (no enumeration oracle).
-   */
-  static invalidEvidence(): MediaAdoptionError {
-    return new MediaAdoptionError(
-      "invalid_evidence",
-      "The avatar upload could not be adopted (invalid or expired evidence)",
-    );
-  }
-
-  /** The object was already adopted (or lost the concurrent race) — a conflict. */
-  static alreadyAdopted(): MediaAdoptionError {
-    return new MediaAdoptionError("already_adopted", "This avatar has already been claimed");
   }
 }
 

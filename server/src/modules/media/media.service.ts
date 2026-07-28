@@ -1,5 +1,5 @@
 /**
- * Media module — ingest orchestration (ADR 0005 Decision 5, under ADR 0007).
+ * Media module — ingest orchestration (ADR 0005 Decision 5, as amended by ADR 0008).
  *
  * Transport-agnostic: takes a byte `Readable` plus authorization evidence, never
  * an HTTP request. Owns the streaming mechanics the validation component (M3)
@@ -8,22 +8,20 @@
  * failure. Write-after-validate: the registry row is created only after the
  * bytes are fully stored and verified — no pending state.
  *
- * Evidence resolution (ADR 0007): an authenticated principal, or a verified
- * upload grant whose per-grant object bound is enforced against the registry.
+ * Authorization: an authenticated principal is the single ingest evidence type
+ * (the pre-auth upload grant was retired — ADR 0008); the uploader is the
+ * object's provenance.
  */
 
 import { randomBytes } from "node:crypto";
 import { Transform, type TransformCallback } from "node:stream";
 
-import { isPrismaError } from "../../shared/utils/index.js";
 import {
-  MediaGrantError,
   MediaIngestError,
   MediaReadError,
   MediaStorageError,
   MediaValidationError,
 } from "./media.errors.js";
-import { GRANT_MAX_OBJECTS, verifyUploadGrant } from "./media.grants.js";
 import { storageKey } from "./media.keys.js";
 import { createMediaRepository } from "./media.repository.js";
 import {
@@ -36,7 +34,6 @@ import { createStorageAdapter } from "./index.js";
 import type {
   IMediaRepository,
   IMediaService,
-  IngestEvidence,
   MediaProvenance,
   StorageAdapter,
 } from "./media.types.js";
@@ -96,25 +93,11 @@ export const createMediaService = (
   storage: StorageAdapter = createStorageAdapter(),
   repo: IMediaRepository = createMediaRepository(),
 ): IMediaService => {
-  /** Verify evidence and produce the provenance the registry records. */
-  const resolveProvenance = async (
-    evidence: IngestEvidence,
-  ): Promise<MediaProvenance> => {
-    if (evidence.kind === "user") {
-      return { uploaderId: evidence.userId };
-    }
-    const grant = verifyUploadGrant(evidence.grant);
-    const used = await repo.countByGrant(grant.id);
-    if (used >= GRANT_MAX_OBJECTS) {
-      throw MediaGrantError.exhausted();
-    }
-    return { grantId: grant.id, grantExpiresAt: grant.expiresAt };
-  };
-
   return {
     ingest: async (file, evidence) => {
-      // Authorize before any byte is stored.
-      const provenance = await resolveProvenance(evidence);
+      // The authenticated uploader is the object's provenance — the single model
+      // after the pre-auth grant was retired (ADR 0008).
+      const provenance: MediaProvenance = { uploaderId: evidence.userId };
 
       const key = storageKey(`objects/${randomBytes(16).toString("base64url")}`);
       const inspector = new ContentInspector();
@@ -158,14 +141,7 @@ export const createMediaService = (
         await storage.delete(key).catch(() => undefined);
         // Prefer the inspector's typed rejection (validation/size/source) over
         // the generic teardown error `save` raises once its source is dead.
-        const cause = inspectError ?? err;
-        // The per-grant unique constraint is the atomic backstop for the
-        // count bound under concurrency (the pre-check races); a violation
-        // means the grant already spent its allowance.
-        if (isPrismaError(cause, "P2002")) {
-          throw MediaGrantError.exhausted();
-        }
-        throw cause;
+        throw inspectError ?? err;
       }
     },
 

@@ -33,7 +33,6 @@ const candidate = (
 ): ReclaimCandidate => ({ id, storageKey: key(`objects/${id}`), size: 10, reason, ...over });
 
 const makeRepo = (over: Partial<IReclamationRepository> = {}): IReclamationRepository => ({
-  findAbandoned: async () => [],
   findUnreferencedOwned: async () => [],
   keysWithRow: async () => new Set<string>(),
   tombstoneIfReclaimable: async () => true,
@@ -65,15 +64,15 @@ describe("reclamation orchestrator — report mode", () => {
   it("counts eligible candidates and would-reclaim bytes, and MUTATES NOTHING", async () => {
     const { adapter, deleted } = makeStorage({ exists: async () => true });
     const repo = makeRepo({
-      findAbandoned: async () => [candidate(1, "abandoned", { size: 100 })],
       findUnreferencedOwned: async () => [candidate(2, "unreferenced", { size: 50 })],
     });
 
     const report = await run(repo, adapter);
 
-    expect(report.eligibleAbandoned).toBe(1);
+    // The abandoned-grant class was retired (WI-6); reclamation is single-class.
+    expect(report.eligibleAbandoned).toBe(0);
     expect(report.eligibleUnreferenced).toBe(1);
-    expect(report.wouldReclaimBytes).toBe(150);
+    expect(report.wouldReclaimBytes).toBe(50);
     expect(report.reclaimed).toBe(0);
     expect(deleted).toHaveLength(0); // the load-bearing invariant: report deletes nothing
   });

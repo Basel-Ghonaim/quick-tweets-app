@@ -32,24 +32,6 @@ const makeDb = () => {
 };
 
 describe("reclamation repository — selection queries", () => {
-  it("findAbandoned targets expired, unadopted, unreferenced, ready objects only", async () => {
-    const { db, calls } = makeDb();
-    const now = new Date("2026-07-27T00:00:00.000Z");
-
-    const out = await createReclamationRepository(db as never).findAbandoned(now, 50);
-
-    expect(calls[0]!.where).toEqual({
-      status: "ready",
-      uploaderId: null,
-      grantExpiresAt: { lt: now },
-      references: { none: {} },
-      quarantines: { none: { resolvedAt: null } },
-    });
-    expect(calls[0]!.orderBy).toEqual({ id: "asc" });
-    expect(calls[0]!.take).toBe(50);
-    expect(out).toEqual([{ id: 1, storageKey: "objects/x", size: 10, reason: "abandoned" }]);
-  });
-
   it("findUnreferencedOwned targets owned, unreferenced, past-grace, ready objects only", async () => {
     const { db, calls } = makeDb();
     const olderThan = new Date("2026-07-26T00:00:00.000Z");

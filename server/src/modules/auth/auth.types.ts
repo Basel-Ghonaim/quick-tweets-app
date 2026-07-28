@@ -78,13 +78,11 @@ export interface ITokenRepository {
 
 // ─── Service Interface ───────────────────────────────────────────────────────
 
-/** Result returned by register and login operations. */
+/** Result returned by register and login operations. Auth is Media-free (ADR 0008 D10): no avatar. */
 export interface AuthResult {
   user: User;
   accessToken: string;
   refreshToken: string;
-  /** The user's avatar public read token, resolved from its reference — or null. */
-  avatarToken: string | null;
 }
 
 /** Result returned by token refresh operations. */
@@ -92,14 +90,11 @@ export interface TokenRefreshResult {
   accessToken: string;
   refreshToken: string;
   user: UserSafe;
-  /** The user's avatar public read token, resolved from its reference — or null. */
-  avatarToken: string | null;
 }
 
-/** The authenticated user's own profile view (`GET /me`), avatar resolved. */
+/** The authenticated user's identity (`GET /auth/me`) — Media-free; the avatar is served by `GET /users/me`. */
 export interface MeResult {
   user: UserSafe;
-  avatarToken: string | null;
 }
 
 /** Login credentials received from the client. */

@@ -74,10 +74,12 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
   const log = deps.log ?? ((line: string) => console.log(line));
   const olderThan = new Date(now.getTime() - deps.graceMs);
 
-  // 1. Select — registry-only.
-  const abandoned = await repo.findAbandoned(now, deps.batch);
+  // 1. Select — registry-only. The abandoned-grant class was retired with the
+  //    pre-auth grant (WI-6); reclamation now selects the single unreferenced-owned
+  //    class. (The `eligibleAbandoned` report field is kept at 0 until WI-8
+  //    reconciles the reason/audit terminology.)
   const unreferenced = await repo.findUnreferencedOwned(olderThan, deps.batch);
-  const candidates: ReclaimCandidate[] = [...abandoned, ...unreferenced];
+  const candidates: ReclaimCandidate[] = [...unreferenced];
 
   // 2. Integrity — partition candidates into intact vs a row-without-bytes
   //    divergence (ready row, no bytes), never reclaimed on divergence alone.
@@ -169,7 +171,7 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
   const report: ReclamationReport = {
     mode: deps.mode,
     scannedAt: now,
-    eligibleAbandoned: abandoned.length,
+    eligibleAbandoned: 0, // retired class (WI-6); field removed in WI-8
     eligibleUnreferenced: unreferenced.length,
     wouldReclaimBytes,
     rowWithoutBytes: rowWithoutBytes.length,
