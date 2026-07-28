@@ -39,8 +39,7 @@ export type ReclamationMode = "report" | "destructive";
 export interface ReclamationReport {
   mode: ReclamationMode;
   scannedAt: Date;
-  /** Eligible garbage by class (intact bytes — the would-reclaim set). */
-  eligibleAbandoned: number;
+  /** Eligible unreferenced-owned garbage (intact bytes — the would-reclaim set). */
   eligibleUnreferenced: number;
   wouldReclaimBytes: number;
   /** Divergences — never reclaimed on divergence alone. */
@@ -74,10 +73,9 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
   const log = deps.log ?? ((line: string) => console.log(line));
   const olderThan = new Date(now.getTime() - deps.graceMs);
 
-  // 1. Select — registry-only. The abandoned-grant class was retired with the
-  //    pre-auth grant (WI-6); reclamation now selects the single unreferenced-owned
-  //    class. (The `eligibleAbandoned` report field is kept at 0 until WI-8
-  //    reconciles the reason/audit terminology.)
+  // 1. Select — registry-only. Reclamation has a single garbage class,
+  //    unreferenced-owned (the abandoned-grant class was retired with the pre-auth
+  //    grant, ADR 0008).
   const unreferenced = await repo.findUnreferencedOwned(olderThan, deps.batch);
   const candidates: ReclaimCandidate[] = [...unreferenced];
 
@@ -171,7 +169,6 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
   const report: ReclamationReport = {
     mode: deps.mode,
     scannedAt: now,
-    eligibleAbandoned: 0, // retired class (WI-6); field removed in WI-8
     eligibleUnreferenced: unreferenced.length,
     wouldReclaimBytes,
     rowWithoutBytes: rowWithoutBytes.length,
@@ -182,7 +179,7 @@ export const runReclamation = async (deps: ReclamationDeps): Promise<Reclamation
 
   log(
     `[jobs] media-reclamation (${report.mode}) — ` +
-      `abandoned=${report.eligibleAbandoned} unreferenced=${report.eligibleUnreferenced} ` +
+      `unreferenced=${report.eligibleUnreferenced} ` +
       `wouldReclaimBytes=${report.wouldReclaimBytes} ` +
       `rowWithoutBytes=${report.rowWithoutBytes} orphanBytes=${report.orphanBytes} ` +
       `reclaimed=${report.reclaimed} quarantined=${report.quarantined}`,
