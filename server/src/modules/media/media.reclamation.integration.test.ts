@@ -1,11 +1,11 @@
 /**
  * Reclamation selection — boundary tests against a REAL Postgres.
  *
- * Run with `npm run test:integration`. Seeds one object on each side of every
- * class boundary and asserts the selection queries admit exactly the garbage:
- * abandoned (expired grant) vs still-live grant; owned-unreferenced-past-grace vs
- * referenced vs too-young; and never a tombstone. Results are filtered to this
- * run's seeded ids, so a shared dev database does not perturb the assertions.
+ * Run with `npm run test:integration`. Seeds objects on each side of the
+ * unreferenced-owned boundary and asserts the selection query admits exactly the
+ * garbage: owned-unreferenced-past-grace vs referenced vs too-young, and never a
+ * tombstone. Results are filtered to this run's seeded ids, so a shared dev
+ * database does not perturb the assertions.
  *
  * Excluded from the default unit run (CI has no database).
  */

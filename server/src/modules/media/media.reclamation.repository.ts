@@ -24,8 +24,9 @@ import type { StorageKey } from "./media.types.js";
 
 type PrismaInstance = typeof prisma;
 
-/** Why an object is a reclamation candidate — recorded on the audit trail (Step 5). */
-export type ReclaimReason = "abandoned" | "unreferenced";
+/** Why an object is a reclamation candidate — recorded on the audit trail (Step 5).
+ *  Single class since the pre-auth grant was retired (ADR 0008). */
+export type ReclaimReason = "unreferenced";
 
 /**
  * A registry object eligible for reclamation. Carries only what the collector
@@ -46,7 +47,8 @@ export type AuditOutcome = "would_reclaim" | "reclaimed" | "would_quarantine" | 
 export interface ReclamationAuditRow {
   mediaId: number | null;
   storageKey: string | null;
-  reason: string; // abandoned | unreferenced | row_without_bytes | orphan_bytes
+  reason: string; // unreferenced | row_without_bytes | orphan_bytes
+                  // (historical rows may also carry the retired "abandoned" — see WI-8)
   outcome: AuditOutcome;
   bytes: number;
   mode: string; // report | destructive

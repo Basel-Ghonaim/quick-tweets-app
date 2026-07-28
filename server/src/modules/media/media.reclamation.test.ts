@@ -69,8 +69,7 @@ describe("reclamation orchestrator — report mode", () => {
 
     const report = await run(repo, adapter);
 
-    // The abandoned-grant class was retired (WI-6); reclamation is single-class.
-    expect(report.eligibleAbandoned).toBe(0);
+    // Reclamation is single-class (unreferenced-owned) — no abandoned concept.
     expect(report.eligibleUnreferenced).toBe(1);
     expect(report.wouldReclaimBytes).toBe(50);
     expect(report.reclaimed).toBe(0);
