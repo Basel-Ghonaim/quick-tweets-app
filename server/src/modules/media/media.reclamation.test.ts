@@ -21,6 +21,7 @@ import type {
   ReclaimCandidate,
   ReclaimReason,
   ReclamationAuditRow,
+  RecoverableTombstone,
 } from "./media.reclamation.repository";
 import type { StorageAdapter, StorageKey } from "./media.types";
 
@@ -35,11 +36,17 @@ const candidate = (
 const makeRepo = (over: Partial<IReclamationRepository> = {}): IReclamationRepository => ({
   findUnreferencedOwned: async () => [],
   keysWithRow: async () => new Set<string>(),
+  findLingeringTombstones: async () => [],
   tombstoneIfReclaimable: async () => true,
   recordAudit: async () => {},
   openQuarantine: async () => {},
   ...over,
 });
+
+const lingering = (
+  id: number,
+  over: Partial<RecoverableTombstone> = {},
+): RecoverableTombstone => ({ id, storageKey: key(`objects/${id}`), size: 10, ...over });
 
 /** A fake transaction runner: invoke the callback with an opaque sentinel client. */
 const fakeTx: <T>(fn: (tx: never) => Promise<T>) => Promise<T> = (fn) => fn({} as never);
@@ -212,6 +219,66 @@ describe("reclamation orchestrator — audit + quarantine persistence", () => {
       "row_without_bytes:quarantined",
       "unreferenced:reclaimed",
     ]);
+  });
+});
+
+describe("reclamation orchestrator — recovery of lingering tombstone bytes (#356)", () => {
+  it("report mode surfaces recoverable tombstones (would_recover) and deletes NOTHING", async () => {
+    const audits: ReclamationAuditRow[] = [];
+    const { adapter, deleted } = makeStorage();
+    const repo = makeRepo({
+      findLingeringTombstones: async () => [lingering(7)],
+      recordAudit: async (rows) => { audits.push(...rows); },
+    });
+
+    const report = await run(repo, adapter);
+
+    expect(report.recoverable).toBe(1);
+    expect(report.recovered).toBe(0);
+    expect(deleted).toHaveLength(0); // report never deletes — recovery backlog is only surfaced
+    expect(audits.map((a) => `${a.reason}:${a.outcome}`)).toContain("lingering_bytes:would_recover");
+  });
+
+  it("destructive mode re-deletes the lingering bytes and retains the tombstone (no re-tombstone)", async () => {
+    const audits: ReclamationAuditRow[] = [];
+    const tombstoned: number[] = [];
+    const { adapter, deleted } = makeStorage();
+    const repo = makeRepo({
+      findLingeringTombstones: async () => [lingering(7)],
+      tombstoneIfReclaimable: async (id) => { tombstoned.push(id); return true; },
+      recordAudit: async (rows) => { audits.push(...rows); },
+    });
+
+    const report = await runReclamation({
+      storage: adapter, repo, graceMs: 0, batch: 100, mode: "destructive", runInTransaction: fakeTx, log: () => {},
+    });
+
+    expect(report.recovered).toBe(1);
+    expect(deleted).toEqual(["objects/7"]); // bytes re-deleted
+    expect(tombstoned).not.toContain(7); // already tombstoned — recovery never re-tombstones a row
+    expect(audits.map((a) => `${a.reason}:${a.outcome}`)).toContain("lingering_bytes:recovered");
+  });
+
+  it("isolates a per-object recovery failure — the rest still recover, the failure stays backlog", async () => {
+    const deleted: string[] = [];
+    const adapter: StorageAdapter = {
+      save: async () => {},
+      createReadStream: async () => Readable.from([]),
+      exists: async () => true,
+      enumerate: async () => [],
+      delete: async (k) => {
+        if (k === "objects/7") throw new Error("disk error");
+        deleted.push(k);
+      },
+    };
+    const repo = makeRepo({ findLingeringTombstones: async () => [lingering(7), lingering(8)] });
+
+    const report = await runReclamation({
+      storage: adapter, repo, graceMs: 0, batch: 100, mode: "destructive", runInTransaction: fakeTx, log: () => {},
+    });
+
+    expect(report.recovered).toBe(1); // only object 8 recovered
+    expect(deleted).toEqual(["objects/8"]); // object 7's bytes stay backlog for the next pass
   });
 });
 
