@@ -40,14 +40,33 @@ export interface ReclaimCandidate {
   reason: ReclaimReason;
 }
 
+/**
+ * A tombstoned object (`status='deleted'`) whose bytes still linger after a
+ * failed/crashed post-commit delete — retryable cleanup, not a divergence (#356).
+ * Carries only what recovery needs: the id (to audit) plus the key and size (to
+ * re-delete the bytes and account for them). The row itself is never touched:
+ * the tombstone is permanently retained; only the lingering bytes are removed.
+ */
+export interface RecoverableTombstone {
+  id: number;
+  storageKey: StorageKey;
+  size: number;
+}
+
 /** What happened to a candidate/divergence — report outcomes are the "would_" pair. */
-export type AuditOutcome = "would_reclaim" | "reclaimed" | "would_quarantine" | "quarantined";
+export type AuditOutcome =
+  | "would_reclaim"
+  | "reclaimed"
+  | "would_quarantine"
+  | "quarantined"
+  | "would_recover"
+  | "recovered";
 
 /** One append-only audit row — the durable evidence base for the soak review. */
 export interface ReclamationAuditRow {
   mediaId: number | null;
   storageKey: string | null;
-  reason: string; // unreferenced | row_without_bytes | orphan_bytes
+  reason: string; // unreferenced | row_without_bytes | orphan_bytes | lingering_bytes
                   // (historical rows may also carry the retired "abandoned" — see WI-8)
   outcome: AuditOutcome;
   bytes: number;
@@ -78,6 +97,15 @@ export interface IReclamationRepository {
    * an orphan, so "any status" is deliberate).
    */
   keysWithRow(keys: string[], client?: DbClient): Promise<Set<string>>;
+  /**
+   * Tombstoned objects (`status='deleted'`) among `keys` — the live store
+   * enumeration — whose bytes therefore still linger after a crashed/failed
+   * post-commit delete (#356). The registry row is intentionally retained; this
+   * is **retryable cleanup**, not a divergence: only the bytes are re-deleted.
+   * Store-scoped by construction (a drained tombstone's key is absent from
+   * `keys`), so clean tombstones are never re-examined. Registry-only. Ascending id.
+   */
+  findLingeringTombstones(keys: string[], client?: DbClient): Promise<RecoverableTombstone[]>;
   /**
    * Reclaim object `id` **within the caller's transaction**: lock it `FOR UPDATE`
    * (conflicting with the attach path's own `FOR UPDATE`, so the two serialize),
@@ -128,6 +156,20 @@ export const createReclamationRepository = (
       select: { storageKey: true },
     });
     return new Set(rows.map((row) => row.storageKey));
+  },
+
+  findLingeringTombstones: async (keys, client: DbClient = db) => {
+    if (keys.length === 0) return [];
+    const rows = await client.mediaObject.findMany({
+      where: { status: "deleted", storageKey: { in: keys } },
+      select: CANDIDATE_SELECT,
+      orderBy: { id: "asc" },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      storageKey: storageKey(row.storageKey),
+      size: row.size,
+    }));
   },
 
   tombstoneIfReclaimable: async (id, client: DbClient) => {
