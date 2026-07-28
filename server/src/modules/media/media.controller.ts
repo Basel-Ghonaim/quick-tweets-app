@@ -27,10 +27,10 @@ import {
   MediaReadError,
   MediaValidationError,
 } from "./media.errors.js";
-import { createMediaService } from "./media.service.js";
+import { createMediaService, type IMediaService, type IngestEvidence } from "./media.service.js";
 import { mediaToken } from "./media.tokens.js";
 import { MEDIA_MAX_SIZE_BYTES } from "./media.validation.js";
-import type { IMediaService, IngestEvidence, MediaToken } from "./media.types.js";
+import type { MediaToken } from "./media.types.js";
 
 /** Map Media domain errors to the app's typed HTTP errors (reserved statuses). */
 const toHttpError = (err: unknown): unknown => {

@@ -14,7 +14,7 @@
  */
 
 import { randomBytes } from "node:crypto";
-import { Transform, type TransformCallback } from "node:stream";
+import { Transform, type Readable, type TransformCallback } from "node:stream";
 
 import {
   MediaIngestError,
@@ -30,13 +30,44 @@ import {
   detectMediaType,
   verifyMediaContent,
 } from "./media.validation.js";
-import { createStorageAdapter } from "./index.js";
+import { createStorageAdapter } from "./storage/index.js";
 import type {
   IMediaRepository,
-  IMediaService,
   MediaProvenance,
+  MediaToken,
   StorageAdapter,
 } from "./media.types.js";
+
+// ─── Public contract — the ingest/read boundary ──────────────────────────────
+
+/** Ingest authorization evidence — an authenticated user only (ADR 0008: the
+ * pre-auth grant evidence type was retired). */
+export type IngestEvidence = { kind: "user"; userId: number };
+
+/** What ingest returns to the client — the reference token plus display facts. */
+export interface IngestResult {
+  token: MediaToken;
+  contentType: string;
+  size: number;
+}
+
+/**
+ * A servable object opened for reading: the header facts plus the byte stream.
+ * Deliberately narrow — it carries no storage detail (the storage key stays
+ * inside the module; the read boundary only needs the type, size, and bytes).
+ */
+export interface MediaReadResult {
+  contentType: string;
+  size: number;
+  stream: Readable;
+}
+
+/** Media's orchestration contract — transport-agnostic (a `Readable`, never HTTP). */
+export interface IMediaService {
+  ingest(file: Readable, evidence: IngestEvidence): Promise<IngestResult>;
+  /** Resolve a public token to a servable object; the access-control seam (ADR 0005 D4). */
+  read(token: MediaToken): Promise<MediaReadResult>;
+}
 
 // ─── Stream inspection (the ingest-side mechanics of the M3 policy) ──────────
 

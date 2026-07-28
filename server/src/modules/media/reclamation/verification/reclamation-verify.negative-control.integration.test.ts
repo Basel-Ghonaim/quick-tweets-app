@@ -22,8 +22,8 @@ import {
   tapModels,
   type ObservedState,
 } from "./oracle.js";
-import { storageKey } from "../media.keys.js";
-import { mintToken } from "../media.tokens.js";
+import { storageKey } from "../../media.keys.js";
+import { mintToken } from "../../media.tokens.js";
 
 let env: DisposableMediaEnv | null = null;
 let reachable = false;

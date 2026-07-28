@@ -13,17 +13,17 @@
  * (Enabling that opt-in is out of scope for this Work Item — see #354.)
  */
 
-import { env } from "../../config/env.js";
-import type { JobDefinition } from "../../shared/scheduler/index.js";
-import { createStorageAdapter } from "./index.js";
+import { env } from "../../../config/env.js";
+import type { JobDefinition } from "../../../shared/scheduler/index.js";
+import { createStorageAdapter } from "../storage/index.js";
 import {
   runReclamation,
   type ReclamationDeps,
   type ReclamationMode,
   type ReclamationReport,
-} from "./media.reclamation.js";
-import type { StorageAdapter } from "./media.types.js";
-import type { IReclamationRepository } from "./media.reclamation.repository.js";
+} from "./reclamation.js";
+import type { StorageAdapter } from "../media.types.js";
+import type { IReclamationRepository } from "./reclamation.repository.js";
 
 /**
  * Resolve the configured mode with a fail-safe bias to `report`. Only the exact

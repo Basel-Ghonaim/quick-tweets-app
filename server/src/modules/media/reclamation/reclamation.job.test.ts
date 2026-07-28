@@ -9,9 +9,9 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { createMediaReclamationJob, resolveReclamationMode } from "./media.reclamation.job";
-import type { ReclamationDeps, ReclamationReport } from "./media.reclamation";
-import type { StorageAdapter } from "./media.types";
+import { createMediaReclamationJob, resolveReclamationMode } from "./reclamation.job";
+import type { ReclamationDeps, ReclamationReport } from "./reclamation";
+import type { StorageAdapter } from "../media.types";
 
 const noopStorage = {} as StorageAdapter;
 const emptyReport = {} as ReclamationReport;

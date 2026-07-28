@@ -28,13 +28,13 @@ import { fileURLToPath } from "node:url";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
-import { PrismaClient } from "../../../generated/prisma/client.js";
-import type { DbClient, RunInTransaction } from "../../../shared/database/index.js";
-import { createLocalDiskStorageAdapter } from "../storage/local-disk.adapter.js";
-import type { StorageAdapter } from "../media.types.js";
+import { PrismaClient } from "../../../../generated/prisma/client.js";
+import type { DbClient, RunInTransaction } from "../../../../shared/database/index.js";
+import { createLocalDiskStorageAdapter } from "../../storage/local-disk.adapter.js";
+import type { StorageAdapter } from "../../media.types.js";
 
 /** server/prisma/migrations — four levels up from this file's directory. */
-const MIGRATIONS_DIR = fileURLToPath(new URL("../../../../prisma/migrations", import.meta.url));
+const MIGRATIONS_DIR = fileURLToPath(new URL("../../../../../prisma/migrations", import.meta.url));
 
 export interface DisposableMediaEnv {
   readonly dbName: string;

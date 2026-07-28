@@ -10,8 +10,8 @@ import { Readable } from "node:stream";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createDisposableMediaEnv, type DisposableMediaEnv } from "./disposable-env.js";
-import { storageKey } from "../media.keys.js";
-import { mintToken } from "../media.tokens.js";
+import { storageKey } from "../../media.keys.js";
+import { mintToken } from "../../media.tokens.js";
 
 let env: DisposableMediaEnv | null = null;
 let reachable = false;

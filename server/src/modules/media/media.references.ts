@@ -1,7 +1,7 @@
 /**
  * Media module — reference coordination (ADR 0005 Decision 8).
  *
- * The third feature-facing surface, alongside adoption and ownership. Decision 8
+ * A feature-facing surface (alongside ownership and resolution). Decision 8
  * splits the responsibility: *"Features own the domain reference and the decision
  * to add, replace, or remove it. A feature's only obligation is to signal when a
  * reference begins and ends."* This is that signal.
@@ -9,7 +9,7 @@
  * The feature owns the **trigger**; Media owns the **write**. Both operations
  * accept the caller's transaction, so the signal and the feature's own reference
  * change commit or roll back together and a signal cannot be lost half-way —
- * the shape adoption already proved on the register path.
+ * the transactionally-bound shape every reference producer uses.
  *
  * Both signals are **idempotent**, so a retry is safe: beginning twice records
  * one reference, and ending a reference that is already gone is a no-op.

@@ -22,9 +22,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDisposableMediaEnv, type DisposableMediaEnv } from "./disposable-env.js";
 import { assertNoDeletedReferenced, observe, type ObservedState } from "./oracle.js";
 import { boundServices, seedOwnedReady, seedUser } from "./producers.js";
-import { MediaAttachError } from "../media.errors.js";
-import { createReclamationRepository } from "../media.reclamation.repository.js";
-import { runReclamation } from "../media.reclamation.js";
+import { MediaAttachError } from "../../media.errors.js";
+import { createReclamationRepository } from "../reclamation.repository.js";
+import { runReclamation } from "../reclamation.js";
 
 const NOW = new Date("2026-07-28T12:00:00.000Z");
 const GRACE_MS = 24 * 60 * 60 * 1000;

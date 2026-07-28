@@ -12,7 +12,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AppError } from "../../shared/errors/index.js";
 import { MediaReadError, MediaValidationError } from "./media.errors";
 import { createMediaController } from "./media.controller";
-import type { IMediaService, IngestEvidence, IngestResult } from "./media.types";
+import type { IMediaService, IngestEvidence, IngestResult } from "./media.service";
 
 const BOUNDARY = "----vitestBoundary";
 

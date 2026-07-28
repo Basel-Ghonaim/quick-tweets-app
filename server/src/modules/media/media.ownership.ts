@@ -1,11 +1,11 @@
 /**
  * Media module — ownership authority (ADR 0005 Decision 5).
  *
- * The second feature-facing surface, alongside adoption. Two capabilities:
+ * A feature-facing surface (alongside references and resolution). Two capabilities:
  * - `authorizeAttach` — Media authorizes a feature's attach against the object's
- *   recorded uploader, so no principal can attach another's media. Unlike
- *   adoption (a one-time ownership *fill*), this is a read-only **check**: an
- *   authenticated upload already records its uploader.
+ *   recorded uploader, so no principal can attach another's media. It is a
+ *   read-only **check**, never an ownership *fill*: an authenticated upload already
+ *   records its uploader — the single provenance model (ADR 0008).
  * - `usageFor` — a principal's aggregate footprint, computed from the registry.
  *   Only Media can compute it, so a quota would be enforceable at one owner; the
  *   quota policy itself is deliberately not built here.

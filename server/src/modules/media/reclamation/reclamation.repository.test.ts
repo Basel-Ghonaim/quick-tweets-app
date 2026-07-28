@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { createReclamationRepository } from "./media.reclamation.repository";
+import { createReclamationRepository } from "./reclamation.repository";
 
 interface FindManyArgs {
   where: Record<string, unknown>;

@@ -20,8 +20,8 @@ import { describe, expect, it } from "vitest";
 import {
   createMediaReclamationJob,
   resolveReclamationMode,
-} from "../media.reclamation.job.js";
-import type { ReclamationDeps, ReclamationReport } from "../media.reclamation.js";
+} from "../reclamation.job.js";
+import type { ReclamationDeps, ReclamationReport } from "../reclamation.js";
 
 describe("resolveReclamationMode — fail-safe (only exact 'destructive' enables)", () => {
   const cases: [string | undefined, "report" | "destructive"][] = [
@@ -74,7 +74,7 @@ describe("mode is captured once at job creation and used for every run", () => {
 describe("source guardrail — the job handler never re-reads config per run", () => {
   it("the handler body reads no process.env and re-resolves no mode", () => {
     const here = path.dirname(fileURLToPath(import.meta.url));
-    const source = readFileSync(path.join(here, "..", "media.reclamation.job.ts"), "utf8");
+    const source = readFileSync(path.join(here, "..", "reclamation.job.ts"), "utf8");
     const handler = /handler:\s*async\s*\(\)\s*=>\s*\{([\s\S]*?)\n\s*\},/.exec(source);
     expect(handler, "could not locate the job handler body").not.toBeNull();
     const body = handler![1]!;

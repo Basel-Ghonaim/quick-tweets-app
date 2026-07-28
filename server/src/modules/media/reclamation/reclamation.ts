@@ -27,15 +27,15 @@
 import {
   runInTransaction as defaultRunInTransaction,
   type RunInTransaction,
-} from "../../shared/database/index.js";
-import type { StorageAdapter } from "./media.types.js";
+} from "../../../shared/database/index.js";
+import type { StorageAdapter } from "../media.types.js";
 import {
   createReclamationRepository,
   type AuditOutcome,
   type IReclamationRepository,
   type ReclaimCandidate,
   type ReclamationAuditRow,
-} from "./media.reclamation.repository.js";
+} from "./reclamation.repository.js";
 
 /** report = identify + account, mutate nothing. destructive = also physically reclaim. */
 export type ReclamationMode = "report" | "destructive";

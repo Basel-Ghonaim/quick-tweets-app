@@ -12,18 +12,18 @@
 
 import { Readable } from "node:stream";
 
-import { createCommentRepository } from "../../comments/comment.repository.js";
-import { createCommentService } from "../../comments/comment.service.js";
-import { createTweetRepository } from "../../tweets/tweet.repository.js";
-import { createTweetService } from "../../tweets/tweet.service.js";
-import { createUserRepository } from "../../users/user.repository.js";
-import { createUserService } from "../../users/user.service.js";
-import { storageKey } from "../media.keys.js";
-import { createMediaOwnership } from "../media.ownership.js";
-import { createMediaReferences } from "../media.references.js";
-import { createMediaRepository } from "../media.repository.js";
-import { createMediaResolution } from "../media.resolution.js";
-import { mintToken } from "../media.tokens.js";
+import { createCommentRepository } from "../../../comments/comment.repository.js";
+import { createCommentService } from "../../../comments/comment.service.js";
+import { createTweetRepository } from "../../../tweets/tweet.repository.js";
+import { createTweetService } from "../../../tweets/tweet.service.js";
+import { createUserRepository } from "../../../users/user.repository.js";
+import { createUserService } from "../../../users/user.service.js";
+import { storageKey } from "../../media.keys.js";
+import { createMediaOwnership } from "../../media.ownership.js";
+import { createMediaReferences } from "../../media.references.js";
+import { createMediaRepository } from "../../media.repository.js";
+import { createMediaResolution } from "../../media.resolution.js";
+import { mintToken } from "../../media.tokens.js";
 import type { DisposableMediaEnv } from "./disposable-env.js";
 
 /** The producer services + media port, all bound to the disposable env. */

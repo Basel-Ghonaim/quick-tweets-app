@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { runReclamation } from "./media.reclamation";
+import { runReclamation } from "./reclamation";
 import type {
   IReclamationRepository,
   QuarantineEntry,
@@ -22,8 +22,8 @@ import type {
   ReclaimReason,
   ReclamationAuditRow,
   RecoverableTombstone,
-} from "./media.reclamation.repository";
-import type { StorageAdapter, StorageKey } from "./media.types";
+} from "./reclamation.repository";
+import type { StorageAdapter, StorageKey } from "../media.types";
 
 const key = (s: string): StorageKey => s as StorageKey;
 
@@ -285,9 +285,11 @@ describe("reclamation orchestrator — recovery of lingering tombstone bytes (#3
 describe("reclamation — registry-only guardrail", () => {
   it("neither the orchestrator nor its repository imports a feature module", () => {
     const here = path.dirname(fileURLToPath(import.meta.url));
-    const featureImport = /from\s+["']\.\.\/(tweets|comments|auth|users|follows|likes)/;
+    // One-or-more `../` (the sources now sit a level deeper under reclamation/)
+    // then a feature-module segment — the registry-only guardrail, depth-robust.
+    const featureImport = /from\s+["'](?:\.\.\/)+(tweets|comments|auth|users|follows|likes)/;
 
-    for (const file of ["media.reclamation.ts", "media.reclamation.repository.ts"]) {
+    for (const file of ["reclamation.ts", "reclamation.repository.ts"]) {
       const source = readFileSync(path.join(here, file), "utf8");
       expect(source).not.toMatch(featureImport);
     }

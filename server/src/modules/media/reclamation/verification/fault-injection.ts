@@ -14,9 +14,9 @@
 
 import type { Readable } from "node:stream";
 
-import type { DbClient } from "../../../shared/database/index.js";
-import type { IReclamationRepository } from "../media.reclamation.repository.js";
-import type { StorageAdapter, StorageKey } from "../media.types.js";
+import type { DbClient } from "../../../../shared/database/index.js";
+import type { IReclamationRepository } from "../reclamation.repository.js";
+import type { StorageAdapter, StorageKey } from "../../media.types.js";
 
 /** Wraps a StorageAdapter so `delete()` throws for chosen keys. */
 export class FaultInjectingStorage implements StorageAdapter {

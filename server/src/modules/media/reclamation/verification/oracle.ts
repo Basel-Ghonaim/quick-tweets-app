@@ -13,9 +13,9 @@
 
 import { expect } from "vitest";
 
-import { PrismaClient } from "../../../generated/prisma/client.js";
+import { PrismaClient } from "../../../../generated/prisma/client.js";
 import type { DisposableMediaEnv } from "./disposable-env.js";
-import { storageKey } from "../media.keys.js";
+import { storageKey } from "../../media.keys.js";
 
 /** One object's observable state, read independently from DB and storage. */
 export interface ObservedState {

@@ -22,15 +22,15 @@ import { Readable } from "node:stream";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { prisma } from "../../shared/database/index.js";
-import { runReclamation } from "./media.reclamation.js";
+import { prisma } from "../../../shared/database/index.js";
+import { runReclamation } from "./reclamation.js";
 import {
   createReclamationRepository,
   type IReclamationRepository,
   type ReclaimCandidate,
-} from "./media.reclamation.repository.js";
-import { mintToken } from "./media.tokens.js";
-import type { StorageAdapter, StorageKey } from "./media.types.js";
+} from "./reclamation.repository.js";
+import { mintToken } from "../media.tokens.js";
+import type { StorageAdapter, StorageKey } from "../media.types.js";
 
 const TAG = `it-recover-${process.pid}-${Math.floor(process.hrtime()[1])}`;
 
