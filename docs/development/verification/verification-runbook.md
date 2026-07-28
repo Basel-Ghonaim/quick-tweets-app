@@ -21,34 +21,30 @@
 By design (ADR 0005 Decision 8), Media reasons about referenced-ness from **its
 own state**, and features never read Media's schema. The consequence for
 verification: the ledger, `TweetMedia` rows, and `MediaObject` internals
-(`status`, `uploader_id`, `grant_id`) are **not exposed by any endpoint**.
+(`status`, `uploader_id`) are **not exposed by any endpoint**.
 
 | What you are verifying | Postman sees | Only pgAdmin sees |
 |---|---|---|
-| Object stored & servable | `GET /media/:token` → 200 | `status`, `uploader_id`, `grant_id` |
+| Object stored & servable | `GET /media/:token` → 200 | `status`, `uploader_id` |
 | Avatar attached | `avatar:{token}` on the user | the `user-avatar:{id}` ledger row |
 | Tweet media | `media:[{token}]` on the tweet | `tweet_media` rows + `tweet:{id}` ledger rows |
 | **Reference began / ended** | *(nothing)* | **the ledger delta — the whole point** |
-| Abandoned vs unreferenced | *(nothing)* | the M11 target states (see terminology) |
+| Unreferenced (M11 target) | *(nothing)* | the reclamation target state (see terminology) |
 
 **A Postman-only pass cannot validate the reclamation prerequisite.** Treat every
 DB checkpoint below as a required step, not an optional peek.
 
-## Terminology — two distinct M11 targets (do not conflate)
+## Terminology — the M11 reclamation target
 
-These are different states with different causes. M11 will treat them
-differently, so this verification keeps them separate:
+- **Unreferenced (owned).** An object with an `uploader_id` that **no longer has
+  any ledger row** pointing at it. It was owned and referenced; the reference
+  ended. *Cause:* a tweet whose media was removed, or a tweet that was deleted.
+  This is M11's **single** reclamation target.
 
-- **Abandoned (grant-provenance).** An object uploaded under an upload grant that
-  was **never adopted**, whose grant is no longer live. It has `uploader_id IS
-  NULL` and a `grant_id`. This is ADR 0007's "abandoned" — it never belonged to a
-  principal. *Cause:* a register flow that uploaded an avatar but never completed.
-- **Unreferenced (owned).** An object with an `uploader_id` (an authenticated
-  upload, or an adopted avatar) that **no longer has any ledger row** pointing at
-  it. It was owned and referenced; the reference ended. *Cause:* a tweet whose
-  media was removed, or a tweet that was deleted.
-
-The word **abandoned** is reserved for the first. The second is **unreferenced**.
+The pre-auth grant **"abandoned"** class — a grant-provenance object never adopted
+(`uploader_id IS NULL`, `grant_id` set) — was retired with the upload grant
+(ADR 0008). Historical `media_reclamation_audit` rows may still carry
+`reason="abandoned"`; those are immutable evidence, not a current target.
 
 ## Prerequisites
 
@@ -92,7 +88,6 @@ The word **abandoned** is reserved for the first. The second is **unreferenced**
 - `authLimiter` = **10 requests / 15 min** on `register` + `login`. The auth
   failure-path folder can trip this; a `429 rate_limit` there is the limiter
   working, not a defect. Space them out or accept the window.
-- `mediaMintLimiter` guards `POST /media/grants`. Mint sparingly.
 
 ## DB checkpoints
 
@@ -101,19 +96,18 @@ Postman captured (visible in the environment quick-look, or in each response).
 
 ### Checkpoint A — Media primitives (after folder 02)
 ```sql
--- Every uploaded object is 'ready', with the right provenance.
---   Bearer upload  → uploader_id set, grant_id null
---   grant upload   → uploader_id null, grant_id set
-SELECT id, status, uploader_id, grant_id, content_type, size
+-- Every uploaded object is 'ready', owned by its authenticated uploader
+-- (uploader_id set — the single provenance model, ADR 0008).
+SELECT id, status, uploader_id, content_type, size
 FROM media_objects
 ORDER BY id DESC
 LIMIT 10;
 ```
 
-### Checkpoint B — Avatar adoption (after folder 03, step 3)
+### Checkpoint B — Avatar (authenticated User/Profile action)
 ```sql
--- The adopted avatar: uploader_id is now the new user, grant_id retained as
--- provenance, and a ledger row exists under user-avatar:{id}.
+-- An avatar set via PATCH /users/me: uploader_id is the owning user, and a
+-- ledger row exists under user-avatar:{id}.
 SELECT u.id AS user_id, u.avatar_media_id, m.status, m.uploader_id,
        r.referrer
 FROM users u
@@ -154,8 +148,8 @@ ORDER BY media_id;
 ### Checkpoint E — Delete ends references, leaves an unreferenced object (after "Delete tweet")
 ```sql
 -- The tweet and its tweet_media are gone; the ledger rows are gone; but the
--- MediaObjects survive as 'ready' with an uploader — i.e. UNREFERENCED (owned),
--- not abandoned. This is M11's target for owned-but-unreferenced reclamation.
+-- MediaObjects survive as 'ready' with an uploader — i.e. UNREFERENCED (owned).
+-- This is M11's single reclamation target (owned-but-unreferenced).
 SELECT m.id, m.status, m.uploader_id,
        (SELECT count(*) FROM media_references r WHERE r.media_id = m.id) AS ref_count
 FROM media_objects m
@@ -307,7 +301,7 @@ the whole collection at once — the point is to inspect state between steps.
 |---|---|---|
 | 1 — Auth spine | 00, 01 | none (API-observable only) |
 | 2 — Media primitives | 02 | **A** |
-| 3 — Avatar adoption | 03 | **B** |
+| 3 — Avatar (authenticated) | 03 | **B** |
 | 4 — Tweet coordination | 04 | **C → D (×3) → E**, then **G** for the failure |
 | 5 — Social | 05, 06, 07 | none |
 | 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |
@@ -338,14 +332,13 @@ checkpoint is named.
 
 **Fresh vs reused, stated plainly:**
 - **Fresh every scenario:** the media object(s) and the comment under test. Comment
-  media is a **Bearer** upload (no grant, no adoption), so "fresh media" = one
-  `POST /media` as User A — cheap, and it keeps each scenario's ledger unambiguous.
+  media is a **Bearer** upload, so "fresh media" = one `POST /media` as User A —
+  cheap, and it keeps each scenario's ledger unambiguous.
 - **Reused (read-only):** `cmTweetId`, the host tweet that scenarios A–D hang a
   comment on. It is never edited or deleted, so it cannot skew a result.
 - **Scenario E and F create their own tweets** (`cmCascadeTweetId`,
   `cmRestrictTweetId`) precisely because they delete / attempt-to-delete the tweet —
   they must never touch the shared host tweet.
-- **No grant is ever needed** in folder 08 (grants are the avatar/pre-auth path).
 
 ## Reset strategy
 

@@ -23,9 +23,9 @@
 
 - **Ledger** = `media_references` table (referrer + media_id).
 - **Referrer tags**: `tweet:{tweetId}`, `user-avatar:{userId}`.
-- **Abandoned** = grant-provenance, never adopted (`uploader_id IS NULL`,
-  `grant_id` set). **Unreferenced** = owned (`uploader_id` set) with no ledger
-  row. These are distinct M11 targets — see the runbook's terminology section.
+- **Unreferenced** = an owned object (`uploader_id` set) with no ledger row — the
+  single M11 reclamation target. (The pre-auth grant "abandoned" class was retired
+  with the upload grant, ADR 0008.) See the runbook's terminology section.
 
 ---
 
@@ -50,31 +50,28 @@
 
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
 |----|---------------|--------|---------------------|-------------------|---------|----------------|
-| MED-01 | — | Mint grant | 201; `{grant, expiresAt}` | — (grant is a token, not a row) | — | |
-| MED-02 | MED-01 | Upload `sample.png` under grant | 201; `{token, contentType:image/png, size}` | `media_objects`: `status=ready`, `uploader_id NULL`, `grant_id` set | ← abandoned until adopted | |
-| MED-03 | Login A | Upload `sample.png` under Bearer A | 201; `{token,…}` | `media_objects`: `uploader_id = A`, `grant_id NULL` | ← unreferenced until attached | |
-| MED-04 | MED-02 | Read `GET /media/:token` | 200; body is the bytes; `Content-Type: image/*`; `X-Content-Type-Options: nosniff` | — | — | |
-| MED-05 | — | Upload with no auth and no grant | 401 `unauthorized` | no row | — | |
-| MED-06 | — | Upload with invalid grant | 401 | no row | — | |
+| MED-03 | Login A | Upload `sample.png` under Bearer A | 201; `{token,…}` | `media_objects`: `uploader_id = A` | ← unreferenced until attached | |
+| MED-04 | MED-03 | Read `GET /media/:token` | 200; body is the bytes; `Content-Type: image/*`; `X-Content-Type-Options: nosniff` | — | — | |
+| MED-05 | — | Upload with no auth (no Bearer) | 401 `unauthorized` | no row | — | |
 | MED-07 | Login A | Upload `not-an-image.png` (text) | 415 `unsupported_media_type` (rejected by **content signature**, not extension) | no row | — | ✅ **415, server healthy** (2026-07-23, after #344 fix — previously crashed the process) |
 | MED-08 | — | Read unknown token | 404 / 410 (not served) | — | — | |
-| MED-09 | MED-02 (grant spent) | Re-upload under the **same** grant | 401 / 403 (grant is single-use, `GRANT_MAX_OBJECTS=1`) | no second row for that grant | — | |
 | MED-10 | Local oversize fixture — **valid signature** + >5 MiB (see README) | Upload a >5 MiB file | 413 `payload_too_large` | no row | — | ✅ **413, server healthy** (2026-07-23). Note: a *random/zero* oversize file returns 415 (signature checked before size) — the fixture must carry a real image signature. |
 
-> **Checkpoint A** (runbook) confirms MED-02/03 provenance.
+> Media upload is authenticated-only (the pre-auth grant scenarios MED-01/02/06/09
+> were retired with the upload grant, ADR 0008). **Checkpoint A** (runbook) confirms
+> MED-03 provenance.
 
-## 3 · Avatar (pre-auth adoption)
+## 3 · Avatar — retired (pre-auth adoption removed)
 
-| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
-|----|---------------|--------|---------------------|-------------------|---------|----------------|
-| AVA-01 | — | Mint grant → upload avatar → register with `{avatar:{token,grant}}` | 201; `user.avatar.token` present | `users.avatar_media_id` set; object `uploader_id = new user`, `grant_id` retained; **ledger row `user-avatar:{id}`** | Reset | |
-| AVA-02 | AVA-01 | Read the avatar token via `/media/:token` | 200; image bytes | — | — | |
-| AVA-03 | AVA-01 (grant + token spent) | Register again with the **same** token+grant | 409/422 (replay refused — grant spent at adoption) | no second user; no change to the object | — | |
-| AVA-04 | An unadopted object exists | Register presenting the token **without** the grant | 4xx (adoption re-requires the grant; a leaked token alone is not adoptable) | no adoption | — | |
-| AVA-05 | Object already adopted by A | Attempt to adopt the same object for another user | 409 `already_adopted` (opaque) | unchanged | — | |
+The pre-auth **register-with-avatar / upload-grant adoption** flow (formerly
+AVA-01…05) was retired with the upload grant (ADR 0008): registration is account
+creation only, and the avatar is now an ordinary authenticated **User/Profile**
+producer — upload under `POST /media` (Bearer), then `PATCH /users/me`. The
+authenticated avatar lifecycle is exercised by the User-domain backend tests; the
+user-facing avatar/profile surface is tracked separately ([#362]). These scenarios
+no longer describe executable behavior and are retired rather than rewritten here.
 
-> **Checkpoint B** confirms AVA-01's ledger row. AVA-04/05 may need a fresh
-> grant+upload to set up; see the runbook.
+[#362]: https://github.com/Basel-Ghonaim/quick-tweets-app/issues/362
 
 ## 4 · Tweets + media — Attach, Coordination, Transactions (M7–M9)
 
@@ -168,13 +165,12 @@
 Scenarios **TWT-07** and **TWT-09** are the transaction proofs: a failure mid-attach
 must leave **no** tweet, **no** `tweet_media`, and **no** ledger row. **CMT-M09** is
 the comment equivalent (a cross-principal attach must persist no comment and no
-`comment:{id}` row). **AVA-03** proves adoption's atomicity (a spent grant leaves
-the object untouched). Confirm each with the DB checkpoint, not just the HTTP
+`comment:{id}` row). Confirm each with the DB checkpoint, not just the HTTP
 status — a 422 with a half-written row would be the exact bug this phase exists to
 catch.
 
 ### Reference Coordination
-The heart of the phase, spread across **AVA-01** (begin, avatar), **TWT-01**
+The heart of the phase, spread across **TWT-01**
 (begin, tweet), **TWT-03/04/05** (the set-difference: end, no-op, remove-all),
 **TWT-08** (delete ends all), and **TWT-13** (the global invariant). Comment media
 adds the same shape single-valued — **CMT-M01** (begin), **CMT-M03→M06** (set /
@@ -186,11 +182,10 @@ these matches its ledger checkpoint, the M11 precondition — *every
 reference-creating consumer participates, and Media's state is consistent* — is
 verified by hand.
 
-### Terminology check (do not conflate)
+### Terminology check
 After **TWT-08**, **CMT-M08**, and **CMT-M10**, the ex-media are **unreferenced**
-(owned, no ledger row). After a grant upload that is never adopted (**MED-02** left
-as-is), the object is **abandoned** (never owned). Both are M11 targets; they are
-reached by different paths and must be labelled distinctly in any notes.
+(owned, no ledger row) — the single M11 reclamation target. (The pre-auth grant
+"abandoned" class was retired with the upload grant, ADR 0008.)
 
 ---
 
