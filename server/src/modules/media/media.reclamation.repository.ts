@@ -101,7 +101,8 @@ export const createReclamationRepository = (
     const rows = await client.mediaObject.findMany({
       where: {
         status: "ready",
-        uploaderId: { not: null },
+        // Every object is owned since WI-7 made uploader_id NOT NULL — no owner
+        // filter needed. Selection is: ready, unreferenced, settled past grace.
         createdAt: { lt: olderThan },
         references: { none: {} },
         quarantines: { none: { resolvedAt: null } },

@@ -20,7 +20,7 @@ const fakeRow = (over: Record<string, unknown> = {}) => ({
   contentType: "image/png",
   size: 1234,
   status: "ready",
-  uploaderId: null,
+  uploaderId: 7,
   createdAt: new Date("2026-07-16T00:00:00.000Z"),
   updatedAt: new Date("2026-07-16T00:00:00.000Z"),
   ...over,

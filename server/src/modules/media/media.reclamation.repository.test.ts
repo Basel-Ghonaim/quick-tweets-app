@@ -40,7 +40,6 @@ describe("reclamation repository — selection queries", () => {
 
     expect(calls[0]!.where).toEqual({
       status: "ready",
-      uploaderId: { not: null },
       createdAt: { lt: olderThan },
       references: { none: {} },
       quarantines: { none: { resolvedAt: null } },

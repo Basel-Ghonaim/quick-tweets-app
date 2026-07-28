@@ -31,7 +31,7 @@ const ids: Record<string, number> = {};
 
 const seed = async (
   key: string,
-  data: { uploaderId?: number; status?: string; createdAt?: Date; referenced?: boolean },
+  data: { uploaderId: number; status?: string; createdAt?: Date; referenced?: boolean },
 ): Promise<void> => {
   seq += 1;
   const obj = await prisma.mediaObject.create({
@@ -41,7 +41,7 @@ const seed = async (
       contentType: "image/png",
       size: 10,
       status: data.status ?? "ready",
-      uploaderId: data.uploaderId ?? null,
+      uploaderId: data.uploaderId,
       ...(data.createdAt ? { createdAt: data.createdAt } : {}),
     },
   });
