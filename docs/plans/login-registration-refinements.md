@@ -83,7 +83,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR. The section
 - **Commit/PR boundary:** one PR (backend pattern + frontend rule + data reset + contract note).
 - **Stop-risks:** if any **non-disposable** consumer depends on an uppercase username (none found in analysis) → **stop**. Confirm disposability before reset (pinned as disposable).
 
-### WI-E — Login by neutral identifier
+### WI-E — Login by neutral identifier — [#391](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/391)
 - **Goal & rationale:** login accepts `{ identifier, password }` where identifier is username **or** email; the generic `401` is preserved. Single-input UX; safe only on WI-B's lowercase usernames.
 - **Scope:** backend login schema `{ username }` → `{ identifier }` (presence-only); the login input type; the login resolver — trim + lowercase the identifier, branch on `@` (→ email lookup / username lookup), generic `401` on no-match or bad password; the login controller. Frontend — the login field `username` → `identifier` (label "Username or email"), the login mapper, the login DTO, the login form schema (presence-only), and tests. The API contract's login request.
 - **Non-goals:** no register / `/me` / response-shape changes; no account-creation validation applied at login (stays forgiving/presence-only); no new repository method (reuse the existing username/email lookups); no change to the enumeration/`401` behaviour.

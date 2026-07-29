@@ -105,7 +105,8 @@ export interface MeResult {
 
 /** Login credentials received from the client. */
 export interface LoginInput {
-  username: string;
+  /** Username or email; normalized and routed by the login resolver. */
+  identifier: string;
   password: string;
 }
 

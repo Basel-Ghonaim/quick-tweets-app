@@ -3,7 +3,7 @@
  *
  * Current purpose:
  * - registerSchema: validates registration input (username, name, email, password)
- * - loginSchema: validates login input (username, password)
+ * - loginSchema: validates login input (identifier, password); presence-only
  *
  * Note: /refresh and /logout do NOT need body validation.
  * The refresh token is read from an httpOnly cookie (req.cookies), not req.body.
@@ -61,10 +61,13 @@ export const registerSchema = z.object({
 
 // ─── Login ───────────────────────────────────────────────────────────────────
 
+// Login accepts a neutral identifier (username OR email): presence-only, never the
+// registration charset/format rules. Normalization and the username-vs-email routing
+// live in the service resolver, not here.
 export const loginSchema = z.object({
-  username: z
-    .string({ error: "Username is required" })
-    .min(1, "Username is required")
+  identifier: z
+    .string({ error: "Username or email is required" })
+    .min(1, "Username or email is required")
     .trim(),
 
   password: z

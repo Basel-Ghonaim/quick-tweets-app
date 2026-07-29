@@ -1,11 +1,13 @@
 export interface LoginCredentials {
-  username: string;
+  identifier: string;
   password: string;
 }
 
-export interface RegisterCredentials extends LoginCredentials {
+export interface RegisterCredentials {
+  username: string;
   name: string;
   email: string;
+  password: string;
   confirmPassword: string;
   privacy: boolean;
 }

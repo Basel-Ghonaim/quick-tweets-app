@@ -154,10 +154,17 @@ export const createAuthService = (
   // ─── Login ─────────────────────────────────────────────────────────────────
 
   login: async (data: LoginInput): Promise<AuthResult> => {
-    // 1. Find user by username.
-    const user = await authRepo.findByUsername(data.username);
+    // 1. Resolve the neutral identifier: trim + lowercase, then route by the '@'
+    //    discriminator — an '@' means email (a username can never contain '@'
+    //    under the lowercase charset), otherwise username. There is NO fallback
+    //    between the two paths, and every miss below yields the same generic 401,
+    //    so an unknown username, an unknown email, and a wrong password stay
+    //    indistinguishable.
+    const identifier = data.identifier.trim().toLowerCase();
+    const user = identifier.includes("@")
+      ? await authRepo.findByEmail(identifier)
+      : await authRepo.findByUsername(identifier);
     if (!user) {
-      // Generic message — don't reveal whether username exists.
       throw AppError.unauthorized("Invalid credentials");
     }
 
