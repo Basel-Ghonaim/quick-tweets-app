@@ -1,10 +1,10 @@
 # Login & Registration Refinements — Execution Plan
 
-> **Status:** Draft
+> **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
 > **Last Updated:** 2026-07-29
-> **Parent Issue:** —
+> **Parent Issue:** [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384)
 > **Supersedes:** —
 
 This plan sequences the settled **Login & Registration refinements** into five independently reviewable Work Items. The product and architecture decisions behind them are **closed** (recorded through prior analysis passes); this plan owns their **execution order, boundaries, and invariants**, and never reopens them.
@@ -57,7 +57,7 @@ Serialization edges (shared files — not new dependencies):
 
 Each Work Item is a separate, atomic unit with its own Issue and PR. The sections below define each one strategically; the granular acceptance criteria and status live in the Issue.
 
-### WI-D — Register Transaction Correctness
+### WI-D — Register Transaction Correctness — [#385](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/385)
 - **Goal & rationale:** registration must never persist an account without its required initial refresh session, and a concurrent duplicate must yield one account + `409`, never `500`. This is the correctness foundation that must precede any reshaping of the register contract.
 - **Scope:** wrap `{ User INSERT + refresh-session INSERT }` in the existing `runInTransaction`; add an optional transaction-`client` parameter to `createRefreshToken` (mirroring the auth repository's `create`); catch `P2002` via the existing `isPrismaError` (code-only) and **attribute the field by re-querying** username/email → the specific `409` (fallback: a combined conflict message). `bcrypt` hashing and refresh-value generation run **before** the transaction; access-token signing and response construction run **after** commit.
 - **Non-goals:** no API-contract change (request/response unchanged); no `error.meta.target` parsing; no refresh-token-at-rest hashing; no login/refresh changes (already atomic).

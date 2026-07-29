@@ -49,7 +49,7 @@ A plan is a living document while `Active`: it evolves across pull requests (Doc
 
 | Plan | Type | Status | Parent Issue |
 |---|---|---|---|
-| [login-registration-refinements.md](login-registration-refinements.md) | Execution | Draft | — |
+| [login-registration-refinements.md](login-registration-refinements.md) | Execution | Active | [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384) |
 | [media-implementation.md](media-implementation.md) | Execution | Active | [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305) |
 | [auth-first-grant-retirement.md](auth-first-grant-retirement.md) | Migration | Active | [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357) |
 | [documentation-migration-plan.md](documentation-migration-plan.md) | Migration | Historical | [#215](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/215) |
