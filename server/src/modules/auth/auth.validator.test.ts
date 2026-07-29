@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 
 import { registerSchema } from "./auth.validator";
 
-const VALID = { username: "basel_a", name: "Basel", email: "b@example.com", password: "Passw0rd!" };
+const VALID = { username: "basel_a", email: "b@example.com", password: "Passw0rd!" };
 
 const usernameError = (input: string): string | undefined => {
   const r = registerSchema.safeParse({ ...VALID, username: input });
@@ -34,5 +34,11 @@ describe("registerSchema — lowercase-only username (WI-B)", () => {
     // If a lowercasing transform existed, "MixedCase1" would be coerced and pass.
     // It must FAIL — proving rejection, not silent normalization.
     expect(registerSchema.safeParse({ ...VALID, username: "MixedCase1" }).success).toBe(false);
+  });
+
+  it("strips a sent name — registration is account-only", () => {
+    const r = registerSchema.safeParse({ ...VALID, name: "Ignored" });
+    expect(r.success).toBe(true);
+    if (r.success) expect("name" in r.data).toBe(false);
   });
 });

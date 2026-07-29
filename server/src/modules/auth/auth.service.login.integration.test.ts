@@ -29,7 +29,7 @@ beforeAll(async () => {
     reachable = false;
     return;
   }
-  await svc.register({ username: base, name: "Login IT", email, password: PASSWORD });
+  await svc.register({ username: base, email, password: PASSWORD });
 }, 30_000);
 
 afterAll(async () => {

@@ -21,10 +21,9 @@ import type { DbClient } from "../../shared/database/index.js";
 
 // ─── Data Shapes ─────────────────────────────────────────────────────────────
 
-/** Data required to create a new user (excludes auto-generated fields). */
+/** Data required to create a new user (excludes auto-generated fields). Registration is account-only — no `name`; name is optional profile data set later via `PATCH /users/me`. */
 export interface CreateUserData {
   username: string;
-  name: string;
   email: string;
   passwordHash: string;
 }
@@ -108,7 +107,6 @@ export interface LoginInput {
 /** Registration data received from the client — account fields only (ADR 0008 D1). */
 export interface RegisterInput {
   username: string;
-  name: string;
   email: string;
   password: string;
 }

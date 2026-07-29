@@ -13,10 +13,10 @@ import type { RunInTransaction } from "../../shared/database/index.js";
 import { createAuthService } from "./auth.service";
 import type { IAuthRepository, ITokenRepository } from "./auth.types";
 
-const REG = { username: "alice1", name: "Alice", email: "a@example.com", password: "Passw0rd!" };
+const REG = { username: "alice1", email: "a@example.com", password: "Passw0rd!" };
 
 interface StoredUser {
-  id: number; username: string; name: string; email: string; passwordHash: string;
+  id: number; username: string; name: string | null; email: string; passwordHash: string;
   profileImage: string | null; avatarMediaId: number | null;
   bio: string; createdAt: Date; updatedAt: Date;
 }
@@ -33,7 +33,7 @@ const makeWorld = (existingUsernames: string[] = []) => {
     findById: async (id) => (users.find((x) => x.id === id) ?? null) as never,
     create: async (data) => {
       const u: StoredUser = {
-        id: nextId++, username: data.username, name: data.name, email: data.email,
+        id: nextId++, username: data.username, name: null, email: data.email,
         passwordHash: data.passwordHash, profileImage: null, avatarMediaId: null,
         bio: "", createdAt: new Date(), updatedAt: new Date(),
       };
@@ -70,6 +70,7 @@ describe("auth service — account-only registration (Media-free)", () => {
     expect(result.accessToken).toBeTruthy();
     expect(result.refreshToken).toBeTruthy();
     expect(w.users).toHaveLength(1);
+    expect(w.users[0]!.name).toBeNull(); // register is account-only — name is not set
     expect(w.users[0]!.avatarMediaId).toBeNull();
     expect(w.calls.createRefresh).toEqual([{ userId: w.users[0]!.id }]);
     // Auth is Media-free — the result carries no avatar.

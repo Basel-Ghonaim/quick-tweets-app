@@ -60,7 +60,7 @@ const makeHarness = (opts: HarnessOpts = {}) => {
       }
       const row = { id: nextId++, username: data.username, email: data.email };
       (staged ?? committed).push(row);
-      return { ...row, name: data.name, passwordHash: data.passwordHash } as never;
+      return { ...row, name: null, passwordHash: data.passwordHash } as never;
     },
   };
 
