@@ -50,7 +50,6 @@ const stubService = (): IAuthService =>
     logout: async () => {},
     logoutAll: async () => {},
     refreshToken: async () => authResult,
-    getMe: async () => ({ user }),
   }) as never;
 
 const names = (calls: CookieCall[]) => calls.map((c) => c.name);

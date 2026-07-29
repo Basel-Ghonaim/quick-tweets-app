@@ -6,7 +6,6 @@
  * - login: parse validated body → call service → set cookie → return 200 + user + accessToken
  * - logout: read cookie → call service → clear cookie → return 204
  * - refresh: read cookie → call service → set new cookie → return 200 + accessToken
- * - me: read userId from authGuard → fetch user → return 200 + user
  *
  * Security: refresh token is NEVER in the response body.
  * It is set as an httpOnly cookie — JavaScript cannot read it.
@@ -205,24 +204,6 @@ export const createAuthController = (
       sendSuccess(res, {
         accessToken: result.accessToken,
         user: toUserResponse(result.user),
-      });
-    } catch (err) {
-      next(err);
-    }
-  },
-
-  /**
-   * GET /auth/me
-   * Returns the authenticated user's profile.
-   * Requires authGuard middleware to run first.
-   */
-  me: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const userId = req.userId!;
-      const { user } = await service.getMe(userId);
-
-      sendSuccess(res, {
-        user: toUserResponse(user),
       });
     } catch (err) {
       next(err);

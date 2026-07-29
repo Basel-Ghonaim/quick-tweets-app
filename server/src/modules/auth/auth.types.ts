@@ -98,11 +98,6 @@ export interface TokenRefreshResult {
   user: UserSafe;
 }
 
-/** The authenticated user's identity (`GET /auth/me`) — Media-free; the avatar is served by `GET /users/me`. */
-export interface MeResult {
-  user: UserSafe;
-}
-
 /** Login credentials received from the client. */
 export interface LoginInput {
   /** Username or email; normalized and routed by the login resolver. */
@@ -130,5 +125,4 @@ export interface IAuthService {
   logout(refreshToken: string): Promise<void>;
   logoutAll(userId: number): Promise<void>;
   refreshToken(token: string): Promise<TokenRefreshResult>;
-  getMe(userId: number): Promise<MeResult>;
 }

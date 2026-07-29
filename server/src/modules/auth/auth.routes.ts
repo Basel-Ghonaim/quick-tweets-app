@@ -6,16 +6,11 @@
  * - POST /login    → authLimiter → validate → controller.login
  * - POST /logout   → controller.logout   (reads cookie, no body validation)
  * - POST /refresh  → refreshLimiter → controller.refresh  (reads cookie)
- * - GET  /me       → authGuard → controller.me
  *
  * Rate limiting:
  * - login/register: strict (10 req/15min) — brute force protection
  * - refresh: generous (30 req/15min) — automated silent refresh
- * - logout/me: no rate limit (single-call endpoints)
- *
- * Future expansion:
- * - POST /forgot-password → validate → controller.forgotPassword
- * - POST /reset-password  → validate → controller.resetPassword
+ * - logout: no rate limit (single-call endpoints)
  *
  * Principle: SRP — only route definitions, no logic.
  * Principle: Layered Architecture — middleware → controller → service → repository.
@@ -41,5 +36,4 @@ authRoutes.post("/refresh", refreshLimiter, controller.refresh);
 
 // ─── Protected Routes (auth required) ────────────────────────────────────────
 
-authRoutes.get("/me", authGuard, controller.me);
 authRoutes.post("/logout-all", authGuard, controller.logoutAll);
