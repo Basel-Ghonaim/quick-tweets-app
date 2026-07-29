@@ -1,28 +1,19 @@
 /**
- * Characterization of the auth repository's refresh contract (#261, updated #258).
+ * Characterization of the auth repository's refresh contract.
  *
- * `restAuth.refresh` POSTs to `/auth/refresh` and returns the **full session**
- * ({ user, accessToken }) — the server-side source Session Restore uses, with no
- * local persistence. Locked via the repository's injectable client — no DOM, no
- * network.
+ * `restAuth.refresh` POSTs to `/auth/refresh` and returns the session
+ * ({ user: { id, username }, accessToken }) — the source Session Restore uses,
+ * with no local persistence. Locked via the repository's injectable client — no
+ * DOM, no network.
  */
 import { describe, it, expect, vi } from "vitest";
 import { restAuth } from "./restAuth";
-import type { User } from "@shared/types";
+import type { AuthUser } from "@shared/types";
 
-const userDto = {
-  id: 1,
-  username: "ada",
-  name: "Ada Lovelace",
-  email: "ada@example.com",
-  profileImage: null,
-  avatar: null,
-  bio: "",
-  createdAt: "2026-01-01T00:00:00.000Z",
-};
-const expectedUser: User = { ...userDto };
+const userDto = { id: 1, username: "ada" };
+const expectedUser: AuthUser = { ...userDto };
 
-describe("restAuth.refresh — returns the full session (#261, #258)", () => {
+describe("restAuth.refresh — returns the session", () => {
   it("POSTs to /auth/refresh (no body) and returns { user, accessToken }", async () => {
     const post = vi.fn().mockResolvedValue({
       data: { success: true, data: { user: userDto, accessToken: "tok-abc" } },

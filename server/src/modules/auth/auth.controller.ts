@@ -6,7 +6,6 @@
  * - login: parse validated body → call service → set cookie → return 200 + user + accessToken
  * - logout: read cookie → call service → clear cookie → return 204
  * - refresh: read cookie → call service → set new cookie → return 200 + accessToken
- * - me: read userId from authGuard → fetch user → return 200 + user
  *
  * Security: refresh token is NEVER in the response body.
  * It is set as an httpOnly cookie — JavaScript cannot read it.
@@ -79,22 +78,13 @@ const clearSessionCookies = (res: Response): void => {
 // ─── User Response Formatter ─────────────────────────────────────────────────
 
 /**
- * Strips sensitive fields (passwordHash) from User before sending to client.
- * This acts as a simple response mapper (DTO).
- *
- * Auth is Media-free (ADR 0008 D10): the response carries token-derived identity
- * only, never the avatar — the current-user avatar is served by `GET /users/me`.
+ * The minimal auth identity exposed by register/login/refresh: `{ id, username }`.
+ * Auth is Profile-free (ADR 0008 D10) — name, email, avatar, bio, and the rest of
+ * the profile are served by the canonical current-user resource, `GET /users/me`.
  */
-const toUserResponse = (
-  user: { id: number; username: string; name: string; email: string; profileImage: string | null; bio: string; createdAt: Date },
-) => ({
+const toUserResponse = (user: { id: number; username: string }) => ({
   id: user.id,
   username: user.username,
-  name: user.name,
-  email: user.email,
-  profileImage: user.profileImage, // DEPRECATED (always null) — retired with #335
-  bio: user.bio,
-  createdAt: user.createdAt,
 });
 
 // ─── Controller Factory ──────────────────────────────────────────────────────
@@ -205,24 +195,6 @@ export const createAuthController = (
       sendSuccess(res, {
         accessToken: result.accessToken,
         user: toUserResponse(result.user),
-      });
-    } catch (err) {
-      next(err);
-    }
-  },
-
-  /**
-   * GET /auth/me
-   * Returns the authenticated user's profile.
-   * Requires authGuard middleware to run first.
-   */
-  me: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const userId = req.userId!;
-      const { user } = await service.getMe(userId);
-
-      sendSuccess(res, {
-        user: toUserResponse(user),
       });
     } catch (err) {
       next(err);

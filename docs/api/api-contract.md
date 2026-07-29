@@ -54,7 +54,6 @@ POST   /api/v1/auth/login
 POST   /api/v1/auth/logout
 POST   /api/v1/auth/logout-all
 POST   /api/v1/auth/refresh
-GET    /api/v1/auth/me
 
 GET    /api/v1/tweets
 GET    /api/v1/tweets?author=:username
@@ -264,12 +263,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
   "data": {
     "user": {
       "id": 1,
-      "username": "basel",
-      "name": "Basel",
-      "email": "test@test.com",
-      "profileImage": null,   // DEPRECATED (always null) — retired with #335
-      "bio": "",
-      "createdAt": "2026-05-10T12:00:00.000Z"
+      "username": "basel"
     },
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
@@ -343,12 +337,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
       "id": 1,
-      "username": "johndoe",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "profileImage": null,   // DEPRECATED (always null) — retired with #335
-      "bio": "",
-      "createdAt": "2026-01-01T00:00:00.000Z"
+      "username": "johndoe"
     }
   }
 }
@@ -356,35 +345,14 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 // Set-Cookie: qt_session=1; Secure; SameSite=Strict; Path=/   (readable session hint — see "Session cookies" below)
 ```
 
-### `GET /auth/me` — Get current user profile
-
-**Auth:** Required
-
-```jsonc
-// Response 200
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": 1,
-      "username": "basel",
-      "name": "Basel",
-      "email": "test@test.com",
-      "profileImage": null,   // DEPRECATED (always null) — retired with #335
-      "bio": "",
-      "createdAt": "2026-05-10T12:00:00.000Z"
-    }
-  }
-}
-```
-
-> **Avatar & `profileImage`.** Auth responses (register / login / refresh / `GET /auth/me`) are
-> **Media-free** (ADR 0008 Decision 10): they carry token-derived identity only, never the avatar.
-> The authenticated user's avatar is served by the **User** domain — `GET /users/me` (and
-> `GET /users/:username`) carry `avatar: { token } | null`, the public read token resolved at the
-> boundary from an internal numeric Media Reference. `profileImage` is retained only for backward
-> compatibility (always `null`) and is retired with #335; the embedded author shape
-> ([AuthorEmbed](#authorembed)) still exposes the legacy field until then.
+> **Auth responses are minimal.** Register / login / refresh carry only the session token and the
+> identity `{ id, username }` (ADR 0008 Decision 10 — Auth is Profile-free): never name, email,
+> avatar, or bio. The authenticated user's full profile is served by the **User** domain,
+> `GET /users/me` — the single canonical current-user resource. (`GET /auth/me` was retired: it
+> returned only User-owned state and duplicated `/users/me`.) The public `GET /users/:username` (and
+> the embedded author shape, [AuthorEmbed](#authorembed)) carry `avatar: { token } | null`, the read
+> token resolved at the boundary from an internal numeric Media Reference; `profileImage` is retained
+> only for backward compatibility (always `null`) and is retired with the author-avatar migration.
 
 ---
 
@@ -812,11 +780,11 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 ### `GET /users/me` — Own profile
 
-**Auth:** Required. Returns the authenticated user's own profile — the same shape as `GET /users/:username` (with `isFollowing: false`). `me` is a reserved self-alias resolved from the token.
+**Auth:** Required. Returns the authenticated user's own profile — the `GET /users/:username` shape **plus `email`** (a self-view-only field; the public view omits it), with `isFollowing: false`. `me` is a reserved self-alias resolved from the token. This is the canonical current-user resource.
 
 ### `PATCH /users/me` — Update own profile
 
-**Auth:** Required. Updates any subset of `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). Returns the updated profile (same shape as above).
+**Auth:** Required. Updates any subset of `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). Returns the updated self profile (the same shape as `GET /users/me`, including `email`).
 
 ```jsonc
 // Request — any subset; at least one field. Avatar is full-replacement:

@@ -11,23 +11,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import { authReducer, authActions } from "../../store";
 import { executeLogout } from "./executeLogout";
 import { createAppError } from "@shared/errors";
-import type { User } from "@shared/types";
+import type { AuthUser } from "@shared/types";
 
 const makeStore = () =>
   configureStore({
     reducer: { auth: authReducer },
   });
 
-const user: User = {
-  id: 1,
-  username: "ada",
-  name: "Ada Lovelace",
-  email: "ada@example.com",
-  profileImage: null,
-  avatar: null,
-  bio: "",
-  createdAt: "2026-01-01T00:00:00.000Z",
-};
+const user: AuthUser = { id: 1, username: "ada" };
 
 const signIn = (store: ReturnType<typeof makeStore>) =>
   store.dispatch(

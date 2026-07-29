@@ -19,7 +19,7 @@ import { describe, it, expect } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 import { authReducer, authActions } from "./authSlice";
 import { createAppError } from "@shared/errors";
-import type { User } from "@shared/types";
+import type { AuthUser } from "@shared/types";
 
 // serializableCheck stays ON (the default): the store now holds only the plain
 // SerializedAppError DTO, so the check passes — this locks that invariant.
@@ -28,16 +28,7 @@ const makeStore = () =>
     reducer: { auth: authReducer },
   });
 
-const user: User = {
-  id: 1,
-  username: "ada",
-  name: "Ada Lovelace",
-  email: "ada@example.com",
-  profileImage: null,
-  avatar: null,
-  bio: "",
-  createdAt: "2026-01-01T00:00:00.000Z",
-};
+const user: AuthUser = { id: 1, username: "ada" };
 
 describe("auth store-access contract (#253)", () => {
   it("exposes the initial shape the hooks select", () => {

@@ -12,7 +12,6 @@
  * - login(): find user → compare password → generate tokens
  * - logout(): delete refresh token from database
  * - refreshToken(): validate token → rotate (delete old, create new) → return new tokens
- * - getMe(): load the authenticated user's identity
  *
  * Principle: SRP — only authentication business rules, no HTTP or database concerns.
  * Principle: DIP — depends on repository interfaces, not Prisma directly.
@@ -38,7 +37,6 @@ import type {
   IAuthService,
   ITokenRepository,
   LoginInput,
-  MeResult,
   RegisterInput,
   TokenRefreshResult,
 } from "./auth.types.js";
@@ -224,22 +222,12 @@ export const createAuthService = (
 
     await tokenRepo.rotateRefreshToken(token, storedToken.userId, newRefreshTokenValue, expiresAt);
 
-    // Load the user so refresh returns the full session (token + identity).
+    // Load the user so refresh returns the session identity ({ id, username }) with the token.
     const user = await authRepo.findById(storedToken.userId);
     if (!user) {
       throw AppError.unauthorized("Invalid refresh token");
     }
 
     return { accessToken: newAccessToken, refreshToken: newRefreshTokenValue, user };
-  },
-
-  // ─── Get Me ──────────────────────────────────────────────────────────────
-
-  getMe: async (userId: number): Promise<MeResult> => {
-    const user = await authRepo.findById(userId);
-    if (!user) {
-      throw AppError.notFound("User");
-    }
-    return { user };
   },
 });

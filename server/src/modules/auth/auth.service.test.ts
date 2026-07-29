@@ -88,17 +88,4 @@ describe("auth service — account-only registration (Media-free)", () => {
     expect(w.users).toHaveLength(0);
   });
 
-  it("getMe returns the authenticated user's identity only (no avatar)", async () => {
-    const w = makeWorld();
-    w.users.push({
-      id: 5, username: "u", name: "N", email: "e@x.com", passwordHash: "h",
-      profileImage: null, avatarMediaId: 88, bio: "", createdAt: new Date(), updatedAt: new Date(),
-    });
-    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction);
-
-    const me = await svc.getMe(5);
-
-    expect(me.user.id).toBe(5);
-    expect("avatarToken" in me).toBe(false);
-  });
 });

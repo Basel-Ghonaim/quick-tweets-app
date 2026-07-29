@@ -135,7 +135,8 @@ export const createUserService = (
         resolveAvatar(user.avatarMediaId),
       ]);
 
-      return buildResponse(user, avatarToken, likesCount, false);
+      // Self-view: the public profile plus `email` (owned by the account, not exposed publicly).
+      return { ...buildResponse(user, avatarToken, likesCount, false), email: user.email };
     },
 
     // ─── Update Self Profile ──────────────────────────────────────────
@@ -148,7 +149,7 @@ export const createUserService = (
           userRepo.countLikesReceived(userId),
           resolveAvatar(updated.avatarMediaId),
         ]);
-        return buildResponse(updated, avatarToken, likesCount, false);
+        return { ...buildResponse(updated, avatarToken, likesCount, false), email: updated.email };
       }
 
       // 1b. Avatar edit (set / replace / remove) — coordinate in one transaction.
@@ -197,7 +198,7 @@ export const createUserService = (
         });
 
         const likesCount = await userRepo.countLikesReceived(userId);
-        return buildResponse(updated, token, likesCount, false);
+        return { ...buildResponse(updated, token, likesCount, false), email: updated.email };
       } catch (err) {
         throw asAttachFailure(err);
       }
