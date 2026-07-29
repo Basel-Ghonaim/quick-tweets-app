@@ -23,7 +23,9 @@ export const newPasswordPolicy = {
 export const usernameRules = {
   minLength: 4,
   maxLength: 20,
-  charset: /^[a-zA-Z0-9_]+$/,
+  // Lowercase-only (WI-B): uppercase is rejected, never normalized — mirrors the
+  // backend registerSchema. The stored-username invariant WI-E's resolver relies on.
+  charset: /^[a-z0-9_]+$/,
 } as const;
 
 export const nameRules = {
