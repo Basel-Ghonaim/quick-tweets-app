@@ -295,15 +295,15 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 ```jsonc
 // Request body
 {
-  "username": "basel",
-  "password": "Password1!"
+  "identifier": "basel",   // username OR email; presence-only. Server normalizes trim().toLowerCase()
+  "password": "Password1!" // and routes on '@': contains '@' → email lookup, else username. No fallback.
 }
 
 // Response 200 — same shape as /auth/register
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
 // Set-Cookie: qt_session=1; Secure; SameSite=Strict; Path=/   (readable session hint — see "Session cookies" below)
 
-// Response 401 — wrong username or password (generic message, no user enumeration)
+// Response 401 — unknown username, unknown email, or wrong password: one generic message, no enumeration
 { "success": false, "error": { "type": "unauthorized", "message": "Invalid credentials" } }
 ```
 
