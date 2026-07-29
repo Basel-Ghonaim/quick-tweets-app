@@ -13,7 +13,7 @@ The domain is a small social graph: users author tweets, tweets gather comments 
 
 ## Entities and relationships
 
-- **User** is the root aggregate — the owner of all content and relationships. Authentication state and every piece of content hang off it.
+- **User** is the root aggregate — the owner of all content and relationships. Authentication state and every piece of content hang off it. Its identity is `username` + `email` (both required and unique); `name` is **optional** profile data (nullable, set via `PATCH /users/me`, never defaulted or derived from `username`).
 - A **tweet** belongs to one author (a user) and aggregates its comments and likes.
 - A **comment** belongs to both a tweet and its author — a reply within a tweet's thread.
 - A **like** is the join between a user and a tweet, modelling approval.

@@ -114,7 +114,6 @@ export const createAuthService = (
 
     const newUser: CreateUserData = {
       username: data.username,
-      name: data.name,
       email: data.email,
       passwordHash,
     };

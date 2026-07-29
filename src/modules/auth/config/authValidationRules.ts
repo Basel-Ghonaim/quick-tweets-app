@@ -28,6 +28,3 @@ export const usernameRules = {
   charset: /^[a-z0-9_]+$/,
 } as const;
 
-export const nameRules = {
-  maxLength: 50,
-} as const;

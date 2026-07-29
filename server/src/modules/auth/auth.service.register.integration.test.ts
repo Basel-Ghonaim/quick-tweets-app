@@ -26,7 +26,6 @@ const base = `itreg${process.pid}x${Math.floor(process.hrtime()[1])}`;
 const usernameFor = (suffix: string) => `${base}_${suffix}`;
 const inputFor = (suffix: string) => ({
   username: usernameFor(suffix),
-  name: "Reg IT",
   email: `${base}_${suffix}@it.local`,
   password: "Passw0rd!",
 });
@@ -97,5 +96,16 @@ describe("register — transactional correctness against real Postgres (WI-D)", 
     expect(account).not.toBeNull();
     const sessions = await prisma.refreshToken.count({ where: { userId: account!.id } });
     expect(sessions).toBe(1);
+  });
+
+  it("register creates an account with a NULL name (account-only)", async () => {
+    if (!reachable) return;
+    const input = inputFor("nullname");
+
+    await createAuthService().register(input);
+
+    const account = await prisma.user.findUnique({ where: { username: input.username } });
+    expect(account).not.toBeNull();
+    expect(account!.name).toBeNull();
   });
 });

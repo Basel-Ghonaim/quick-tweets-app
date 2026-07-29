@@ -34,12 +34,6 @@ export const registerSchema = z.object({
     )
     .trim(),
 
-  name: z
-    .string({ error: "Name is required" })
-    .min(1, "Name is required")
-    .max(50, "Name must be at most 50 characters")
-    .trim(),
-
   email: z
     .string({ error: "Email is required" })
     .email("Invalid email format")

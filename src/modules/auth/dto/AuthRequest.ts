@@ -5,7 +5,6 @@ export interface LoginRequestDto {
 
 export interface RegisterRequestDto {
   username: string;
-  name: string;
   email: string;
   password: string;
 }

@@ -8,7 +8,7 @@ import {
   matchesPattern,
 } from "@shared/schema-form";
 import { VALIDATION_MESSAGES } from "./validationMessages";
-import { newPasswordPolicy, usernameRules, nameRules } from "./authValidationRules";
+import { newPasswordPolicy, usernameRules } from "./authValidationRules";
 
 // ─── Login: identity check only ──────────────────────────────────────────────
 // Presence only — login checks an existing credential and must not apply the
@@ -34,19 +34,6 @@ const loginFields = {
 // Deliberately not built from loginFields — that coupling is how the stale
 // max(16) leaked into login. The backend re-validates independently.
 const registerFields = {
-  name: {
-    name: "name",
-    type: "text",
-    label: "Full Name",
-    placeholder: "John Doe",
-    validators: [
-      isRequired(VALIDATION_MESSAGES.required("Name")),
-      isLengthChecked(
-        undefined,
-        VALIDATION_MESSAGES.maxLength(nameRules.maxLength),
-      ),
-    ],
-  },
   username: {
     name: "username",
     type: "text",
@@ -125,7 +112,6 @@ export const authFormSchemas = {
   loginFields,
   // Registration is account creation only (auth-first, ADR 0008) — no avatar.
   registerFields: {
-    name: { ...registerFields.name, span: "half" },
     username: { ...registerFields.username, span: "half" },
     email: { ...registerFields.email, span: "full" },
     password: { ...registerFields.password, span: "half" },

@@ -13,11 +13,14 @@
 
 // ─── Author Embed ────────────────────────────────────────────────────────────
 
-/** Lightweight user snapshot embedded in tweet/comment responses. */
+/**
+ * Lightweight user snapshot embedded in tweet/comment responses. `name` is
+ * optional profile data; when `null`, presentation falls back to `username`.
+ */
 export interface AuthorEmbed {
   id: number;
   username: string;
-  name: string;
+  name: string | null;
   profileImage: string | null;
 }
 

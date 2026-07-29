@@ -71,7 +71,7 @@ export interface TweetWithRelations {
   author: {
     id: number;
     username: string;
-    name: string;
+    name: string | null;
     profileImage: string | null;
   };
   _count: {

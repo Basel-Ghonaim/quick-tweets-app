@@ -33,7 +33,7 @@ const rawUser = (over: Partial<UserWithCounts> = {}): UserWithCounts => ({
 });
 
 const makeWorld = (currentAvatar: number | null = null) => {
-  const updates: { data: { name?: string; bio?: string; avatarMediaId?: number | null }; client: unknown }[] = [];
+  const updates: { data: { name?: string | null; bio?: string; avatarMediaId?: number | null }; client: unknown }[] = [];
   let stored: number | null = currentAvatar;
 
   const repo: IUserRepository = {
@@ -254,5 +254,28 @@ describe("current-user email is self-view only", () => {
     const profile = await svc.getProfile("ada");
 
     expect("email" in profile).toBe(false);
+  });
+});
+
+describe("profile name — set and clear (optional profile data)", () => {
+  it("clears name with null — the repository receives name: null, no transaction", async () => {
+    const w = makeWorld();
+    const { media } = makeMedia({});
+    const svc = createUserService(w.repo, media, w.runInTransaction);
+
+    await svc.updateMe(USER, { name: null });
+
+    expect(w.updates[0]!.data.name).toBeNull();
+    expect(w.updates[0]!.client).toBeUndefined(); // no avatar edit → not in a transaction
+  });
+
+  it("sets a new name", async () => {
+    const w = makeWorld();
+    const { media } = makeMedia({});
+    const svc = createUserService(w.repo, media, w.runInTransaction);
+
+    await svc.updateMe(USER, { name: "Ada Lovelace" });
+
+    expect(w.updates[0]!.data.name).toBe("Ada Lovelace");
   });
 });

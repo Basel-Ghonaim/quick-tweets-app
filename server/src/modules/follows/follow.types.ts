@@ -14,7 +14,7 @@
  * Principle: ISP — repository and service contracts are separate.
  */
 
-import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
+import type { CursorMeta, CursorParams } from "../../shared/types/index.js";
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ export interface FollowActionResponse {
 export interface FollowUserItem {
   id: number;
   username: string;
-  name: string;
+  name: string | null;
   profileImage: string | null;
   bio: string;
 }

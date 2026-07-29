@@ -15,7 +15,6 @@ export const authMapper = (): AuthMapper => ({
   }),
   registerCredentialsToDto: (data) => ({
     username: data.username,
-    name: data.name,
     email: data.email,
     password: data.password,
   }),
