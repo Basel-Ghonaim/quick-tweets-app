@@ -30,7 +30,7 @@ describe("restAuth.refresh — returns the session", () => {
 
 describe("restAuth.register — account creation only (auth-first, ADR 0008)", () => {
   const creds = {
-    username: "ada", name: "Ada Lovelace", email: "ada@example.com",
+    username: "ada", email: "ada@example.com",
     password: "Passw0rd!", confirmPassword: "Passw0rd!", privacy: true,
   };
   const asClient = (post: unknown) => post as Parameters<typeof restAuth>[0];
@@ -45,12 +45,12 @@ describe("restAuth.register — account creation only (auth-first, ADR 0008)", (
 
     expect(post).toHaveBeenCalledWith(
       "/auth/register",
-      expect.objectContaining({ username: "ada", name: "Ada Lovelace", email: "ada@example.com" }),
+      expect.objectContaining({ username: "ada", email: "ada@example.com" }),
     );
-    // The avatar is not part of signup anymore — the request must not carry it.
+    // Registration is account-only: the request must not carry name (nor an avatar).
     expect(post).toHaveBeenCalledWith(
       "/auth/register",
-      expect.not.objectContaining({ avatar: expect.anything() }),
+      expect.not.objectContaining({ name: expect.anything(), avatar: expect.anything() }),
     );
     expect(session.accessToken).toBe("acc");
   });
