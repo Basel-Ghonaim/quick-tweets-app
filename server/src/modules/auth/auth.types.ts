@@ -58,10 +58,16 @@ export interface IAuthRepository {
  * Implemented by: createTokenRepository (auth.repository.ts)
  */
 export interface ITokenRepository {
+  /**
+   * Persist a refresh token. The optional `client` lets a caller run it inside a
+   * transaction — so register can commit the account and its initial refresh
+   * session as one atomic unit (mirrors `IAuthRepository.create`).
+   */
   createRefreshToken(
     userId: number,
     token: string,
     expiresAt: Date,
+    client?: DbClient,
   ): Promise<RefreshToken>;
   findRefreshToken(token: string): Promise<RefreshTokenRecord | null>;
   deleteRefreshToken(token: string): Promise<void>;

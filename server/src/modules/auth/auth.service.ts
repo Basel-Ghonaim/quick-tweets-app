@@ -21,7 +21,15 @@
 
 import bcrypt from "bcrypt";
 import { AppError } from "../../shared/errors/index.js";
-import { generateAccessToken, generateRefreshToken } from "../../shared/utils/index.js";
+import {
+  runInTransaction as defaultRunInTransaction,
+  type RunInTransaction,
+} from "../../shared/database/index.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  isPrismaError,
+} from "../../shared/utils/index.js";
 import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
 import type {
   AuthResult,
@@ -43,6 +51,30 @@ const SALT_ROUNDS = 12;
 /** Refresh token validity period in days. */
 const REFRESH_TOKEN_DAYS = 7;
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Turn a register-time P2002 into the correct 409. A unique constraint fired
+ * despite the advisory pre-check — i.e. a concurrent duplicate committed between
+ * the pre-check and our INSERT. We re-query to attribute the collision to the
+ * specific field, deliberately NOT parsing the driver-adapter's constraint
+ * metadata (its shape is adapter-specific and brittle). Returns the AppError to
+ * throw; the combined message is the fallback when the racing row is already
+ * gone by the time we re-query.
+ */
+const attributeRegisterConflict = async (
+  authRepo: IAuthRepository,
+  data: RegisterInput,
+): Promise<AppError> => {
+  if (await authRepo.findByUsername(data.username)) {
+    return AppError.conflict("Username already taken");
+  }
+  if (await authRepo.findByEmail(data.email)) {
+    return AppError.conflict("Email already in use");
+  }
+  return AppError.conflict("Username or email is already in use");
+};
+
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
@@ -50,47 +82,71 @@ const REFRESH_TOKEN_DAYS = 7;
  *
  * @param authRepo - User database operations (defaults to Prisma implementation)
  * @param tokenRepo - Refresh token operations (defaults to Prisma implementation)
+ * @param runInTransaction - Unit-of-work runner (defaults to the Prisma interactive transaction)
  */
 export const createAuthService = (
   authRepo: IAuthRepository = createAuthRepository(),
   tokenRepo: ITokenRepository = createTokenRepository(),
+  runInTransaction: RunInTransaction = defaultRunInTransaction,
 ): IAuthService => ({
   // ─── Register ────────────────────────────────────────────────────────────
 
   register: async (data: RegisterInput): Promise<AuthResult> => {
-    // 1. Check username uniqueness (fast, clear 409 — before any write).
+    // 1. Advisory uniqueness pre-checks — a fast, clear 409 before any write.
+    //    These are not authoritative: the DB unique constraints are, and a
+    //    duplicate that races past these checks is caught at step 3 and still
+    //    resolves to 409 (never 500).
     const existingUsername = await authRepo.findByUsername(data.username);
     if (existingUsername) {
       throw AppError.conflict("Username already taken");
     }
-
-    // 2. Check email uniqueness.
     const existingEmail = await authRepo.findByEmail(data.email);
     if (existingEmail) {
       throw AppError.conflict("Email already in use");
     }
 
-    // 3. Hash password with bcrypt.
+    // 2. Hash the password and mint the refresh value BEFORE the transaction:
+    //    bcrypt is ~250ms and must not hold a database connection/transaction
+    //    open, and the refresh value is pure CPU. Registration is account
+    //    creation only (ADR 0008 D1): no avatar is coupled to signup.
     const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS);
+    const refreshTokenValue = generateRefreshToken();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
 
-    // 4. Create the account. Registration is account creation only (ADR 0008 D1):
-    //    no avatar is coupled to signup.
     const newUser: CreateUserData = {
       username: data.username,
       name: data.name,
       email: data.email,
       passwordHash,
     };
-    const user = await authRepo.create(newUser);
 
-    // 5. Generate tokens.
+    // 3. Atomic account creation: the User row and its initial refresh session
+    //    commit together or roll back together — never a committed account
+    //    without its session (a failed session INSERT rolls the account back),
+    //    and a duplicate racing past the pre-checks surfaces as P2002, which we
+    //    attribute to the specific field by re-querying (no reliance on the
+    //    driver-adapter's constraint-metadata shape).
+    let user;
+    try {
+      user = await runInTransaction(async (tx) => {
+        const created = await authRepo.create(newUser, tx);
+        await tokenRepo.createRefreshToken(created.id, refreshTokenValue, expiresAt, tx);
+        return created;
+      });
+    } catch (err) {
+      if (isPrismaError(err, "P2002")) {
+        throw await attributeRegisterConflict(authRepo, data);
+      }
+      throw err;
+    }
+
+    // 4. Sign the access token AFTER commit. The signing secret is validated at
+    //    startup (env.JWT_SECRET), so this does not fail in practice; and even
+    //    if it did, the account and its session are already durably committed —
+    //    the user simply logs in. Signing inside the transaction would only
+    //    widen it for no benefit.
     const accessToken = generateAccessToken(user.id);
-    const refreshTokenValue = generateRefreshToken();
-
-    // 6. Store refresh token.
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS);
-    await tokenRepo.createRefreshToken(user.id, refreshTokenValue, expiresAt);
 
     return { user, accessToken, refreshToken: refreshTokenValue };
   },

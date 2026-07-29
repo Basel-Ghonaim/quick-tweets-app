@@ -74,8 +74,8 @@ export const createAuthRepository = (
 export const createTokenRepository = (
   db: PrismaInstance = prisma,
 ): ITokenRepository => ({
-  createRefreshToken: (userId, token, expiresAt) =>
-    db.refreshToken.create({
+  createRefreshToken: (userId, token, expiresAt, client: DbClient = db) =>
+    client.refreshToken.create({
       data: { userId, token, expiresAt },
     }),
 

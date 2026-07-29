@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import { AppError } from "../../shared/errors/index.js";
+import type { RunInTransaction } from "../../shared/database/index.js";
 import { createAuthService } from "./auth.service";
 import type { IAuthRepository, ITokenRepository } from "./auth.types";
 
@@ -50,13 +51,18 @@ const makeWorld = (existingUsernames: string[] = []) => {
     deleteExpired: async () => 0,
   };
 
-  return { users, authRepo, tokenRepo, calls };
+  // Passthrough runner: register now commits inside runInTransaction; the fake
+  // repos already write in-memory, so the tx boundary is a no-op here (atomic
+  // rollback is proven against real Postgres in the integration suite).
+  const runInTransaction: RunInTransaction = (fn) => fn({} as never);
+
+  return { users, authRepo, tokenRepo, calls, runInTransaction };
 };
 
 describe("auth service — account-only registration (Media-free)", () => {
   it("registers with account fields only and issues a session, with no avatar in the result", async () => {
     const w = makeWorld();
-    const svc = createAuthService(w.authRepo, w.tokenRepo);
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction);
 
     const result = await svc.register({ ...REG });
 
@@ -73,7 +79,7 @@ describe("auth service — account-only registration (Media-free)", () => {
 
   it("rejects a duplicate username with 409 before creating anything", async () => {
     const w = makeWorld([REG.username]);
-    const svc = createAuthService(w.authRepo, w.tokenRepo);
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction);
 
     const err = await svc.register({ ...REG }).catch((e: unknown) => e);
 
@@ -88,7 +94,7 @@ describe("auth service — account-only registration (Media-free)", () => {
       id: 5, username: "u", name: "N", email: "e@x.com", passwordHash: "h",
       profileImage: null, avatarMediaId: 88, bio: "", createdAt: new Date(), updatedAt: new Date(),
     });
-    const svc = createAuthService(w.authRepo, w.tokenRepo);
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction);
 
     const me = await svc.getMe(5);
 
