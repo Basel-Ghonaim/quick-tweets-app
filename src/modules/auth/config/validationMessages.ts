@@ -12,7 +12,7 @@ export const VALIDATION_MESSAGES = {
   match: (fieldName: string) => `This field must match your ${fieldName}.`,
   privacy: "You must accept the privacy policy to continue.",
   usernameCharset:
-    "Username can only contain letters, numbers, and underscores.",
+    "Username can only contain lowercase letters, numbers, and underscores.",
   passwordComplexity: {
     lowercase: "Password must contain a lowercase letter.",
     uppercase: "Password must contain an uppercase letter.",
