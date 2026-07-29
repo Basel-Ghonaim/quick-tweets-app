@@ -120,7 +120,7 @@ Embedded in tweets and comments — a lightweight user snapshot.
 interface AuthorEmbed {
   id: number;
   username: string;
-  name: string;
+  name: string | null;         // optional profile data; when null, presentation falls back to username
   profileImage: string | null; // DEPRECATED (always null) — author-avatar display migrates
                                // to the Media Reference model in a later Work Item.
 }
@@ -252,10 +252,11 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 // Request body
 {
   "username": "basel",      // 4-20 chars, lowercase alphanumeric/underscores (uppercase rejected, not normalized)
-  "name": "Basel",          // 1-50 chars
   "email": "test@test.com", // valid email
   "password": "Password1!"  // 8-72 chars, upper, lower, digit, special char
 }
+// Registration is account-only: no `name`. name is optional profile data set later
+// via PATCH /users/me (absent = NULL, never derived from username).
 
 // Response 201
 {
@@ -784,7 +785,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 ### `PATCH /users/me` — Update own profile
 
-**Auth:** Required. Updates any subset of `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). Returns the updated self profile (the same shape as `GET /users/me`, including `email`).
+**Auth:** Required. Updates any subset of `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). `name` follows the same three-way rule as the avatar: **omitted = unchanged, `null` = clear, a string = set** (`name` is never derived from `username`). Returns the updated self profile (the same shape as `GET /users/me`, including `email`).
 
 ```jsonc
 // Request — any subset; at least one field. Avatar is full-replacement:
