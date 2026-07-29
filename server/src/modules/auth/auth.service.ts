@@ -222,7 +222,7 @@ export const createAuthService = (
 
     await tokenRepo.rotateRefreshToken(token, storedToken.userId, newRefreshTokenValue, expiresAt);
 
-    // Load the user so refresh returns the full session (token + identity).
+    // Load the user so refresh returns the session identity ({ id, username }) with the token.
     const user = await authRepo.findById(storedToken.userId);
     if (!user) {
       throw AppError.unauthorized("Invalid refresh token");
