@@ -70,7 +70,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR. The section
 - **Commit/PR boundary:** one PR; commits ≈ (1) `createRefreshToken` client parameter, (2) transactional register + `P2002` handling, (3) tests.
 - **Stop-risks:** if `P2002` is not reliably raised/observable for the account's unique constraints under the configured Prisma adapter → **stop** and reconsider the race contract. If `runInTransaction` cannot span both repository calls with the passed client → **stop**.
 
-### WI-B — Lowercase-only Username Invariant + dev/test-data reconciliation
+### WI-B — Lowercase-only Username Invariant + dev/test-data reconciliation — [#388](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/388)
 - **Goal & rationale:** stored usernames are lowercase-only, enforced by backend + frontend validation; disposable uppercase dev/test rows are reconciled. Establishes the invariant WI-E's resolver relies on (uppercase usernames exist in dev data).
 - **Scope:** backend register username pattern `^[a-zA-Z0-9_]+$` → `^[a-z0-9_]+$` (reject uppercase; **never** lowercase silently); the corresponding frontend username validation rule + message; **reset/reseed** the disposable uppercase dev/test rows (and any seed script) to lowercase.
 - **Non-goals:** no production-compatibility/grandfathering/complex migration; no silent normalization of uppercase input; no DB schema/constraint change; no login change.

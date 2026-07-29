@@ -252,7 +252,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 ```jsonc
 // Request body
 {
-  "username": "basel",      // 4-20 chars, alphanumeric/underscores
+  "username": "basel",      // 4-20 chars, lowercase alphanumeric/underscores (uppercase rejected, not normalized)
   "name": "Basel",          // 1-50 chars
   "email": "test@test.com", // valid email
   "password": "Password1!"  // 8-72 chars, upper, lower, digit, special char
