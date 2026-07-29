@@ -1,5 +1,5 @@
 export interface LoginRequestDto {
-  username: string;
+  identifier: string;
   password: string;
 }
 

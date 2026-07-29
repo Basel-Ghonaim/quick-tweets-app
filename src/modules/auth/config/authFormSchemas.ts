@@ -14,12 +14,12 @@ import { newPasswordPolicy, usernameRules, nameRules } from "./authValidationRul
 // Presence only — login checks an existing credential and must not apply the
 // account-creation policy (matches the backend loginSchema).
 const loginFields = {
-  username: {
-    name: "username",
+  identifier: {
+    name: "identifier",
     type: "text",
-    label: "Username",
-    placeholder: "johndoe",
-    validators: [isRequired(VALIDATION_MESSAGES.required("Username"))],
+    label: "Username or email",
+    placeholder: "johndoe or you@company.com",
+    validators: [isRequired(VALIDATION_MESSAGES.required("Username or email"))],
   },
   password: {
     name: "password",

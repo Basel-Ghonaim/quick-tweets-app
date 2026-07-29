@@ -9,7 +9,7 @@ describe("authErrorHandler", () => {
     const mapped = authErrorHandler(createAppError("unauthorized", "Invalid credentials"));
 
     expect(mapped.type).toBe("unauthorized");
-    expect(mapped.message).toBe("Incorrect username or password.");
+    expect(mapped.message).toBe("Incorrect username/email or password.");
     expect(mapped.errors).toBeUndefined(); // form-level: carries no field map
   });
 

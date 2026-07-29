@@ -64,3 +64,17 @@ describe("restAuth.register — account creation only (auth-first, ADR 0008)", (
     expect(session.accessToken).toBe("acc");
   });
 });
+
+describe("restAuth.login — submits the neutral identifier", () => {
+  it("POSTs { identifier, password } to /auth/login", async () => {
+    const post = vi.fn().mockResolvedValue({
+      data: { success: true, data: { user: userDto, accessToken: "acc" } },
+    });
+    const repo = restAuth({ post } as unknown as Parameters<typeof restAuth>[0]);
+
+    const session = await repo.login({ identifier: "basel_a", password: "Passw0rd!" });
+
+    expect(post).toHaveBeenCalledWith("/auth/login", { identifier: "basel_a", password: "Passw0rd!" });
+    expect(session.accessToken).toBe("acc");
+  });
+});

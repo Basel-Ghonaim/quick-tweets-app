@@ -2,7 +2,7 @@ import { AppError, createAppError } from "@shared/errors";
 
 const AUTH_MESSAGES: Partial<Record<AppError["type"], string>> = {
   // Form-level, and deliberately does not say which field was wrong.
-  unauthorized: "Incorrect username or password.",
+  unauthorized: "Incorrect username/email or password.",
   validation: "Please review the highlighted fields to correct the errors.",
   conflict: "This account is already registered. Try logging in.",
   forbidden: "Your account is temporarily locked or unverified.",
