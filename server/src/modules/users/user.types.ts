@@ -46,7 +46,8 @@ export interface SelfProfileResponse extends UserProfileResponse {
  * set/replace, `null` = remove (ADR 0008 Decision 5).
  */
 export interface UpdateMeInput {
-  name?: string;
+  /** Omitted = unchanged; `null` = clear; a string = set/replace. */
+  name?: string | null;
   bio?: string;
   avatar?: { token: string } | null;
 }
@@ -102,7 +103,7 @@ export interface IUserRepository {
    */
   updateProfile(
     userId: number,
-    data: { name?: string; bio?: string; avatarMediaId?: number | null },
+    data: { name?: string | null; bio?: string; avatarMediaId?: number | null },
     client?: DbClient,
   ): Promise<UserWithCounts>;
 }

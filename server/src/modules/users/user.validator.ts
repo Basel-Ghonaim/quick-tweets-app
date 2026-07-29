@@ -18,11 +18,14 @@ const avatarRefSchema = z.object({
 
 export const updateMeSchema = z
   .object({
+    // Optional profile data: omitted = unchanged, `null` = clear (set to NULL),
+    // a string = set/replace (validated). name is never derived from username.
     name: z
       .string()
       .min(1, "Name is required")
       .max(50, "Name must be at most 50 characters")
       .trim()
+      .nullable()
       .optional(),
     bio: z.string().max(160, "Bio must be at most 160 characters").trim().optional(),
     // Full-replacement avatar: omitted → unchanged; `{ token }` → set/replace;
