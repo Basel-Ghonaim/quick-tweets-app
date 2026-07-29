@@ -64,7 +64,7 @@ export interface CommentWithRelations {
   author: {
     id: number;
     username: string;
-    name: string;
+    name: string | null;
     profileImage: string | null;
   };
 }

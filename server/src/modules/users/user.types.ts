@@ -18,7 +18,8 @@ import type { DbClient } from "../../shared/database/index.js";
 export interface UserProfileResponse {
   id: number;
   username: string;
-  name: string;
+  /** Optional profile data; `null` when unset — presentation falls back to `username`. */
+  name: string | null;
   /** @deprecated Always `null`. Superseded by `avatar`; removed with the #335 tail. */
   profileImage: string | null;
   /** The resolved avatar read token, or `null`. Set/changed via `PATCH /users/me`. */
@@ -56,7 +57,7 @@ export interface UpdateMeInput {
 export interface UserWithCounts {
   id: number;
   username: string;
-  name: string;
+  name: string | null;
   email: string;
   profileImage: string | null;
   /** Bare Media Reference (MediaObject.id) — resolved to a token at the boundary. */

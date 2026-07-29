@@ -21,7 +21,10 @@ datasource db {
 model User {
   id            Int      @id @default(autoincrement())
   username      String   @unique
-  name          String
+  // Optional profile data: absent = NULL, never defaulted or derived from
+  // username (username is only a read-side presentation fallback). Set/cleared
+  // via PATCH /users/me; registration never sets it.
+  name          String?
   email         String   @unique
   passwordHash  String   @map("password_hash")
   profileImage  String?  @map("profile_image")     // DEPRECATED (always null) — superseded by avatarMediaId; retired with the later author-avatar migration
