@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** The authoritative source for the project's **code-design principles** — the patterns and rules that define what good code looks like here. Binding on all contributors, human and AI.
 > **Scope:** Owns *principles* (the timeless "why" and "what good looks like"). It does **not** own *mechanisms* (the current "how"), which live in the relevant platform, security, and contract documents, nor *process* (Git, commits, reviews), which lives in the Engineering Execution Standard.
-> **Version:** 1.0
-> **Last Updated:** 2026-06-24
+> **Version:** 1.1
+> **Last Updated:** 2026-07-29
 > **Owner:** Basel Ghonaim
 
 ## How to read this document
@@ -101,6 +101,25 @@ Principle only — component-level details are owned by the [design-system docum
 | DB tables / columns | snake_case (mapped by the ORM) | `users`, `profile_image` |
 
 Branch and commit naming are *process* conventions, owned by the Engineering Execution Standard — not this document.
+
+## 12. Comments
+
+> **Source comments are for durable reasoning, not code narration or development history.**
+
+Comments preserve knowledge the code itself cannot express. Prefer clear naming, expressive types, and good responsibility boundaries over comments that explain the code; before adding one, ask whether a safe local naming or structure change would remove the need for it — without expanding the current task's scope.
+
+- **Explain *why*, not *what*.** Do not restate a line, type, interface, or function that already reads clearly; a well-named declaration needs no paragraph re-describing what TypeScript already says.
+- **A comment earns its place** when it preserves reasoning the code cannot show: an architectural rationale, an invariant, a security/safety or concurrency constraint, a non-obvious ordering, a real workaround and why it exists, an external constraint, or intentional behavior that would otherwise look wrong.
+- **No development provenance.** Source comments — **and test descriptions/docstrings** — must not record where a change came from: no Issue/PR numbers, branch names, work-item labels (`WI-C`), development milestones (`M9`), or execution-plan steps. That history belongs in Git commits, PRs, Issues, and Execution Plans, which are its **correct home** — a commit message *should* cite the work item that a source comment must not.
+- **Durable pointers are permitted — and differ from provenance.** A comment may point to where a lasting constraint or decision lives: an ADR, a recorded architecture **Finding**, or the owning document (`see ADR 0005`, `Finding 0002`). The test is *purpose*: a stable pointer to a durable artifact is fine; "this came from WI-C / PR #392" is not. Prefer pointing to durable documentation over copying it into the source.
+- **Domain identifiers are not milestones.** A label that is part of the model's own vocabulary — e.g. a reclamation oracle's fixtures `O1`, `M1`, `M3` — is legitimate; the prohibition is on *development-milestone* references, not on identifiers that merely resemble one.
+- **No speculation or roadmaps.** Do not narrate planned or future work in source comments (`Future expansion:`, "later we will…", "TODO when M9 lands"). Document only what exists; planned work belongs in the issue tracker.
+- **File headers are optional and short.** One or two lines when a file's responsibility or boundary is not obvious from its name and structure — never a header that merely restates the filename.
+- **The time test.** If a developer two years from now, with no knowledge of the task that produced it, would not find the comment useful and correct, it does not belong in the source.
+
+The goal is signal-to-noise, not a minimum count: keep every comment a reader genuinely needs for correctness or safety, and drop every comment that only narrates.
+
+**Apply this incrementally (Boy Scout), never as a campaign.** When a task legitimately touches a file, it may leave that area slightly cleaner — removing or shortening a redundant or stale comment only when doing so is obvious and safe, changes no behavior/contract/architecture, and does not expand the task's scope. A comment whose historical significance is unclear is recorded for review, not deleted by guessing; a broader comment-quality problem is recorded as a finding, not pursued in-task.
 
 ---
 
