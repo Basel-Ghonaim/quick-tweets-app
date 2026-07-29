@@ -32,6 +32,11 @@ export interface UserProfileResponse {
   createdAt: Date;
 }
 
+/** The authenticated user's own profile: the public shape plus `email` (self-view only). */
+export interface SelfProfileResponse extends UserProfileResponse {
+  email: string;
+}
+
 // ─── Request Shapes ──────────────────────────────────────────────────────────
 
 /**
@@ -52,6 +57,7 @@ export interface UserWithCounts {
   id: number;
   username: string;
   name: string;
+  email: string;
   profileImage: string | null;
   /** Bare Media Reference (MediaObject.id) — resolved to a token at the boundary. */
   avatarMediaId: number | null;
@@ -110,6 +116,6 @@ export interface IUserRepository {
  */
 export interface IUserService {
   getProfile(username: string, reqUserId?: number): Promise<UserProfileResponse>;
-  getMe(userId: number): Promise<UserProfileResponse>;
-  updateMe(userId: number, data: UpdateMeInput): Promise<UserProfileResponse>;
+  getMe(userId: number): Promise<SelfProfileResponse>;
+  updateMe(userId: number, data: UpdateMeInput): Promise<SelfProfileResponse>;
 }

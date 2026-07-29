@@ -23,6 +23,7 @@ const rawUser = (over: Partial<UserWithCounts> = {}): UserWithCounts => ({
   id: USER,
   username: "ada",
   name: "Ada",
+  email: "ada@example.com",
   profileImage: null,
   avatarMediaId: null,
   bio: "",
@@ -233,5 +234,25 @@ describe("user profile reads resolve the avatar", () => {
     const svc = createUserService(w.repo, media, w.runInTransaction);
 
     expect((await svc.getMe(USER)).avatar).toBeNull();
+  });
+});
+
+describe("current-user email is self-view only", () => {
+  it("getMe (self) includes email", async () => {
+    const w = makeWorld(null);
+    const { media } = makeMedia({});
+    const svc = createUserService(w.repo, media, w.runInTransaction);
+
+    expect((await svc.getMe(USER)).email).toBe("ada@example.com");
+  });
+
+  it("getProfile (public) does not expose email", async () => {
+    const w = makeWorld(null);
+    const { media } = makeMedia({});
+    const svc = createUserService(w.repo, media, w.runInTransaction);
+
+    const profile = await svc.getProfile("ada");
+
+    expect("email" in profile).toBe(false);
   });
 });
