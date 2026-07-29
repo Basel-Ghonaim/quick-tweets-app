@@ -4,14 +4,11 @@ import { configureStore } from "@reduxjs/toolkit";
 
 import { authReducer, authActions } from "../../store";
 import { restoreSession } from "./restoreSession";
-import type { User } from "@shared/types";
+import type { AuthUser } from "@shared/types";
 
 const makeStore = () => configureStore({ reducer: { auth: authReducer } });
 
-const user: User = {
-  id: 1, username: "ada", name: "Ada Lovelace", email: "ada@example.com",
-  profileImage: null, avatar: null, bio: "", createdAt: "2026-01-01T00:00:00.000Z",
-};
+const user: AuthUser = { id: 1, username: "ada" };
 
 describe("restoreSession", () => {
   it("does NOT attempt a refresh when there is no session hint (guest)", async () => {

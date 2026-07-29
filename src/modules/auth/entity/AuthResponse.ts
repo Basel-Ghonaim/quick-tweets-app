@@ -1,6 +1,6 @@
-import type { User } from "@shared/types";
+import type { AuthUser } from "@shared/types";
 
 export interface AuthResponse {
-  user: User;
+  user: AuthUser;
   accessToken: string;
 }

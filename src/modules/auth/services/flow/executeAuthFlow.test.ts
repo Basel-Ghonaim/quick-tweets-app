@@ -11,7 +11,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "../../store";
 import { executeAuthFlow } from "./executeAuthFlow";
 import { createAppError } from "@shared/errors";
-import type { User } from "@shared/types";
+import type { AuthUser } from "@shared/types";
 import type { AuthResponse } from "../../entity";
 
 const makeStore = () =>
@@ -19,16 +19,7 @@ const makeStore = () =>
     reducer: { auth: authReducer },
   });
 
-const user: User = {
-  id: 1,
-  username: "ada",
-  name: "Ada Lovelace",
-  email: "ada@example.com",
-  profileImage: null,
-  avatar: null,
-  bio: "",
-  createdAt: "2026-01-01T00:00:00.000Z",
-};
+const user: AuthUser = { id: 1, username: "ada" };
 const session: AuthResponse = { user, accessToken: "tok-123" };
 
 describe("executeAuthFlow — success is the server response, no persistence gate (#258)", () => {

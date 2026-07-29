@@ -1,7 +1,7 @@
-import type { RequestState, User } from "@shared/types";
+import type { RequestState, AuthUser } from "@shared/types";
 
 export interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   accessToken: string | null;
   requests: AuthRequests;
 }
