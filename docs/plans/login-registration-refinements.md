@@ -3,11 +3,11 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-07-29
+> **Last Updated:** 2026-07-30
 > **Parent Issue:** [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384)
 > **Supersedes:** —
 
-This plan sequences the settled **Login & Registration refinements** into five independently reviewable Work Items. The product and architecture decisions behind them are **closed** (recorded through prior analysis passes); this plan owns their **execution order, boundaries, and invariants**, and never reopens them.
+This plan sequences the settled **Login & Registration refinements** into six independently reviewable Work Items. The product and architecture decisions behind them are **closed** (recorded through prior analysis passes); this plan owns their **execution order, boundaries, and invariants**, and never reopens them.
 
 It is a **strategy document**: it owns each Work Item's strategic definition (goal, scope, non-goals, dependencies, invariants, verification strategy, Definition-of-Done summary, and stop-risks). Each Work Item's **granular acceptance criteria, live status, and progress belong to its Issue** (created when that Work Item begins), which this plan links and never mirrors — per [Documentation Strategy §5](../architecture/documentation-strategy.md) and [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
 
@@ -18,10 +18,11 @@ It is a **strategy document**: it owns each Work Item's strategic definition (go
 - Let login accept a **neutral `identifier`** (username **or** email) while preserving the generic `401`.
 - Consolidate the current-user surface: **retire `/auth/me`**, make **`/users/me` the canonical current-user resource**, and make Auth responses **Profile-free** (`{ id, username }` + token).
 - Remove **`name`** from Register and make it **truthful optional profile data** (absent = `NULL`; `username` is a read-side fallback only).
+- Let a user **change their own `username`** (self-service handle change) with immediate authenticated-identity consistency, stable historical URLs (alias + reservation + redirect), and a single shared validation rule.
 
 ## 2. Boundary declaration
 
-**Covers:** the five Work Items below — backend logic plus the affected frontend logic, validation, state, mappers, DTOs, tests, and API/contract documentation.
+**Covers:** the six Work Items below — backend logic plus the affected frontend logic, validation, state, mappers, DTOs, tests, and API/contract documentation.
 
 **Does not cover (out of scope; unchanged):** Account/User deletion (and its `uploader_id` `Restrict` interaction); `profileImage` cleanup (its own existing concern); date-of-birth; Terms/Privacy persistence; password reset; the authenticated-application / onboarding **UI and screens**; and any unrelated deferred Issue.
 
@@ -31,11 +32,12 @@ It is a **strategy document**: it owns each Work Item's strategic definition (go
 2. **Co-versioning.** Any Work Item that changes an API/contract co-versions **all** affected backend + frontend logic, validation, state, mappers, DTOs, tests, and contract docs **within that same Work Item.** What remains deferred is onboarding/app **UI/screens** — not the frontend **logic** these changes touch.
 3. **B — disposable data.** Existing uppercase usernames are **disposable dev/test verification data**: reset/reseed them. **No** production-compatibility machinery, grandfathering, or complex migration to preserve them. The resulting invariant is lowercase-only stored usernames, enforced by backend + frontend validation; uppercase input is **rejected, never silently normalized.**
 4. **A — truthful absence.** `name` has **no default** and is **never populated or derived from `username`.** Absent is represented truthfully as `NULL`. `username` is the **presentation (read-side) fallback only** when `name === null`; it must not mutate or persist `name`.
-5. **Separateness.** The five Work Items stay separate unless formal-planning evidence proves a boundary cannot be preserved safely. **C and A are not combined for convenience.**
+5. **Separateness.** The six Work Items stay separate unless formal-planning evidence proves a boundary cannot be preserved safely. **C and A are not combined for convenience.**
+6. **F — architectural guarantees (binding).** Editable username must hold three guarantees: (1) **immediate authenticated-identity consistency** — no stale session, logout, or refresh; (2) **stable username locators** — no historical URL 404s, via the approved alias/reservation/redirect architecture; (3) **single source of truth** — the username validation rule and the handle resolver are each defined once and reused. Changing this architecture or expanding scope requires stopping to discuss.
 
 ## 4. Strategy & sequencing
 
-**Order:** **D → B → E → C → A** (sequential; merge-to-stable-`main` between each).
+**Order:** **D → B → E → C → A → F** (sequential; merge-to-stable-`main` between each).
 
 **Dependency graph:**
 
@@ -43,15 +45,18 @@ It is a **strategy document**: it owns each Work Item's strategic definition (go
 D  (register correctness, foundation)
       └─▶ C (register/auth response contract)  ──▶ A (register field + name nullable)
 B  (username lowercase + data)  ──▶ E (login identifier)
+{B, D, C, A}  ──▶ F (editable username)
 
 Serialization edges (shared files — not new dependencies):
   E ⋯ C   both edit auth.controller / the login handler → must not run concurrently
   B ⋯ A   both edit registerSchema → satisfied by B landing before A
+  A ⋯ F   both edit updateMeSchema / registerSchema → satisfied by A landing before F
 ```
 
 - **D → C, D → A** *(hard):* register must be transactionally correct before its request/response contract is reshaped.
 - **B → E** *(hard):* the lowercasing resolver would strand existing uppercase accounts unless stored usernames are already lowercase.
 - **C → A** *(efficiency):* C minimizes the Auth response first, so A never re-touches it (no DTO rework).
+- **{B, D, C, A} → F** *(hard):* editable username reuses B's lowercase validation, D's `P2002` pattern, C's `{ id, username }` identity, and A's `PATCH /users/me` optional-field path; it is the plan's final item.
 
 ## 5. Execution structure
 
@@ -122,6 +127,20 @@ Each Work Item is a separate, atomic unit with its own Issue and PR. The section
 - **Commit/PR boundary:** one PR; commits ≈ schema + migration, backend (drop name + nullable DTOs/projections + profile-update `name: null`), frontend (register form + types), docs.
 - **Stop-risks:** if any backend path assumes `name` non-null in a way that would fault on `null` → find and handle before shipping. If the `name`-nullable migration is not a clean widening on the actual DB → **stop**. If the frontend still sends `name` (a silent strip → silent data loss) → prevented by co-versioning the register form within this Work Item.
 
+### WI-F — Editable Username (self-service handle change) — [#399](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/399)
+- **Goal & rationale:** a user changes their own `username` via `PATCH /users/me` under the lowercase-only invariant, with the session, historical URLs, and validation all staying coherent. The closing item of the identity work.
+- **Approved architecture — History + Reservation + Redirect:** a rename records the old handle in a `username_aliases` table (**reserved indefinitely**) and sets the new one current; a single `resolveUserByHandle` (current → else alias) backs every username locator; a former handle **301-redirects** (reads) or **resolves** (writes) to the canonical handle; uniqueness spans current usernames **and** reserved aliases.
+- **Scope:** extract the username rule into a shared `usernameField` consumed by register + edit; add the `UsernameAlias` model + additive migration; add `resolveUserByHandle` + read-locator wiring (`/users/:username`, `/tweets?author=`, `/follows/:username/(followers|following)`) with 301-to-canonical; add `username` to `updateMeSchema` + `UpdateMeInput` + `updateMe` (transactional uniqueness across users + alias, `UPDATE` + alias insert, `P2002 → 409`); reserve aliases in registration's uniqueness; re-sync the frontend auth identity from the rename response. Docs — API contract, data-model, authentication document.
+- **Non-goals (scope fence):** no rename cooldown / rate-limit / churn throttle; no alias expiry or release; no id-based canonical URLs; no case-insensitivity beyond lowercase-only; no cross-device push sync; no account-deletion reconciliation (dormant).
+- **Dependencies:** **B** (validation), **D** (`P2002`), **C** (auth identity), **A** (`PATCH /users/me` optional-field path) — all merged; sequenced **last**.
+- **Impact:** backend (user validator + types + service + repository; auth validator — shared-rule extraction; tweets/follows read locators + the shared resolver; **schema + migration**) + frontend (auth-slice identity re-sync) + the API contract + the data-model + the authentication document.
+- **Invariants:** `id` is the stable session identity; `username` is a mutable, unique, reserved-on-release handle; a handle is taken iff it is a current username **or** a reserved alias; former handles never `404`; one validation rule, one resolver.
+- **Migration/data:** one **additive** migration — `CREATE TABLE username_aliases` (+ FK + index); no change to `users.username`, no backfill.
+- **Verification strategy:** backend — rename updates + reserves the old handle; `P2002 → 409`; register rejects reserved aliases; `/users/:old` → `301` canonical; the **same** access token still authorizes after a rename (id-based session); author embeds reflect the new handle (join). Frontend — the rename flow re-syncs the auth identity from the response. Real-Postgres integration for rename, reservation, resolver/redirect, and session-continuity.
+- **Definition of Done (summary):** editable `username` live via `PATCH /users/me`; history + reservation + redirect enforced by the shared resolver; the shared `usernameField` is the single validation source; all three guarantees held; tests green; the API contract + data-model + authentication document co-versioned.
+- **Commit/PR boundary:** one PR; commits ≈ plan update, shared `usernameField`, `UsernameAlias` model + migration, resolver + read redirects, transactional rename, registration reservation, identity re-sync, docs.
+- **Stop-risks:** if any implementation detail would require changing the agreed architecture (history / reservation / redirect) or expanding scope (policies, id-URLs) → **stop and discuss** before proceeding.
+
 ## 6. Risks & mitigations (effort-wide)
 
 - **Serialize E and C** — both edit the login handler; running them concurrently risks a broken login path. Mitigation: the sequential order (E before C).
@@ -133,8 +152,9 @@ Each Work Item is a separate, atomic unit with its own Issue and PR. The section
 
 ## 7. Completion criteria (whole effort)
 
-- All five Work Items merged to `main`, each green (typecheck + unit + integration), each leaving a consistent backend/frontend/contract state.
+- All six Work Items merged to `main`, each green (typecheck + unit + integration), each leaving a consistent backend/frontend/contract state.
 - Register is transactional (no orphan; race → `409`); usernames are lowercase-only (backend + frontend, data reconciled); login accepts `{ identifier }` with a generic `401`; `/auth/me` is retired and `/users/me` is canonical (self `email`) with Auth responses minimized and the frontend auth contract co-versioned to `{ id, username }` (a `/users/me` consumer is future work); `name` is removed from register and truthfully optional (nullable, never derived, clearable, read-side fallback).
+- Editable username is live via `PATCH /users/me` with **immediate identity consistency** (id-based session — no logout/refresh), **stable historical URLs** (alias + reservation + `301` redirect), and a **single shared validation rule + resolver** — the three guarantees held.
 - All API/contract changes are co-versioned across backend, frontend logic, and docs; the API contract, data-model, and authentication documents are consistent.
 - The frontend **UI/screens remain deferred** — only logic, validation, state, mappers, and tests changed.
 - No out-of-scope item was pulled in.
