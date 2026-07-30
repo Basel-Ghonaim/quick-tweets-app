@@ -6,9 +6,9 @@
  * with no local persistence. Locked via the repository's injectable client — no
  * DOM, no network.
  */
-import { describe, it, expect, vi } from "vitest";
-import { restAuth } from "./restAuth";
 import type { AuthUser } from "@shared/types";
+import { describe, expect, it, vi } from "vitest";
+import { restAuth } from "./restAuth";
 
 const userDto = { id: 1, username: "ada" };
 const expectedUser: AuthUser = { ...userDto };
@@ -18,7 +18,9 @@ describe("restAuth.refresh — returns the session", () => {
     const post = vi.fn().mockResolvedValue({
       data: { success: true, data: { user: userDto, accessToken: "tok-abc" } },
     });
-    const repo = restAuth({ post } as unknown as Parameters<typeof restAuth>[0]);
+    const repo = restAuth({ post } as unknown as Parameters<
+      typeof restAuth
+    >[0]);
 
     const session = await repo.refresh();
 
@@ -30,8 +32,10 @@ describe("restAuth.refresh — returns the session", () => {
 
 describe("restAuth.register — account creation only (auth-first, ADR 0008)", () => {
   const creds = {
-    username: "ada", email: "ada@example.com",
-    password: "Passw0rd!", confirmPassword: "Passw0rd!", privacy: true,
+    username: "ada",
+    email: "ada@example.com",
+    password: "Passw0rd!",
+    confirmPassword: "Passw0rd!",
   };
   const asClient = (post: unknown) => post as Parameters<typeof restAuth>[0];
 
@@ -50,7 +54,10 @@ describe("restAuth.register — account creation only (auth-first, ADR 0008)", (
     // Registration is account-only: the request must not carry name (nor an avatar).
     expect(post).toHaveBeenCalledWith(
       "/auth/register",
-      expect.not.objectContaining({ name: expect.anything(), avatar: expect.anything() }),
+      expect.not.objectContaining({
+        name: expect.anything(),
+        avatar: expect.anything(),
+      }),
     );
     expect(session.accessToken).toBe("acc");
   });
@@ -61,11 +68,19 @@ describe("restAuth.login — submits the neutral identifier", () => {
     const post = vi.fn().mockResolvedValue({
       data: { success: true, data: { user: userDto, accessToken: "acc" } },
     });
-    const repo = restAuth({ post } as unknown as Parameters<typeof restAuth>[0]);
+    const repo = restAuth({ post } as unknown as Parameters<
+      typeof restAuth
+    >[0]);
 
-    const session = await repo.login({ identifier: "basel_a", password: "Passw0rd!" });
+    const session = await repo.login({
+      identifier: "basel_a",
+      password: "Passw0rd!",
+    });
 
-    expect(post).toHaveBeenCalledWith("/auth/login", { identifier: "basel_a", password: "Passw0rd!" });
+    expect(post).toHaveBeenCalledWith("/auth/login", {
+      identifier: "basel_a",
+      password: "Passw0rd!",
+    });
     expect(session.accessToken).toBe("acc");
   });
 });

@@ -10,7 +10,6 @@ export const VALIDATION_MESSAGES = {
     message: `Must be exactly or less than ${max} characters.`,
   }),
   match: (fieldName: string) => `This field must match your ${fieldName}.`,
-  privacy: "You must accept the privacy policy to continue.",
   usernameCharset:
     "Username can only contain lowercase letters, numbers, and underscores.",
   passwordComplexity: {

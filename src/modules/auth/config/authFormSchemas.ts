@@ -97,12 +97,6 @@ const registerFields = {
       isMatch("password", VALIDATION_MESSAGES.match("Password")),
     ],
   },
-  privacy: {
-    name: "privacy",
-    type: "checkbox",
-    label: "I agree to the privacy policy rules",
-    validators: [isRequired(VALIDATION_MESSAGES.privacy)],
-  },
 } satisfies Record<
   keyof RegisterCredentials,
   FormFieldConfig<RegisterCredentials>
@@ -112,10 +106,9 @@ export const authFormSchemas = {
   loginFields,
   // Registration is account creation only (auth-first, ADR 0008) — no avatar.
   registerFields: {
-    username: { ...registerFields.username, span: "half" },
+    username: { ...registerFields.username, span: "full" },
     email: { ...registerFields.email, span: "full" },
-    password: { ...registerFields.password, span: "half" },
-    confirmPassword: { ...registerFields.confirmPassword, span: "half" },
-    privacy: { ...registerFields.privacy, span: "full" },
+    password: { ...registerFields.password, span: "full" },
+    confirmPassword: { ...registerFields.confirmPassword, span: "full" },
   } satisfies Record<string, FormFieldConfig<RegisterCredentials>>,
 };
