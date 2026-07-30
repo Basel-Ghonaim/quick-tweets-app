@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the data model's **relationship, cascade, and indexing rationale** — the *why* behind the schema. The field-level truth (types, defaults, column maps) is owned by [`schema.prisma`](../../server/prisma/schema.prisma) and referenced here, never restated.
 > **Scope:** Why the entities relate as they do, how deletes propagate, and which indexes exist and what they serve. It is not a field listing.
-> **Version:** 1.0
-> **Last Updated:** 2026-06-28
+> **Version:** 1.1
+> **Last Updated:** 2026-07-30
 > **Owner:** Basel Ghonaim
 
 ## Overview
@@ -13,19 +13,20 @@ The domain is a small social graph: users author tweets, tweets gather comments 
 
 ## Entities and relationships
 
-- **User** is the root aggregate — the owner of all content and relationships. Authentication state and every piece of content hang off it. Its identity is `username` + `email` (both required and unique); `name` is **optional** profile data (nullable, set via `PATCH /users/me`, never defaulted or derived from `username`).
+- **User** is the root aggregate — the owner of all content and relationships. Authentication state and every piece of content hang off it. Its **stable** identity is the surrogate `id`, which never changes; `username` and `email` are required and unique, but `username` is a **mutable handle** (changed via `PATCH /users/me`) — so sessions and every foreign key key on `id`, never on the handle. `name` is **optional** profile data (nullable, set via `PATCH /users/me`, never defaulted or derived from `username`).
 - A **tweet** belongs to one author (a user) and aggregates its comments and likes.
 - A **comment** belongs to both a tweet and its author — a reply within a tweet's thread.
 - A **like** is the join between a user and a tweet, modelling approval.
 - A **follow** is a *self-referential* join on users — a directed edge from a follower to a followed user; together, follows form the social graph.
 - A **refresh token** belongs to a user — server-side session state for authentication.
+- A **username alias** belongs to a user and records a **former handle** they renamed away from. It is **reserved indefinitely** (it never expires or releases), so historical username locators keep resolving to the current account and the freed handle can never be re-registered by anyone else. One shared resolver treats an alias as the fallback when a handle is not a current username.
 - The **Media** entities are a platform subsystem, not domain content: a **`MediaObject`** is the registry record for one stored file (identity, storage detail, status, and its **uploader** — an owning `User`, `NOT NULL`); a **`MediaReference`** is Media's own record that *something* references an object; **`TweetMedia`** is the tweets-domain **ordered** association to media; and **`MediaReclamationAudit`** / **`MediaQuarantine`** are the reclamation collector's append-only trail and its divergence-review queue. Feature tables hold only a **bare numeric reference** to a `MediaObject` (`User.avatar_media_id`, `Comment.media_id`, `TweetMedia.media_id`), never storage detail; the subsystem's mechanisms are owned by [`backend/media.md`](../backend/media.md).
 
 ## Cascade behaviour
 
 Every relationship deletes with its parent (`onDelete: Cascade`):
 
-- deleting a **user** removes their tweets, comments, likes, follows (in both directions), and refresh tokens — a user's entire footprint leaves with them (with **one exception**: a user that *owns media objects* is blocked from deletion by the uploader `Restrict` foreign key — see the media note below);
+- deleting a **user** removes their tweets, comments, likes, follows (in both directions), refresh tokens, and username aliases — a user's entire footprint leaves with them (with **one exception**: a user that *owns media objects* is blocked from deletion by the uploader `Restrict` foreign key — see the media note below);
 - deleting a **tweet** removes its comments and likes.
 
 The rationale: the model has no meaningful orphan — a comment without its tweet, or a like without its user, is noise. Cascade enforces referential integrity in the database rather than in application code, so a missed cleanup path cannot leave dangling rows (defense in depth).
@@ -40,6 +41,7 @@ Indexes exist to serve the product's hot read paths; each maps to a query the ap
 - **Comments** are indexed by tweet (the "comments on this tweet" query) and by author.
 - **Likes** are indexed by tweet (per-tweet like counts) and carry a **unique (user, tweet)** constraint — a user can like a tweet at most once, which makes liking idempotent.
 - **Follows** carry a **unique (follower, followed)** constraint — you cannot follow someone twice — and are indexed in **both directions**: by follower ("who do I follow", which drives the feed) and by followed ("who follows me", which drives follower counts).
+- **Usernames** are unique **across two tables**: a handle is taken if it is a live `users.username` **or** a reserved `username_aliases.username`. Each table enforces its own `@unique`, and the application checks both (through the shared resolver) before a rename or a registration; the two per-table uniques are authoritative, so a duplicate racing past the check surfaces as a safe `409`, never a corrupt state. `username_aliases` is additionally indexed by `user_id` (a user's former-handle list); the `username` uniques already index the lookup the resolver runs.
 - **Media** carries the constraints attach and reclamation rely on: `media_objects` is uniquely keyed by `token` and by `storage_key` (the public handle and the storage-key↔object mapping); `media_references` is **unique `(media_id, referrer)`** so a repeated begin-signal is idempotent and an end is exact; `tweet_media` is unique on `(tweet_id, position)` and `(tweet_id, media_id)` (no two objects share a slot, none is attached twice); and the reclamation tables index `media_reclamation_audit(run_at)` and `media_quarantine(resolved_at)` — the soak's time-ordered trail and the open-divergence scan. There is deliberately **no index on `tweet_media(media_id)`**: the only query it would serve is "which tweets reference this object", the feature-schema scan reclamation is forbidden to run.
 
 Columns without their own index are either already unique (for example `username` and `email`, whose uniqueness already provides an index) or are not on a hot read path. The broader rules — bounded queries, avoiding N+1 — are owned by [Engineering Principles §9](../development/engineering-principles.md).

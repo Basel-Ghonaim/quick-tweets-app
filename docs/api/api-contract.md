@@ -272,7 +272,10 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 // Set-Cookie: refreshToken=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth
 // Set-Cookie: qt_session=1; Secure; SameSite=Strict; Path=/   (readable session hint — see "Session cookies" below)
 
-// Response 409 — username or email already taken
+// Response 409 — username or email already taken. A username is "taken" if it is a
+// current username OR a reserved former handle (freed by a rename but held indefinitely,
+// so it can never be re-registered). The username rule is the shared `usernameField`,
+// the same one PATCH /users/me enforces on a rename.
 { "success": false, "error": { "type": "conflict", "message": "Username already taken" } }
 
 // Response 422 — validation failed (field-level errors)
@@ -348,7 +351,9 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 > **Auth responses are minimal.** Register / login / refresh carry only the session token and the
 > identity `{ id, username }` (ADR 0008 Decision 10 — Auth is Profile-free): never name, email,
-> avatar, or bio. The authenticated user's full profile is served by the **User** domain,
+> avatar, or bio. Of the two identity fields, **`id` is stable and `username` is mutable** — a
+> self-service rename (`PATCH /users/me`) changes the handle but never the `id`, so clients key
+> sessions and references on `id`, never on the handle. The authenticated user's full profile is served by the **User** domain,
 > `GET /users/me` — the single canonical current-user resource. (`GET /auth/me` was retired: it
 > returned only User-owned state and duplicated `/users/me`.) The public `GET /users/:username` (and
 > the embedded author shape, [AuthorEmbed](#authorembed)) carry `avatar: { token } | null`, the read
@@ -417,7 +422,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 **Notes:**
 - Filtered subset of the global feed — same tweet shape
 - `isLiked` requires optional auth
-- Returns `404` if username does not exist
+- `author` accepts a current **or** a former handle: a former handle resolves transparently to the same author (no redirect on this non-profile locator). Returns `404` only if the handle was never assigned.
 
 ---
 
@@ -768,6 +773,10 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
   }
 }
 
+// Response 301 — :username is a FORMER handle (freed by a rename, still reserved):
+// permanent redirect to the canonical profile URL. No JSON body; the target is in
+// the Location header: /api/v1/users/<current-username>
+
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "User not found" } }
 ```
@@ -778,6 +787,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 - `likesCount`: total likes received across all their tweets
 - `followersCount` / `followingCount`: computed via `COUNT()` on follows table
 - `isFollowing`: `true` if the authenticated user follows this profile, `false` for guests
+- `:username` accepts a current **or** a former handle: a former handle (freed by a rename, held indefinitely) **`301`-redirects** to the current canonical URL, so historical profile links never `404`. Only a handle that was never assigned returns `404`.
 
 ### `GET /users/me` — Own profile
 
@@ -785,28 +795,38 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 ### `PATCH /users/me` — Update own profile
 
-**Auth:** Required. Updates any subset of `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). `name` follows the same three-way rule as the avatar: **omitted = unchanged, `null` = clear, a string = set** (`name` is never derived from `username`). Returns the updated self profile (the same shape as `GET /users/me`, including `email`).
+**Auth:** Required. Updates any subset of `username`, `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). `name` follows the same three-way rule as the avatar: **omitted = unchanged, `null` = clear, a string = set** (`name` is never derived from `username`). Changing `username` **renames the handle**: the old handle is reserved (see below), the new one becomes current, and because the session is keyed on the immutable `id` (never the handle), the **same access token keeps working with no re-login or refresh** — the response is the authoritative new identity. Returns the updated self profile (the same shape as `GET /users/me`, including `email`).
 
 ```jsonc
 // Request — any subset; at least one field. Avatar is full-replacement:
 //   omitted   → unchanged
 //   { token } → set / replace   (token from POST /media, uploaded under Bearer)
 //   null      → remove
-{ "name": "Basel G.", "bio": "hello", "avatar": { "token": "Nk3v9qYw1kPz-XG27RODaQ" } }
+// username, when present, must satisfy the shared rule (see POST /auth/register).
+{ "username": "basel_g", "name": "Basel G.", "bio": "hello", "avatar": { "token": "Nk3v9qYw1kPz-XG27RODaQ" } }
 
-// Response 422 — validation, or the avatar could not be attached / violates the
-// avatar policy (JPEG or PNG only, ≤ 1 MiB). Opaque: never names the token.
+// Response 409 — the requested username is taken: a current username OR another
+// account's reserved former handle. (Renaming to your OWN current handle is a no-op 200;
+// reclaiming your OWN former handle is allowed.)
+{ "success": false, "error": { "type": "conflict", "message": "Username already taken" } }
+
+// Response 422 — validation (a username failing the shared rule lands here, exactly as at
+// register), or the avatar could not be attached / violates the avatar policy (JPEG or PNG
+// only, ≤ 1 MiB). Opaque: never names the token.
 { "success": false, "error": { "type": "validation", "message": "Avatar does not meet the requirements",
     "details": { "avatar": ["Avatar must be a JPEG or PNG image"] } } }
 ```
 
 **Notes:**
+- `username`: optional; validated by the **shared `usernameField`** register uses (one source of truth — lowercase `^[a-z0-9_]{4,20}$`, uppercase rejected not normalized). A rename **reserves the old handle indefinitely** as a former handle: it keeps `301`-redirecting / resolving to you (see `GET /users/:username`) and can never be taken or re-registered by anyone else. Renaming is refused (`409`) if the target is a live username or another account's reserved handle; renaming to your own current handle is a no-op, and reclaiming your own former handle is allowed. Identity is the immutable `id`, so a rename never invalidates the session or a shareable link.
 - The avatar is an authenticated Media producer: upload under `POST /media` (Bearer), then submit its `token` here. The **avatar policy** (JPEG/PNG, ≤ 1 MiB) is enforced server-side over Media's authoritative type/size — stricter than the global media limits.
 - An uploaded object that is never attached (or is rejected here) is left owned-but-unreferenced and is reclaimed later by the background media reclamation — no request-level deletion.
 
 ---
 
 ## Follows
+
+> Every `/follows/:username` locator (follow, unfollow, followers, following) resolves a **former handle** transparently to the current account — historical handles keep working, with no redirect on these non-profile locators. Only a never-assigned handle `404`s.
 
 ### `POST /follows/:username` — Follow a user
 
