@@ -157,6 +157,46 @@ no longer describe executable behavior and are retired rather than rewritten her
 | FOL-05 | FOL-01 | B unfollows A | 200; `isFollowing:false` | `follows` row removed | — | |
 | FOL-06 | login B | B follows A **twice** | idempotent / no duplicate | single `follows` row (unique pair) | — | |
 
+## 8 · Username rename & locator stability (WI-F)
+
+> Editable username via **History + Reservation + Redirect**. Renaming a handle
+> updates the current username, **reserves** the former handle as an alias of the
+> same account, and keeps every historical locator working. These scenarios prove
+> the three WI-F guarantees against a real DB. The driver is Postman folder
+> **09 · Username rename**; the DB proof is **Checkpoint H** (`username_aliases`).
+>
+> - **G1 — identity is the id, not the handle.** The access token minted *before* a
+>   rename still authenticates *after* it and returns the new handle — no logout, no
+>   refresh (USR-01/02).
+> - **G2 — a former handle never 404s.** The shareable profile URL 301-redirects
+>   (USR-03); non-profile locators resolve the alias transparently (USR-04).
+> - **G3 — one validation rule.** The rename path enforces the *same* `usernameField`
+>   as register — an invalid handle is a 422, never a 409/500 (USR-08).
+>
+> **Self-isolated.** Folder 09 mints its own two users (a renamer + a bystander) with
+> per-run unique handles, so it never disturbs `verify_alice`/`verify_bob` and a
+> former handle reserved by a prior run cannot collide. Run **09** top-to-bottom;
+> the run's handles are `{{rnOldUsername}}` → `{{rnNewUsername}}`, bystander
+> `{{rnBystander}}`.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| USR-01 | Renamer registered as `old` | `PATCH /users/me {username:new}` (Bearer renamer) | 200; `data.username = new`; `data.id` unchanged | `users`: username = `new`; **`username_aliases`: one row `old` → same `user_id`** (Checkpoint H) | via reset | |
+| USR-02 | USR-01 | `GET /users/me` with the **same** Bearer minted before USR-01 | 200; `id` unchanged; `username = new` — the session never went stale (**G1**) | — | — | |
+| USR-03 | USR-01 (redirect-follow **off**) | `GET /users/old` (former handle) | **301**; `Location` ends `/users/new` (**G2**, profile URL) | — | — | |
+| USR-04 | USR-01; bystander logged in | Bystander `POST /follows/old` (former handle) | 200; `isFollowing:true` — the follow locator resolves the alias (**G2**, writes) | `follows` row (bystander → renamer) | via reset | |
+| USR-05 | USR-01 | Bystander `PATCH /users/me {username:old}` | 409 `conflict` — a reserved former handle is cross-account | no change | — | |
+| USR-06 | Bystander holds `bystander` | Renamer `PATCH /users/me {username:bystander}` | 409 `conflict` — a live handle is taken | no change | — | |
+| USR-07 | USR-01 | `POST /auth/register {username:old,…}` (new account) | 409 `conflict` — no re-registration of a reserved handle | no new `users` row | — | |
+| USR-08 | Renamer logged in | `PATCH /users/me {username:"AB"}` (too short + uppercase) | **422** `validation` — same rule as register (**G3**) | no change | — | |
+| USR-09 | USR-01 | Renamer `PATCH /users/me {username:new}` (already current) | 200; `username` unchanged | `username_aliases`: **UNCHANGED** — no second alias (Checkpoint H) | — | |
+| USR-10 | USR-01…09 | Renamer `PATCH /users/me {username:old}` (reclaim own former handle) | 200; `data.username = old` | `username_aliases`: the `old` row **gone**; `new` now reserved → same `user_id` (Checkpoint H) | via reset | |
+
+> **USR-05 vs USR-07** are the two faces of one reservation: a reserved former handle
+> is refused to a **rename** *and* to a **registration**. **USR-09** proves a no-op
+> rename mints no alias; **USR-10** proves reclaiming your *own* former handle is a
+> 200 (the self-alias is released), not a 409 against yourself.
+
 ---
 
 ## Cross-cutting concerns (called out explicitly)

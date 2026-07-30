@@ -223,6 +223,60 @@
       "value": "",
       "type": "default",
       "enabled": true
+    },
+    {
+      "key": "rnOldUsername",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rnNewUsername",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rnBystander",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rnEmail",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rnBystanderEmail",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rnAccessToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "rnBystanderToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "rnUserId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "rnBystanderId",
+      "value": "",
+      "type": "default",
+      "enabled": true
     }
   ],
   "_postman_variable_scope": "environment"

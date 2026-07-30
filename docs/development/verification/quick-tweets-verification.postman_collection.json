@@ -3649,6 +3649,577 @@
           ]
         }
       ]
+    },
+    {
+      "name": "09 · Username rename (WI-F)",
+      "description": "Editable username with History + Reservation + Redirect. Self-isolated: Setup mints TWO fresh, uniquely-named users (a renamer + a bystander) so it never mutates verify_alice/verify_bob and stays re-runnable (each run's former handles are reserved indefinitely). Scenarios map 1:1 to USR-01…USR-10 in verification-scenarios.md and prove the three guarantees: G1 the session is id-based (the same Bearer minted BEFORE the rename still works and returns the new handle — no logout/refresh); G2 a former handle never 404s (301 on the profile URL, transparent resolution on the follow locator); G3 the rename reuses the SAME username validation as register. DB proof: Checkpoint H (username_aliases) in the runbook. Run top-to-bottom.",
+      "item": [
+        {
+          "name": "0 · Setup — register renamer + bystander",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{rnOldUsername}}\",\n  \"email\": \"{{rnEmail}}\",\n  \"password\": \"{{userA_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Pre-request mints unique handles for this run (rnOldUsername/rnNewUsername/rnBystander) so former-handle reservations from earlier runs never collide. This request registers the RENAMER as {{rnOldUsername}}; run S2 next for the bystander."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Unique, charset-valid ([a-z0-9_], 4–20) handles for a re-runnable pass.",
+                  "const uniq = (Date.now() % 1e9).toString(36);",
+                  "pm.environment.set(\"rnOldUsername\", \"rn_\" + uniq);",
+                  "pm.environment.set(\"rnNewUsername\", \"rn2_\" + uniq);",
+                  "pm.environment.set(\"rnBystander\", \"by_\" + uniq);",
+                  "pm.environment.set(\"rnEmail\", \"rn_\" + uniq + \"@verify.local\");",
+                  "pm.environment.set(\"rnBystanderEmail\", \"by_\" + uniq + \"@verify.local\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.environment.set(\"rnAccessToken\", d.accessToken);",
+                  "pm.environment.set(\"rnUserId\", d.user.id);",
+                  "pm.test(\"registered as the old handle\", () => pm.expect(d.user.username).to.eql(pm.environment.get(\"rnOldUsername\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup — register bystander",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{rnBystander}}\",\n  \"email\": \"{{rnBystanderEmail}}\",\n  \"password\": \"{{userA_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Registers the BYSTANDER as {{rnBystander}} — a second live account, used to prove a reserved former handle blocks others and that a live handle collides."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.environment.set(\"rnBystanderToken\", d.accessToken);",
+                  "pm.environment.set(\"rnBystanderId\", d.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-01 · Rename own username",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{rnNewUsername}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "PATCH /users/me changes the handle. The response is the authoritative new identity; the id is unchanged (G1). → CHECKPOINT H (old handle now reserved as an alias of the same id)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"handle is the new one\", () => pm.expect(d.username).to.eql(pm.environment.get(\"rnNewUsername\")));",
+                  "pm.test(\"identity id is unchanged (session key is the id)\", () => pm.expect(String(d.id)).to.eql(pm.environment.get(\"rnUserId\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-02 · Me after rename — SAME token still valid (G1)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The Bearer was minted BEFORE the rename. It still authenticates and returns the NEW handle — the session never went stale, no logout/refresh needed (G1)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"same token resolves the renamed account\", () => pm.expect(String(d.id)).to.eql(pm.environment.get(\"rnUserId\")));",
+                  "pm.test(\"and returns the new handle\", () => pm.expect(d.username).to.eql(pm.environment.get(\"rnNewUsername\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-03 · Former handle redirects 301 (G2 — profile URL)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{rnOldUsername}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{rnOldUsername}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The shareable profile URL for a former handle must not 404: it 301-redirects to the current handle. Redirect-following is disabled so the 301 itself is observed."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 301\", () => pm.response.to.have.status(301));",
+                  "pm.test(\"Location points at the current handle\", () => pm.expect(pm.response.headers.get(\"Location\")).to.include(pm.environment.get(\"rnNewUsername\")));"
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "followRedirects": false
+          }
+        },
+        {
+          "name": "USR-04 · Former handle resolves on the follow locator (G2 — writes)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{rnOldUsername}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{rnOldUsername}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnBystanderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Non-profile locators resolve a former handle transparently (no redirect): the bystander follows the renamer BY THE OLD HANDLE and it lands on the same account."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"followed via the old handle\", () => pm.expect(pm.response.json().data.isFollowing).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-05 · Reserved former handle blocks another account's rename",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnBystanderToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{rnOldUsername}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "The bystander cannot rename INTO the renamer's reserved former handle — reservations are cross-account (uniqueness spans live usernames AND aliases)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"conflict envelope\", () => pm.expect(pm.response.json().success).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-06 · Rename to a live handle held by another account → 409",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{rnBystander}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "The renamer cannot take the bystander's CURRENT handle."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-07 · Reserved former handle blocks registration",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{rnOldUsername}}\",\n  \"email\": \"{{rnOldUsername}}_reg@verify.local\",\n  \"password\": \"{{userA_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "A reserved former handle cannot be re-registered by a brand-new account (no re-registration of a freed handle)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-08 · Invalid username rejected — shared validation (G3)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"AB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "'AB' is too short and uppercase. The rename path enforces the SAME usernameField rule as register — one source of truth (G3): a 422, not a 409/500."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"validation error\", () => pm.expect(pm.response.json().error.type).to.eql(\"validation\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-09 · No-op rename to the current handle → 200, no new alias",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{rnNewUsername}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Renaming to the handle you already hold is a true no-op — it succeeds and reserves NO additional alias. → CHECKPOINT H (still exactly one alias)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"handle unchanged\", () => pm.expect(pm.response.json().data.username).to.eql(pm.environment.get(\"rnNewUsername\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "USR-10 · Reclaim own former handle → 200",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{rnAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{rnOldUsername}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "The renamer renames BACK to its own reserved former handle. The self-alias is released (not a 409 against itself) and the just-vacated handle becomes the new reservation. → CHECKPOINT H (old alias gone; new handle now reserved)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"reclaimed the old handle\", () => pm.expect(pm.response.json().data.username).to.eql(pm.environment.get(\"rnOldUsername\")));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "auth": {
