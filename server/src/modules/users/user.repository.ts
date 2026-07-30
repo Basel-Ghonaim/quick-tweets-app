@@ -88,6 +88,7 @@ export const createUserRepository = (
       where: { id: userId },
       data: {
         ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.username !== undefined ? { username: data.username } : {}),
         ...(data.bio !== undefined ? { bio: data.bio } : {}),
         // Set the avatar reference exactly when provided — including to `null`
         // (remove). Omitted leaves it untouched.
@@ -95,4 +96,17 @@ export const createUserRepository = (
       },
       select: profileSelect,
     }),
+
+  // ── Username history / reservation ──
+
+  findUsername: (userId, client: DbClient = db) =>
+    client.user.findUnique({ where: { id: userId }, select: { username: true } }),
+
+  reserveUsername: async (userId, username, client: DbClient = db) => {
+    await client.usernameAlias.create({ data: { username, userId } });
+  },
+
+  releaseAlias: async (username, client: DbClient = db) => {
+    await client.usernameAlias.deleteMany({ where: { username } });
+  },
 });

@@ -24,6 +24,11 @@ import {
   runInTransaction as defaultRunInTransaction,
   type RunInTransaction,
 } from "../../shared/database/index.js";
+import { isPrismaError } from "../../shared/utils/index.js";
+import {
+  resolveUserByHandle,
+  type ResolvedHandle,
+} from "../../shared/identity/index.js";
 import {
   mediaOwnership,
   mediaReferences,
@@ -79,6 +84,7 @@ export const createUserService = (
   userRepo: IUserRepository = createUserRepository(),
   media: UserMediaPort = defaultMediaPort,
   runInTransaction: RunInTransaction = defaultRunInTransaction,
+  resolveHandle: (handle: string) => Promise<ResolvedHandle | null> = resolveUserByHandle,
 ): IUserService => {
   /** Resolve a user's avatar reference to its public read token (null when unset/unservable). */
   const resolveAvatar = (avatarMediaId: number | null): Promise<string | null> =>
@@ -103,6 +109,27 @@ export const createUserService = (
     isFollowing,
     createdAt: user.createdAt,
   });
+
+  /**
+   * Validate a requested username change. Returns `null` when nothing changes (no
+   * `username` supplied, or the same handle). Throws `409` when the target is held
+   * by another account (a current username OR a reserved alias). A target that is
+   * the caller's own reserved alias is allowed — a reclaim that frees that alias.
+   */
+  const planRename = async (
+    userId: number,
+    requested: string | undefined,
+  ): Promise<{ from: string; to: string; reclaimSelfAlias: boolean } | null> => {
+    if (requested === undefined) return null;
+    const current = await userRepo.findUsername(userId);
+    if (!current) throw AppError.notFound("User");
+    if (requested === current.username) return null; // no-op — the same handle
+    const holder = await resolveHandle(requested);
+    if (holder && holder.userId !== userId) {
+      throw AppError.conflict("Username already taken");
+    }
+    return { from: current.username, to: requested, reclaimSelfAlias: holder?.viaAlias ?? false };
+  };
 
   return {
     // ─── Public Profile ───────────────────────────────────────────────
@@ -142,8 +169,12 @@ export const createUserService = (
     // ─── Update Self Profile ──────────────────────────────────────────
 
     updateMe: async (userId, data: UpdateMeInput) => {
-      // 1a. No avatar edit — name/bio only; no media coordination, no transaction.
-      if (data.avatar === undefined) {
+      // Validate a requested rename up front (uniqueness across current usernames
+      // AND reserved aliases). `rename` is null when nothing changes.
+      const rename = await planRename(userId, data.username);
+
+      // No avatar edit and no rename → a plain name/bio update, no transaction.
+      if (data.avatar === undefined && rename === null) {
         const updated = await userRepo.updateProfile(userId, { name: data.name, bio: data.bio });
         const [likesCount, avatarToken] = await Promise.all([
           userRepo.countLikesReceived(userId),
@@ -152,54 +183,77 @@ export const createUserService = (
         return { ...buildResponse(updated, avatarToken, likesCount, false), email: updated.email };
       }
 
-      // 1b. Avatar edit (set / replace / remove) — coordinate in one transaction.
-      //     Captured in a const so its narrowed type survives inside the closure.
-      const avatarEdit = data.avatar;
-      const current = await userRepo.findAvatar(userId);
-      if (!current) {
-        throw AppError.notFound("User");
-      }
-      const oldMediaId = current.avatarMediaId;
+      // Avatar coordination (if any) and the atomic rename (if any) commit together
+      // in one transaction — a rename and its alias reservation are one unit.
+      const avatarEdit = data.avatar; // { token } | null | undefined
       const referrer = avatarReferrer(userId);
+      let oldMediaId: number | null = null;
+      if (avatarEdit !== undefined) {
+        const current = await userRepo.findAvatar(userId);
+        if (!current) {
+          throw AppError.notFound("User");
+        }
+        oldMediaId = current.avatarMediaId;
+      }
 
       try {
-        const { updated, token } = await runInTransaction(async (tx) => {
-          let newMediaId: number | null = null;
-          let token: string | null = null;
-          if (avatarEdit !== null) {
-            // Lock + authorize (WI-1 returns the authoritative metadata), then
-            // evaluate the avatar policy UNDER the lock, before the reference begins.
-            const attached = await media.ownership.authorizeAttach(
-              { token: avatarEdit.token, ownerId: userId },
-              tx,
-            );
-            assertAvatarPolicy(attached.contentType, attached.size);
-            newMediaId = attached.referenceId;
-            token = attached.token;
+        const { updated, editedToken } = await runInTransaction(async (tx) => {
+          // Rename: free a self-alias being reclaimed, then reserve the old handle.
+          if (rename) {
+            if (rename.reclaimSelfAlias) {
+              await userRepo.releaseAlias(rename.to, tx);
+            }
+            await userRepo.reserveUsername(userId, rename.from, tx);
           }
 
-          // Signal only a genuine change (single-ref set difference): a resubmit
-          // of the same object neither ends nor re-begins.
-          if (oldMediaId !== newMediaId) {
-            if (oldMediaId !== null) {
-              await media.references.referenceEnded({ mediaId: oldMediaId, referrer }, tx);
+          // Avatar set / replace / remove — only when an avatar edit is present.
+          // `undefined` leaves the reference untouched in the write below.
+          let newMediaId: number | null | undefined;
+          let editedToken: string | null = null;
+          if (avatarEdit !== undefined) {
+            newMediaId = null;
+            if (avatarEdit !== null) {
+              // Lock + authorize (returns the authoritative metadata), then evaluate
+              // the avatar policy UNDER the lock, before the reference begins.
+              const attached = await media.ownership.authorizeAttach(
+                { token: avatarEdit.token, ownerId: userId },
+                tx,
+              );
+              assertAvatarPolicy(attached.contentType, attached.size);
+              newMediaId = attached.referenceId;
+              editedToken = attached.token;
             }
-            if (newMediaId !== null) {
-              await media.references.referenceBegan({ mediaId: newMediaId, referrer }, tx);
+
+            // Signal only a genuine change (single-ref set difference): a resubmit
+            // of the same object neither ends nor re-begins.
+            if (oldMediaId !== newMediaId) {
+              if (oldMediaId !== null) {
+                await media.references.referenceEnded({ mediaId: oldMediaId, referrer }, tx);
+              }
+              if (newMediaId !== null) {
+                await media.references.referenceBegan({ mediaId: newMediaId, referrer }, tx);
+              }
             }
           }
 
           const updated = await userRepo.updateProfile(
             userId,
-            { name: data.name, bio: data.bio, avatarMediaId: newMediaId },
+            { name: data.name, bio: data.bio, username: rename?.to, avatarMediaId: newMediaId },
             tx,
           );
-          return { updated, token };
+          return { updated, editedToken };
         });
 
-        const likesCount = await userRepo.countLikesReceived(userId);
-        return { ...buildResponse(updated, token, likesCount, false), email: updated.email };
+        const [likesCount, avatarToken] = await Promise.all([
+          userRepo.countLikesReceived(userId),
+          // No avatar edit → resolve the current avatar; otherwise use the edit's token.
+          avatarEdit === undefined ? resolveAvatar(updated.avatarMediaId) : Promise.resolve(editedToken),
+        ]);
+        return { ...buildResponse(updated, avatarToken, likesCount, false), email: updated.email };
       } catch (err) {
+        if (isPrismaError(err, "P2002")) {
+          throw AppError.conflict("Username already taken");
+        }
         throw asAttachFailure(err);
       }
     },

@@ -46,8 +46,8 @@ export interface SelfProfileResponse extends UserProfileResponse {
  * set/replace, `null` = remove (ADR 0008 Decision 5).
  */
 export interface UpdateMeInput {
-  /** Omitted = unchanged; `null` = clear; a string = set/replace. */
   name?: string | null;
+  username?: string;
   bio?: string;
   avatar?: { token: string } | null;
 }
@@ -103,9 +103,18 @@ export interface IUserRepository {
    */
   updateProfile(
     userId: number,
-    data: { name?: string | null; bio?: string; avatarMediaId?: number | null },
+    data: { name?: string | null; username?: string; bio?: string; avatarMediaId?: number | null },
     client?: DbClient,
   ): Promise<UserWithCounts>;
+
+  /** The user's current username — for detecting a rename and recording the old handle. */
+  findUsername(userId: number, client?: DbClient): Promise<{ username: string } | null>;
+
+  /** Record `username` as a reserved alias of `userId` (the handle it just released). */
+  reserveUsername(userId: number, username: string, client?: DbClient): Promise<void>;
+
+  /** Remove a reserved alias `username` (e.g. the user reclaims their own former handle). */
+  releaseAlias(username: string, client?: DbClient): Promise<void>;
 }
 
 // ─── Service Interface ───────────────────────────────────────────────────────
