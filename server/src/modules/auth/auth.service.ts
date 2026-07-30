@@ -29,6 +29,10 @@ import {
   generateRefreshToken,
   isPrismaError,
 } from "../../shared/utils/index.js";
+import {
+  resolveUserByHandle,
+  type ResolvedHandle,
+} from "../../shared/identity/index.js";
 import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
 import type {
   AuthResult,
@@ -81,11 +85,13 @@ const attributeRegisterConflict = async (
  * @param authRepo - User database operations (defaults to Prisma implementation)
  * @param tokenRepo - Refresh token operations (defaults to Prisma implementation)
  * @param runInTransaction - Unit-of-work runner (defaults to the Prisma interactive transaction)
+ * @param resolveHandle - Username → user resolver (the single shared source); rejects reserved aliases at register
  */
 export const createAuthService = (
   authRepo: IAuthRepository = createAuthRepository(),
   tokenRepo: ITokenRepository = createTokenRepository(),
   runInTransaction: RunInTransaction = defaultRunInTransaction,
+  resolveHandle: (handle: string) => Promise<ResolvedHandle | null> = resolveUserByHandle,
 ): IAuthService => ({
   // ─── Register ────────────────────────────────────────────────────────────
 
@@ -93,8 +99,10 @@ export const createAuthService = (
     // 1. Advisory uniqueness pre-checks — a fast, clear 409 before any write.
     //    These are not authoritative: the DB unique constraints are, and a
     //    duplicate that races past these checks is caught at step 3 and still
-    //    resolves to 409 (never 500).
-    const existingUsername = await authRepo.findByUsername(data.username);
+    //    resolves to 409 (never 500). The username check spans current usernames
+    //    AND reserved aliases (via the shared resolver), so a released handle
+    //    cannot be re-registered.
+    const existingUsername = await resolveHandle(data.username);
     if (existingUsername) {
       throw AppError.conflict("Username already taken");
     }

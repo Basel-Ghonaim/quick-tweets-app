@@ -89,7 +89,9 @@ const makeHarness = (opts: HarnessOpts = {}) => {
     }
   };
 
-  const svc = createAuthService(authRepo, tokenRepo, runInTransaction);
+  // The pre-check resolver passes (null) so register proceeds to the INSERT and
+  // the P2002 path under test; the DB constraints remain authoritative.
+  const svc = createAuthService(authRepo, tokenRepo, runInTransaction, async () => null);
   return { svc, committed, seen, txClient };
 };
 

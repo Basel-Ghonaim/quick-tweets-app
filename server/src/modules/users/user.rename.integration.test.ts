@@ -11,6 +11,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "../../shared/database/index.js";
 import { AppError } from "../../shared/errors/index.js";
 import { resolveUserByHandle } from "../../shared/identity/index.js";
+import { createAuthService } from "../auth/auth.service.js";
 import { createUserService } from "./user.service.js";
 
 const TAG = `itrename${process.pid}x${Math.floor(process.hrtime()[1])}`;
@@ -70,6 +71,15 @@ describe("username rename — real Postgres", () => {
     if (!reachable) return;
     // `orig` is now reserved by userId — the other account cannot take it.
     const err = await svc.updateMe(otherId, { username: orig }).catch((e: unknown) => e);
+    expect((err as AppError).statusCode).toBe(409);
+  });
+
+  it("blocks registering a new account with a reserved former handle", async () => {
+    if (!reachable) return;
+    // `orig` is a reserved alias — registration must reject it (no re-registration).
+    const err = await createAuthService()
+      .register({ username: orig, email: `${TAG}c@it.local`, password: "Passw0rd!" })
+      .catch((e: unknown) => e);
     expect((err as AppError).statusCode).toBe(409);
   });
 });
