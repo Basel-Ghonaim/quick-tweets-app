@@ -20,19 +20,12 @@
  */
 
 import { z } from "zod";
+import { usernameField } from "../../shared/validation/index.js";
 
 // ─── Register ────────────────────────────────────────────────────────────────
 
 export const registerSchema = z.object({
-  username: z
-    .string({ error: "Username is required" })
-    .min(4, "Username must be at least 4 characters")
-    .max(20, "Username must be at most 20 characters")
-    .regex(
-      /^[a-z0-9_]+$/,
-      "Username can only contain lowercase letters, numbers, and underscores",
-    )
-    .trim(),
+  username: usernameField,
 
   email: z
     .string({ error: "Email is required" })

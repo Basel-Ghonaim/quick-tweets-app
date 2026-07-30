@@ -14,6 +14,7 @@
  */
 
 import { prisma, type DbClient } from "../../shared/database/index.js";
+import { resolveUserByHandle } from "../../shared/identity/index.js";
 import type { ITweetRepository } from "./tweet.types.js";
 import type { CursorParams } from "../../shared/types/index.js";
 
@@ -90,13 +91,10 @@ export const createTweetRepository = (
     });
   },
 
-  findAuthorIdByUsername: async (username: string) => {
-    const user = await db.user.findUnique({
-      where: { username },
-      select: { id: true },
-    });
-    return user?.id ?? null;
-  },
+  // Alias-aware via the single shared resolver: a former handle resolves to the
+  // current author, so historical `?author=` links keep working.
+  findAuthorIdByUsername: async (username: string) =>
+    (await resolveUserByHandle(username, db))?.userId ?? null,
 
   // ── Single Tweet ──
 

@@ -204,6 +204,32 @@ SELECT
 -- Both = 0.
 ```
 
+### Checkpoint H — Username rename & reservation (folder 09)
+```sql
+-- WI-F: a rename moves the current username AND reserves the FORMER handle as an
+-- alias pointing at the SAME user id (locator stability). Substitute :rnUserId
+-- with the value folder 09's Setup captured.
+SELECT u.id AS user_id, u.username AS current_username,
+       a.username AS reserved_alias, a.user_id AS alias_user_id
+FROM users u
+LEFT JOIN username_aliases a ON a.user_id = u.id
+WHERE u.id = :rnUserId
+ORDER BY a.created_at;
+-- After USR-01:        current = new; ONE alias row = old, alias_user_id = user_id.
+-- After USR-09 (no-op): UNCHANGED — still exactly one alias (no duplicate row).
+-- After USR-10 (reclaim): current = old; the `old` alias is GONE, and a NEW alias
+--                          = new now reserves the just-vacated handle.
+
+-- Global invariant: a reserved alias is NEVER also a live username — uniqueness
+-- spans both tables. MUST be 0.
+SELECT count(*) AS alias_collides_with_live
+FROM username_aliases a JOIN users u ON u.username = a.username;
+```
+> **USR-05** and **USR-07** have no distinct DB shape of their own — they are the
+> *refusals* this reservation produces (a former handle rejected to a rename and to
+> a registration). Confirm them by their `409` and by this checkpoint showing the
+> alias still owned by the original account.
+
 ## Comment media checkpoints (CM-1 … CM-6)
 
 > For Postman folder **08 · Comment Media**. Referrer tag `comment:{commentId}`,
@@ -305,7 +331,8 @@ the whole collection at once — the point is to inspect state between steps.
 | 4 — Tweet coordination | 04 | **C → D (×3) → E**, then **G** for the failure |
 | 5 — Social | 05, 06, 07 | none |
 | 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |
-| 7 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
+| 7 — Username rename | 09 | **H** (after USR-01, USR-09, and USR-10) |
+| 8 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
 
 A phase is "green" only when its API assertions pass **and** its DB checkpoint
 matches. Record outcomes in [verification-scenarios.md](verification-scenarios.md)

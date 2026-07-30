@@ -89,6 +89,18 @@ Two users are **required** — the cross-principal attach tests (TWT-09, TWT-12,
 CMT-05) need a second principal. Both are defined in the environment
 (`verify_alice`, `verify_bob`) and created by folder `01 · Auth`.
 
+## Username rename (WI-F)
+
+Beyond the media phase, folder **09 · Username rename** exercises the
+editable-username subsystem (History + Reservation + Redirect): a rename updates the
+current handle, **reserves** the former one, and keeps historical locators alive. It
+is **self-isolated** (mints its own two users with per-run unique handles) and
+**non-destructive**. See scenarios **USR-01…USR-10** and **Checkpoint H**
+(`username_aliases`). Its guarantees, in one line each: the session is **id-based**
+(a token minted before a rename still works after it — no logout/refresh); a former
+handle **never 404s** (301 on the profile URL, transparent resolution elsewhere); the
+rename **reuses register's username validation** (one source of truth).
+
 ## Scope
 
 This harness verifies **M1–M9**. It deliberately does **not**:

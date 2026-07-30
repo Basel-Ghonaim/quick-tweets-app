@@ -56,13 +56,21 @@ const makeWorld = (existingUsernames: string[] = []) => {
   // rollback is proven against real Postgres in the integration suite).
   const runInTransaction: RunInTransaction = (fn) => fn({} as never);
 
-  return { users, authRepo, tokenRepo, calls, runInTransaction };
+  // The register pre-check now uses the shared handle resolver (current username
+  // OR reserved alias). Here a handle is "taken" if it is a seeded existing name
+  // or an already-created user.
+  const resolveHandle = async (handle: string) =>
+    existingUsernames.includes(handle) || users.some((u) => u.username === handle)
+      ? { userId: -1, canonicalUsername: handle, viaAlias: false }
+      : null;
+
+  return { users, authRepo, tokenRepo, calls, runInTransaction, resolveHandle };
 };
 
 describe("auth service — account-only registration (Media-free)", () => {
   it("registers with account fields only and issues a session, with no avatar in the result", async () => {
     const w = makeWorld();
-    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction);
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, w.resolveHandle);
 
     const result = await svc.register({ ...REG });
 
@@ -80,7 +88,7 @@ describe("auth service — account-only registration (Media-free)", () => {
 
   it("rejects a duplicate username with 409 before creating anything", async () => {
     const w = makeWorld([REG.username]);
-    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction);
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, w.resolveHandle);
 
     const err = await svc.register({ ...REG }).catch((e: unknown) => e);
 
@@ -89,4 +97,15 @@ describe("auth service — account-only registration (Media-free)", () => {
     expect(w.users).toHaveLength(0);
   });
 
+  it("rejects a reserved former handle (alias) with 409 — no re-registration", async () => {
+    const w = makeWorld();
+    // The requested handle is a reserved alias of another account.
+    const reservedAlias = async () => ({ userId: 42, canonicalUsername: "someone_else", viaAlias: true });
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, reservedAlias);
+
+    const err = await svc.register({ ...REG }).catch((e: unknown) => e);
+
+    expect((err as AppError).statusCode).toBe(409);
+    expect(w.users).toHaveLength(0);
+  });
 });

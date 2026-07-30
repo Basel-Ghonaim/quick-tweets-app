@@ -47,8 +47,27 @@ model User {
   followers     Follow[]       @relation("following")  // people who follow ME
   following     Follow[]       @relation("followers")  // people I follow
   mediaObjects  MediaObject[]  // media uploaded/owned (registry provenance)
+  usernameAliases UsernameAlias[]  // former handles this user released (reserved)
 
   @@map("users")
+}
+
+// ─── UsernameAlias ───────────────────────────────────────────────────────────
+// A former username a user released via a rename. Retained so old locators
+// (GET /users/:username, ?author=, /follows/:username) resolve/redirect to the
+// current handle, and reserved so no other account can re-register it (no
+// impersonation). A handle is "taken" iff it is a current users.username OR a row
+// here — that cross-table uniqueness is enforced by the rename/register checks
+// (Postgres cannot express it as one constraint) plus the two @unique columns.
+model UsernameAlias {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique                    // the released handle (lowercase-only)
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("username_aliases")
 }
 
 model RefreshToken {

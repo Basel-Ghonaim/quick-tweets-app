@@ -11,6 +11,7 @@
  */
 
 import { z } from "zod";
+import { usernameField } from "../../shared/validation/index.js";
 
 const avatarRefSchema = z.object({
   token: z.string().trim().min(1, "An avatar reference cannot be empty"),
@@ -27,11 +28,23 @@ export const updateMeSchema = z
       .trim()
       .nullable()
       .optional(),
-    bio: z.string().max(160, "Bio must be at most 160 characters").trim().optional(),
+    // Rename: omitted = unchanged, a string = new handle. Same lowercase-only rule
+    // as registration (the single shared source); never cleared.
+    username: usernameField.optional(),
+    bio: z
+      .string()
+      .max(160, "Bio must be at most 160 characters")
+      .trim()
+      .optional(),
     // Full-replacement avatar: omitted → unchanged; `{ token }` → set/replace;
     // `null` → remove. `.nullable().optional()` allows all three.
     avatar: avatarRefSchema.nullable().optional(),
   })
-  .refine((data) => data.name !== undefined || data.bio !== undefined || data.avatar !== undefined, {
-    message: "At least one field must be provided",
-  });
+  .refine(
+    (data) =>
+      data.name !== undefined ||
+      data.username !== undefined ||
+      data.bio !== undefined ||
+      data.avatar !== undefined,
+    { message: "At least one field must be provided" },
+  );
