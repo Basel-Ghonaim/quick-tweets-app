@@ -15,6 +15,7 @@
  */
 
 import { prisma } from "../../shared/database/index.js";
+import { resolveUserByHandle } from "../../shared/identity/index.js";
 import type { CursorParams } from "../../shared/types/index.js";
 import type { IFollowRepository } from "./follow.types.js";
 
@@ -43,13 +44,10 @@ export const createFollowRepository = (
 ): IFollowRepository => ({
   // ── User Lookup ──
 
-  findUserIdByUsername: async (username) => {
-    const user = await db.user.findUnique({
-      where: { username },
-      select: { id: true },
-    });
-    return user?.id ?? null;
-  },
+  // Alias-aware via the single shared resolver: a former handle resolves to the
+  // current user, so historical `/follows/:username` links keep working.
+  findUserIdByUsername: async (username) =>
+    (await resolveUserByHandle(username, db))?.userId ?? null,
 
   // ── Follow Check ──
 

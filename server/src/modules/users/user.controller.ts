@@ -14,6 +14,8 @@ import type { Request, Response, NextFunction } from "express";
 import { createUserService } from "./user.service.js";
 import type { IUserService } from "./user.types.js";
 import { sendSuccess } from "../../shared/response/index.js";
+import { AppError } from "../../shared/errors/index.js";
+import { resolveUserByHandle, type ResolvedHandle } from "../../shared/identity/index.js";
 
 // ─── Controller Factory ──────────────────────────────────────────────────────
 
@@ -24,17 +26,27 @@ import { sendSuccess } from "../../shared/response/index.js";
  */
 export const createUserController = (
   service: IUserService = createUserService(),
+  resolveHandle: (handle: string) => Promise<ResolvedHandle | null> = resolveUserByHandle,
 ) => ({
 
   /**
    * GET /users/:username
    * Returns user profile with counts + isFollowing. Uses optionalAuth.
+   *
+   * A former handle (released on a rename) 301-redirects to the canonical
+   * current-username URL, so historical profile links never 404.
    */
   getProfile: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const username = String(req.params.username);
-      const profile = await service.getProfile(username, req.userId);
+      const handle = String(req.params.username);
+      const resolved = await resolveHandle(handle);
+      if (!resolved) throw AppError.notFound("User");
+      if (resolved.viaAlias) {
+        res.redirect(301, `${req.baseUrl}/${resolved.canonicalUsername}`);
+        return;
+      }
 
+      const profile = await service.getProfile(handle, req.userId);
       sendSuccess(res, profile);
     } catch (err) {
       next(err);
