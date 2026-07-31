@@ -1,0 +1,71 @@
+# ADR 0009: Channel Verification — a Platform Capability Owning Proof of Control over a Communication Channel
+
+> **Status:** Accepted
+> **Date:** 2026-07-31
+> **Deciders:** Basel Ghonaim
+
+## Context
+
+Registration is **account creation only** ([ADR 0008](0008-auth-first-onboarding-grant-retirement.md)): it creates the account and its session, and the User domain owns the email as profile/account data. Email is already treated as **identity** — it is required and unique, and it is a login identifier (the neutral-identifier login) — yet **nothing proves the account holder controls the mailbox they claimed.** There is a standing gap between *"an email was claimed"* and *"the holder demonstrably controls it,"* and there is currently **no outbound-delivery (mailer) or notification mechanism anywhere in the codebase** — proving control would be its first need.
+
+The capability that closes this gap is not really about *email*. Email is one **communication channel**; the same proof-of-control shape applies to phone, a push token, or any other channel. The **fact, the authority, and the lifecycle are channel-invariant**; only the *delivery* and *proof affordance* are channel-specific. So the real domain is **proof of control over a communication channel**, of which email verification is the first implementation.
+
+This boundary is decided **now, before the first consumer**, for the reason [ADR 0005](0005-media-file-upload-architecture.md) and [ADR 0003](0003-cross-tier-shared-facts-leaf-packages.md) were: there is a single, real, cross-cutting fact with **no existing owner** (the User domain owns the email *value*; Auth owns the *session*; nobody owns *proven control*), and the boundary **must be preserved independently of its deferred implementation** — [ADR 0002](0002-refined-adr-threshold.md) **criterion 2**. Drawing it channel-neutral now prevents a later channel (or a later feature) from re-inventing it as a second, parallel mechanism. Consumers such as password reset or change-email are **not** the justification and are **out of scope**; the capability is justified by owning the fact, not by how many features read it.
+
+Its eventual natural owner is a future platform document (`docs/backend/channel-verification.md` or equivalent), **deferred until the subsystem exists in code** (the Stable-Core rule, [ADR 0004](0004-stable-core-platform-document-rule.md)); until then this ADR is the interim record.
+
+## Decision
+
+Adopt a **Channel Verification platform capability** that owns proof of control over a communication channel. **This ADR records architectural boundaries, ownership, custody, and lifecycle only; the mechanisms and schema that implement them are deferred (see "What this ADR does not decide").**
+
+1. **A Channel Verification platform capability owns proof-of-control.** It is a **platform capability, not a feature** — a shared mechanism no single feature owns (features depend on it; it depends on no feature). Its **domain is proof of control over a communication channel**; **email is the first and only implemented channel.** The core (fact, authority, lifecycle, custody) is kept **channel-neutral in concept**, but **no multi-channel machinery is built** — no channel registry, plug-in, or per-channel strategy layer. The governing principle is **"design for the abstraction, don't build the abstraction"**: a second channel, if it ever arrives, extends this same context and is what earns any generalization ([the second-feature rule](../../frontend/architecture.md)); designing that seam from the single instance that exists today would encode email's assumptions.
+
+2. **It owns a single authoritative fact, and is its sole authority.** The capability owns exactly one fact: **"the account holder has demonstrated control of a specific channel endpoint, currently valid."** It is the **sole authority to create, maintain, and invalidate** that fact — the only thing permitted to transition an endpoint into or out of the *Proven* state. The fact is **defeasible** (never a permanent, absorbing state) and **binds to an endpoint value**, not to "the account's email" abstractly.
+
+3. **Ownership boundaries — what it does not own.** **User owns the endpoint value** (the email address is account/profile data). **Delivery** (a mailer) is a separately-owned platform mechanism the capability **composes**, never owns (Decision 7). **Registration and authentication** are Auth's. **Gating policy** — whether any given action requires a proven channel — belongs to the **consumer**, never here. The capability is therefore **policy-free** (it produces the fact; consumers decide what requires it) and **independent from registration**: an account is created and authenticated with its endpoint **Unproven**, and the holder operates **untrusted** until some consumer requires trust. Coupling proof to registration is explicitly rejected (see Alternatives).
+
+4. **Fixed dependency direction.** Feature modules and other consumers depend on Channel Verification through its published interface; **Channel Verification depends on nothing domain-specific** (it never imports a feature) and reaches delivery only through a composed **delivery boundary**. There is no cycle. This is the project's standing rule ([Engineering Principles](../../development/engineering-principles.md)): features depend on platform capabilities, features never depend on one another, and a platform capability never depends on a feature.
+
+5. **Lifecycle of the fact (channel-neutral).** The fact moves through **Unproven → Pending → Proven**, and *Proven* is **defeasible**:
+   - **Unproven** — the endpoint has no valid proof (the resting state).
+   - **Pending** — a challenge is outstanding, awaiting the holder's demonstration; it returns to **Unproven** on expiry, abandonment, or supersession.
+   - **Proven** — control was demonstrated and is currently valid; it returns to **Unproven** on **revocation** or **staleness-driven re-verification**.
+   - **Endpoint-value change re-instantiates the fact for a new subject:** because proof binds to a value, changing the endpoint leaves the *new* value **Unproven** while the prior proof becomes **moot/historical** — this is a *change of subject*, **not a revocation** of a still-applicable proof. **Invariants:** an endpoint is always in exactly one of these states; **only this capability transitions a fact into Proven**; re-verification of an unchanged endpoint issues a *new* challenge against the *same* standing subject.
+
+6. **Custody — the fact lives entirely inside the capability.** The fact is **owned and stored within Channel Verification**; **nothing about verification is stored on the User row.** The capability keeps its own state keyed by an **inward reference to the account** (the session/refresh-token custody shape — state *maintained about* the user — not a user-selected object referenced *outward* from `users`). Consumers read verified-state as a **projection resolved at the boundary**. The endpoint value enters the capability **only as a caller-supplied subject** (the one allowed feature→platform direction); the capability **never reads from, nor foreign-keys to, the mutable User email**, and stores the proven value as a **frozen provenance snapshot**. **Invariants:** User owns *"the current endpoint value"* (live, mutable); Channel Verification owns *"the proven value and its status"* (frozen, historical); **their divergence is the signal that a changed endpoint is Unproven — not drift to be reconciled**, so there is no sync obligation and no second writer of the fact.
+
+7. **Delivery is composed, not owned.** Conveying a challenge requires an **outbound-delivery mechanism** (for email, a mailer). The capability **requires but does not own** it. Delivery is a **separately-owned, shared platform concern** — it must be reusable so future channels and future consumers (password reset, notifications) do not each re-implement it, and it must **never be absorbed** into this capability. **Its design is out of scope for this ADR** and is decided when the first proof act is implemented.
+
+This ADR **records boundaries only and implements nothing** — no module, no endpoint, no schema, no mailer.
+
+## What this ADR does not decide (deferred to modeling & implementation)
+
+These are **intentionally deferred** and are **implementation/modeling concerns, not unresolved architectural questions.** They are recorded here so the settled/deferred split is explicit; each is settled in its Execution Plan and Work Items, not by re-opening this ADR:
+
+- **Concrete model/entity names** for the standing account↔endpoint status record, its subordinate challenge, and the code module/directory — and the **channel-neutral vs email-concrete** naming choice for them.
+- **Schema design** — tables, columns, keys, indexes, and constraints.
+- **Row-materialization strategy** — whether *Unproven* is a materialized row (e.g. at account creation) or simply the **absence** of a matching proof until the first challenge.
+- **Raw vs hashed proven value** — how the frozen endpoint snapshot is stored (a privacy/PII vs operational-simplicity trade-off).
+- **API shape and projections** — challenge/confirm endpoints, and how (and whether, self-view vs public) verified-state is exposed on the user surface.
+- **Delivery implementation** — the mailer mechanism itself (provider, transport, retries, rate-limiting/abuse controls) and the design of the shared delivery subsystem it composes.
+- **Channel mechanism specifics** for email — the proof affordance (link vs code), challenge expiry, and re-verification/staleness cadence (a policy detail, and where policy lives is the consumer's).
+
+## Alternatives considered
+
+- **Couple proof to registration** (registration fails until the email is proven). **Rejected:** it makes Auth depend on the mailer/verification subsystem and lets account creation fail on an **external channel's availability**, violating Auth's minimal, Profile-free/Media-free boundary ([ADR 0008](0008-auth-first-onboarding-grant-retirement.md)) and its robustness. Proof is decoupled; the endpoint starts Unproven.
+- **Store the verified bit as a column on `User`** (authority in this capability, custody on User). **Rejected:** it places a foreign, derived fact on the User row (the denormalized-account-state hazard [ADR 0008](0008-auth-first-onboarding-grant-retirement.md) guards against), re-introduces a **two-writer hazard** on that row, and structurally erodes sole-authority. Custody stays with the capability; consumers get a boundary projection instead.
+- **Name/scope the capability "Email Verification."** **Rejected:** email is one channel, not the domain; baking it into the identity invites a **second parallel platform** when another channel arrives — the duplicate-implementation trap the project has already paid down ([Finding 0001](../findings/0001-schema-form-design-system-cycle.md)). Named channel-neutral.
+- **Build the multi-channel abstraction now** (a channel registry / plug-in / per-channel strategy layer). **Rejected/deferred:** designing the seam from the single channel that exists would encode email's assumptions and be reshaped by the first real second channel; the second-feature rule defers the abstraction until a second instance validates it. *Design for the abstraction, don't build it.*
+- **Own delivery inside the capability** (a bespoke mailer here). **Rejected:** delivery is a shared mechanism multiple consumers (password reset, notifications) will need; owning it here duplicates it. It is composed and separately owned.
+- **Model the domain around the Challenge** (a stateless issue → verify → discard token). **Rejected:** the owned fact is a durable, **defeasible** *Proven* status that must **outlive** any single challenge; the standing account↔endpoint record is the center, and the challenge is subordinate to it.
+- **Treat "verified" as an identity/KYC claim.** **Rejected:** the capability proves **control of a channel endpoint**, never personhood; no real-world identity is asserted.
+
+## Consequences
+
+- The project gains **one authority for channel-proof-of-control**: a single owner that creates, maintains, and invalidates the fact, while User owns only the endpoint value and consumers read a boundary-resolved projection. No feature re-implements proof-of-control, and future consumers (password reset, change-email) become straightforward — but they remain **out of scope here**, and their gating policy is **theirs**.
+- **This capability introduces the codebase's first outbound-delivery need.** A **mailer/notification platform mechanism** must be decided when the capability is implemented (its own Work Item, and — if it meets the bar — its own ADR); it is designed as a **shared** mechanism so this capability and later consumers compose it rather than re-implementing it.
+- **Nothing is implemented by this ADR** (see "What this ADR does not decide"). The smallest proven consumer — the account holder proving their own email — comes first, via an implementation Work Item.
+- The **Channel Verification platform document** is **deferred until the subsystem exists in code**, per the Stable-Core rule ([ADR 0004](0004-stable-core-platform-document-rule.md)); this ADR is its interim decision record. **On that document's creation, this ADR retains only the boundary and rationale, and the document owns the operative mechanisms** — preserving one-owner-per-fact.
+- **Contract impact (future):** challenge/confirm endpoints appear, and the user surface may expose a verified-state **projection**; recorded here as **direction only** — the [API contract](../../api/api-contract.md) and the [data model](../data-model.md) are co-versioned when the capability is implemented ([Documentation Strategy §10](../documentation-strategy.md)). The schema and migration are implementation.
+- **Platform-vs-feature classification** — that Channel Verification is a *platform capability* — is ratified by accepting this ADR.
+- This ADR is **immutable once accepted**; its status moves from `Proposed` to `Accepted` **on merge**. A future change to this direction is a new, **superseding** ADR.
