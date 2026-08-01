@@ -62,13 +62,13 @@ Proposed with rationale; **ratified when this plan is approved** (they are not d
 
 ## 4. Strategy & sequencing
 
-**Order:** **1 → 2 → 3 → 4 → 5 → 6**, with **7** and **8** following (7 may run in parallel once 2 lands).
+**Order:** **1 → 2 → 3 → 4 → 5 → 6**, with **7** and **8** following (7 may run in parallel once 3 lands).
 
 ```
 1 (delivery port + inert adapter)  ─┐
                                     ├─▶ 4 (service: issue/confirm) ─▶ 5 (HTTP) ─▶ 6 (published surface + projection)
 2 (schema + migration) ─▶ 3 (types + repository) ─┘
-2 ─▶ 7 (expiry sweep job)
+                              3 ─▶ 7 (expiry sweep job)
 6 ─▶ 8 (docs + verification harness)
 ```
 
@@ -76,7 +76,7 @@ Proposed with rationale; **ratified when this plan is approved** (they are not d
 - **2 → 3 → 4** *(hard)*: the repository needs the tables; the service needs the repository.
 - **4 → 5** *(hard)*: the HTTP surface is a thin translation of an already-tested service.
 - **5 → 6** *(sequencing)*: the projection is most meaningful once the fact can actually be produced end-to-end.
-- **2 → 7** *(hard)*: the sweep needs the tables, but nothing else — so it can land any time after 2.
+- **3 → 7** *(hard)*: the sweep reaches the database through the **repository**, never Prisma directly — the project's layering rule, and the shape of the refresh-token cleanup job this one is cloned from. Its bulk delete is therefore a repository method (WI-3), not a second data-access path. Beyond that it needs nothing, so it can land any time after 3.
 - **6 → 8** *(hard)*: the harness verifies behaviour that must already exist.
 
 **Why this order and not another.** The riskiest *architectural* claims are validated earliest and most cheaply: the **delivery boundary** in WI-1 (~30 lines, no schema), and the **custody model** in WI-6. The riskiest *implementation* surface — the challenge lifecycle — is unit-tested in WI-4 before any HTTP exists, because the real CI gate is `typecheck` + unit tests. Documentation and the manual harness come last because they must describe behaviour that is already true.
@@ -111,14 +111,14 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ### WI-3 — Types + repository
 - **Goal & rationale:** the internal data-access contract. **It precedes WI-4** because the service depends on a repository *interface*, never on Prisma — the project's standing layering rule.
-- **Scope:** the module's types (DTOs, the internal repository interface, a branded challenge-token type with mint + validate-before-lookup in the shape of Media's token module) and the repository implementation with the `db = prisma` default parameter; every method accepting an optional transaction client.
-- **Non-goals:** no business rules; no HTTP; nothing exported from the module barrel yet.
+- **Scope:** the module's types (DTOs, the internal repository interface, a branded challenge-token type with mint + validate-before-lookup in the shape of Media's token module) and the repository implementation with the `db = prisma` default parameter; every method accepting an optional transaction client. The interface also carries the **sweep's bulk delete** (WI-7's data access), because the sweep reaches the database through the repository like every other caller — see **3 → 7** in §4.
+- **Non-goals:** no business rules; no HTTP; nothing exported from the module barrel yet; no job registration (that is WI-7).
 - **Dependencies:** **WI-2** (hard).
-- **Boundary validated:** that all persistence detail stays internal — the repository is never published.
+- **Boundary validated:** that all persistence detail stays internal — the repository is never published — and that it is the **single** data-access path, with no caller reaching Prisma around it.
 - **Invariants protected:** **I7** (internals stay unexported), **I4** (the endpoint is a parameter, never a join to `users`).
-- **Verification:** typecheck; the repository compiles against the generated client.
-- **DoD:** types and repository exist behind an interface; nothing is exported from the barrel; typecheck green.
-- **Commit/PR boundary:** one PR. *(May be combined with WI-4 if landing a compiles-but-unused unit is undesirable — the boundary is a review-ergonomics choice, not an architectural one.)*
+- **Verification:** typecheck; unit tests over a fake client cover mint/validate, the row → domain mapping, and the bulk delete.
+- **DoD:** types and repository exist behind an interface; nothing is exported from the barrel; typecheck + unit green.
+- **Commit/PR boundary:** one PR, kept separate from WI-4. The repository is genuinely unit-testable against a fake client (the Media precedent), so it is not a compiles-but-unused unit; and WI-4 is the effort's riskiest surface, which deserves an undiluted review rather than sharing a PR with mechanical type and repository work.
 - **Stop-risks:** none material.
 
 ### WI-4 — Verification service (issue / confirm)
@@ -158,10 +158,10 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Stop-risks:** if the projection cannot be resolved without denormalizing onto `users` → **stop**; that would invalidate the ADR's custody decision and require a superseding ADR.
 
 ### WI-7 — Challenge expiry sweep job
-- **Goal & rationale:** hygiene for closed and expired challenges. It is **deliberately late and low-risk** because **D4** makes it non-load-bearing: correctness never depends on it. It needs only the tables, so it may run in parallel after WI-2.
-- **Scope:** a job definition cloned from the existing refresh-token cleanup job (bulk delete of closed/expired rows past the retention window per **D3**), registered on the existing scheduler; interval and retention as configuration.
-- **Non-goals:** no new scheduler substrate (it already exists, with Postgres advisory-lock single-run safety); no reclamation semantics.
-- **Dependencies:** **WI-2** (hard).
+- **Goal & rationale:** hygiene for closed and expired challenges. It is **deliberately late and low-risk** because **D4** makes it non-load-bearing: correctness never depends on it. It needs the repository and nothing more, so it may run in parallel after WI-3.
+- **Scope:** a job definition cloned from the existing refresh-token cleanup job — which reaches the database through a repository, never Prisma directly — calling the bulk delete WI-3 declared (closed/expired rows past the retention window per **D3**), registered on the existing scheduler; interval and retention as configuration.
+- **Non-goals:** no new scheduler substrate (it already exists, with Postgres advisory-lock single-run safety); no reclamation semantics; **no second data-access path** — the job adds no Prisma call of its own.
+- **Dependencies:** **WI-3** (hard) — the repository, not merely the tables.
 - **Boundary validated:** that the existing background-execution substrate hosts this job **unchanged** — one registration line.
 - **Invariants protected:** **I8** (the sweep removes rows; it never writes a status).
 - **Verification:** unit test with a stubbed repository and injected clock; the job is registered at composition.
