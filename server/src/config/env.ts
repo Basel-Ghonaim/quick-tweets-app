@@ -39,6 +39,9 @@ const envSchema = z
     RECLAMATION_GRACE_MS: z.coerce.number().int().nonnegative().default(24 * 60 * 60 * 1000),
     RECLAMATION_INTERVAL_MS: z.coerce.number().int().positive().default(6 * 60 * 60 * 1000),
     RECLAMATION_BATCH: z.coerce.number().int().positive().default(100),
+    // Permissive `string`, not an enum, so an unexpected value warns and stays
+    // inert (see resolveMailMode) rather than taking the server down at startup.
+    MAIL_MODE: z.string().default("inert"),
   });
 
 export const env = envSchema.parse(process.env);
