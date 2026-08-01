@@ -1,0 +1,79 @@
+# ADR 0010: Design System Re-establishment — a Platform Owning the Product's Presentation Language
+
+> **Status:** Accepted
+> **Date:** 2026-07-31
+> **Deciders:** Basel Ghonaim
+
+## Context
+
+The current design system (`src/shared/design-system/`, documented by [design-system.md](../../frontend/design-system.md)) was written as an **early bootstrap** — its one goal was to let the product start being built quickly, *before* the project had its ADRs, ownership rules, the platform-vs-feature model, the domain/capability separation, or its present methodology. Its tokens, theming, and components are **temporary implementations, not the result of deliberate architectural design.** The bootstrap origin still shows: undefined primitive references, a light/dark **semantic key mismatch**, a global stylesheet that **hardcodes colors and bypasses tokens**, an **unreachable** theme, primitive-direct/hardcoded consumption in components, and per-component focus duplication.
+
+The design system has become a **blocker for frontend progress** — major pages (Feed, Profile) have been repeatedly postponed rather than built on a foundation known to require rebuilding. The effort is therefore **not** refactoring a few components; it is **re-establishing the design system so it aligns with the architecture the project has evolved toward.**
+
+**Why this boundary is decided now, before the consuming pages exist.** The design system is a **foundation whose existence precedes its adoption** — a platform (the shape of [ADR 0005](0005-media-file-upload-architecture.md) and [ADR 0009](0009-channel-verification-platform-capability.md)), not a feature waiting for consumers. It owns a real, cross-cutting responsibility no feature owns — the product's presentation language — so the feature "no-consumer" deferral does not gate it, and it has **imminent, blocked consumers** (the pages this effort unblocks). Per [ADR 0002](0002-refined-adr-threshold.md) **criterion 2**, this decision spans the frontend presentation tier broadly and **must be preserved independently of its incremental implementation.**
+
+**Governance note — this ADR is not the doc.** Unlike ADR 0005/0009, whose platform documents are deferred until the subsystem exists in code, the design system **already exists and already has a platform document** ([design-system.md](../../frontend/design-system.md)) — it is **past the Stable-Core gate** ([ADR 0004](0004-stable-core-platform-document-rule.md)). So this ADR records the **re-establishment boundary, ownership, and invariants**; `design-system.md` is **rewritten to the deliberate design as the system is rebuilt**, superseding its bootstrap-era model. This is the Media shape: `media.md` and ADR 0005 coexist — the ADR holds the boundary and rationale, the document holds the operative mechanisms.
+
+## Decision
+
+Re-establish the Design System as a **platform that owns the product's presentation language.** **This ADR records boundaries, ownership, and invariants only; the concrete token vocabulary, component contracts, theming values, and rollout are deferred (see "What this ADR does not decide").**
+
+1. **The Design System is a platform that owns the presentation language.** It is a **platform, not a feature**: features depend on it, it depends on no feature, and it **never imports a feature**. Its **single authority is the mapping from declared UI *intent* to *appearance and behavior*** — a consumer declares intent (a primary action, a danger state, a raised surface, a text input) and the DS is the sole authority on what that looks and behaves like. **Consumers own composition and content; the DS owns the language they compose in.**
+
+2. **Foundation precedes adoption — with a guardrail.** The DS's existence precedes its consumers; the feature "no-consumer" deferral does not gate the foundation. **But this ADR decides the domain, boundary, ownership, and invariants only.** The **concrete vocabulary and component contracts are shaped and validated by the first real consumers**; **speculative specifics** — tokens or component APIs with no consuming surface — are **reserved, not frozen**, until a consumer needs them. This is the same *design-for-the-abstraction-don't-build-it* discipline as [ADR 0009](0009-channel-verification-platform-capability.md): decide the boundary now; do not freeze what only a real consumer can validate.
+
+3. **Token architecture — three tiers, one binding rule, token-type agnostic.** Tokens are organized in **three tiers**: **Primitive** (raw, theme-invariant values; no intent; DS-internal) → **Semantic** (intent-named roles; the layer consumers bind to; where theme resolution occurs) → **Component** (optional, scoped, **derived** from semantic — names a component's local concerns, never new appearance). **Binding invariant:** a consumer binds only to **semantic** tokens (or its own component tokens derived from them) — **never** primitives, **never** hardcoded values. **This architecture is token-type agnostic** — it governs color, spacing, typography, elevation, motion, and any future token type **identically, and is defined once for all of them.** **Interaction states** (hover / active / disabled / …) are a **dimension within** the semantic and component tiers, **not a fourth tier**: the semantic layer provides emphasis steps, the component decides which step a state consumes. **Aliases** are a **mechanism, not a tier**; an additional brand/theme indirection layer is introduced **only when a real second binding exists.**
+
+4. **Theming is a transparent resolution layer.** A **theme is a complete resolution of the semantic layer**, applied at a **single root boundary**. **Components know nothing about themes** and never branch on them — they consume semantic tokens and re-theme for free. **Key-parity invariant:** every theme defines the **same** set of semantic keys (a theme is a complete resolution, never a partial override). The mechanism is **theme-count agnostic**: a theme is one of an **open, named set** of resolutions, not a light/dark boolean — additional themes (dark, high-contrast, brand, seasonal) are future **instances** that slot into the same mechanism with **no architectural change**. **Semantic responsibility-purity** keeps this true: each semantic token carries **one responsibility** and is never collapsed with another merely because two current themes render them identically. **Theme selection and persistence** (system preference vs explicit, storage, startup) are a **runtime/app policy, not the DS's** — the DS owns the resolution and exposes the switching seam; the app owns the policy.
+
+5. **Accessibility is an owned invariant.** The DS is the authority for, and **guarantees**, the presentation-level accessibility contract — **contrast** for guaranteed relationships and a **single, consistent focus indicator** — in **every** theme. Accessibility is a property of the language, not a per-component or per-consumer afterthought.
+
+6. **Localization — the DS owns reactivity, not data.** The DS owns **localization-reactivity**: the presentation mechanisms that adapt UI to **direction** and **script/locale** — direction-agnostic authoring via **logical properties** (so spacing and layout mirror automatically), **mirror-aware icons** (each icon declares whether it flips), and a **script-aware typography seam** — all driven by an external locale/direction signal the DS **does not own**. The DS does **not** own **localization-data**: the active locale, translated strings, or locale-specific content and formatting (the i18n/content layer). **Direction-agnosticism is built in from the start** — logical properties are free at authoring time and prohibitively expensive to retrofit — whereas per-script font mappings and any translation integration **wait for a real second locale.**
+
+7. **Responsiveness splits along language vs composition.** The DS owns the responsive **language and behavior** — the breakpoint/container vocabulary, responsive scales, and the guarantee that its **own primitives adapt correctly**. The **consumer owns responsive composition** — how and when a page rearranges its layout using those tools. The DS provides the responsive vocabulary and adaptive primitives; it **does not dictate page layout.**
+
+8. **Ownership boundaries — what the DS does not own.**
+   - **Feature/product composition and layout** (Feed/Profile structure, feature components) — consumers compose DS primitives; the DS never imports a feature.
+   - **Product-domain semantics** (engagement colors such as like / repost / quote) — these live in a **product-semantic layer that consumes DS primitives**, feature-owned, **never** in the DS's domain-agnostic semantic set.
+   - **Business logic, data, state, and routing** — other zones.
+   - **Localization data, content, and copy** — the i18n/content layer (Decision 6).
+   - **Theme selection/persistence policy** — runtime/app (Decision 4).
+   - **When or whether to use a component** — consumer policy.
+   - **Cross-tier shared facts** ([ADR 0003](0003-cross-tier-shared-facts-leaf-packages.md)) — the DS is **frontend-tier only** and owns no fact that crosses to the backend.
+
+9. **Reconstruction is an in-place re-establishment of the one Design System.** The bootstrap DS is **superseded in place** — there is **one** design system, re-established to this architecture and migrated **incrementally**, its consumers (the existing authenticated surface, then the pages it unblocks) moved onto it as it is rebuilt. A **parallel/candidate** second design system is **rejected**: a second owner of one domain is the duplicate-implementation trap the project has already paid down ([Finding 0001](../findings/0001-schema-form-design-system-cycle.md)), and a consumerless sandbox validates coherence, not fitness.
+
+This ADR **records boundaries, ownership, and invariants only and implements nothing** — no tokens, no components, no theme values, no migration.
+
+## What this ADR does not decide (deferred to the Execution Plan & implementation)
+
+These are **intentionally deferred** and are **execution/implementation concerns, not unresolved architectural questions.** They are settled in the [Execution Plan](0006-execution-plans-home-and-lifecycle.md) and its Work Items, not by re-opening this ADR:
+
+- **The execution/rollout sequence.** The architecture is **token-type agnostic** and set **once**; the **order** in which token types and components are rebuilt is an **Execution Plan** decision, **not** an architectural one. The plan validates the architecture **incrementally, beginning with the highest-risk foundation**; the specific order belongs to the plan.
+- **Concrete token names, ramps, scales, and values** — color, spacing, typography, elevation, motion.
+- **Component contracts and the component set** — the API/vocabulary of each primitive and which components exist.
+- **The theming mechanism and the built theme set** — the transport (for example, CSS custom properties applied at a root boundary) and which themes are authored (and when).
+- **The localization implementation** — per-script font mappings, per-icon mirror flags, and the i18n integration.
+- **The responsive implementation** — breakpoint values, fluid formulas, and per-component adaptive behavior.
+- **The migration/coexistence mechanics** — how existing consumers are moved onto the re-established foundation without a big-bang break.
+
+## Alternatives considered
+
+- **Frame the effort as refactoring the bootstrap DS in place.** Rejected as the *framing*: the bootstrap predates the project's architecture, so the goal is **re-establishment to the current architecture**, not incremental improvement of a temporary solution. (The *execution* remains incremental and in-place — Decision 9.)
+- **Build a parallel "candidate" design system alongside the current one.** Rejected: a second owner of one domain is the duplicate-implementation trap ([Finding 0001](../findings/0001-schema-form-design-system-cycle.md)), and a consumerless sandbox validates internal coherence, not fitness-for-consumer. The one DS is re-established in place, validated by real consumers.
+- **Apply the feature "no-consumer" deferral to the DS.** Rejected: the DS is a **foundation whose existence precedes adoption** (the shape of ADR 0005/0009), not a feature waiting for consumers, and it has imminent, blocked consumers. The guardrail (Decision 2) preserves the discipline where it genuinely applies — the speculative specifics.
+- **States as a fourth token tier; a mandatory alias tier.** Rejected: states are a **dimension** within the tiers and aliases are a **mechanism**; promoting either to a tier bakes a category error into the foundation and invites premature brand machinery (Decision 3).
+- **Theme as a light/dark boolean.** Rejected: the resolution mechanism is theme-count agnostic at no cost; hardcoding two themes forecloses high-contrast / brand / seasonal for no benefit (Decision 4).
+- **Own localization content/strings — or, conversely, defer RTL to later.** Rejected on both ends: owning content would couple the platform to the i18n layer (the DS owns *reactivity*, not *data*), and deferring direction-agnosticism is a prohibitively expensive retrofit, so RTL-readiness is built in from the start (Decision 6).
+- **Own responsive page layout.** Rejected: composition is the consumer's; the DS owns the responsive language, not the page (Decision 7).
+- **Pin the rollout order (for example, "colors first") in this ADR.** Rejected: the architecture is token-type agnostic; the sequence is an Execution Plan decision, and stating it here would misclassify a plan choice as an architectural one.
+
+## Consequences
+
+- The project gains **one authoritative owner of the presentation language** — a single place that maps intent to appearance and behavior, with consumers expressing intent and never re-deciding appearance. The pages currently blocked (Feed, Profile) can be built on a deliberate foundation instead of a temporary one.
+- **`design-system.md` is rewritten to this architecture as the DS is rebuilt**, superseding its bootstrap-era model; each increment co-versions the document with the code ([Documentation Strategy §10](../documentation-strategy.md)). This ADR retains only the boundary, ownership, and rationale; `design-system.md` owns the operative conventions — preserving one-owner-per-fact (the `media.md` shape).
+- **Nothing is implemented by this ADR.** The Execution Plan sequences the incremental rebuild (highest-risk foundation first), each increment is a Work Item, and consumers are migrated as the foundation lands.
+- **The bootstrap-era drift is retired by construction** as the architecture's invariants are enforced — the binding rule ends primitive-direct/hardcoded consumption, key-parity ends theme drift, and the owned focus indicator ends per-component focus duplication. These are consequences of the invariants, tracked as implementation Work Items, not decided here.
+- **Ratified by accepting this ADR:** the **platform-vs-feature** classification (the Design System is a platform) and the **foundation-precedes-adoption** stance — with its guardrail — for this effort.
+- **Contract/doc impact:** the [API contract](../../api/api-contract.md) is unaffected (this is presentation only); `design-system.md` and the frontend architecture docs co-version with the DS where they reference it, as the rebuild lands.
+- This ADR is **immutable once accepted**; its status moves from `Proposed` to `Accepted` **on merge**. A future change to this direction is a new, **superseding** ADR.
