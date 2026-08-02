@@ -164,7 +164,13 @@ export const createChannelVerificationService = (
     }
 
     await runTransaction(async (tx) => {
-      await repo.closeChallenge(open.id, at, "verified", tx);
+      // The close is what decides single use: if no row was still open, another
+      // caller verified it or a resend superseded it between the read above and
+      // here. Raising before the proof is recorded rolls the whole thing back,
+      // so a lost race can never leave a proof behind.
+      const closed = await repo.closeChallenge(open.id, at, "verified", tx);
+      if (closed === 0) throw ChannelVerificationError.confirmationFailed();
+
       await repo.markProven({ verificationId: record.id, provenAt: at }, tx);
     });
   };

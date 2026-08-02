@@ -111,10 +111,13 @@ const fakeWorld = () => {
     },
 
     closeChallenge: async (id: number, closedAt: Date, reason: string) => {
+      // Conditional, as the database is: only a still-open row matches.
+      const row = challenges.find((c) => c.id === id && c.closedAt === null);
+      if (row === undefined) return 0;
       writes.push("closeChallenge");
-      const row = challenges.find((c) => c.id === id)!;
       row.closedAt = closedAt;
       row.closedReason = reason;
+      return 1;
     },
 
     markProven: async ({ verificationId, provenAt }: { verificationId: number; provenAt: Date }) => {
@@ -199,6 +202,29 @@ describe("issuing", () => {
     expect(outcome.delivered).toBe(false);
     expect(challenges).toHaveLength(1);
     expect(challenges[0]!.closedAt).toBeNull();
+  });
+
+  it("sends nothing when the transaction fails", async () => {
+    const world = fakeWorld();
+    mail = fakeMail();
+    const service = createChannelVerificationService({
+      repo: world.repo as unknown as IChannelVerificationRepository,
+      mail: mail.adapter as unknown as MailAdapter,
+      runInTransaction: async () => {
+        throw new Error("deadlock detected");
+      },
+      now: () => T0,
+      format: FORMAT,
+      challengeTtlMs: TTL,
+      resendCooldownMs: COOLDOWN,
+    });
+
+    await expect(service.issue({ userId: USER, endpoint: ENDPOINT })).rejects.toThrow(
+      "deadlock detected",
+    );
+
+    expect(mail.adapter.send).not.toHaveBeenCalled();
+    expect(world.challenges).toHaveLength(0);
   });
 
   it("sends only after the challenge is persisted", async () => {
@@ -415,6 +441,26 @@ describe("confirming", () => {
     await expect(
       service.confirm({ userId: USER, endpoint: ENDPOINT, code }),
     ).resolves.toBeUndefined();
+  });
+
+  it("loses gracefully when the challenge is closed between reading and closing it", async () => {
+    const { service, challenges, records, repo, code } = await issued();
+
+    // Whoever else got there first — a concurrent confirm, or a resend that
+    // superseded it — closed the row after this caller read it.
+    const closeChallenge = repo.closeChallenge;
+    repo.closeChallenge = async (...args: Parameters<typeof closeChallenge>) => {
+      challenges[0]!.closedAt = T0;
+      challenges[0]!.closedReason = "superseded";
+      return closeChallenge(...args);
+    };
+
+    await expect(
+      service.confirm({ userId: USER, endpoint: ENDPOINT, code }),
+    ).rejects.toMatchObject({ code: "confirmation_failed" });
+
+    // The proof is never recorded: the close is what decides, and it lost.
+    expect(records[0]!.provenAt).toBeNull();
   });
 
   it("fails identically for every cause, revealing nothing", async () => {
