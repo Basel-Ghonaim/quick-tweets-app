@@ -122,7 +122,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ### WI-2 — Theme mechanism, key parity, and the global bypass
 - **Goal & rationale:** make theming **verifiable**. **It precedes the vocabulary** because nothing currently sets the theme attribute — the dark block is unreachable, so key parity, theme transparency and theme-count agnosticism are all unfalsifiable claims until a theme can actually be switched.
-- **Scope:** the **typed theme contract** the Design System exports (the theme-name union and the attribute contract, **D4**); the application-side provider that implements it and the Storybook switcher that exercises it; alignment of the diverging light/dark keys; and the removal of the global stylesheet's hardcoded body colours and font, which bypass the token layer entirely.
+- **Scope:** the **typed theme contract** the Design System exports (the theme-name union and the attribute contract, **D4**); the application-side provider that implements it and the Storybook switcher that exercises it; alignment of the diverging light/dark keys — including a **provisional dark value** for any key the legacy light theme defines and dark does not, and removal of a dark-only key with no consumer; and the removal of the global stylesheet's hardcoded body colours and font, which bypass the token layer entirely.
 - **Non-goals:** no theme **selection policy** (system preference, persistence, startup) — that is the application's (**I9**); no theme provider inside the Design System (**D4**); no new **semantic vocabulary** (**D14** — closing a parity gap by defining an already-referenced key is a bugfix, not vocabulary; authoring the colour layer is **WI-3**).
 - **Dependencies:** **WI-1** (hard).
 - **Boundary validated:** the theme contract itself — that the Design System resolves and the application selects, with the contract **typed** so a consumer cannot drift from the theme set that actually exists. Establishing key parity also **closes WI-1's checker blind spot**: with identical key sets, a union-of-definitions check is equivalent to a per-theme one.
@@ -130,12 +130,15 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Verification:** switching the root attribute re-themes the surface with **no component change**; a key-set comparison between themes is equal; Storybook can switch themes; the global stylesheet no longer sets colour.
 - **DoD:** both themes reachable and key-aligned; the contract is exported and typed; Storybook switches; `main.css` bypass removed; typecheck + unit green.
 - **Commit/PR boundary:** one PR.
-- **Stop-risks:** if key parity cannot be reached on the legacy set without inventing tokens, stop and record it — parity on the **new** layer is the binding requirement, and forcing it onto a set that is about to be deleted is wasted motion.
+- **Stop-risks:** if key parity cannot be reached without **inventing vocabulary** — a key referenced nowhere, or a value with no defensible provisional choice — stop and record it. Defining a key that is already *referenced* is a bugfix (**D14**); minting one that nothing consumes is not, and neither is guessing a value the evidence does not support.
+
+> **Legacy-set parity is WI-2's or nobody's.** WI-3 introduces the new tiers **alongside** the legacy set (**D11**) and never repairs it; WI-10 deletes it. A parity gap left open here therefore survives the entire migration — and because every component-migration Work Item verifies that **AA holds in both themes**, each would be validating against a broken baseline. Closing it is why a dark value that has never rendered is still a **D14** bugfix rather than **WI-3** authoring: it completes a resolution so the mechanism can be trusted, and **D9** keeps the value provisional.
+
 
 ### WI-3 — Colour primitives and the semantic layer
 - **Goal & rationale:** author the language. **It precedes any component** because nothing can bind to a vocabulary that does not exist, and **it follows the mechanism** because a semantic layer is only meaningful once its resolution can be observed in more than one theme.
 - **Scope:** the colour **primitive** tier and the **semantic** tier built on it, resolved completely in every theme, introduced **alongside** the legacy set (**D11**). The vocabulary is scoped to what the existing components exercise (**D8**); tokens with no consumer are **reserved, not built**.
-- **Non-goals:** no component migration; no deletion of legacy tokens; no compositional tokens (inverse surfaces, scrims, selection) — no consumer exists; no investment in final values (**D9**).
+- **Non-goals:** no component migration; no deletion of legacy tokens, and **no repair of the legacy set** — the new tiers land beside it (**D11**), so a legacy parity gap is not closed here; no compositional tokens (inverse surfaces, scrims, selection) — no consumer exists; no investment in final values (**D9**).
 - **Dependencies:** **WI-2** (hard).
 - **Boundary validated:** the three-tier model — that intent-named roles resolve to primitives, and that a theme is a complete resolution of that layer.
 - **Invariants protected:** **I1**, **I2**, **I4**.
