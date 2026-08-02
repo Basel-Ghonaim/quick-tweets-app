@@ -42,6 +42,27 @@ const envSchema = z
     // Permissive `string`, not an enum, so an unexpected value warns and stays
     // inert (see resolveMailMode) rather than taking the server down at startup.
     MAIL_MODE: z.string().default("inert"),
+    // Crockford base32 — I/L/O/U are absent because the code is typed by hand.
+    // 12 characters over 32 symbols is 60 bits, which keeps a fast digest out of
+    // offline brute-force range. Configuration, not platform logic.
+    CHANNEL_VERIFICATION_CODE_ALPHABET: z
+      .string()
+      .default("0123456789ABCDEFGHJKMNPQRSTVWXYZ"),
+    CHANNEL_VERIFICATION_CODE_LENGTH: z.coerce.number().int().positive().default(12),
+    // Covers received-then-typed, not worst-case delivery: a holder who never
+    // receives the message waits out the cooldown and asks again, so a longer
+    // window would only keep a leaked code useful.
+    CHANNEL_VERIFICATION_CHALLENGE_TTL_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(15 * 60 * 1000),
+    // The durable abuse control; the per-IP limiter is only the outer layer.
+    CHANNEL_VERIFICATION_RESEND_COOLDOWN_MS: z.coerce
+      .number()
+      .int()
+      .nonnegative()
+      .default(60 * 1000),
   });
 
 export const env = envSchema.parse(process.env);
