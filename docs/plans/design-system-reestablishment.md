@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-01
+> **Last Updated:** 2026-08-02
 > **Parent Issue:** [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414)
 > **Supersedes:** —
 
@@ -58,6 +58,8 @@ Each Work Item cites the invariants it protects by identifier. Those marked ✅ 
 - **D10 — Feed and Profile are adoption targets, not validation targets.** This effort does not prove those pages work; it makes the language mature enough for them to adopt it later without another foundational rebuild. If a future page needs a token that does not exist, that is **normal extension of a stable foundation**, not evidence this effort was incomplete.
 - **D11 — Migration is an in-place strangler.** CSS custom properties are additive and the old and new names do not collide, so: introduce the new tiers **alongside** the existing tokens; migrate consumers **one Work Item at a time**, each leaving the application fully working; delete the legacy set only when its **last** consumer is gone.
 - **D12 — The undefined-token checker is a unit test.** Frontend unit tests already run in CI, so implementing the checker as a test earns enforcement for free rather than requiring a bespoke build step.
+- **D13 — The checker enforces token *responsibility*, not one rule for every custom property.** A **Design Token** (primitive or semantic) must exist: a fallback does not excuse a missing one, because a fallback *hides* the silent rename the checker exists to catch — `var(--color-accent, blue)` still renders after `--color-accent` disappears, plausibly and wrongly. A **component token** is runtime-parameterised by design (set by an inline style), so its fallback **is** its default value and is legitimate. This is not a compromise between strict and lenient: it applies the tier model **ADR 0010 Decision 3 already defines**. A single strict rule would false-positive on legitimate defaults, and a checker that cries wolf gets weakened rather than obeyed; a single lenient rule would let the language rot one fallback at a time. **Classification is by definition site** — `foundations/tokens/**` and `foundations/theme/**` are Design Tokens; a component's own module CSS or inline-style keys are component tokens — because naming conventions drift and definition sites do not.
+- **D14 — "No new tokens" means no new *semantic vocabulary*.** A token that is already **referenced** but never **defined** is a bug, and defining it introduces no vocabulary — the vocabulary is already present in the references. Completing a partial ramp is therefore a bugfix, not scope creep, and is preferred over repointing references to a different token, which would change appearance on a set that is about to be deleted.
 
 ### 3.3 Definition of Stable
 
@@ -106,22 +108,24 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ### WI-1 — Migration safety net
 - **Goal & rationale:** make the binding rule *enforceable* before anything moves. **It comes first** because the migration's largest hazard is silent breakage: components construct token names by string interpolation and stories pass role names as strings, so a rename produces an undefined custom property at runtime with **no compile-time or lint failure**. Every later Work Item depends on this net existing.
-- **Scope:** a checker, implemented as a **unit test** (**D12**), that fails on any `var(--…)` reference with no definition; and the fixes for the undefined-token bugs it immediately surfaces.
-- **Non-goals:** no token renaming; no new tokens; no component changes beyond the bug fixes the checker forces.
+- **Scope:** a checker, implemented as a **unit test** (**D12**), that resolves `var(--…)` references — literal in CSS and interpolated in TSX — against definitions drawn from the foundations, from components' runtime-prop keys, and from CSS-local declarations, and **fails on any unresolved Design Token reference by the responsibility rule in D13**; and the fixes for the undefined-token bugs it surfaces, **including those currently masked by a fallback** (per **D14**, completing a partial ramp is a bugfix).
+- **Non-goals:** no token renaming; **no new semantic vocabulary** (**D14** — defining an already-referenced token is a bugfix, not new vocabulary); no component changes beyond the bug fixes the checker forces; no theme-parity enforcement (**WI-2** owns **I2**, and see the note below).
 - **Dependencies:** none (first).
-- **Boundary validated:** that the binding rule is **mechanically enforceable**, not merely declared — the property every later item relies on.
+- **Boundary validated:** that the binding rule is **mechanically enforceable**, not merely declared — the property every later item relies on — and that enforcement follows the **tier model** rather than treating every custom property alike.
 - **Invariants protected:** **I1**.
-- **Verification:** the checker fails on a deliberately injected undefined reference, then passes once reverted — proven, not asserted; typecheck + unit green.
-- **DoD:** the checker runs in the unit suite and is green; every pre-existing undefined-token reference is fixed; the injection proof is recorded in the PR.
+- **Verification:** the checker fails on a deliberately injected undefined reference, then passes once reverted — proven, not asserted; a component token with a fallback does **not** trip it, while a Design Token with a fallback does; typecheck + unit green.
+- **DoD:** the checker runs in the unit suite and is green; every unresolved Design Token reference is fixed; the injection proof and an explicit statement of **what the checker does and does not cover** are recorded in the PR.
 - **Commit/PR boundary:** one PR (checker + the bugs it surfaces).
 - **Stop-risks:** if the checker cannot see through the string-interpolated token construction, say so plainly and record what it does and does not cover — a net believed to be tighter than it is would be worse than none.
+
+> **The checker does not need to be theme-aware.** A token defined in one theme but not another is invisible to a union-of-definitions check — but that is **I2**'s gap, not the checker's, and **WI-2 closes it**: once every theme defines the same key set, a union check and a per-theme check are equivalent for Design Tokens. Two simple mechanisms composing, rather than one clever one.
 
 ### WI-2 — Theme mechanism, key parity, and the global bypass
 - **Goal & rationale:** make theming **verifiable**. **It precedes the vocabulary** because nothing currently sets the theme attribute — the dark block is unreachable, so key parity, theme transparency and theme-count agnosticism are all unfalsifiable claims until a theme can actually be switched.
 - **Scope:** the **typed theme contract** the Design System exports (the theme-name union and the attribute contract, **D4**); the application-side provider that implements it and the Storybook switcher that exercises it; alignment of the diverging light/dark keys; and the removal of the global stylesheet's hardcoded body colours and font, which bypass the token layer entirely.
-- **Non-goals:** no theme **selection policy** (system preference, persistence, startup) — that is the application's (**I9**); no theme provider inside the Design System (**D4**); no new tokens.
+- **Non-goals:** no theme **selection policy** (system preference, persistence, startup) — that is the application's (**I9**); no theme provider inside the Design System (**D4**); no new **semantic vocabulary** (**D14** — closing a parity gap by defining an already-referenced key is a bugfix, not vocabulary; authoring the colour layer is **WI-3**).
 - **Dependencies:** **WI-1** (hard).
-- **Boundary validated:** the theme contract itself — that the Design System resolves and the application selects, with the contract **typed** so a consumer cannot drift from the theme set that actually exists.
+- **Boundary validated:** the theme contract itself — that the Design System resolves and the application selects, with the contract **typed** so a consumer cannot drift from the theme set that actually exists. Establishing key parity also **closes WI-1's checker blind spot**: with identical key sets, a union-of-definitions check is equivalent to a per-theme one.
 - **Invariants protected:** **I2**, **I3**, **I9**.
 - **Verification:** switching the root attribute re-themes the surface with **no component change**; a key-set comparison between themes is equal; Storybook can switch themes; the global stylesheet no longer sets colour.
 - **DoD:** both themes reachable and key-aligned; the contract is exported and typed; Storybook switches; `main.css` bypass removed; typecheck + unit green.
@@ -215,7 +219,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 ### WI-10 — Retire the legacy set and rewrite the platform document
 - **Goal & rationale:** declare **Stable** and make it true. **It is last** because the legacy set cannot be deleted while any consumer binds to it, and the platform document cannot describe a system that is still half-migrated.
 - **Scope:** delete the legacy token set; rewrite `design-system.md` to the re-established architecture, superseding its bootstrap-era model; verify every criterion in §3.3.
-- **Non-goals:** no behaviour change; no new tokens; no component changes.
+- **Non-goals:** no behaviour change; no new semantic vocabulary (**D14**); no component changes.
 - **Dependencies:** **WI-9** (hard).
 - **Boundary validated:** that the Design System is the **single owner** of the presentation language, with no second vocabulary surviving alongside it.
 - **Invariants protected:** all nine, verified together as the **Definition of Stable**.
