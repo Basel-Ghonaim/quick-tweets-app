@@ -15,6 +15,7 @@ import type {
   CreateChallengeInput,
   CreateRecordInput,
   IChannelVerificationRepository,
+  LockedRecord,
   MarkProvenInput,
   OpenChallenge,
   VerificationRecord,
@@ -73,8 +74,28 @@ export const createChannelVerificationRepository = (
     return row === null ? null : toRecord(row);
   },
 
-  createRecord: async (input: CreateRecordInput, client: DbClient = db) =>
-    toRecord(await client.channelVerification.create({ data: input })),
+  upsertRecord: async ({ userId, endpoint }: CreateRecordInput, client: DbClient = db) =>
+    toRecord(
+      await client.channelVerification.upsert({
+        where: { userId_endpoint: { userId, endpoint } },
+        create: { userId, endpoint },
+        update: {},
+      }),
+    ),
+
+  lockRecord: async (id, client: DbClient = db) => {
+    // Prisma has no `FOR UPDATE` builder, so the lock is raw; the tagged
+    // template binds `id` as a parameter rather than interpolating it. A single
+    // row per transaction, so there is no lock ordering to observe.
+    const rows = await client.$queryRaw<LockedRecord[]>`
+      SELECT id,
+             last_challenged_at AS "lastChallengedAt",
+             proven_at          AS "provenAt"
+        FROM channel_verifications
+       WHERE id = ${id}
+         FOR UPDATE`;
+    return rows[0] ?? null;
+  },
 
   findOpenChallenge: async (verificationId, client: DbClient = db) => {
     const row = await client.channelVerificationChallenge.findFirst({

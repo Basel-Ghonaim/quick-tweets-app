@@ -132,11 +132,11 @@ describe("closing", () => {
     const db = fakeDb();
     const closedAt = new Date("2026-01-01T00:30:00Z");
 
-    await repoOver(db).closeChallenge(11, closedAt, "confirmed");
+    await repoOver(db).closeChallenge(11, closedAt, "verified");
 
     expect(db.channelVerificationChallenge.update).toHaveBeenCalledWith({
       where: { id: 11 },
-      data: { closedAt, closedReason: "confirmed" },
+      data: { closedAt, closedReason: "verified" },
     });
     expect(db.channelVerificationChallenge.deleteMany).not.toHaveBeenCalled();
   });

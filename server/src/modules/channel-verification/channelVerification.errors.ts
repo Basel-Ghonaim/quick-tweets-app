@@ -5,7 +5,11 @@
  * speaks HTTP, and the boundary above it decides the status mapping.
  */
 
-export type ChannelVerificationErrorCode = "invalid_code" | "invalid_format";
+export type ChannelVerificationErrorCode =
+  | "invalid_code"
+  | "invalid_format"
+  | "cooldown_active"
+  | "confirmation_failed";
 
 export class ChannelVerificationError extends Error {
   public readonly code: ChannelVerificationErrorCode;
@@ -35,6 +39,30 @@ export class ChannelVerificationError extends Error {
     return new ChannelVerificationError(
       "invalid_format",
       "Challenge code format needs at least two distinct characters and a positive length",
+    );
+  }
+
+  /** Another challenge was issued for this subject too recently. */
+  static cooldownActive(): ChannelVerificationError {
+    return new ChannelVerificationError(
+      "cooldown_active",
+      "A challenge was issued for this endpoint too recently",
+    );
+  }
+
+  /**
+   * The single outcome of every failed confirmation — malformed, unknown
+   * subject, none open, expired, closed, superseded, or simply wrong.
+   *
+   * One shape because uniform opacity is auditable and a carve-out is not: the
+   * moment any one cause reports itself, it acquires its own message, then its
+   * own status, and the guarantee decays by increments. The cause is kept for
+   * diagnostics; it never reaches the caller.
+   */
+  static confirmationFailed(): ChannelVerificationError {
+    return new ChannelVerificationError(
+      "confirmation_failed",
+      "Confirmation failed",
     );
   }
 }
