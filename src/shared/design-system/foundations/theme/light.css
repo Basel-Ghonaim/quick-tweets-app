@@ -10,6 +10,7 @@
   --color-text-primary: var(--gray-900);
   --color-text-secondary: var(--gray-600);
   --color-text-tertiary: var(--gray-500);
+  --color-text-muted: var(--gray-500);
 
   /* border */
   --color-border: var(--gray-200);

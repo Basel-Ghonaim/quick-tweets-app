@@ -10,4 +10,6 @@
   --font-size-xl: 1.5rem; /* 24px */
   --font-size-2xl: 1.875rem; /* 30px */
   --font-size-3xl: 2.25rem; /* 36px */
+
+  --line-height-base: 1.5;
 }
