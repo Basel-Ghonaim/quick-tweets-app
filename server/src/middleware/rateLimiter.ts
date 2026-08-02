@@ -97,3 +97,51 @@ export const apiLimiter = rateLimit({
     },
   },
 });
+
+// ─── Channel Verification Limiters ───────────────────────────────────────────
+
+/**
+ * Issuing a challenge sends mail, so this guards spend and sender reputation
+ * rather than secrecy. The durable control is the per-address cooldown the
+ * capability enforces; this is only the outer, per-IP layer.
+ *
+ * Applied to: POST /channel-verification/challenges
+ * Limit: 10 requests per 15 minutes per IP
+ */
+export const verificationIssueLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      type: "rate_limit",
+      message: "Too many verification requests. Please wait 15 minutes before trying again.",
+    },
+  },
+});
+
+/**
+ * Confirming is not the control against guessing — a single-use code of this
+ * length is out of brute-force reach regardless of this limiter. It is sized for
+ * people mistyping, not attackers: these limiters are per-IP and in-memory, so a
+ * shared egress pools attempts across unrelated users, and too tight a budget
+ * locks out strangers for a threat the entropy already answers.
+ *
+ * Applied to: POST /channel-verification/challenges/confirm
+ * Limit: 10 requests per 15 minutes per IP
+ */
+export const verificationConfirmLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      type: "rate_limit",
+      message: "Too many confirmation attempts. Please wait 15 minutes before trying again.",
+    },
+  },
+});

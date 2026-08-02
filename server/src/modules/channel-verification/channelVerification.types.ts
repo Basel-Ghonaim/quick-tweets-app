@@ -139,13 +139,21 @@ export interface IChannelVerificationRepository {
     client?: DbClient,
   ): Promise<number>;
 
-  /** Closes one challenge by id — retained, not deleted, so a replay stays distinguishable. */
+  /**
+   * Closes one challenge by id **only while it is still open**, reporting how
+   * many rows that matched. Conditional rather than unconditional so single use
+   * is decided by the write itself: two callers racing cannot both succeed, and
+   * a challenge a concurrent resend already superseded cannot be verified.
+   *
+   * Retained, not deleted, so a replay stays distinguishable from a value that
+   * never existed.
+   */
   closeChallenge(
     id: number,
     closedAt: Date,
     reason: ChallengeCloseReason,
     client?: DbClient,
-  ): Promise<void>;
+  ): Promise<number>;
 
   markProven(input: MarkProvenInput, client?: DbClient): Promise<void>;
 

@@ -121,10 +121,11 @@ export const createChannelVerificationRepository = (
   },
 
   closeChallenge: async (id, closedAt, reason, client: DbClient = db) => {
-    await client.channelVerificationChallenge.update({
-      where: { id },
+    const { count } = await client.channelVerificationChallenge.updateMany({
+      where: { id, closedAt: null },
       data: { closedAt, closedReason: reason },
     });
+    return count;
   },
 
   markProven: async ({ verificationId, provenAt }: MarkProvenInput, client: DbClient = db) => {

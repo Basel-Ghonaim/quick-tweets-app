@@ -128,17 +128,27 @@ describe("closing", () => {
     expect(count).toBe(1);
   });
 
-  it("closes one by id rather than deleting it", async () => {
+  it("closes one by id only while it is still open, and reports the rows matched", async () => {
     const db = fakeDb();
     const closedAt = new Date("2026-01-01T00:30:00Z");
 
-    await repoOver(db).closeChallenge(11, closedAt, "verified");
+    const closed = await repoOver(db).closeChallenge(11, closedAt, "verified");
 
-    expect(db.channelVerificationChallenge.update).toHaveBeenCalledWith({
-      where: { id: 11 },
+    expect(db.channelVerificationChallenge.updateMany).toHaveBeenCalledWith({
+      where: { id: 11, closedAt: null },
       data: { closedAt, closedReason: "verified" },
     });
+    expect(closed).toBe(1);
     expect(db.channelVerificationChallenge.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("reports zero when the challenge was already closed", async () => {
+    const db = fakeDb();
+    db.channelVerificationChallenge.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      repoOver(db).closeChallenge(11, new Date(), "verified"),
+    ).resolves.toBe(0);
   });
 });
 
