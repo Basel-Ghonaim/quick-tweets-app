@@ -3,11 +3,11 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-01
+> **Last Updated:** 2026-08-03
 > **Parent Issue:** [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403)
 > **Supersedes:** —
 
-This plan sequences the implementation of the **Channel Verification** platform capability into eight independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) (Accepted), which owns the boundary, the single owned fact, custody, and the lifecycle, and which this plan never reopens.
+This plan sequences the implementation of the **Channel Verification** platform capability into nine independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) (Accepted), which owns the boundary, the single owned fact, custody, and the lifecycle, and which this plan never reopens.
 
 It is a **strategy document**: it owns the effort's **execution order, boundaries, invariants, and the rationale for that order**. Each Work Item's granular acceptance criteria, live status, and progress belong to its Issue (created when that Work Item begins), which this plan links and never mirrors — per [Documentation Strategy §5](../architecture/documentation-strategy.md) and [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
 
@@ -22,9 +22,9 @@ It is a **strategy document**: it owns the effort's **execution order, boundarie
 
 ## 2. Boundary declaration
 
-**Covers:** the capability module (its record, challenge, service, published surface, HTTP surface), the delivery port and an inert adapter, the schema and its additive migration, the challenge-expiry sweep job, the self-view projection, and the API-contract and manual-verification documentation.
+**Covers:** the capability module (its record, challenge, service, published surface, HTTP surface), the delivery port with an inert adapter **and a local capture backend**, the schema and its additive migration, the challenge-expiry sweep job, the self-view projection, and the API-contract and manual-verification documentation.
 
-**Does not cover (out of scope; unchanged):** any **gating policy** (no feature requires verification); a **real mail provider** (no SMTP, no provider SDK, no credentials); **multi-channel machinery** (no channel registry, strategy layer, or phone support); **staleness/re-verification policy**; **frontend UI** of any kind; bounce/suppression/deliverability handling; mail templating sophistication and i18n of mail content; and admin/revocation surfaces.
+**Does not cover (out of scope; unchanged):** any **gating policy** (no feature requires verification); a **real mail provider** (no SMTP, no provider SDK, no credentials — a backend that writes a message to a local file is none of those, and adding one does not narrow this exclusion); **multi-channel machinery** (no channel registry, strategy layer, or phone support); **staleness/re-verification policy**; **frontend UI** of any kind; bounce/suppression/deliverability handling; mail templating sophistication and i18n of mail content; and admin/revocation surfaces.
 
 ## 3. Pinned constraints (binding on every Work Item)
 
@@ -43,7 +43,7 @@ Each Work Item cites the invariants it protects by identifier. Most are mechanic
 
 ### 3.2 Settled design decisions
 
-Behavioural decisions taken during analysis and binding on implementation:
+Behavioural decisions taken during analysis and binding on implementation. Identifiers are allocated in the order decisions were taken, not in document order — **D7–D9** were catalogued separately in §3.3 before **D10–D11** were added by amendment:
 
 - **D1 — One active challenge per subject.** At most one open challenge per `(account, endpoint)` record, enforced in the service **and** by a partial unique index on the record `WHERE` the challenge is not closed. Multiple live secrets widen the attack surface (materially so for a short code) for no user benefit.
 - **D2 — Resend rotates.** A resend **closes the previous challenge and creates a new one**; the old secret never works again. This rotates a possibly-exposed secret and matches the user's expectation that the newest message is the one that works. The **resend cooldown is anchored on the record, not the challenge**, so it survives rotation (otherwise each new challenge resets the throttle).
@@ -51,6 +51,9 @@ Behavioural decisions taken during analysis and binding on implementation:
 - **D4 — Status is derived, never stored.** Resolution order: a proof matching the **current** endpoint → **Proven**; else an open, unexpired challenge → **Pending**; else **Unproven**. A stored status column would drift the moment a challenge expired with no writer present. Consequence: **expiry requires no write to be correct** — the sweep job is hygiene, not correctness, and may lag or fail without producing a wrong answer.
 - **D5 — Replay protection.** A challenge is single-use. Closed, expired, superseded, wrong-value, and never-existed all return the **same opaque failure** (no distinction leaked, mirroring the generic `401` in login and Media's opaque attach errors); the distinction is retained **internally** for diagnostics only. Secret comparison is constant-time; **confirm is rate-limited** as well as issue. **Idempotent replay of a successful challenge is deliberately deferred** — revisit if a link affordance is adopted or real double-submit friction is observed.
 - **D6 — Active is the absence of `closedAt`.** No separate challenge state column: `closedAt IS NULL` plus `expiresAt` fully determines open / expired / closed, and makes the D1 index trivially expressible. A `closedReason` may exist for **diagnostics only** and must **never** be branched on for an authorization decision — `closedAt` remains the single source of truth for state. (This is I8 applied to the challenge.)
+
+- **D10 — Capture is reachable only by exact opt-in, and never in production.** The capture backend writes a **single-use secret to disk**, so selecting it by accident is not a cosmetic failure. It therefore inherits the mechanism's existing fail-safe shape rather than inventing a second one: an unrecognised `MAIL_MODE` continues to warn and resolve to `inert`, and `MAIL_MODE=capture` under `NODE_ENV=production` does the same — it **warns and resolves to `inert`** rather than crashing, because a startup crash over a mail setting is a worse failure than sending nothing. `inert` stays the default and stays the target every fallback resolves to: **no path ever makes `capture` the fallback.**
+- **D11 — No new configuration surface.** `MAIL_MODE=capture` is the **only** switch. The destination is a **convention**, not a setting, and it is gitignored. A second environment variable would be a second thing to misconfigure on a tool whose whole purpose is local manual verification — and this is pinned so the implementer does not reach for one mid-branch, since adding an environment variable is otherwise a stop.
 
 ### 3.3 Recommendations pending ratification
 
@@ -62,14 +65,15 @@ Proposed with rationale; **ratified when this plan is approved** (they are not d
 
 ## 4. Strategy & sequencing
 
-**Order:** **1 → 2 → 3 → 4 → 5 → 6**, with **7** and **8** following (7 may run in parallel once 3 lands).
+**Order:** **1 → 2 → 3 → 4 → 5 → 6**, with **7** and **7A** following, then **8** (7 may run in parallel once 3 lands; 7A any time after 1).
 
 ```
 1 (delivery port + inert adapter)  ─┐
                                     ├─▶ 4 (service: issue/confirm) ─▶ 5 (HTTP) ─▶ 6 (published surface + projection)
 2 (schema + migration) ─▶ 3 (types + repository) ─┘
                               3 ─▶ 7 (expiry sweep job)
-6 ─▶ 8 (docs + verification harness)
+                              1 ─▶ 7A (capture delivery backend) ─┐
+                                                    6 ────────────┴─▶ 8 (docs + verification harness)
 ```
 
 - **1 → 4** *(hard)*: `issue` cannot complete without something to deliver through. The port is also the **cheapest possible proof of the delivery boundary** — it lands before any schema is committed to.
@@ -77,9 +81,13 @@ Proposed with rationale; **ratified when this plan is approved** (they are not d
 - **4 → 5** *(hard)*: the HTTP surface is a thin translation of an already-tested service.
 - **5 → 6** *(sequencing)*: the projection is most meaningful once the fact can actually be produced end-to-end.
 - **3 → 7** *(hard)*: the sweep reaches the database through the **repository**, never Prisma directly — the project's layering rule, and the shape of the refresh-token cleanup job this one is cloned from. Its bulk delete is therefore a repository method (WI-3), not a second data-access path. Beyond that it needs nothing, so it can land any time after 3.
+- **1 → 7A** *(hard)*: the capture backend is a **second implementation behind the port WI-1 established**, so it needs nothing else and can land any time after 1.
 - **6 → 8** *(hard)*: the harness verifies behaviour that must already exist.
+- **7A → 8** *(hard)*: without an inbox the harness cannot reach the successful-confirm leg at all. Delivery discards the message and the secret is stored as a digest, so the plaintext code exists only in process memory — **successful confirm, `proven` on the self-view, and replay refusal after success are unreachable by hand** until a backend retains the message.
 
 **Why this order and not another.** The riskiest *architectural* claims are validated earliest and most cheaply: the **delivery boundary** in WI-1 (~30 lines, no schema), and the **custody model** in WI-6. The riskiest *implementation* surface — the challenge lifecycle — is unit-tested in WI-4 before any HTTP exists, because the real CI gate is `typecheck` + unit tests. Documentation and the manual harness come last because they must describe behaviour that is already true.
+
+**Why WI-7A exists at all.** It was not in the original sequence; WI-8's preparation added it. The harness gap it closes is **not** a defect in the capability — a code that no observer can recover is exactly the property that makes the capability trustworthy. The missing thing is an **inbox**, which is a **delivery** concern, so it is fixed in the delivery layer rather than by seeding state into the harness or by weakening the capability. It also earns its place independently: WI-1 asserted that delivery composes as a domain-ignorant port on the strength of a **single** adapter, and a seam with one implementation is an untested seam. WI-7A is the first second implementation, which is why a required change to the port type is one of its stop conditions rather than a detail.
 
 ## 5. Execution structure
 
@@ -169,21 +177,34 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Commit/PR boundary:** one PR.
 - **Stop-risks:** if the substrate needs modification to host it → **stop and reassess**; that would contradict the assumption that it is generic.
 
+### WI-7A — Capture delivery backend
+- **Goal & rationale:** give manual verification a **real inbox**. **It follows WI-1** because it is a second backend behind the port WI-1 established — and it is the **first genuine test of that seam**, which until now rested on a single implementation. **It precedes WI-8** because the harness cannot reach the successful-confirm leg before an inbox exists. The gap it closes lives in **delivery**, so it is fixed there rather than by seeding state into the harness or by weakening the capability.
+- **Scope:** a `capture` backend that writes the **full** message to a local file, registered alongside `inert` in the existing mode registry; the destination gitignored; `.env.example` documenting the mode.
+- **Non-goals:** **no change to `inert`**, which stays exactly as it is and stays the default; no change to the **port type**; no change to the **capability** — zero lines inside `modules/channel-verification`; no real provider, SMTP, SDK or credentials (§2 unchanged); no new environment variable (**D11**); no templating, queueing, retry, or bounce handling.
+- **Dependencies:** **WI-1** (hard).
+- **Boundary validated:** that the delivery port genuinely supports **more than one** backend — the claim WI-1 could only assert — and that nothing above the mechanism observes which backend is selected.
+- **Invariants protected:** **I5** — and it *demonstrates* I5 rather than asserting it, since a capability that notices a delivery change was never behind the port.
+- **Verification:** unit tests over the capture backend (it writes the full message; it creates its destination). The mode resolution is proven at its edges: `capture` is selected **only** on exact opt-in outside production, and both an unrecognised value and `capture` under `NODE_ENV=production` warn and resolve to `inert` (**D10**). Two proofs that bite: **zero lines change inside `modules/channel-verification`** — diff-verifiable — and **the existing inert tests pass unchanged**, which is what "inert is untouched" means in evidence rather than in prose.
+- **DoD:** the capture backend exists and is selectable; `inert` unchanged and still the default and still every fallback's target; the destination is gitignored; `.env.example` documents the mode; typecheck + unit green.
+- **Commit/PR boundary:** one PR.
+- **Stop-risks:** if the capture backend **cannot be added without changing the port type**, → **stop**: that would confirm the wrong-abstraction risk §6 already names — a port shaped around its only implementation — and reshaping it is an architectural decision, not a detail of this Work Item. If `capture` cannot be made unreachable by accident, → **stop** rather than ship a mode that writes single-use secrets to disk on a stray environment value.
+
 ### WI-8 — Documentation + manual verification harness
 - **Goal & rationale:** co-version the contract and make the capability **hand-verifiable against a running system**. **It comes last** because it must describe behaviour that already exists.
-- **Scope:** the API contract entries (issue/confirm, the self-view projection field, the opaque failure shape); and the harness — a new Postman folder, a scenarios-catalogue section with stable IDs, a new lettered runbook **DB checkpoint**, a workflow-phase row, and a README paragraph. The harness is **self-isolated** (mints its own user with a per-run unique identity) and non-destructive, per the folder-09 precedent.
-- **Non-goals:** no behaviour change; no new endpoints.
-- **Dependencies:** **WI-6** (hard).
+- **Scope:** the API contract entries (issue/confirm, the self-view projection field, the opaque failure shape); and the harness — a new Postman folder, a scenarios-catalogue section with stable IDs, a new lettered runbook **DB checkpoint**, a workflow-phase row, and a README paragraph. With the capture backend in place the harness covers the **full** path, including successful confirm, `proven` on the self-view, and replay refusal after success. The harness is **self-isolated** (mints its own user with a per-run unique identity) and non-destructive, per the folder-09 precedent.
+- **Non-goals:** no behaviour change; no new endpoints; **no test runner** — `newman` is not a dependency and is not added, because installing a runner to automate a *manual* harness is a different effort with a different justification.
+- **Dependencies:** **WI-6** (hard), **WI-7A** (hard).
 - **Boundary validated:** that every guarantee is observable from outside — API-observable behaviour via the collection, and the custody invariant (**no verification data on `users`**) via the DB checkpoint.
 - **Invariants protected:** **I1** (checkpoint-verified), **I8** (status derives correctly after expiry with no writer).
-- **Verification:** the harness is executed against a running system; every scenario and checkpoint passes.
-- **DoD:** the API contract is co-versioned; the harness folder, scenarios, checkpoint, workflow row, and README paragraph all land; a full manual pass is green.
+- **Verification:** every scenario is executed against a running system on the isolated database, and every checkpoint passes. **The execution claim is split by what each party can actually prove.** The implementer drives the scenarios with `curl` and runs the checkpoint SQL — which proves the scenarios are achievable and the expectations correct — and reports that in exactly those terms, never as "the harness passes". The **Postman collection itself is run by the human**, because the collection *is* the deliverable and validating it by another mechanism would leave the shipped artifact the one thing never exercised.
+- **DoD:** the API contract is co-versioned; the harness folder, scenarios, checkpoint, workflow row, and README paragraph all land; every scenario is executed and green by the method above, with the method **stated explicitly** rather than implied.
 - **Commit/PR boundary:** one PR (docs + harness).
-- **Stop-risks:** if a scenario cannot be expressed without exposing internals → record a finding rather than widening the public surface.
+- **Stop-risks:** if a scenario cannot be expressed without exposing internals → record a finding rather than widening the public surface. Two shapes are **not** acceptable answers to that: seeding state directly into the database to satisfy a precondition — which proves a state the system cannot itself produce and copies persistence facts into a document that will drift — and relaxing a deliberate secrecy property to make observation easier.
 
 ## 6. Risks & mitigations (effort-wide)
 
-- **The delivery port is designed from a single consumer** — the classic wrong-abstraction trap. Mitigation: keep it minimal (recipient + payload); no templating, queueing, or retry policy until a second consumer exists.
+- **The delivery port is designed from a single consumer** — the classic wrong-abstraction trap. Mitigation: keep it minimal (recipient + payload); no templating, queueing, or retry policy until a second consumer exists. **WI-7A is the first evidence either way**: a second backend that fits without touching the port supports the shape, and one that does not is the trap having sprung.
+- **Capture writes a single-use secret to disk.** That is the point of it, and it is also the hazard. Mitigation: **D10** — exact opt-in only, never in production, `inert` as every fallback's target — plus a gitignored destination. The residual risk is a developer with capture enabled locally, which is accepted knowingly.
 - **Abuse control on issuance.** The existing limiters are **per-IP and in-memory**, so they do not stop an IP-rotating attacker mail-bombing one address. Mitigation: the **record-anchored cooldown (D2)** is the durable control; the limiter is only the cheap outer layer. This matters little while delivery is inert and becomes load-bearing the moment a real provider lands.
 - **The lazy-comparison contract.** A caller passing a *stale* endpoint value receives a stale answer. Mitigation: the User self-view is the authoritative caller; the contract is stated on the published method.
 - **Hashing at rest sets a precedent (D7)** that Auth does not yet follow. Mitigation: scope it to this capability; do not retrofit Auth in this effort.
@@ -192,12 +213,12 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ## 7. Completion criteria (whole effort)
 
-- All eight Work Items merged to `main`, each green (typecheck + unit; integration verified locally), each leaving a coherent state.
+- All nine Work Items merged to `main`, each green (typecheck + unit; integration verified locally), each leaving a coherent state.
 - An authenticated holder can request verification of their own email and confirm it; the endpoint becomes **Proven**; the self-view reflects it **as a projection**.
 - **All eight invariants hold**, and the grep-verifiable ones (**I1**, **I4**, **I5**, **I7**) are demonstrably true.
 - Changing the endpoint yields **Unproven with no write** to the capability; disabling the sweep job changes no answer.
-- Delivery remains inert and credential-free; no gating policy exists anywhere.
-- The API contract is co-versioned and the manual harness passes a full run.
+- Delivery remains credential-free and **inert by default**; the capture backend is selectable only by exact opt-in and never resolves as a fallback. No gating policy exists anywhere.
+- The API contract is co-versioned and the manual harness passes a full run — **including the successful-confirm leg**, with the execution method stated rather than implied.
 
 ## 8. Reconciliation
 
