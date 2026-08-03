@@ -38,3 +38,44 @@
   --color-info-secondary: var(--blue-600);
   --color-info-alpha: var(--color-primary-alpha);
 }
+
+/* Primitive tier (ADR 0010 Decision 3) — provisional values seeded from the current hexes. */
+:root {
+  --palette-neutral-0: #ffffff;
+  --palette-neutral-50: #f9fafb;
+  --palette-neutral-100: #f3f4f6;
+  --palette-neutral-200: #e5e7eb;
+  --palette-neutral-300: #d1d5db;
+  --palette-neutral-500: #6b7280;
+  --palette-neutral-600: #4b5563;
+  --palette-neutral-700: #374151;
+  --palette-neutral-900: #111827;
+
+  --palette-slate-200: #cbd5f5;
+  --palette-slate-400: #94a3b8;
+  --palette-slate-600: #475569;
+  --palette-slate-700: #334155;
+  --palette-slate-800: #1e293b;
+  --palette-slate-900: #0f172a;
+
+  --palette-blue-400: #60a5fa;
+  --palette-blue-500: #3b82f6;
+  --palette-blue-600: #2563eb;
+  --palette-blue-700: #1d4ed8;
+  --palette-blue-900: #1e3a8a;
+
+  --palette-green-500: #10b981;
+  --palette-green-600: #059669;
+
+  --palette-amber-500: #f59e0b;
+  --palette-amber-600: #d97706;
+
+  --palette-red-600: #dc2626;
+  --palette-red-700: #b91c1c;
+
+  --palette-blue-a10: rgba(59, 130, 246, 0.1);
+  --palette-neutral-a10: rgba(107, 114, 128, 0.1);
+  --palette-green-a10: rgba(16, 185, 129, 0.1);
+  --palette-amber-a10: rgba(245, 158, 11, 0.1);
+  --palette-red-a10: rgba(220, 38, 38, 0.1);
+}
