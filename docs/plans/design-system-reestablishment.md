@@ -3,11 +3,11 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-02
+> **Last Updated:** 2026-08-03
 > **Parent Issue:** [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414)
 > **Supersedes:** —
 
-This plan sequences the re-establishment of the **Design System** into ten independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) (Accepted), which owns the boundary, ownership, and invariants, and which this plan never reopens.
+This plan sequences the re-establishment of the **Design System** into twelve independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) (Accepted), which owns the boundary, ownership, and invariants, and which this plan never reopens.
 
 It is a **strategy document**: it owns the effort's **execution order, boundaries, invariants, and the rationale for that order**. Each Work Item's granular acceptance criteria, live status, and progress belong to its Issue (created when that Work Item begins), which this plan links and never mirrors — per [Documentation Strategy §5](../architecture/documentation-strategy.md) and [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
 
@@ -42,7 +42,7 @@ Each Work Item cites the invariants it protects by identifier. Those marked ✅ 
 - **I8 — Platform boundary.** The Design System imports no feature, and product-domain semantics never enter its semantic set. ✅
 - **I9 — Selection is app policy.** The Design System defines the theme contract and performs the resolution; selection and persistence live in the application.
 
-**Cross-cutting obligations.** **I5**, **I6** and **I7** are honoured *inside every component-migration Work Item* (4, 5, 6, 8) rather than deferred to a Work Item of their own. Direction-agnosticism in particular is free at authoring time and prohibitively expensive to retrofit, so no component is migrated with physical properties.
+**Cross-cutting obligations.** **I5**, **I6** and **I7** are honoured *inside every component-migration Work Item* (4, 4A, 5, 6, 7, 8) rather than deferred to a Work Item of their own. Direction-agnosticism in particular is free at authoring time and prohibitively expensive to retrofit, so no component is migrated with physical properties.
 
 ### 3.2 Settled decisions
 
@@ -75,7 +75,7 @@ Each Work Item cites the invariants it protects by identifier. Those marked ✅ 
 3. **Theme switching works** through the typed contract, with full **key parity** across themes (**I2**, **I9**).
 4. The **undefined-token checker is green** — zero unresolvable references (**D12**).
 5. **Storybook is the verification environment**, exercising both themes and every interaction state (**D2**).
-6. A **single owned focus indicator** — no per-component focus rings remain (**I5**).
+6. A **single owned focus indicator** — no per-component focus rings remain, **mechanically checked** rather than trusted (**I5**, **D18**).
 7. **AA contrast holds in both themes** for every guaranteed relationship (**I5**).
 8. **Logical properties throughout** — direction-agnostic authoring, no physical properties (**I6**).
 9. **`design-system.md` is rewritten** to the re-established architecture, superseding its bootstrap-era model.
@@ -224,13 +224,13 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Stop-risks:** if a hardcoded value proves to be a genuine product/brand decision with no semantic home, treat it as **consumer-owned composition** (the **D7** rule) rather than promoting it into the Design System.
 
 ### WI-7 — Icons
-- **Goal & rationale:** close the surface everyone forgets. **It is separated** because the icon set is not on anyone's mental list of "components", yet one icon hardcodes an eight-colour palette — a binding-rule violation that would otherwise survive the entire effort and quietly falsify the completion criteria.
+- **Goal & rationale:** close the surface everyone forgets. **It is separated** because the icon set is not on anyone's mental list of "components", yet one icon hardcodes an eight-colour palette — a binding-rule violation that would otherwise survive the entire effort and quietly falsify the completion criteria. **It follows WI-4A** for the same reason as WI-5 and WI-6 — one pass, against a vocabulary already proven — and runs in parallel with both.
 - **Scope:** bring the hardcoded icon palette onto semantic tokens and any remaining primitive-direct binding of **any** family onto the semantic tier; remove the hardcoded colour in the icon stories.
 - **Non-goals:** no icon redesign; no additions to the set; no change to the `currentColor` convention the other icons already follow correctly; **no new vocabulary** (**D15**); **no second pass** (**D17**).
 - **Dependencies:** **WI-4A** (hard).
 - **Boundary validated:** that the binding rule holds **everywhere**, not only in components that look like components.
 - **Invariants protected:** **I1**.
-- **Verification:** no hardcoded colour values remain in the icon set; icons render correctly in both themes.
+- **Verification:** no hardcoded values and no primitive-direct binding of any family remain in the icon set; icons render correctly in both themes.
 - **DoD:** icons migrated; checker green; typecheck + unit green.
 - **Commit/PR boundary:** one PR.
 - **Stop-risks:** if a file-type palette is genuinely semantic to file types rather than to the design language, record it as consumer-owned rather than inventing eight Design System roles for it.
@@ -274,15 +274,16 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 ## 6. Risks & mitigations (effort-wide)
 
 - **Silent rename is the defining hazard.** Token names are built by string interpolation and passed as strings from stories, so no compiler or linter catches a break. Mitigation: **WI-1 first**, and every later Work Item keeps the checker green.
-- **A contrast failure may be a vocabulary failure.** If AA cannot be met without collapsing two responsibilities into one token, the vocabulary is wrong, not the value. Mitigation: check contrast in **WI-3 and WI-4**, not at the end, or the rework touches every migrated file.
-- **No visual regression net.** There are no Design System component tests and no snapshots, and Storybook's a11y gate is local rather than CI-enforced (**D2**, **D3**). Appearance can change silently. Mitigation: stories exercising every state, migration Work Items that preserve appearance by intent, and honest reporting when a change is observed.
+- **A contrast failure may be a vocabulary failure.** If AA cannot be met without collapsing two responsibilities into one token, the vocabulary is wrong, not the value. **This risk has already materialised** — WI-4's preparation found one token bound as a fill, as on-surface text, and as a border — which is why the mitigation is stated as a rule and not a hope: check contrast in **WI-3, WI-3A and WI-4**, never at the end, and author the fix in a vocabulary Work Item (**D15**) rather than the migration that found it.
+- **The pilot may under-represent.** **D17** proves each family's vocabulary on Button, but Button exercises no **validity** or **selection** state, so a family can be sufficient for it and short for Input, Checkbox or FileInput. This is the acknowledged cost of one pilot rather than four. Mitigation: WI-5 and WI-6 name those surfaces as the boundary they validate, and a gap found there is a **stop** into a vocabulary Work Item — never a primitive reach, and never authored inside the migration.
+- **No visual regression net.** There are no Design System component tests and no snapshots — and none are introduced here (**D19**) — while Storybook's a11y gate is local rather than CI-enforced (**D2**, **D3**). Appearance can change silently. Mitigation: stories exercising every state, migration Work Items that preserve appearance by intent, and honest reporting when a change is observed. The residual risk is real and is accepted knowingly rather than mitigated away.
 - **Values are provisional (D9).** A future design will replace them. Mitigation: the tier model keeps values out of components, so a redesign is a palette swap — provided no Work Item lets a value reach a component.
 - **Auth is a prototype, not a reference (D7).** The risk is that migrating it quietly promotes prototype brand decisions into the platform. Mitigation: WI-8's explicit stop-risk, and the rule that unhoused brand values stay local.
 - **Scope creep toward "while we're here".** New components, a design language, or a visual-regression system are all out (§2). Mitigation: discoveries are **recorded, not absorbed**.
 
 ## 7. Completion criteria (whole effort)
 
-- All ten Work Items merged to `main`, each green under the CI gate, each leaving the application fully working.
+- All twelve Work Items merged to `main`, each green under the CI gate, each leaving the application fully working.
 - **All nine Definition-of-Stable criteria (§3.3) hold**, with the mechanically verifiable ones (**I1**, **I2**, **I3**, **I6**, **I8**, and the checker) demonstrated rather than asserted.
 - The legacy token set is **deleted**, and `design-system.md` describes the re-established architecture.
 - No out-of-scope item was pulled in: no redesign, no new components, no visual-regression system, no product pages.
