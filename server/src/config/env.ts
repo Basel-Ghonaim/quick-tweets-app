@@ -63,6 +63,26 @@ const envSchema = z
       .int()
       .nonnegative()
       .default(60 * 1000),
+    // How often spent challenges are swept (ms; default 6h). Hygiene, not
+    // correctness — status is derived, so nothing depends on this having run.
+    CHANNEL_VERIFICATION_SWEEP_INTERVAL_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(6 * 60 * 60 * 1000),
+    // How long a spent challenge is kept before removal (ms; default 7d). It
+    // buys diagnostics only: the proof lives on the record and is never swept.
+    //
+    // `positive()` is load-bearing, not tidiness. The sweep deletes where
+    // `closed_at < cutoff OR expires_at < cutoff`, and `cutoff = now - this`; a
+    // negative value would push the cutoff into the future, where `expires_at <
+    // cutoff` starts matching live, unexpired challenges. Rejecting it at
+    // startup closes that permanently, with no runtime branch.
+    CHANNEL_VERIFICATION_CHALLENGE_RETENTION_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(7 * 24 * 60 * 60 * 1000),
   });
 
 export const env = envSchema.parse(process.env);
