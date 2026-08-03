@@ -60,6 +60,11 @@ Each Work Item cites the invariants it protects by identifier. Those marked ✅ 
 - **D12 — The undefined-token checker is a unit test.** Frontend unit tests already run in CI, so implementing the checker as a test earns enforcement for free rather than requiring a bespoke build step.
 - **D13 — The checker enforces token *responsibility*, not one rule for every custom property.** A **Design Token** (primitive or semantic) must exist: a fallback does not excuse a missing one, because a fallback *hides* the silent rename the checker exists to catch — `var(--color-accent, blue)` still renders after `--color-accent` disappears, plausibly and wrongly. A **component token** is runtime-parameterised by design (set by an inline style), so its fallback **is** its default value and is legitimate. This is not a compromise between strict and lenient: it applies the tier model **ADR 0010 Decision 3 already defines**. A single strict rule would false-positive on legitimate defaults, and a checker that cries wolf gets weakened rather than obeyed; a single lenient rule would let the language rot one fallback at a time. **Classification is by definition site** — `foundations/tokens/**` and `foundations/theme/**` are Design Tokens; a component's own module CSS or inline-style keys are component tokens — because naming conventions drift and definition sites do not.
 - **D14 — "No new tokens" means no new *semantic vocabulary*.** A token that is already **referenced** but never **defined** is a bug, and defining it introduces no vocabulary — the vocabulary is already present in the references. Completing a partial ramp is therefore a bugfix, not scope creep, and is preferred over repointing references to a different token, which would change appearance on a set that is about to be deleted.
+- **D15 — A responsibility split is architectural, not cosmetic.** Where consumers bind one token as two different things — a **fill** and **on-surface text**, for instance — that is two tokens, and they stay two tokens even in a theme where their values coincide. This applies **I4** and ADR 0010 Decision 4; it does not reopen them. The reason is not tidiness: the two responsibilities answer to **different criteria** — text to 4.5:1 (WCAG 1.4.3), a fill acting as a boundary to 3:1 (1.4.11) — so a single token inherits the *union* of both, forcing the fill to a threshold it was never subject to and surrendering headroom it is entitled to. Collapsing them does not merely blur meaning; it **over-constrains the design space**. A token whose value coincides with another's is therefore never evidence that the two should merge, and **the split is authored in a vocabulary Work Item, never inside a component migration** — the component that discovers the gap is the worst place to fix it, because the fix serves every later component too.
+- **D16 — On-surface text resolves per theme; a fill need not.** These are not two styles of the same choice. For **on-surface text**, clearing 4.5:1 requires a luminance of `≤ 0.1833` against the light surface and `≥ 0.2730` against the dark one — **the ranges do not intersect**, so a theme-invariant value is not merely undesirable, it does not exist. For a **fill** at 3:1 against the page the ranges *do* intersect (`0.126–0.285`), so a theme-invariant fill is permitted where it serves brand consistency — permitted, never required. That the two responsibilities have **different feasible regions** is itself the proof they are different responsibilities, and it is why **D15** is arithmetic rather than taste.
+- **D17 — Pilot-first applies to every token family, not only colour.** The reason WI-4 precedes the other components — prove the vocabulary against a real consumer before more files depend on it — is not specific to colour, and applying it to colour alone would leave five families authored and applied everywhere in one step, with no pilot and **187** primitive-direct references already committed to them. **Button is the pilot for every family.** It is therefore the one surface deliberately opened twice; every other surface — Input, Checkbox, FileInput, Icons, Auth — is migrated **once**, across all families in a single pass. This is a sequencing decision, like **D1**, not an architectural one.
+- **D18 — The focus indicator is a shared definition components compose, not a global rule.** A global `:focus-visible` rule would style application markup the Design System does not own, which contradicts **I7**; a shared definition keeps the indicator inside the platform's ownership while still being singular. **I5**'s "single" is then made mechanically checkable rather than trusted: no component may declare its own ring. Enforcement is placed where it can first be **green** — an invariant that is asserted but unenforceable erodes, and thirteen per-component focus declarations, every one of them below 3:1, are what that erosion already looks like here.
+- **D19 — Storybook and the foundation checks are the proof surface; no component-test framework is introduced.** The project has no component-test dependency today, and adding one is a new test tier with its own conventions — a separate effort, not a rider on a token migration. This follows **D2** and the §2 exclusion of a visual-regression system, and it is stated explicitly so that no migration Work Item resolves it under momentum. Its cost is named honestly in §6.
 
 ### 3.3 Definition of Stable
 
@@ -77,30 +82,41 @@ Each Work Item cites the invariants it protects by identifier. Those marked ✅ 
 
 ## 4. Strategy & sequencing
 
-**Order:** **1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10**, with 5–7 parallelisable once 4 lands.
+**Order:** **1 → 2 → 3 → 3A → 4 → 4A → 5 → 6 → 7 → 8 → 9 → 10**, with 5–7 parallelisable once 4A lands.
 
 ```
-1 (safety net) ─▶ 2 (theme mechanism) ─▶ 3 (colour vocabulary) ─▶ 4 (Button — the vertical slice)
-                                                                        │
-                                        ┌───────────────────────────────┼───────────────┐
-                                        ▼                               ▼               ▼
-                              5 (Input + Checkbox)              6 (FileInput)      7 (Icons)
-                                        └───────────────┬───────────────┘
-                                                        ▼
-                                              8 (Auth token-swap)
-                                                        ▼
-                                         9 (remaining token types) ─▶ 10 (retire legacy + doc)
+1 (safety net) ─▶ 2 (theme mechanism) ─▶ 3 (colour vocabulary) ─▶ 3A (vocabulary completion
+                                                                     + owned focus indicator)
+                                                                              │
+                                                                              ▼
+                                                                4 (Button — the colour slice)
+                                                                              │
+                                                                              ▼
+                                                   4A (remaining families — piloted on Button)
+                                                                              │
+                                        ┌─────────────────────────────────────┼───────────────┐
+                                        ▼                                     ▼               ▼
+                              5 (Input + Checkbox)                    6 (FileInput)      7 (Icons)
+                                        └─────────────────┬───────────────────┘
+                                                          ▼
+                                        8 (Auth token-swap + focus enforcement)
+                                                          ▼
+                                    9 (token families no component consumes) ─▶ 10 (retire legacy + doc)
 ```
 
 - **1 → everything** *(hard)*: ~25 files consume tokens, and components build token names by **string interpolation**, so a rename fails no typecheck and no lint — it resolves to an undefined variable at runtime. The compiler cannot be the safety net, so the checker must exist before anything moves.
 - **1 → 2** *(hard)*: the checker immediately converts the existing undefined-token bugs into visible failures, which is what makes the theme work verifiable rather than merely plausible.
 - **2 → 3** *(hard)*: theming is **unverifiable** until a theme can be switched — nothing currently sets the theme attribute, so the dark block is dead code. Key parity and theme transparency cannot be claimed, let alone tested, before the mechanism exists.
-- **3 → 4** *(hard)*: the language must exist before a component can bind to it.
-- **4 → 5, 6, 7** *(hard, then parallel)*: the first component proves the vocabulary survives contact with a real consumer. Once it has, the rest are mechanical and independent of one another.
-- **5, 6, 7 → 8** *(sequencing)*: Auth consumes the components; migrating it after them avoids touching the same surfaces twice.
+- **3 → 3A** *(hard)*: 3A completes the layer 3 authored. It cannot precede it, and it exists because 4's preparation proved the layer incomplete — one token was carrying two responsibilities.
+- **3A → 4** *(hard)*: the language must exist before a component can bind to it, and by **D15** a missing token is never authored inside the migration that discovers it.
+- **4 → 4A** *(hard)*: colour is the family most coupled to theming (**D1**), so proving the tier model end-to-end there first means the remaining five families are authored against a mechanism already known to work, not simultaneously with it.
+- **4A → 5, 6, 7** *(hard, then parallel)*: the pilot proves the vocabulary of **every** family survives contact with a real consumer (**D17**). Once it has, the rest are single-pass, mechanical, and independent of one another.
+- **5, 6, 7 → 8** *(sequencing)*: Auth consumes the components, so migrating it after them avoids touching the same surfaces twice. It is also the first **sequenced** point at which every component has migrated — 5, 6 and 7 run in parallel, so none of them individually is the last — which is where the focus-indicator enforcement can first be green (**D18**).
 - **8 → 9 → 10** *(hard)*: the legacy set cannot be deleted while any consumer still binds to it, and the platform document cannot describe a system that is still half-migrated.
 
-**Why this order and not another.** The riskiest claims are validated earliest and most cheaply. **Enforceability** comes first (a 25-file migration with no compiler safety net is the effort's single largest hazard). **Verifiability** comes second — a theme that cannot be switched makes the central invariants unfalsifiable. **Vocabulary sufficiency** comes third, proven by one real component before nine more files depend on it. Everything after WI-4 is repetition of a proven pattern, and the two items that can only be done last — deleting the legacy set and describing the result — are last.
+**Why this order and not another.** The riskiest claims are validated earliest and most cheaply. **Enforceability** comes first (a 25-file migration with no compiler safety net is the effort's single largest hazard). **Verifiability** comes second — a theme that cannot be switched makes the central invariants unfalsifiable. **Vocabulary sufficiency** comes third, and it is proven on one real component **for every token family**, not for colour alone.
+
+**Why the pilot is the only surface opened twice.** An earlier revision of this plan authored the remaining families in a single late Work Item and applied them everywhere at once, which had two costs. Every component and Auth would have been opened twice — once for colour, once for the rest — across **187** primitive-direct references. And more seriously, it applied *pilot-first* to colour while abandoning it for spacing, typography, border, shadow and motion, whose vocabulary would then have been proven only after every consumer already depended on it. That is the failure WI-4's preparation demonstrated is real, not theoretical. Concentrating the double pass in **Button** costs one extra pass over one file and buys a proven vocabulary for all five remaining families before **171** of those references are touched. Everything after 4A is repetition of a pattern proven across every family, and the two items that can only be done last — deleting the legacy set and describing the result — are last.
 
 ## 5. Execution structure
 
