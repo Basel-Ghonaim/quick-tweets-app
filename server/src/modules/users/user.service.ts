@@ -38,6 +38,10 @@ import {
   type IMediaReferences,
   type IMediaResolution,
 } from "../media/index.js";
+import {
+  channelVerificationStatus,
+  type IChannelVerificationStatus,
+} from "../channel-verification/index.js";
 import { createUserRepository } from "./user.repository.js";
 import { assertAvatarPolicy } from "./user.avatar-policy.js";
 import type {
@@ -85,6 +89,7 @@ export const createUserService = (
   media: UserMediaPort = defaultMediaPort,
   runInTransaction: RunInTransaction = defaultRunInTransaction,
   resolveHandle: (handle: string) => Promise<ResolvedHandle | null> = resolveUserByHandle,
+  verification: IChannelVerificationStatus = channelVerificationStatus,
 ): IUserService => {
   /** Resolve a user's avatar reference to its public read token (null when unset/unservable). */
   const resolveAvatar = (avatarMediaId: number | null): Promise<string | null> =>
@@ -157,13 +162,22 @@ export const createUserService = (
         throw AppError.notFound("User");
       }
 
-      const [likesCount, avatarToken] = await Promise.all([
+      const [likesCount, avatarToken, emailVerification] = await Promise.all([
         userRepo.countLikesReceived(userId),
         resolveAvatar(user.avatarMediaId),
+        // Asked for, never stored: the account row holds the address, and the
+        // capability holds whether it is proven. The subject is handed over
+        // from the row already loaded here.
+        verification.statusOf(userId, user.email),
       ]);
 
-      // Self-view: the public profile plus `email` (owned by the account, not exposed publicly).
-      return { ...buildResponse(user, avatarToken, likesCount, false), email: user.email };
+      // Self-view: the public profile plus `email` and its verification state —
+      // both the account holder's own, neither exposed publicly.
+      return {
+        ...buildResponse(user, avatarToken, likesCount, false),
+        email: user.email,
+        emailVerification,
+      };
     },
 
     // ─── Update Self Profile ──────────────────────────────────────────
@@ -176,11 +190,16 @@ export const createUserService = (
       // No avatar edit and no rename → a plain name/bio update, no transaction.
       if (data.avatar === undefined && rename === null) {
         const updated = await userRepo.updateProfile(userId, { name: data.name, bio: data.bio });
-        const [likesCount, avatarToken] = await Promise.all([
+        const [likesCount, avatarToken, emailVerification] = await Promise.all([
           userRepo.countLikesReceived(userId),
           resolveAvatar(updated.avatarMediaId),
+          verification.statusOf(userId, updated.email),
         ]);
-        return { ...buildResponse(updated, avatarToken, likesCount, false), email: updated.email };
+        return {
+          ...buildResponse(updated, avatarToken, likesCount, false),
+          email: updated.email,
+          emailVerification,
+        };
       }
 
       // Avatar coordination (if any) and the atomic rename (if any) commit together
@@ -244,12 +263,17 @@ export const createUserService = (
           return { updated, editedToken };
         });
 
-        const [likesCount, avatarToken] = await Promise.all([
+        const [likesCount, avatarToken, emailVerification] = await Promise.all([
           userRepo.countLikesReceived(userId),
           // No avatar edit → resolve the current avatar; otherwise use the edit's token.
           avatarEdit === undefined ? resolveAvatar(updated.avatarMediaId) : Promise.resolve(editedToken),
+          verification.statusOf(userId, updated.email),
         ]);
-        return { ...buildResponse(updated, avatarToken, likesCount, false), email: updated.email };
+        return {
+          ...buildResponse(updated, avatarToken, likesCount, false),
+          email: updated.email,
+          emailVerification,
+        };
       } catch (err) {
         if (isPrismaError(err, "P2002")) {
           throw AppError.conflict("Username already taken");

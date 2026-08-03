@@ -25,6 +25,10 @@ import {
 } from "./channelVerification.codes.js";
 import { ChannelVerificationError } from "./channelVerification.errors.js";
 import { createChannelVerificationRepository } from "./channelVerification.repository.js";
+import {
+  createChannelVerificationStatus,
+  type IChannelVerificationStatus,
+} from "./channelVerification.status.js";
 import type {
   ChallengeCode,
   ChallengeCodeFormat,
@@ -38,6 +42,7 @@ import type {
 
 export interface ChannelVerificationServiceDeps {
   repo?: IChannelVerificationRepository;
+  status?: IChannelVerificationStatus;
   mail?: MailAdapter;
   runInTransaction?: RunInTransaction;
   now?: () => Date;
@@ -56,8 +61,9 @@ export const createChannelVerificationService = (
 ): IChannelVerificationService => {
   const repo = deps.repo ?? createChannelVerificationRepository();
   const mail = deps.mail ?? createMailAdapter();
-  const runTransaction = deps.runInTransaction ?? defaultRunInTransaction;
   const now = deps.now ?? (() => new Date());
+  const status = deps.status ?? createChannelVerificationStatus(repo, now);
+  const runTransaction = deps.runInTransaction ?? defaultRunInTransaction;
   const format = deps.format ?? {
     alphabet: env.CHANNEL_VERIFICATION_CODE_ALPHABET,
     length: env.CHANNEL_VERIFICATION_CODE_LENGTH,
@@ -175,22 +181,10 @@ export const createChannelVerificationService = (
     });
   };
 
-  const statusOf = async (
-    userId: number,
-    endpoint: string,
-    client?: DbClient,
-  ): Promise<VerificationStatus> => {
-    // Looked up by the endpoint given, so a changed subject finds no record and
-    // resolves Unproven — a change of subject, not a revoked proof.
-    const record = await repo.findRecord(userId, endpoint, client);
-    if (record === null) return "unproven";
-    if (record.provenAt !== null) return "proven";
-
-    const open = await repo.findOpenChallenge(record.id, client);
-    if (open !== null && open.expiresAt.getTime() > now().getTime()) return "pending";
-
-    return "unproven";
-  };
+  // Delegated, not duplicated: derivation has one home, and it is the one that
+  // is published.
+  const statusOf: IChannelVerificationService["statusOf"] = (userId, endpoint, client) =>
+    status.statusOf(userId, endpoint, client);
 
   return { issue, confirm, statusOf };
 };

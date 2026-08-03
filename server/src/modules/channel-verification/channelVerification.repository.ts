@@ -97,6 +97,22 @@ export const createChannelVerificationRepository = (
     return rows[0] ?? null;
   },
 
+  findRecords: async (subjects, client: DbClient = db) => {
+    if (subjects.length === 0) return [];
+    const rows = await client.channelVerification.findMany({
+      where: { OR: subjects.map(({ userId, endpoint }) => ({ userId, endpoint })) },
+    });
+    return rows.map(toRecord);
+  },
+
+  findOpenChallenges: async (verificationIds, client: DbClient = db) => {
+    if (verificationIds.length === 0) return [];
+    const rows = await client.channelVerificationChallenge.findMany({
+      where: { verificationId: { in: verificationIds }, closedAt: null },
+    });
+    return rows.map((row) => ({ ...toChallenge(row), secretHash: row.secretHash }));
+  },
+
   findOpenChallenge: async (verificationId, client: DbClient = db) => {
     const row = await client.channelVerificationChallenge.findFirst({
       where: { verificationId, closedAt: null },

@@ -74,6 +74,16 @@ const fakeWorld = () => {
     findOpenChallenge: async (verificationId: number) =>
       challenges.find((c) => c.verificationId === verificationId && c.closedAt === null) ?? null,
 
+    findRecords: async (subjects: { userId: number; endpoint: string }[]) =>
+      records.filter((r) =>
+        subjects.some((s) => s.userId === r.userId && s.endpoint === r.endpoint),
+      ),
+
+    findOpenChallenges: async (verificationIds: number[]) =>
+      challenges.filter(
+        (c) => verificationIds.includes(c.verificationId) && c.closedAt === null,
+      ),
+
     createChallenge: async (input: {
       verificationId: number;
       secretHash: string;

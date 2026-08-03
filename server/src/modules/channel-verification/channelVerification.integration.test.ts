@@ -14,6 +14,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { prisma } from "../../shared/database/index.js";
 import type { MailAdapter, MailMessage } from "../../shared/mail/index.js";
+import { createUserService } from "../users/user.service.js";
 import { createChannelVerificationService } from "./channelVerification.service.js";
 import type { ChallengeCodeFormat } from "./channelVerification.types.js";
 
@@ -154,5 +155,67 @@ describe("two transactions racing for the same subject", () => {
     expect((rejected[0]!.reason as { code?: string }).code).toBe("confirmation_failed");
 
     expect(await service.statusOf(userId, endpoint)).toBe("proven");
+  });
+});
+
+describe("custody — the account presents a fact it does not hold", () => {
+  it("keeps zero verification columns on the account table", async () => {
+    if (!reachable) return;
+    const columns = await prisma.$queryRaw<{ column_name: string }[]>`
+      SELECT column_name FROM information_schema.columns WHERE table_name = 'users'`;
+
+    const names = columns.map((c) => c.column_name);
+    expect(names.filter((n) => /verif|proven|challeng|channel/i.test(n))).toEqual([]);
+  });
+
+  it("reports the status on the self-view, resolved rather than stored", async () => {
+    if (!reachable) return;
+    const profile = await createUserService().getMe(userId);
+
+    // Proven by the first suite; the account row itself knows nothing about it.
+    expect(profile.emailVerification).toBe("proven");
+    expect(profile.email).toBe(ENDPOINT);
+  });
+
+  it("flips to unproven when the address changes, without writing to the capability", async () => {
+    if (!reachable) return;
+
+    const before = await prisma.channelVerification.findMany({
+      where: { userId },
+      select: { id: true, endpoint: true, provenAt: true, updatedAt: true },
+      orderBy: { id: "asc" },
+    });
+    const challengesBefore = await prisma.channelVerificationChallenge.count();
+
+    // No change-email path exists yet, so the column is moved directly: the
+    // projection is what is under test here, not a user flow.
+    const renamed = `renamed-${ENDPOINT}`;
+    await prisma.user.update({ where: { id: userId }, data: { email: renamed } });
+
+    try {
+      const profile = await createUserService().getMe(userId);
+
+      // A different value is a different subject — the old proof still stands,
+      // it simply is not about this address.
+      expect(profile.emailVerification).toBe("unproven");
+      expect(profile.email).toBe(renamed);
+
+      const after = await prisma.channelVerification.findMany({
+        where: { userId },
+        select: { id: true, endpoint: true, provenAt: true, updatedAt: true },
+        orderBy: { id: "asc" },
+      });
+      expect(after).toEqual(before);
+      expect(await prisma.channelVerificationChallenge.count()).toBe(challengesBefore);
+    } finally {
+      await prisma.user.update({ where: { id: userId }, data: { email: ENDPOINT } });
+    }
+  });
+
+  it("restores to proven once the address is back — the proof was never revoked", async () => {
+    if (!reachable) return;
+    const profile = await createUserService().getMe(userId);
+
+    expect(profile.emailVerification).toBe("proven");
   });
 });

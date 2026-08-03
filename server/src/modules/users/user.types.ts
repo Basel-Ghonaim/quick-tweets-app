@@ -10,6 +10,7 @@
  * Principle: ISP — repository and service contracts are separate.
  */
 
+import type { VerificationStatus } from "../channel-verification/index.js";
 import type { DbClient } from "../../shared/database/index.js";
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
@@ -33,9 +34,17 @@ export interface UserProfileResponse {
   createdAt: Date;
 }
 
-/** The authenticated user's own profile: the public shape plus `email` (self-view only). */
+/**
+ * The authenticated user's own profile: the public shape plus `email` and
+ * whether that address has been proven — both self-view only.
+ *
+ * `emailVerification` is a **projection**, resolved at read time from the
+ * capability that owns the fact. Nothing about it is stored on the account, and
+ * a changed address reads as `unproven` because the proof was about the old one.
+ */
 export interface SelfProfileResponse extends UserProfileResponse {
   email: string;
+  emailVerification: VerificationStatus;
 }
 
 // ─── Request Shapes ──────────────────────────────────────────────────────────
