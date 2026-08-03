@@ -1,2 +1,2 @@
-import "./foundations";
+export * from "./foundations";
 export * from "./components";
