@@ -86,3 +86,39 @@
   --palette-amber-a10: rgba(245, 158, 11, 0.1);
   --palette-red-a10: rgba(220, 38, 38, 0.1);
 }
+
+/* Fill / boundary role tokens (ADR 0010 Decision 3) — the role as a filled
+   background or border, kept distinct from on-surface text (a different contrast
+   criterion). A theme-invariant value is permitted here; the on-surface token is
+   not. `text` is the contrast-paired on-fill text; `subtle` a translucent wash. */
+:root {
+  --fill-primary: var(--palette-blue-600);
+  --fill-primary-hover: var(--palette-blue-700);
+  --fill-primary-text: var(--palette-neutral-0);
+  --fill-primary-subtle: var(--palette-blue-a10);
+
+  --fill-secondary: var(--palette-neutral-500);
+  --fill-secondary-hover: var(--palette-neutral-600);
+  --fill-secondary-text: var(--palette-neutral-0);
+  --fill-secondary-subtle: var(--palette-neutral-a10);
+
+  --fill-success: var(--palette-green-700);
+  --fill-success-hover: var(--palette-green-800);
+  --fill-success-text: var(--palette-neutral-0);
+  --fill-success-subtle: var(--palette-green-a10);
+
+  --fill-warning: var(--palette-amber-700);
+  --fill-warning-hover: var(--palette-amber-800);
+  --fill-warning-text: var(--palette-neutral-0);
+  --fill-warning-subtle: var(--palette-amber-a10);
+
+  --fill-error: var(--palette-red-600);
+  --fill-error-hover: var(--palette-red-700);
+  --fill-error-text: var(--palette-neutral-0);
+  --fill-error-subtle: var(--palette-red-a10);
+
+  --fill-info: var(--palette-blue-600);
+  --fill-info-hover: var(--palette-blue-700);
+  --fill-info-text: var(--palette-neutral-0);
+  --fill-info-subtle: var(--palette-blue-a10);
+}

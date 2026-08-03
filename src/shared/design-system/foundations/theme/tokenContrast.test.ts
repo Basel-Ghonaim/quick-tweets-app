@@ -83,8 +83,8 @@ type Pair = { fg: string; bg: string; min: number };
 const PAIRS: Pair[] = [
   ...TEXT.flatMap((fg) => SURFACES.map((bg) => ({ fg, bg, min: 4.5 }))),
   ...ROLES.flatMap((r) => [
-    { fg: `--control-${r}-text`, bg: `--control-${r}-rest`, min: 4.5 },
-    { fg: `--control-${r}-text`, bg: `--control-${r}-hover`, min: 4.5 },
+    { fg: `--fill-${r}-text`, bg: `--fill-${r}`, min: 4.5 },
+    { fg: `--fill-${r}-text`, bg: `--fill-${r}-hover`, min: 4.5 },
   ]),
   ...SURFACES.map((bg) => ({ fg: "--focus-ring", bg, min: 3 })),
 ];
