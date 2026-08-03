@@ -1,4 +1,4 @@
-:root {
+[data-theme="light"] {
   /* surfaces */
   --color-bg: var(--gray-50);
   --color-surface: white;
