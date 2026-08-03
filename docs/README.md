@@ -37,6 +37,7 @@ This is the **map** of the project's documentation — every document, what it o
 - [authentication.md](features/authentication.md) — the authentication feature: its flows and how it composes the platform.
 
 ### `development/` — how to run the project and how the team works
+- [agent-onboarding.md](development/agent-onboarding.md) — the on-ramp for an agent or contributor joining the project: reading order, decision authority in practice, the mistakes newcomers make, and the self-review bar. Points at the rules; never restates them.
 - [setup.md](development/setup.md) — running the project locally.
 - [engineering-principles.md](development/engineering-principles.md) — code-design principles (SOLID, data/architectural patterns, naming).
 - [engineering-execution-standard.md](development/engineering-execution-standard.md) — how work is executed: the Git lifecycle, scope control, review, and decision authority.
