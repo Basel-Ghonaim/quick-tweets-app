@@ -16,6 +16,12 @@ import type { RunInTransaction } from "../../shared/database/index.js";
 import { createUserService, type UserMediaPort } from "./user.service.js";
 import type { IUserRepository, UserWithCounts } from "./user.types.js";
 
+/** The capability's published query, stubbed: the self-view asks, it never stores. */
+const verificationStub = {
+  statusOf: async () => "unproven" as const,
+  statusOfMany: async (subjects: unknown[]) => subjects.map(() => "unproven" as const),
+};
+
 const TX = { __tx: true } as never; // opaque sentinel for the transaction client
 const USER = 7;
 
@@ -117,7 +123,7 @@ describe("user avatar — set / replace / remove", () => {
   it("sets an avatar on a user that had none — begins, no end, under one tx", async () => {
     const w = makeWorld(null);
     const { media, began, ended } = makeMedia({ tok: { id: 55 } });
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const result = await svc.updateMe(USER, { avatar: { token: "tok" } });
 
@@ -132,7 +138,7 @@ describe("user avatar — set / replace / remove", () => {
   it("replaces an existing avatar — ends the old, begins the new", async () => {
     const w = makeWorld(11);
     const { media, began, ended } = makeMedia({ tok2: { id: 22 } });
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     await svc.updateMe(USER, { avatar: { token: "tok2" } });
 
@@ -143,7 +149,7 @@ describe("user avatar — set / replace / remove", () => {
   it("removes the avatar with null — ends the reference, sets it null", async () => {
     const w = makeWorld(11);
     const { media, began, ended } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const result = await svc.updateMe(USER, { avatar: null });
 
@@ -156,7 +162,7 @@ describe("user avatar — set / replace / remove", () => {
   it("resubmitting the same avatar signals nothing (set-difference)", async () => {
     const w = makeWorld(33);
     const { media, began, ended } = makeMedia({ same: { id: 33 } });
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     await svc.updateMe(USER, { avatar: { token: "same" } });
 
@@ -167,7 +173,7 @@ describe("user avatar — set / replace / remove", () => {
   it("name/bio only (avatar omitted) — no coordination, no transaction", async () => {
     const w = makeWorld(44);
     const { media, began, ended } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const result = await svc.updateMe(USER, { name: "Ada L.", bio: "hello" });
 
@@ -182,7 +188,7 @@ describe("user avatar — policy (ADR 0008 D7)", () => {
   it("rejects a GIF with 422 and coordinates/persists nothing", async () => {
     const w = makeWorld(null);
     const { media, began } = makeMedia({ gif: { id: 9, contentType: "image/gif" } });
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const err = await svc.updateMe(USER, { avatar: { token: "gif" } }).catch((e: unknown) => e);
 
@@ -195,7 +201,7 @@ describe("user avatar — policy (ADR 0008 D7)", () => {
   it("rejects an over-1MiB image with 422", async () => {
     const w = makeWorld(null);
     const { media } = makeMedia({ big: { id: 9, contentType: "image/png", size: 1024 * 1024 + 1 } });
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const err = await svc.updateMe(USER, { avatar: { token: "big" } }).catch((e: unknown) => e);
 
@@ -206,7 +212,7 @@ describe("user avatar — policy (ADR 0008 D7)", () => {
   it("refuses a cross-principal / unknown token opaquely (422), without naming it", async () => {
     const w = makeWorld(null);
     const { media, began } = makeMedia({}); // token not attachable
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const err = await svc.updateMe(USER, { avatar: { token: "someone-elses" } }).catch((e: unknown) => e);
 
@@ -220,7 +226,7 @@ describe("user profile reads resolve the avatar", () => {
   it("getMe resolves the avatar reference to a token", async () => {
     const w = makeWorld(77);
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const me = await svc.getMe(USER);
 
@@ -230,7 +236,7 @@ describe("user profile reads resolve the avatar", () => {
   it("getProfile resolves the avatar reference to a token", async () => {
     const w = makeWorld(88);
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const profile = await svc.getProfile("ada");
 
@@ -240,7 +246,7 @@ describe("user profile reads resolve the avatar", () => {
   it("resolves to null when the user has no avatar", async () => {
     const w = makeWorld(null);
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     expect((await svc.getMe(USER)).avatar).toBeNull();
   });
@@ -250,7 +256,7 @@ describe("current-user email is self-view only", () => {
   it("getMe (self) includes email", async () => {
     const w = makeWorld(null);
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     expect((await svc.getMe(USER)).email).toBe("ada@example.com");
   });
@@ -258,7 +264,7 @@ describe("current-user email is self-view only", () => {
   it("getProfile (public) does not expose email", async () => {
     const w = makeWorld(null);
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     const profile = await svc.getProfile("ada");
 
@@ -270,7 +276,7 @@ describe("profile name — set and clear (optional profile data)", () => {
   it("clears name with null — the repository receives name: null, no transaction", async () => {
     const w = makeWorld();
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     await svc.updateMe(USER, { name: null });
 
@@ -281,7 +287,7 @@ describe("profile name — set and clear (optional profile data)", () => {
   it("sets a new name", async () => {
     const w = makeWorld();
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction);
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     await svc.updateMe(USER, { name: "Ada Lovelace" });
 
@@ -295,7 +301,7 @@ describe("username rename", () => {
   it("renames — reserves the old handle and updates to the new, in one transaction", async () => {
     const w = makeWorld();
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction, freeResolver);
+    const svc = createUserService(w.repo, media, w.runInTransaction, freeResolver, verificationStub);
 
     await svc.updateMe(USER, { username: "ada_new" });
 
@@ -308,7 +314,7 @@ describe("username rename", () => {
     const w = makeWorld();
     const { media } = makeMedia({});
     const otherHolder = async () => ({ userId: 99, canonicalUsername: "someone", viaAlias: false });
-    const svc = createUserService(w.repo, media, w.runInTransaction, otherHolder);
+    const svc = createUserService(w.repo, media, w.runInTransaction, otherHolder, verificationStub);
 
     const err = await svc.updateMe(USER, { username: "taken" }).catch((e: unknown) => e);
 
@@ -321,7 +327,7 @@ describe("username rename", () => {
     const w = makeWorld();
     const { media } = makeMedia({});
     const selfAlias = async () => ({ userId: USER, canonicalUsername: "ada", viaAlias: true });
-    const svc = createUserService(w.repo, media, w.runInTransaction, selfAlias);
+    const svc = createUserService(w.repo, media, w.runInTransaction, selfAlias, verificationStub);
 
     await svc.updateMe(USER, { username: "ada_old" });
 
@@ -333,7 +339,7 @@ describe("username rename", () => {
   it("is a no-op when the submitted username equals the current one", async () => {
     const w = makeWorld();
     const { media } = makeMedia({});
-    const svc = createUserService(w.repo, media, w.runInTransaction, freeResolver);
+    const svc = createUserService(w.repo, media, w.runInTransaction, freeResolver, verificationStub);
 
     await svc.updateMe(USER, { username: "ada" });
 
@@ -349,11 +355,69 @@ describe("username rename", () => {
       e.code = "P2002";
       throw e;
     };
-    const svc = createUserService(w.repo, media, w.runInTransaction, freeResolver);
+    const svc = createUserService(w.repo, media, w.runInTransaction, freeResolver, verificationStub);
 
     const err = await svc.updateMe(USER, { username: "raced" }).catch((e: unknown) => e);
 
     expect((err as AppError).statusCode).toBe(409);
     expect(w.username()).toBe("ada"); // rolled back
+  });
+});
+
+describe("the self-view's verification projection", () => {
+  const askedAbout: { userId: number; endpoint: string }[] = [];
+
+  const verificationSpy = (answer: "unproven" | "pending" | "proven") => ({
+    statusOf: async (userId: number, endpoint: string) => {
+      askedAbout.push({ userId, endpoint });
+      return answer;
+    },
+    statusOfMany: async (subjects: unknown[]) => subjects.map(() => answer),
+  });
+
+  it("reports what the capability says, not anything the account row holds", async () => {
+    for (const answer of ["unproven", "pending", "proven"] as const) {
+      const w = makeWorld();
+      const svc = createUserService(
+        w.repo,
+        makeMedia({}).media,
+        w.runInTransaction,
+        undefined,
+        verificationSpy(answer),
+      );
+
+      await expect(svc.getMe(USER)).resolves.toMatchObject({ emailVerification: answer });
+    }
+  });
+
+  it("asks about the account's own current address", async () => {
+    askedAbout.length = 0;
+    const w = makeWorld();
+    const svc = createUserService(
+      w.repo,
+      makeMedia({}).media,
+      w.runInTransaction,
+      undefined,
+      verificationSpy("proven"),
+    );
+
+    await svc.getMe(USER);
+
+    expect(askedAbout).toEqual([{ userId: USER, endpoint: "ada@example.com" }]);
+  });
+
+  it("carries the projection through a profile update too", async () => {
+    const w = makeWorld();
+    const svc = createUserService(
+      w.repo,
+      makeMedia({}).media,
+      w.runInTransaction,
+      undefined,
+      verificationSpy("pending"),
+    );
+
+    await expect(svc.updateMe(USER, { bio: "hello" })).resolves.toMatchObject({
+      emailVerification: "pending",
+    });
   });
 });
