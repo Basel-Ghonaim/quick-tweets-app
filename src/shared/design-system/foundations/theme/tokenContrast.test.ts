@@ -8,16 +8,16 @@ import { describe, expect, test } from "vitest";
  * failure here is diagnostic — it can mean two responsibilities were wrongly
  * collapsed onto one token, not merely that a value is off.
  *
- * Scope is the tier's *intrinsic* guarantees: text on surface, on-fill text on
- * its fill (rest and hover), and the focus ring against a surface.
+ * The split into a fill and an on-surface token per role lets each answer to its
+ * own criterion, so the check covers, in both themes:
+ *   - text on a surface, and on-surface role text, at 4.5:1 (WCAG 1.4.3);
+ *   - on-fill text against its fill, default and hover, at 4.5:1;
+ *   - a fill as a UI boundary against the page, and the focus ring against a
+ *     surface, at 3:1 (WCAG 1.4.11).
  *
- * Two pairings are deliberately the consumer's, because whether a fill sits on
- * the page, on a raised surface, or inside a border is composition this tier
- * cannot see: a role fill bound as on-surface text, and a role fill acting as a
- * UI boundary against what is behind it (WCAG 1.4.11, 3:1). The second is not
- * hypothetical — `primary` against the dark page, and `success` and `warning`
- * against the light page, are below 3:1 — so a component binding those owns
- * either a border or a value change.
+ * One pairing stays the consumer's: a fill placed on a *raised* surface rather
+ * than the page contrasts less, and whether a component does that is composition
+ * this tier cannot see.
  */
 
 const TOKENS_DIR = join(process.cwd(), "src/shared/design-system/foundations/tokens");
@@ -86,6 +86,8 @@ const PAIRS: Pair[] = [
     { fg: `--fill-${r}-text`, bg: `--fill-${r}`, min: 4.5 },
     { fg: `--fill-${r}-text`, bg: `--fill-${r}-hover`, min: 4.5 },
   ]),
+  ...ROLES.flatMap((r) => SURFACES.map((bg) => ({ fg: `--on-surface-${r}`, bg, min: 4.5 }))),
+  ...ROLES.map((r) => ({ fg: `--fill-${r}`, bg: "--surface-page", min: 3 })),
   ...SURFACES.map((bg) => ({ fg: "--focus-ring", bg, min: 3 })),
 ];
 
