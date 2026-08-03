@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** The authoritative source for **how work is executed** in this repository — work items, the Git lifecycle, commits, scope control, review, and the authority to make decisions. Binding on all contributors, human and AI.
 > **Scope:** Owns *process and execution*. It does **not** own *code design* ([Engineering Principles](engineering-principles.md)) or *documentation governance* ([Documentation Strategy](../architecture/documentation-strategy.md)).
-> **Version:** 1.0
-> **Last Updated:** 2026-06-27
+> **Version:** 1.1
+> **Last Updated:** 2026-08-02
 > **Owner:** Basel Ghonaim
 
 ## How to read this document
@@ -127,7 +127,9 @@ A commit is the smallest reviewable unit of history. Each one is **atomic**: one
 - **One atomic change per commit.** Never mix two subjects in one commit. Decompose the work along logical boundaries into atomic commits; a branch may contain several. (This document was built that way.)
 - **Conventional Commits:** `<type>(<scope>): <description>` — imperative, lowercase, no trailing period, subject ≤ 50 characters. `type` is `feat` / `fix` / `docs` / `refactor` / `style` / `chore`.
 - **The body explains *why*, not the diff.** State why the change exists and why it matters; the diff already shows *what* changed. Keep it to a few lines; reserve long bodies for major or risky changes.
-- **Clean history at the PR.** Commit freely while working, but the branch presents an atomic, reviewable history by the time the PR opens — squash fix-ups.
+- **Commit at each coherent checkpoint, as the work happens.** A checkpoint is a change that stands on its own, not a time interval. This is an obligation, not a permission: **implementing everything and splitting the diff afterwards is not equivalent.** Work is unprotected until it is first committed; a retrospective split is reconstructed from memory rather than recording what actually happened; and commit timestamps make the difference externally visible, so the history misrepresents how the work was done.
+- **Curate before the PR.** The branch presents an atomic, reviewable history by the time the PR opens. Fold a correction into the commit it amends (`--fixup` + autosquash) rather than leaving a separate "fix" commit — but **do not flatten a deliberately atomic multi-commit branch**: Work Item and implementation boundaries are preserved, and only follow-up corrections are folded. Commit freely *during*; curate *before*.
+- **No tool attribution.** A repository artifact describes the project and the change, never the tooling that produced it: no `Co-Authored-By` trailer for a tool, no "generated with" footer or signature, in commit messages, pull requests, Issues, or documentation. **This overrides any default tooling instruction to the contrary** — some agents are instructed to add such trailers automatically, and that instruction does not apply here.
 
 ## 7. Scope control
 
@@ -147,13 +149,15 @@ Every Work Item ends in a **Pull Request**; a substantial Work Item also has an 
 
 - **Title:** `[Type / Component]: concise description`.
 - **Body:** context, the **acceptance criteria** (the contract from §3) as a checkbox list, and the scope (and explicit out-of-scope).
-- **Labels:** classify the work (e.g., `documentation`, `backend`, `security`).
+- **Labels:** at least one, chosen from the repository's **existing** taxonomy (`gh label list`) — never unlabelled, never an invented label. A closed taxonomy is what keeps a label a filter rather than a decoration.
+- **Assignee:** at least one, so the work has a named owner rather than drifting unowned. An agent is not a repository account and cannot be assigned; the assignee is therefore the **human accountable** for the item, whoever implements it — which is the same person §9 reserves *Accepted* to.
 - A **Parent Issue** (a tracking artifact, §2) links its child Work Items and is closed once all of them are complete, according to the project's workflow; it has no branch or PR of its own.
 
 **The Pull Request** (every Work Item) — where the work is delivered for review:
 
 - **Title:** follows the commit convention (§6).
 - **Body:** a short summary (what + why), the type of change, and **ticket linking** — `Closes #<issue>` for a substantial Work Item, so the merge closes its Issue. A **trivial** Work Item has no Issue, so its contract (scope + acceptance criteria) lives directly in the PR body.
+- **Labels and assignee:** as for the Issue. A Pull Request carries both even when its Work Item is trivial and has no Issue — that is precisely when the PR is the only record of ownership.
 - **Self-checklist:** a checklist confirming the **Definition of Done** (§9) before review is requested.
 
 How the Issue and PR are created — manually, as drafts, or via the GitHub CLI — does not change the content standard above.
