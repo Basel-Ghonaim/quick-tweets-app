@@ -31,7 +31,7 @@ Documentation captures the **intended** architecture and the **why**; the **code
 
 ## Session bootstrap checklist
 
-1. Read this file.
+1. Read this file. **If this is your first session on the project, read the Agent Onboarding guide next** — it is the on-ramp: reading order, decision authority in practice, and the mistakes newcomers make.
 2. Identify the task's scope and the **single** authoritative document for the area (see Authoritative Documents).
 3. For substantial implementation, consult the **Engineering Execution Standard** before starting.
 4. Work on a branch cut from the latest `main`, following the project's Git conventions.
@@ -58,6 +58,7 @@ Consult the relevant one before deep work; do not duplicate it here.
 - **Documentation map** (every document, classified, with its owner — the navigation entry point) → `docs/README.md`
 - **Documentation governance** → `docs/architecture/documentation-strategy.md`
 - **API contract** (single source for endpoints, payloads, error shapes) → `docs/api/api-contract.md`
+- **Agent onboarding** (the on-ramp for a new agent or contributor — reading order, decision authority in practice, common mistakes, the self-review bar) → `docs/development/agent-onboarding.md`
 - **Engineering Execution Standard** (work units, Git lifecycle, branch/commit strategy, scope control, review, Definition of Done & Accepted, Decision Authority Matrix, stop rules) → `docs/development/engineering-execution-standard.md`
 - **Code design principles** (SOLID, data/architectural patterns, naming) → `docs/development/engineering-principles.md`
 
