@@ -16,6 +16,7 @@ import { prisma } from "../../shared/database/index.js";
 import type { MailAdapter, MailMessage } from "../../shared/mail/index.js";
 import { createUserService } from "../users/user.service.js";
 import { createChannelVerificationService } from "./channelVerification.service.js";
+import { createChannelVerificationSweepJob } from "./channelVerification.sweep.job.js";
 import type { ChallengeCodeFormat } from "./channelVerification.types.js";
 
 const FORMAT: ChallengeCodeFormat = { alphabet: "0123456789ABCDEFGHJKMNPQRSTVWXYZ", length: 12 };
@@ -217,5 +218,75 @@ describe("custody — the account presents a fact it does not hold", () => {
     const profile = await createUserService().getMe(userId);
 
     expect(profile.emailVerification).toBe("proven");
+  });
+});
+
+describe("the sweep, against real rows", () => {
+  it("removes spent challenges and leaves the proof standing", async () => {
+    if (!reachable) return;
+    const endpoint = `sweep-${ENDPOINT}`;
+    const mail = capturingMail();
+    const service = serviceWith(mail.adapter);
+
+    await service.issue({ userId, endpoint });
+    await service.confirm({ userId, endpoint, code: codeIn(mail.sent[0]!) });
+    expect(await service.statusOf(userId, endpoint)).toBe("proven");
+
+    // Retention of 1ms: everything already closed is past the window.
+    await createChannelVerificationSweepJob({
+      retentionMs: 1,
+      log: () => {},
+    }).handler();
+
+    const record = await prisma.channelVerification.findUnique({
+      where: { userId_endpoint: { userId, endpoint } },
+      select: { id: true, provenAt: true },
+    });
+
+    // The challenge is gone; the record and its proof are not.
+    expect(record?.provenAt).not.toBeNull();
+    expect(
+      await prisma.channelVerificationChallenge.count({
+        where: { verificationId: record!.id },
+      }),
+    ).toBe(0);
+    expect(await service.statusOf(userId, endpoint)).toBe("proven");
+  });
+
+  it("changes no answer: a lapsed challenge reads the same swept or unswept", async () => {
+    if (!reachable) return;
+    const endpoint = `lapsed-${ENDPOINT}`;
+    const service = serviceWith(capturingMail().adapter);
+
+    // A challenge that expired long ago and was never closed — the case the
+    // sweep exists for, and the one D4 says needs no writer to read correctly.
+    const record = await prisma.channelVerification.create({
+      data: { userId, endpoint, updatedAt: new Date() },
+      select: { id: true },
+    });
+    await prisma.channelVerificationChallenge.create({
+      data: {
+        verificationId: record.id,
+        secretHash: "b".repeat(64),
+        expiresAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    const beforeSweep = await service.statusOf(userId, endpoint);
+    expect(
+      await prisma.channelVerificationChallenge.count({ where: { verificationId: record.id } }),
+    ).toBe(1);
+
+    await createChannelVerificationSweepJob({ retentionMs: 1, log: () => {} }).handler();
+
+    // The row is genuinely gone, so the comparison below means something.
+    expect(
+      await prisma.channelVerificationChallenge.count({ where: { verificationId: record.id } }),
+    ).toBe(0);
+
+    const afterSweep = await service.statusOf(userId, endpoint);
+
+    expect(beforeSweep).toBe("unproven");
+    expect(afterSweep).toBe(beforeSweep);
   });
 });
