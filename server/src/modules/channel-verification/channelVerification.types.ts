@@ -65,6 +65,12 @@ export interface CreateRecordInput {
   endpoint: string;
 }
 
+/** An account paired with the endpoint being asked about. */
+export interface VerificationSubject {
+  userId: number;
+  endpoint: string;
+}
+
 export interface CreateChallengeInput {
   verificationId: number;
   secretHash: string;
@@ -121,6 +127,25 @@ export interface IChannelVerificationRepository {
    * serialize and the throttle can be read under it rather than around it.
    */
   lockRecord(id: number, client?: DbClient): Promise<LockedRecord | null>;
+
+  /**
+   * The records matching any of `subjects`, in whatever order the database
+   * returns them — the caller re-associates. One query regardless of how many
+   * subjects are asked about.
+   */
+  findRecords(
+    subjects: VerificationSubject[],
+    client?: DbClient,
+  ): Promise<VerificationRecord[]>;
+
+  /**
+   * The open challenge for each of `verificationIds` that has one. One query
+   * regardless of how many records are asked about.
+   */
+  findOpenChallenges(
+    verificationIds: number[],
+    client?: DbClient,
+  ): Promise<OpenChallenge[]>;
 
   /** The open challenge for a record, if any — open being the absence of a close. */
   findOpenChallenge(
