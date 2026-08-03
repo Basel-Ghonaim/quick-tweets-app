@@ -20,3 +20,22 @@
   --color-primary: var(--blue-500);
   --color-primary-hover: var(--blue-600);
 }
+
+/* Semantic tier (ADR 0010 Decision 3) — values provisional. */
+[data-theme="light"] {
+  --surface-page: var(--palette-neutral-50);
+  --surface-default: var(--palette-neutral-0);
+  --surface-hover: var(--palette-neutral-100);
+  --surface-active: var(--palette-neutral-200);
+
+  --text-primary: var(--palette-neutral-900);
+  --text-secondary: var(--palette-neutral-600);
+  --text-tertiary: var(--palette-neutral-500);
+  --text-muted: var(--palette-neutral-500);
+  --text-accent: var(--palette-blue-600);
+
+  --border-default: var(--palette-neutral-200);
+  --border-strong: var(--palette-neutral-300);
+
+  --focus-ring: var(--palette-blue-500);
+}
