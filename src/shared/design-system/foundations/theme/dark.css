@@ -39,3 +39,37 @@
 
   --focus-ring: var(--palette-blue-500);
 }
+
+/* Control role scale (ADR 0010 Decision 3) — the six interaction roles; `text` is
+   the on-fill text, contrast-paired to the fill so it stays legible on rest and hover. */
+[data-theme="dark"] {
+  --control-primary-rest: var(--palette-blue-700);
+  --control-primary-hover: var(--palette-blue-900);
+  --control-primary-subtle: var(--palette-blue-a10);
+  --control-primary-text: var(--palette-neutral-0);
+
+  --control-secondary-rest: var(--palette-neutral-500);
+  --control-secondary-hover: var(--palette-neutral-600);
+  --control-secondary-subtle: var(--palette-neutral-a10);
+  --control-secondary-text: var(--palette-neutral-0);
+
+  --control-success-rest: var(--palette-green-500);
+  --control-success-hover: var(--palette-green-600);
+  --control-success-subtle: var(--palette-green-a10);
+  --control-success-text: var(--palette-neutral-900);
+
+  --control-warning-rest: var(--palette-amber-500);
+  --control-warning-hover: var(--palette-amber-600);
+  --control-warning-subtle: var(--palette-amber-a10);
+  --control-warning-text: var(--palette-neutral-900);
+
+  --control-error-rest: var(--palette-red-600);
+  --control-error-hover: var(--palette-red-700);
+  --control-error-subtle: var(--palette-red-a10);
+  --control-error-text: var(--palette-neutral-0);
+
+  --control-info-rest: var(--palette-blue-600);
+  --control-info-hover: var(--palette-blue-700);
+  --control-info-subtle: var(--palette-blue-a10);
+  --control-info-text: var(--palette-neutral-0);
+}
