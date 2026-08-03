@@ -163,47 +163,71 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Commit/PR boundary:** one PR.
 - **Stop-risks:** if a contrast requirement cannot be met without collapsing two responsibilities into one token, **stop** — that is a vocabulary problem, and discovering it here is far cheaper than after nine files bind to it.
 
-### WI-4 — First component migration (Button) — the vertical slice
-- **Goal & rationale:** prove the language survives contact with a real consumer. **It is the effort's pivot**: everything before it is preparation, everything after is repetition of the pattern it establishes. It precedes the remaining components so that a vocabulary flaw is found once, not five times.
-- **Scope:** migrate Button to bind **only** to semantic tokens; replace its hand-rolled focus ring with the **single owned focus indicator**; verify AA in both themes; author the stories that exercise every interaction state; author with logical properties. Promote the a11y addon from reporting to failing (**D3**).
-- **Non-goals:** no redesign of Button's appearance; no API/prop changes; no other component.
+### WI-3A — Complete the colour vocabulary and author the owned focus indicator
+- **Goal & rationale:** close the vocabulary gap **WI-4's preparation exposed** — one token bound as a fill, as on-surface text, and as a border, with no value clearing AA in both themes for all three — and author the focus indicator once, centrally. **It follows WI-3** because it completes the layer WI-3 authored. **It precedes WI-4** because by **D15** a missing token is never authored inside the migration that discovers it: the fix serves every later component, so making Button carry it would put a language change and a component migration on one diff and give the vocabulary no review of its own.
+- **Scope:** split the control role scale **by responsibility** — a fill/boundary token and an on-surface text token per role, each carrying only the states the existing components exercise (**D8**) — with the on-surface token resolved **per theme** and the fill permitted to stay theme-invariant (**D16**); extend the contrast check to the pairs the split newly guarantees, including the **fill-as-boundary** pairing WI-3's check deliberately left to the consumer; and author the **single owned focus indicator** as a shared definition components compose (**D18**). Authored **alongside** the legacy set (**D11**), with values provisional (**D9**).
+- **Non-goals:** no component migration — **nothing binds these tokens here**; no other token family (**WI-4A**); no compositional vocabulary — still no consumer (**D8**); no repair of the legacy set (**D11**); no **enforcement** check for per-component focus rings, which cannot be green until every component has migrated (**D18**, **WI-8**); no investment in final values (**D9**).
 - **Dependencies:** **WI-3** (hard).
-- **Boundary validated:** **vocabulary sufficiency** — that the semantic layer has a correct place for every state a real component needs, and that the component re-themes with no knowledge of themes.
-- **Invariants protected:** **I1**, **I3**, **I5**, **I6**, **I7**.
-- **Verification:** Button references no primitive and no hardcoded value; it renders correctly in both themes with no theme-conditional code; focus comes from the owned token; AA holds in both themes; stories cover every state.
-- **DoD:** Button fully migrated; the owned focus indicator exists and Button uses it; a11y promoted to failing; typecheck + unit green; Storybook green.
+- **Boundary validated:** **responsibility purity under a real constraint** — that two responsibilities answering to different criteria are expressed as two tokens rather than one, and that the tier absorbs a **theme-resolution asymmetry** (one token theme-resolved, another theme-invariant) without any component being able to observe it.
+- **Invariants protected:** **I2**, **I4**, **I5**.
+- **Verification:** every role exposes a distinct fill token and on-surface text token; key sets stay identical across themes (**I2**); the extended check covers on-surface text at 4.5:1 and fill-as-boundary at 3:1 in **both** themes and is green; the focus indicator clears 3:1 against every surface in every theme. Proven, not asserted: injecting a below-threshold value fails the check, then passes on revert.
+- **DoD:** the split vocabulary and the owned focus indicator exist and resolve in every theme; nothing consumes them yet; legacy untouched; typecheck + unit green.
 - **Commit/PR boundary:** one PR.
-- **Stop-risks:** if Button needs a semantic token the vocabulary lacks, **stop and extend the vocabulary deliberately** rather than reaching for a primitive — the first such reach would silently reintroduce the drift this effort exists to remove.
+- **Stop-risks:** if a role cannot satisfy both criteria **even after** the split, the primitive ramp is short a step — extend the ramp (a **D14** bugfix) and never re-collapse the two tokens, which would undo the decision this Work Item exists to implement. If the focus indicator cannot be expressed as a composable definition without a global rule, **stop**: a global rule styles markup the Design System does not own (**D18**, **I7**).
+
+### WI-4 — First component migration (Button) — the colour slice
+- **Goal & rationale:** prove the language survives contact with a real consumer. **It is the effort's pivot**: everything before it is preparation, everything after is repetition of the pattern it establishes. It precedes the remaining components so that a vocabulary flaw is found once, not five times. **It stays colour-only** so the pivot is reviewed against the family most coupled to theming (**D1**), and so the five remaining families are authored in **WI-4A** against a tier model already proven rather than simultaneously with it.
+- **Scope:** migrate Button's **colour** binding to semantic tokens only; replace its three hand-rolled focus rings with the owned indicator from **WI-3A**; verify AA in both themes; author the stories that exercise every interaction state; author with logical properties. Promote the a11y addon from reporting to failing (**D3**).
+- **Non-goals:** no redesign of Button's appearance; no API/prop changes; no other component; **no new semantic vocabulary** — a gap is a stop, and it is authored in a vocabulary Work Item, not here (**D15**); **no other token family** — Button's spacing, typography, border, shadow and motion bindings are **WI-4A**'s (**D17**); no component-test framework (**D19**).
+- **Dependencies:** **WI-3A** (hard).
+- **Boundary validated:** **vocabulary sufficiency for colour** — that the semantic layer has a correct place for every state a real component needs, and that the component re-themes with no knowledge of themes.
+- **Invariants protected:** **I1** (for colour), **I3**, **I5**, **I6**, **I7**.
+- **Verification:** Button's colour references resolve to semantic tokens only — no primitive, no hardcoded value; it renders correctly in both themes with no theme-conditional code; focus comes from the owned indicator and Button declares none of its own; AA holds in both themes; stories cover every state. **I1 is claimed for colour only**: Button's remaining primitive-direct references belong to **WI-4A** and are stated openly in the PR rather than left for a reader to discover.
+- **DoD:** Button's colour fully migrated; the owned indicator in use; a11y promoted to failing; typecheck + unit green; Storybook green.
+- **Commit/PR boundary:** one PR.
+- **Stop-risks:** if Button needs a semantic token the vocabulary lacks, **stop** — extend the vocabulary deliberately in a Work Item of its own rather than reaching for a primitive **or authoring it here**; the first such reach would silently reintroduce the drift this effort exists to remove.
+
+### WI-4A — The remaining token families, piloted on Button
+- **Goal & rationale:** prove the vocabulary of **every other family** against a real consumer before any of it is generalised. **It follows WI-4** because the tier model is proven on colour first (**D1**). **It precedes WI-5 – WI-8** because the alternative — authoring five families and applying them everywhere in one late step — would give those families no pilot at all and commit **187** primitive-direct references to an unproven vocabulary (**D17**). Button is opened a second time here **deliberately**: it is the pilot, and it is the **only** surface this effort opens twice.
+- **Scope:** author the **semantic tier** for the remaining families — spacing, typography, border, shadow, motion — to the extent each requires under the tier model, and bind **Button alone** to it, retiring its **16** remaining primitive-direct references.
+- **Non-goals:** no colour work (**WI-4**'s); **no other component** — generalising is **WI-5 – WI-8**'s; no new scales or values (**D9**); no responsive or breakpoint redesign; no reserved tokens without a consumer (**D8**); no component-test framework (**D19**).
+- **Dependencies:** **WI-4** (hard).
+- **Boundary validated:** **token-type agnosticism** — that the tier model defined once governs **every** family identically (ADR 0010 Decision 3), demonstrated against a real consumer rather than asserted.
+- **Invariants protected:** **I1** (now for every family), **I4**, **I6**, **I7**.
+- **Verification:** Button binds **no primitive of any type** and contains no hardcoded value; its appearance is unchanged; the checker is green; both themes render correctly; stories still cover every state.
+- **DoD:** the remaining families have a semantic tier; Button is fully migrated across every family; typecheck + unit green; Storybook green.
+- **Commit/PR boundary:** one PR, or one per family if the diff is large enough to harm review.
+- **Stop-risks:** if a family genuinely does not fit the tier model, that is an **architectural** finding — record it and stop, rather than bending the family or the model quietly. If modelling motion turns out to require deciding **where a reduced-motion resolution lives**, that is a decision to raise, not to take under momentum.
 
 ### WI-5 — Input and Checkbox
-- **Goal & rationale:** apply the proven pattern. **It follows WI-4** because the pattern must be proven once before it is repeated; it can run in parallel with WI-6 and WI-7, which touch disjoint files.
-- **Scope:** migrate both components to semantic-only binding, the owned focus indicator, and logical properties; update their stories to exercise every state in both themes.
-- **Non-goals:** no redesign; no API change; no FileInput.
-- **Dependencies:** **WI-4** (hard).
-- **Boundary validated:** that the vocabulary holds for **validity and selection states** — the surfaces Button does not exercise.
+- **Goal & rationale:** apply the proven pattern, **in a single pass**. **It follows WI-4A** because the pattern must be proven for *every* family before it is repeated (**D17**); it can run in parallel with WI-6 and WI-7, which touch disjoint files.
+- **Scope:** migrate both components to semantic-only binding **across every token family** — their **36** primitive-direct non-colour references included — plus the owned focus indicator and logical properties; update their stories to exercise every state in both themes.
+- **Non-goals:** no redesign; no API change; no FileInput; **no new vocabulary** — a gap is a stop (**D15**); **no second pass** — these components are opened once and leave nothing for a later family sweep (**D17**).
+- **Dependencies:** **WI-4A** (hard).
+- **Boundary validated:** that the vocabulary holds for **validity and selection states** — the surfaces Button does not exercise — and that the single-pass migration proven on the pilot generalises.
 - **Invariants protected:** **I1**, **I3**, **I5**, **I6**.
-- **Verification:** as WI-4, for both components, including the invalid/error state path.
-- **DoD:** both components migrated and story-covered; checker green; typecheck + unit green.
+- **Verification:** as WI-4A, for both components — no primitive of any type, no hardcoded value, no focus ring of their own — including the invalid/error state path.
+- **DoD:** both components fully migrated and story-covered; checker green; typecheck + unit green.
 - **Commit/PR boundary:** one PR.
-- **Stop-risks:** as WI-4 — a missing token is a vocabulary decision, never a primitive reach.
+- **Stop-risks:** as WI-4 — a missing token is a vocabulary decision taken in its own Work Item, never a primitive reach and never authored here.
 
 ### WI-6 — FileInput
-- **Goal & rationale:** the worst case, isolated. **It gets its own Work Item** because it carries by far the heaviest drift — primitive-direct references *and* hardcoded hex and rgba throughout, across three variants — so folding it into a shared PR would make that review unreadable.
-- **Scope:** migrate all three variants to semantic-only binding, the owned focus indicator, and logical properties; replace every hardcoded value; update stories.
-- **Non-goals:** no redesign; no variant restructuring; no change to its upload behaviour.
-- **Dependencies:** **WI-4** (hard).
+- **Goal & rationale:** the worst case, isolated. **It gets its own Work Item** because it carries by far the heaviest drift — **62** primitive-direct non-colour references *and* hardcoded hex and rgba throughout, across three variants — so folding it into a shared PR would make that review unreadable. **It follows WI-4A** for the same reason as WI-5, and runs in parallel with it.
+- **Scope:** migrate all three variants to semantic-only binding **across every token family**, plus the owned focus indicator and logical properties; replace every hardcoded value; update stories.
+- **Non-goals:** no redesign; no variant restructuring; no change to its upload behaviour; **no new vocabulary** (**D15**); **no second pass** (**D17**).
+- **Dependencies:** **WI-4A** (hard).
 - **Boundary validated:** the binding rule **under the worst case** — if the vocabulary survives this component, it survives the codebase.
 - **Invariants protected:** **I1**, **I3**, **I5**, **I6**.
-- **Verification:** zero primitive-direct references and zero hardcoded colour values remain in the component; both themes correct; checker green.
-- **DoD:** all three variants migrated; typecheck + unit green; Storybook green.
+- **Verification:** zero primitive-direct references **of any family** and zero hardcoded values remain in the component; it declares no focus ring of its own; both themes correct; checker green.
+- **DoD:** all three variants fully migrated; typecheck + unit green; Storybook green.
 - **Commit/PR boundary:** one PR.
 - **Stop-risks:** if a hardcoded value proves to be a genuine product/brand decision with no semantic home, treat it as **consumer-owned composition** (the **D7** rule) rather than promoting it into the Design System.
 
 ### WI-7 — Icons
 - **Goal & rationale:** close the surface everyone forgets. **It is separated** because the icon set is not on anyone's mental list of "components", yet one icon hardcodes an eight-colour palette — a binding-rule violation that would otherwise survive the entire effort and quietly falsify the completion criteria.
-- **Scope:** bring the hardcoded icon palette onto semantic tokens; remove the hardcoded colour in the icon stories.
-- **Non-goals:** no icon redesign; no additions to the set; no change to the `currentColor` convention the other icons already follow correctly.
-- **Dependencies:** **WI-4** (hard).
+- **Scope:** bring the hardcoded icon palette onto semantic tokens and any remaining primitive-direct binding of **any** family onto the semantic tier; remove the hardcoded colour in the icon stories.
+- **Non-goals:** no icon redesign; no additions to the set; no change to the `currentColor` convention the other icons already follow correctly; **no new vocabulary** (**D15**); **no second pass** (**D17**).
+- **Dependencies:** **WI-4A** (hard).
 - **Boundary validated:** that the binding rule holds **everywhere**, not only in components that look like components.
 - **Invariants protected:** **I1**.
 - **Verification:** no hardcoded colour values remain in the icon set; icons render correctly in both themes.
@@ -212,28 +236,28 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Stop-risks:** if a file-type palette is genuinely semantic to file types rather than to the design language, record it as consumer-owned rather than inventing eight Design System roles for it.
 
 ### WI-8 — Auth — mechanical token-swap
-- **Goal & rationale:** **unpin the legacy set.** Auth is the last consumer holding the old tokens alive, and the legacy set cannot be deleted while it does. **It follows the components** because Auth composes them, so migrating it earlier would mean touching the same surfaces twice. It is explicitly **not** a design exercise (**D7**).
-- **Scope:** swap Auth's token references to the semantic layer, **preserving current appearance**; author with logical properties. Hardcoded brand values with no semantic home stay **local to the Auth module** as consumer-owned composition.
-- **Non-goals:** **no visual redesign** of any kind; no restructuring; no promotion of Auth's brand values into the Design System's semantic set; no treatment of Auth as a design reference.
+- **Goal & rationale:** **unpin the legacy set**, and close the focus invariant. Auth is the last consumer holding the old tokens alive, and the legacy set cannot be deleted while it does. **It follows the components** because Auth composes them, so migrating it earlier would mean touching the same surfaces twice. It is explicitly **not** a design exercise (**D7**). It also **carries the focus-indicator enforcement** (**D18**): WI-5, WI-6 and WI-7 run in parallel, so none of them individually is the last component to migrate, and this is the first **sequenced** point at which the check can be green. Auth declares no focus ring of its own, so the check constrains only what has already been migrated.
+- **Scope:** swap Auth's token references to the semantic layer **across every token family** — its **73** primitive-direct non-colour references included — **preserving current appearance**; author with logical properties. Hardcoded brand values with no semantic home stay **local to the Auth module** as consumer-owned composition. Add the mechanical check that **no component declares its own focus indicator** (**I5**, **D18**).
+- **Non-goals:** **no visual redesign** of any kind; no restructuring; no promotion of Auth's brand values into the Design System's semantic set; no treatment of Auth as a design reference; **no new vocabulary** (**D15**); **no second pass** (**D17**).
 - **Dependencies:** **WI-5**, **WI-6**, **WI-7** (sequencing).
-- **Boundary validated:** the **language/composition boundary** — that a consumer can express itself in the language while keeping its own decorative composition local.
-- **Invariants protected:** **I1**, **I6**, **I8** (product/brand specifics stay out of the platform).
-- **Verification:** Auth references no primitive and no Design System-owned hardcoded value; appearance is unchanged; any retained local values are visibly scoped to the Auth module.
-- **DoD:** Auth migrated with appearance preserved; no brand value promoted into the Design System; typecheck + unit green.
-- **Commit/PR boundary:** one PR.
-- **Stop-risks:** if preserving appearance would require adding a Design System token that serves only Auth's prototype look, **stop** — that token would encode a design that is expected to be replaced, which is precisely what **D7** forbids.
+- **Boundary validated:** the **language/composition boundary** — that a consumer can express itself in the language while keeping its own decorative composition local — and that **I5**'s "single" indicator is enforced rather than trusted.
+- **Invariants protected:** **I1**, **I5**, **I6**, **I8** (product/brand specifics stay out of the platform).
+- **Verification:** Auth references no primitive of any family and no Design System-owned hardcoded value; appearance is unchanged; any retained local values are visibly scoped to the Auth module. The focus check is proven, not asserted: reintroducing a per-component ring fails it, then passes on revert — and it is green with **zero** exemptions, since an allowlist would erode the invariant it claims to protect.
+- **DoD:** Auth fully migrated with appearance preserved; no brand value promoted into the Design System; the focus check is green with no exemptions; typecheck + unit green.
+- **Commit/PR boundary:** one PR, or two if separating the Auth migration from the focus check improves review.
+- **Stop-risks:** if preserving appearance would require adding a Design System token that serves only Auth's prototype look, **stop** — that token would encode a design that is expected to be replaced, which is precisely what **D7** forbids. If the focus check cannot be made green without an exemption, the migration is **incomplete** — finish it rather than weakening the check.
 
-### WI-9 — Conform the remaining token types
-- **Goal & rationale:** make the architecture true of **every** token family, not only colour. **It follows the colour migration** because the tier model and binding rule are proven there first; conforming the rest is then mechanical.
-- **Scope:** bring the remaining token families (spacing, typography, elevation, motion, and the rest) into the three-tier model and under the binding rule, to the extent each requires.
-- **Non-goals:** no new scales or values; no responsive/breakpoint redesign; no redesign of any kind.
-- **Dependencies:** **WI-8** (sequencing).
-- **Boundary validated:** **token-type agnosticism** — that the architecture defined once genuinely governs every family identically (ADR 0010 Decision 3).
-- **Invariants protected:** **I1**, **I4**.
-- **Verification:** each remaining family conforms to the tier model; the checker stays green; no consumer binds to a primitive of any type.
-- **DoD:** all token families conformed; typecheck + unit green.
-- **Commit/PR boundary:** one PR, or one per family if the diff is large enough to harm review.
-- **Stop-risks:** if a family genuinely does not fit the tier model, that is an **architectural** finding — record it and stop, rather than bending the family or the model quietly.
+### WI-9 — Conform the token families no component consumes
+- **Goal & rationale:** make the architecture true of **every** family, including the ones no component reaches. **WI-4A and the migrations conform every consumed family**; what remains are families with **zero** consumer references — as at authoring, **breakpoints** and **z-index** — which could not be piloted for exactly that reason. The set is defined by the rule (*no consumer after WI-8*), not fixed here, so a family that turns out to have a consumer belongs to that consumer's Work Item instead. **It is placed after WI-8** because it is small and blocks only WI-10; it has no technical dependency on the component migrations and could run beside them.
+- **Scope:** bring the remaining unconsumed families into the three-tier model and under the binding rule, **to the extent each requires** — a family with no consumer may need no semantic tier at all, and inventing one would violate **D8**.
+- **Non-goals:** no new scales or values (**D9**); no responsive or breakpoint redesign; no redesign of any kind; no re-opening of a family already conformed by **WI-4A** or a migration Work Item.
+- **Dependencies:** **WI-4A** (hard, for the tier model); **WI-8** (sequencing only).
+- **Boundary validated:** **token-type agnosticism** at its edge — that the architecture governs even the families with nothing binding to them, or that it honestly does not need to.
+- **Invariants protected:** **I1**, **I4**, **I8**.
+- **Verification:** every family either conforms to the tier model or is recorded, with its reason, as not requiring one; the checker stays green; no consumer binds to a primitive of any type.
+- **DoD:** all token families accounted for — conformed or explicitly reasoned; typecheck + unit green.
+- **Commit/PR boundary:** one PR.
+- **Stop-risks:** if a family genuinely does not fit the tier model, that is an **architectural** finding — record it and stop, rather than bending the family or the model quietly. **Breakpoints are the known candidate**: a custom property is not valid inside a `@media` condition, so a semantic breakpoint tier may be unreachable by construction — record that as the finding it is instead of inventing a mechanism to force it.
 
 ### WI-10 — Retire the legacy set and rewrite the platform document
 - **Goal & rationale:** declare **Stable** and make it true. **It is last** because the legacy set cannot be deleted while any consumer binds to it, and the platform document cannot describe a system that is still half-migrated.
