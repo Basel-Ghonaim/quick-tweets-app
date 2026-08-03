@@ -25,6 +25,7 @@ import { prisma } from "./shared/database/index.js";
 import { createPostgresJobLock, createScheduler } from "./shared/scheduler/index.js";
 import { createRefreshTokenCleanupJob } from "./modules/auth/refreshTokenCleanup.job.js";
 import { createMediaReclamationJob } from "./modules/media/reclamation/reclamation.job.js";
+import { createChannelVerificationSweepJob } from "./modules/channel-verification/channelVerification.sweep.job.js";
 
 // ─── Startup ─────────────────────────────────────────────────────────────────
 
@@ -45,13 +46,15 @@ const start = async () => {
     console.log(`   Environment: ${env.NODE_ENV}\n`);
   });
 
-  // 3. Background jobs — the scheduler runs the refresh-token cleanup (M10) and
-  //    media reclamation (M11, report-only unless explicitly set destructive).
+  // 3. Background jobs — the scheduler runs the refresh-token cleanup (M10),
+  //    media reclamation (M11, report-only unless explicitly set destructive),
+  //    and the channel-verification sweep (hygiene; no answer depends on it).
   //    A dedicated lock connection gives cross-instance single-run.
   const jobLock = createPostgresJobLock();
   const scheduler = createScheduler({ lock: jobLock });
   scheduler.register(createRefreshTokenCleanupJob());
   scheduler.register(createMediaReclamationJob());
+  scheduler.register(createChannelVerificationSweepJob());
   scheduler.start();
   console.log("   Background scheduler started");
 
