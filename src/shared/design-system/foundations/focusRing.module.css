@@ -1,0 +1,8 @@
+/* The single owned focus indicator (ADR 0010 Decision 5). A component composes
+   this class instead of declaring its own ring, so the indicator is defined once
+   and stays consistent across the system; it consumes --focus-ring, which every
+   theme resolves above 3:1 against every surface. Keyboard focus only. */
+.focusRing:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
