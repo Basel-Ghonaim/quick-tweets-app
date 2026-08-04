@@ -3,11 +3,11 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-03
+> **Last Updated:** 2026-08-04
 > **Parent Issue:** [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403)
 > **Supersedes:** —
 
-This plan sequences the implementation of the **Channel Verification** platform capability into nine independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) (Accepted), which owns the boundary, the single owned fact, custody, and the lifecycle, and which this plan never reopens.
+This plan sequences the implementation of the **Channel Verification** platform capability into ten independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) (Accepted), which owns the boundary, the single owned fact, custody, and the lifecycle, and which this plan never reopens.
 
 It is a **strategy document**: it owns the effort's **execution order, boundaries, invariants, and the rationale for that order**. Each Work Item's granular acceptance criteria, live status, and progress belong to its Issue (created when that Work Item begins), which this plan links and never mirrors — per [Documentation Strategy §5](../architecture/documentation-strategy.md) and [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
 
@@ -22,7 +22,7 @@ It is a **strategy document**: it owns the effort's **execution order, boundarie
 
 ## 2. Boundary declaration
 
-**Covers:** the capability module (its record, challenge, service, published surface, HTTP surface), the delivery port with an inert adapter **and a local capture backend**, the schema and its additive migration, the challenge-expiry sweep job, the self-view projection, and the API-contract and manual-verification documentation.
+**Covers:** the capability module (its record, challenge, service, published surface, HTTP surface), the delivery port with an inert adapter **and a local capture backend**, the schema and its additive migration, the challenge-expiry sweep job, the self-view projection, the API-contract and manual-verification documentation, and the platform document that owns the subsystem.
 
 **Does not cover (out of scope; unchanged):** any **gating policy** (no feature requires verification); a **real mail provider** (no SMTP, no provider SDK, no credentials — a backend that writes a message to a local file is none of those, and adding one does not narrow this exclusion); **multi-channel machinery** (no channel registry, strategy layer, or phone support); **staleness/re-verification policy**; **frontend UI** of any kind; bounce/suppression/deliverability handling; mail templating sophistication and i18n of mail content; and admin/revocation surfaces.
 
@@ -73,7 +73,7 @@ Proposed with rationale; **ratified when this plan is approved** (they are not d
 2 (schema + migration) ─▶ 3 (types + repository) ─┘
                               3 ─▶ 7 (expiry sweep job)
                               1 ─▶ 7A (capture delivery backend) ─┐
-                                                    6 ────────────┴─▶ 8 (docs + verification harness)
+                                                    6 ────────────┴─▶ 8 (docs + verification harness) ─▶ WI-Docs
 ```
 
 - **1 → 4** *(hard)*: `issue` cannot complete without something to deliver through. The port is also the **cheapest possible proof of the delivery boundary** — it lands before any schema is committed to.
@@ -84,6 +84,7 @@ Proposed with rationale; **ratified when this plan is approved** (they are not d
 - **1 → 7A** *(hard)*: the capture backend is a **second implementation behind the port WI-1 established**, so it needs nothing else and can land any time after 1.
 - **6 → 8** *(hard)*: the harness verifies behaviour that must already exist.
 - **7A → 8** *(hard)*: without an inbox the harness cannot reach the successful-confirm leg at all. Delivery discards the message and the secret is stored as a digest, so the plaintext code exists only in process memory — **successful confirm, `proven` on the self-view, and replay refusal after success are unreachable by hand** until a backend retains the message.
+- **8 → WI-Docs** *(hard)*: a subsystem document describes what is true, and the harness is where a divergence between intent and behaviour surfaces. Writing it earlier would document belief.
 
 **Why this order and not another.** The riskiest *architectural* claims are validated earliest and most cheaply: the **delivery boundary** in WI-1 (~30 lines, no schema), and the **custody model** in WI-6. The riskiest *implementation* surface — the challenge lifecycle — is unit-tested in WI-4 before any HTTP exists, because the real CI gate is `typecheck` + unit tests. Documentation and the manual harness come last because they must describe behaviour that is already true.
 
@@ -201,6 +202,18 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Commit/PR boundary:** one PR (docs + harness).
 - **Stop-risks:** if a scenario cannot be expressed without exposing internals → record a finding rather than widening the public surface. Two shapes are **not** acceptable answers to that: seeding state directly into the database to satisfy a precondition — which proves a state the system cannot itself produce and copies persistence facts into a document that will drift — and relaxing a deliberate secrecy property to make observation easier.
 
+### WI-Docs — The platform document
+- **Goal & rationale:** give the capability an **owner in the documentation**. [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) owns why it exists and what it decided; the [API contract](../api/api-contract.md) owns the wire shapes; the harness owns hand-verification. Nothing owns **the subsystem** — its module layout, its published surface, the derived-status resolution order, custody, the delivery port and its two backends, the sweep job's hygiene-not-correctness property, hashing at rest, and the opaque-failure discipline. Those are precisely the facts [`media.md`](../backend/media.md) owns for Media, and **ADR 0004**'s Stable-Core rule says a subsystem earns that document once it exists in code — which, as of WI-7A, it does. **It comes last** because a subsystem document describes what is true, and WI-8 is where any remaining gap between what is believed and what behaves surfaces.
+- **Scope:** `docs/backend/channel-verification.md`, following the shape `media.md` established, and its entry in the backend section of [`docs/README.md`](../README.md). §7 and §8 already name it — this Work Item creates what they point to.
+- **Non-goals:** no code and no behaviour change; **no new decisions** — one discovered while writing is *recorded, not taken*, which is what "descriptive" means; **no duplication** of ADR 0009, the API contract, or the harness, each of which is linked and never restated; no repair of the harness documents' pre-existing hygiene issues.
+- **Dependencies:** **WI-8** (hard).
+- **Boundary validated:** **single ownership** — that the capability has one authoritative home for what it is and how it works, distinct from the ADR that decided it and the contract that exposes it.
+- **Invariants protected:** none directly — it is the **record** of all eight.
+- **Verification:** every claim traced to **code**, not to this plan and not to the ADR; no fact stated here is also stated in ADR 0009 or the API contract; `docs/README.md` lists it; §7 and §8 name it.
+- **DoD:** the document exists and is co-versioned; the documentation map lists it; the plan's completion criteria and Reconciliation reference it; no code changed.
+- **Commit/PR boundary:** one PR.
+- **Stop-risks:** if writing the document surfaces a divergence between the intended design and the code, **record it** — a finding if architectural, an Issue if a routine bug — and describe **what the code does**. Documenting intent as though it were behaviour is the exact failure this document exists to prevent. If a fact seems to want restating from ADR 0009, that is the boundary between them blurring: link it instead.
+
 ## 6. Risks & mitigations (effort-wide)
 
 - **The delivery port is designed from a single consumer** — the classic wrong-abstraction trap. Mitigation: keep it minimal (recipient + payload); no templating, queueing, or retry policy until a second consumer exists. **WI-7A is the first evidence either way**: a second backend that fits without touching the port supports the shape, and one that does not is the trap having sprung.
@@ -213,13 +226,16 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ## 7. Completion criteria (whole effort)
 
-- All nine Work Items merged to `main`, each green (typecheck + unit; integration verified locally), each leaving a coherent state.
+- All ten Work Items merged to `main`, each green (typecheck + unit; integration verified locally), each leaving a coherent state.
 - An authenticated holder can request verification of their own email and confirm it; the endpoint becomes **Proven**; the self-view reflects it **as a projection**.
 - **All eight invariants hold**, and the grep-verifiable ones (**I1**, **I4**, **I5**, **I7**) are demonstrably true.
 - Changing the endpoint yields **Unproven with no write** to the capability; disabling the sweep job changes no answer.
 - Delivery remains credential-free and **inert by default**; the capture backend is selectable only by exact opt-in and never resolves as a fallback. No gating policy exists anywhere.
 - The API contract is co-versioned and the manual harness passes a full run — **including the successful-confirm leg**, with the execution method stated rather than implied.
+- **The capability has a platform document** — `docs/backend/channel-verification.md` exists, is listed in the documentation map, and owns the subsystem's mechanisms without restating ADR 0009 or the API contract.
 
 ## 8. Reconciliation
 
 *Added as this plan approaches `Historical`: where each Work Item's durable facts landed in the permanent documents, which findings were recorded, and the forward links. The capability's platform document is created when its subsystem exists in code (the Stable-Core rule, [ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); on its creation, ADR 0009 retains only the boundary and rationale.*
+
+That document is `docs/backend/channel-verification.md`, created by **WI-Docs**.
