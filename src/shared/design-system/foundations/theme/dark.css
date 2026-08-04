@@ -93,3 +93,13 @@
   --control-fill-info-text: var(--palette-neutral-0);
   --control-fill-info-subtle: var(--palette-blue-a10);
 }
+
+/* Control state emphasis (ADR 0011 Decision 1a). Disabled and loading are named
+   states resting on theme as the axis: a high-contrast theme (ADR 0010 Decision 4)
+   is the likeliest to re-resolve a disabled state, since dimming by opacity is what
+   harms the contrast the DS owns in every theme (Decision 5). Identical across the
+   committed themes today, declared in each per the fill note above so none outranks. */
+[data-theme="dark"] {
+  --control-opacity-disabled: 0.6;
+  --control-opacity-loading: 0.8;
+}

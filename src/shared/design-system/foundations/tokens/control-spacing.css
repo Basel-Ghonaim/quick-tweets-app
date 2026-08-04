@@ -1,0 +1,15 @@
+/* Control spacing — intent tier (ADR 0011 Decision 5, the hybrid: control-internal
+   padding and gap earn a tier, page layout does not). Named in logical axes
+   (inline / block) so the vocabulary is direction-agnostic (I6). Density is the
+   earning axis; its resolution is not built — no density theme exists to resolve into (D8). */
+:root {
+  --control-padding-inline-small: var(--space-2);
+  --control-padding-inline-medium: var(--space-4);
+  --control-padding-inline-large: var(--space-6);
+
+  --control-padding-block-small: var(--space-1);
+  --control-padding-block-medium: var(--space-2);
+  --control-padding-block-large: var(--space-3);
+
+  --control-gap: var(--space-2); /* between a control's own parts (icon and label); fixed across sizes today (D8) */
+}

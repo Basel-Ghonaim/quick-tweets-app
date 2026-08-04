@@ -1,0 +1,16 @@
+/* Motion — intent tier (ADR 0011 Decision 1a). Authored alongside the legacy
+   --transition-* scale (D11). Values are literal here by choice: nothing binds a
+   raw duration or easing alone, so a primitive motion scale would serve no one (D8).
+   --transition-{fast,medium,slow} (0.15/0.3/0.5s ease-in-out) is a different feel,
+   still live in Auth and Input:180 — not repointed here (that changes appearance),
+   converging onto this tier as its consumers migrate and losing its last in WI-8.
+   Reduced motion is the earning axis; its mechanism is out of scope and a token is
+   not sufficient anyway — zeroing the spin's duration freezes it mid-rotation. */
+:root {
+  /* interactive-state transition */
+  --motion-interactive: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* indeterminate spin; keyframes and `infinite` stay with the component */
+  --motion-spin: 0.75s linear;
+  /* press-feedback transform; reduced motion resolves it to `none` */
+  --motion-press: scale(0.98);
+}
