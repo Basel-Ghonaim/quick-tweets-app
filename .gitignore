@@ -17,6 +17,10 @@ dist-ssr
 # Server
 server/.env
 server/src/generated
+# Captured mail — full message bodies, i.e. single-use secrets on disk.
+# Deliberately unanchored: the destination resolves against the working
+# directory, so anchoring it would hold only when the process starts in server/.
+.mail-capture/
 
 # Editor directories and files
 .vscode/*
