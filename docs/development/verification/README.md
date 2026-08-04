@@ -23,6 +23,16 @@ rows, and `MediaObject` internals are invisible to any endpoint by design. So:
 
 > **Postman drives state. pgAdmin verifies coordination.**
 
+Folder **10** adds a third element, because a verification code is knowable to
+nobody by design — delivery discards it and storage digests it. A **capture**
+mail backend writes each message to a file, and a person reads the code from
+there. For that folder the line is:
+
+> **Postman drives state · the capture file supplies the secret · pgAdmin
+> verifies custody.**
+
+The file read is a first-class step, exactly as a DB checkpoint is.
+
 Half of this harness lives in the database. Skipping the DB checkpoints means not
 verifying the very thing this phase is for. The runbook's checkpoint SQL is not
 optional.
@@ -100,6 +110,32 @@ is **self-isolated** (mints its own two users with per-run unique handles) and
 (a token minted before a rename still works after it — no logout/refresh); a former
 handle **never 404s** (301 on the profile URL, transparent resolution elsewhere); the
 rename **reuses register's username validation** (one source of truth).
+
+## Channel verification
+
+Folder **10 · Channel verification** exercises proof of control over the account's
+email: request a code, read it from the capture file, confirm it, and watch the
+self-view move `unproven → pending → proven`. It is **self-isolated** (it mints
+its own account with a per-run unique handle) and **non-destructive**. See
+scenarios **CHV-01…CHV-13** and **Checkpoint I**.
+
+**It needs the server started with `MAIL_MODE=capture`**, which writes each
+message to `.mail-capture/` (gitignored). Without it the code cannot be obtained
+and CHV-06 onward cannot run — that is not a gap in the harness but the property
+being verified: the plaintext exists in process memory for one request, and
+nowhere else.
+
+Its guarantees, in one line each: the **proof binds to the address, not the
+account**, so changing the address reads `unproven` with nothing written; **every
+confirmation failure is the same response**, so malformed, wrong, expired,
+superseded and replayed are indistinguishable; and **status is derived**, so an
+expired challenge reads correctly with no sweep having run.
+
+Two ordering constraints are consequences rather than preferences: **CHV-13 runs
+last** (eleven confirmations exhaust the per-IP budget for fifteen minutes), and
+**CHV-12 needs a restart** with a short `CHANNEL_VERIFICATION_CHALLENGE_TTL_MS`,
+since the default is not waitable by hand and shortening it throughout would
+expire codes before they could be pasted.
 
 ## Scope
 

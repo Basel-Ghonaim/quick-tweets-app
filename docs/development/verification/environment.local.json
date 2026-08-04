@@ -277,6 +277,48 @@
       "value": "",
       "type": "default",
       "enabled": true
+    },
+    {
+      "key": "cvUsername",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "cvEmail",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "cvToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "cvUserId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "cvCode",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "cvFailureBody",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "cvConfirmAttempts",
+      "value": "",
+      "type": "default",
+      "enabled": true
     }
   ],
   "_postman_variable_scope": "environment"
