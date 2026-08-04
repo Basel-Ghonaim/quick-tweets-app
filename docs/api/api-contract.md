@@ -75,6 +75,9 @@ DELETE /api/v1/follows/:username
 GET    /api/v1/follows/:username/followers
 GET    /api/v1/follows/:username/following
 
+POST   /api/v1/channel-verification/challenges          (authenticated)
+POST   /api/v1/channel-verification/challenges/confirm  (authenticated)
+
 POST   /api/v1/media            (authenticated)
 GET    /media/:token             (top-level, outside /api/v1 — a stable public read URL)
 ```
@@ -791,11 +794,13 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 ### `GET /users/me` — Own profile
 
-**Auth:** Required. Returns the authenticated user's own profile — the `GET /users/:username` shape **plus `email`** (a self-view-only field; the public view omits it), with `isFollowing: false`. `me` is a reserved self-alias resolved from the token. This is the canonical current-user resource.
+**Auth:** Required. Returns the authenticated user's own profile — the `GET /users/:username` shape **plus `email` and `emailVerification`** (self-view-only fields; the public view omits both), with `isFollowing: false`. `me` is a reserved self-alias resolved from the token. This is the canonical current-user resource.
+
+`emailVerification` is `"unproven" | "pending" | "proven"` — a **projection** resolved at read time from [Channel Verification](#channel-verification), which owns the fact. Nothing about it is stored on the account, and changing the address reads as `unproven` because the proof was about the previous value.
 
 ### `PATCH /users/me` — Update own profile
 
-**Auth:** Required. Updates any subset of `username`, `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). `name` follows the same three-way rule as the avatar: **omitted = unchanged, `null` = clear, a string = set** (`name` is never derived from `username`). Changing `username` **renames the handle**: the old handle is reserved (see below), the new one becomes current, and because the session is keyed on the immutable `id` (never the handle), the **same access token keeps working with no re-login or refresh** — the response is the authoritative new identity. Returns the updated self profile (the same shape as `GET /users/me`, including `email`).
+**Auth:** Required. Updates any subset of `username`, `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). `name` follows the same three-way rule as the avatar: **omitted = unchanged, `null` = clear, a string = set** (`name` is never derived from `username`). Changing `username` **renames the handle**: the old handle is reserved (see below), the new one becomes current, and because the session is keyed on the immutable `id` (never the handle), the **same access token keeps working with no re-login or refresh** — the response is the authoritative new identity. Returns the updated self profile (the same shape as `GET /users/me`, including `email` and `emailVerification`).
 
 ```jsonc
 // Request — any subset; at least one field. Avatar is full-replacement:
@@ -1010,3 +1015,74 @@ Resolves the token and streams the bytes under a fixed security envelope. Not ra
 > stays `200`-servable until then; reclamation runs **report-only** until the
 > destructive gate is met. The reclamation model is owned by
 > [`backend/media.md`](../backend/media.md).
+
+---
+
+## Channel Verification
+
+Proof that the account holder controls a communication channel endpoint. The capability owns the fact, not the address: the account row holds the email, and whether it has been proven lives entirely inside the capability, read back as a **projection**. Governing decision: [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md). Email is the only implemented channel.
+
+The subject is **never taken from the request**. Both endpoints act on the authenticated account's own current address, resolved server-side; a body naming another address is ignored. Accepting one would let a caller aim a challenge at an inbox they do not own.
+
+**Verification state** is exposed only on the self-view, as [`emailVerification`](#get-usersme--own-profile):
+
+| Value | Meaning |
+|---|---|
+| `unproven` | No valid proof for the current address — including after the address changes, since the proof was about the old value |
+| `pending` | A challenge is outstanding and has not expired |
+| `proven` | Control was demonstrated for the address currently on the account |
+
+It is **derived at read time**, never stored. An expired challenge therefore reads correctly whether or not anything has cleaned it up.
+
+### `POST /channel-verification/challenges` — Request a code
+
+**Auth:** Required. **Rate limit:** 10 requests / 15 min per IP, *and* a durable per-address cooldown of 60 seconds — the cooldown is the real control, since the per-IP limiter cannot stop an address being targeted from rotating addresses.
+
+**Request:** no body. The address is the authenticated account's own.
+
+Issuing **rotates**: any outstanding challenge is superseded, so only the newest code works. The challenge is persisted before delivery is attempted, and a delivery failure is **reported, never destructive** — the code remains valid and can be resent.
+
+```jsonc
+// Response 202 — the challenge exists; delivery was attempted
+{
+  "success": true,
+  "data": {
+    "delivered": true    // false when the delivery backend refused; the challenge still stands
+  }
+}
+
+// Response 401 — no valid Bearer token
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
+
+// Response 404 — the authenticated account no longer exists
+{ "success": false, "error": { "type": "not_found", "message": "Account not found" } }
+
+// Response 429 — a code was requested for this address too recently (the per-address cooldown)
+{ "success": false, "error": { "type": "too_many_requests", "message": "A verification code was requested too recently. Please wait before requesting another." } }
+```
+
+### `POST /channel-verification/challenges/confirm` — Submit a code
+
+**Auth:** Required. **Rate limit:** 10 requests / 15 min per IP.
+
+**Validation is presence-only.** The code's shape is deliberately *not* checked at the boundary: rejecting a malformed value with a `422` and field errors would tell a caller something a wrong value does not, and that distinction is exactly what must not leak.
+
+The presence check itself still applies, and it is the one case that answers differently: an **absent or empty** `code` is a malformed *request* rather than a failed verification, so it returns the standard `422` with field errors. Every value that is actually present — however malformed — reaches the capability and collapses into the single `400` below.
+
+```jsonc
+// Request
+{ "code": "7QK3MNP2XVZB" }
+
+// Response 204 — confirmed. No body. The address is now `proven`.
+
+// Response 400 — the single failure. Malformed, wrong, expired, superseded,
+// already used, and never-existed are ALL reported identically: same status,
+// same message, no field errors. The cause is retained internally for
+// diagnostics and never reaches the caller.
+{ "success": false, "error": { "type": "bad_request", "message": "That verification code is not valid." } }
+
+// Response 401 — no valid Bearer token
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
+```
+
+> **One failure shape, deliberately.** Uniform opacity is auditable; a carve-out is not. The moment one cause reports itself it acquires its own message, then its own status, and the guarantee decays by increments — the same reasoning as the generic `401` on login. A code is **single-use**, so replaying a confirmed one is refused identically; a *wrong* value, by contrast, leaves the challenge usable, so one mistyped character cannot deny a holder their own verification.
