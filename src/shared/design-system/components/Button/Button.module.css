@@ -57,7 +57,7 @@
 
 .variant-contained {
   background-color: var(--btn-bg);
-  color: var(--btn-text, #ffffff);
+  color: var(--btn-text);
   border-color: var(--btn-bg);
 }
 

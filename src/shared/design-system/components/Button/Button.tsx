@@ -33,14 +33,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       .join(" ");
 
     const dynamicStyles = {
-      "--btn-bg": `var(--color-${color}-primary)`,
-      "--btn-bg-hover": `var(--color-${color}-secondary)`,
-      "--btn-border": `var(--color-${color}-primary)`,
+      "--btn-bg": `var(--control-fill-${color})`,
+      "--btn-bg-hover": `var(--control-fill-${color}-hover)`,
+      "--btn-border": `var(--control-fill-${color})`,
       "--btn-text":
         variant === "contained"
-          ? "#ffffff"
-          : `var(--color-${color}-primary)`,
-      "--btn-bg-alpha": `var(--color-${color}-alpha)`,
+          ? `var(--control-fill-${color}-text)`
+          : `var(--control-on-surface-${color})`,
+      "--btn-bg-alpha": `var(--control-fill-${color}-subtle)`,
       ...style,
     } as React.CSSProperties;
 
