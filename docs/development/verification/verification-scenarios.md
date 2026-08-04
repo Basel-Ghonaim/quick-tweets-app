@@ -264,3 +264,63 @@ implementation and this catalogue.
 
 Comment Media is verified by hand. The remaining Media milestone, **M11
 (reclamation)**, may proceed when scheduled.
+
+---
+
+## 10 · Channel verification (CHV)
+
+Proof of control over the account's email. What this folder verifies, in one line
+each:
+
+> - **G1 — the code is knowable only to whoever holds the mailbox.** Delivery
+>   discards it and storage digests it, so the plaintext exists in process memory
+>   for one request. The **capture backend** is the inbox that makes this
+>   hand-verifiable at all (CHV-01/06).
+> - **G2 — one failure shape.** Malformed, wrong, expired, superseded, replayed
+>   and never-existed are reported **identically** — same status, same body
+>   (CHV-04/05/08). A carve-out anywhere is a leak.
+> - **G3 — the proof binds to the address, not the account.** Change the address
+>   and the answer becomes `unproven` **with nothing written** (CHV-11).
+> - **G4 — status is derived.** An expired challenge reads correctly with no
+>   sweep having run (CHV-12).
+>
+> **Self-isolated.** Folder 10 mints its own account with a per-run unique handle,
+> so it never disturbs `verify_alice`/`verify_bob`. The run's identity is
+> `{{cvUsername}}`; its captured code is `{{cvCode}}`.
+>
+> **Setup precondition.** The server must run with `MAIL_MODE=capture`, which
+> writes each message to `.mail-capture/`. Without it the code is unobtainable and
+> CHV-06 onward cannot run.
+>
+> **Three ordering constraints, all consequences rather than preferences.**
+> **CHV-13 must run last** — eleven confirmations exhaust the per-IP budget for
+> fifteen minutes and would block everything after it. **CHV-12 needs a restart**
+> with a short `CHANNEL_VERIFICATION_CHALLENGE_TTL_MS`, because the default
+> fifteen minutes is not waitable by hand and shortening it for the whole folder
+> would expire codes before they can be pasted. And **CHV-13 depends on that
+> restart**: CHV-04, 05, 06, 08 and CHV-10's two spend six confirmations before it
+> begins, so against a budget of ten the limiter would otherwise engage on its
+> *fifth* attempt rather than its eleventh. The restart clears the in-memory
+> counter — skipping CHV-12 breaks CHV-13's arithmetic.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| CHV-01 | Setup registered; server in `MAIL_MODE=capture` | `POST /channel-verification/challenges` (Bearer) | **202**; `data.delivered = true` | one `channel_verifications` row; one open challenge, `secret_hash` a **64-hex digest** (Checkpoint I) | via reset | ✅ |
+| CHV-02 | CHV-01 | `GET /users/me` | 200; `emailVerification = "pending"` | — | — | ✅ |
+| CHV-03 | CHV-01, within 60s | `POST …/challenges` again | **429** `too_many_requests` — the per-address cooldown (**D2**) | no second open challenge | — | ✅ |
+| CHV-04 | CHV-01 | `POST …/challenges/confirm {code:"ZZZZZZZZZZZZ"}` | **400** `bad_request`, *"That verification code is not valid."* | challenge **still open** — a wrong guess does not consume it | — | ✅ |
+| CHV-05 | CHV-01 | confirm `{code:"!!"}` (malformed) | **byte-identical** to CHV-04 — not a `422`, no field errors (**G2**) | unchanged | — | ✅ |
+| CHV-06 | CHV-01; code read from `.mail-capture/` | confirm with that code | **204**, empty body | challenge `closed_at` set, `closed_reason = 'verified'`; record `proven_at` set (Checkpoint I) | via reset | ✅ |
+| CHV-07 | CHV-06 | `GET /users/me` | 200; `emailVerification = "proven"` | **no verification column on `users`** (Checkpoint I) | — | ✅ |
+| CHV-08 | CHV-06 | confirm with the **same** code again | **byte-identical** to CHV-04 — a replay is indistinguishable from a wrong value (**G2**, **D5**) | unchanged | — | ✅ |
+| CHV-09 | — | `POST …/challenges` with **no** Bearer | **401** `unauthorized` | none | — | ✅ |
+| CHV-10 | CHV-06; wait out the 60s cooldown | issue again, then confirm with the **superseded** code, then the **current** one | superseded → **400**; current → **204** (**D2** rotation) | prior challenge `closed_reason = 'superseded'` | via reset | ✅ |
+| CHV-11 | CHV-06 (`proven`) | move `users.email` (see the runbook — no endpoint exists), then `GET /users/me` | 200; `emailVerification = "unproven"` (**G3**) | capability rows **unchanged** — reading wrote nothing | restore address | ✅ |
+| CHV-12 | Restart with a short TTL; a fresh unproven address | issue, wait past expiry, `GET /users/me` — **run no sweep** | `pending` → **`unproven`** (**G4**, **I8**) | the expired challenge row is **still present**, unswept — no writer was needed | via reset | ✅ |
+| CHV-13 | **Run last**, and **after CHV-12's restart** — six confirmations are already spent | eleven confirmations in a row | attempts 1–10 → 400; **attempt 11 → 429** `rate_limit` (**D5**) | unchanged | wait 15 min or restart | ✅ |
+
+> **Two different `429`s, deliberately.** CHV-03 is the capability's own
+> per-address cooldown (`type: "too_many_requests"`) — the durable control. CHV-13
+> is the per-IP limiter in front of the route (`type: "rate_limit"`) — the cheap
+> outer layer, which cannot stop one address being targeted from many IPs. Reading
+> them as the same thing would misattribute which control is doing the work.

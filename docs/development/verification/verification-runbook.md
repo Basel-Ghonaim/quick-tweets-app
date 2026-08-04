@@ -225,6 +225,59 @@ ORDER BY a.created_at;
 SELECT count(*) AS alias_collides_with_live
 FROM username_aliases a JOIN users u ON u.username = a.username;
 ```
+### Checkpoint I — Channel verification custody (folder 10)
+```sql
+-- The account holds the address; the capability holds whether it is proven, and
+-- the two never mix. Substitute :cvUserId with the id folder 10's Setup captured.
+
+-- 1. CUSTODY: the account table carries NOTHING about verification. MUST be 0.
+SELECT count(*) AS verification_columns_on_users
+FROM information_schema.columns
+WHERE table_name = 'users'
+  AND (column_name ILIKE '%verif%' OR column_name ILIKE '%proven%'
+       OR column_name ILIKE '%challeng%' OR column_name ILIKE '%channel%');
+
+-- 2. The fact lives in the capability's own tables, keyed inward to the account.
+SELECT v.id, v.endpoint, v.proven_at, v.last_challenged_at,
+       ch.id AS challenge_id, ch.expires_at, ch.closed_at, ch.closed_reason,
+       length(ch.secret_hash) AS secret_hash_length
+FROM channel_verifications v
+LEFT JOIN channel_verification_challenges ch ON ch.verification_id = v.id
+WHERE v.user_id = :cvUserId
+ORDER BY ch.id;
+-- After CHV-01: proven_at NULL; one challenge with closed_at NULL.
+-- After CHV-06: proven_at SET; that challenge closed, reason 'verified'.
+-- After CHV-10: the prior challenge reads 'superseded'. Success closes a
+--               challenge, it never deletes it.
+
+-- 3. THE SECRET IS NEVER STORED IN THE CLEAR. secret_hash_length above is 64 —
+--    a SHA-256 hex digest. Compare it with the code visible in the capture file:
+--    they must NOT match, and the code must appear nowhere in this table.
+SELECT count(*) AS challenges_not_storing_a_digest
+FROM channel_verification_challenges
+WHERE secret_hash !~ '^[0-9a-f]{64}$';
+-- MUST be 0.
+
+-- 4. AFTER CHV-11 (the address moved): the projection reads unproven, and this
+--    count is UNCHANGED from before the change — reading writes nothing, and no
+--    row is created for the new address.
+SELECT count(*) AS capability_rows_for_this_account
+FROM channel_verifications WHERE user_id = :cvUserId;
+
+-- 5. AFTER CHV-12 (a challenge expired, with no sweep run): the expired row is
+--    STILL HERE, and the self-view still reads unproven. That is the point —
+--    status is derived, so no writer is needed for expiry to be correct.
+SELECT count(*) AS expired_but_unswept
+FROM channel_verification_challenges ch
+JOIN channel_verifications v ON v.id = ch.verification_id
+WHERE v.user_id = :cvUserId AND ch.closed_at IS NULL AND ch.expires_at < now();
+```
+> **CHV-11 moves `users.email` directly**, because no endpoint does. That changes
+> an *input* the capability is asked about; the capability's own state is
+> untouched and is observed through the API. It is **not** the seeding pattern
+> this harness rejects — nothing fabricates a state the system cannot produce,
+> and no persistence fact about challenges is relied on to make a scenario pass.
+
 > **USR-05** and **USR-07** have no distinct DB shape of their own — they are the
 > *refusals* this reservation produces (a former handle rejected to a rename and to
 > a registration). Confirm them by their `409` and by this checkpoint showing the
@@ -332,7 +385,8 @@ the whole collection at once — the point is to inspect state between steps.
 | 5 — Social | 05, 06, 07 | none |
 | 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |
 | 7 — Username rename | 09 | **H** (after USR-01, USR-09, and USR-10) |
-| 8 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
+| 8 — Channel verification | 10 | **I** (after CHV-01, CHV-06, and CHV-11). Run in order: CHV-13 **last**, and only after CHV-12's restart has cleared the confirm limiter |
+| 9 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
 
 A phase is "green" only when its API assertions pass **and** its DB checkpoint
 matches. Record outcomes in [verification-scenarios.md](verification-scenarios.md)

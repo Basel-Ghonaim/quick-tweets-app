@@ -4220,6 +4220,604 @@
           ]
         }
       ]
+    },
+    {
+      "name": "10 · Channel verification (CHV)",
+      "description": "Proof of control over the account's email.\n\nREQUIRES the server started with MAIL_MODE=capture, which writes each message to server/.mail-capture/. The code is deliberately absent from every API response: read it from the newest file and set it as cvCode before CHV-06.\n\nEvery request carries an explicit auth block, because the collection root declares bearer {{accessTokenA}} — without one, CHV-09 would run authenticated and the rest would act as User A rather than this run's account.\n\nCHV-11 (address change) and CHV-12 (expiry) are runbook steps rather than requests here, since one needs SQL and the other a restart with a short TTL. CHV-13 must run last, and depends on CHV-12's restart having cleared the confirm limiter.",
+      "item": [
+        {
+          "name": "0 · Setup · register this run's account",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// A unique, charset-valid handle so the folder is re-runnable and never",
+                  "// disturbs verify_alice / verify_bob.",
+                  "const uniq = (Date.now() % 1e9).toString(36);",
+                  "pm.environment.set(\"cvUsername\", \"cv_\" + uniq);",
+                  "pm.environment.set(\"cvEmail\", \"cv_\" + uniq + \"@verify.local\");",
+                  "pm.environment.unset(\"cvCode\");",
+                  "pm.environment.unset(\"cvConfirmAttempts\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.environment.set(\"cvToken\", d.accessToken);",
+                  "pm.environment.set(\"cvUserId\", d.user.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{cvUsername}}\",\n  \"email\": \"{{cvEmail}}\",\n  \"password\": \"{{userA_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "CHV-01 · Issue a challenge",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
+                  "pm.test(\"the message was accepted for delivery\", () =>",
+                  "  pm.expect(pm.response.json().data.delivered).to.eql(true));",
+                  "// The code is NOT in this response and never will be. Open the newest file",
+                  "// in server/.mail-capture/, copy the 12-character code, and set it as the",
+                  "// environment variable cvCode before running CHV-06."
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-02 · Self-view reads pending",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"pending\", () => pm.expect(pm.response.json().data.emailVerification).to.eql(\"pending\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-03 · Re-issue inside the cooldown is refused",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 429\", () => pm.response.to.have.status(429));",
+                  "pm.test(\"the capability's own cooldown, not the limiter\", () =>",
+                  "  pm.expect(pm.response.json().error.type).to.eql(\"too_many_requests\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-04 · A wrong code is refused",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+                  "// Recorded so CHV-05 and CHV-08 can prove they are byte-identical to it.",
+                  "pm.environment.set(\"cvFailureBody\", pm.response.text());"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"ZZZZZZZZZZZZ\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-05 · A malformed code is indistinguishable from a wrong one",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400 — not 422\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"byte-identical to CHV-04\", () =>",
+                  "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"cvFailureBody\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"!!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-06 · Confirm with the captured code",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// cvCode is read BY HAND from the newest file in server/.mail-capture/.",
+                  "// Postman cannot read the filesystem; that manual step is the point.",
+                  "if (!pm.environment.get(\"cvCode\")) {",
+                  "  throw new Error(\"Set cvCode from the capture file before running CHV-06\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"no body\", () => pm.expect(pm.response.text() || \"\").to.eql(\"\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{cvCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-07 · Self-view reads proven",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"proven\", () => pm.expect(pm.response.json().data.emailVerification).to.eql(\"proven\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-08 · Replaying the confirmed code is refused identically",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"byte-identical to a wrong code — a replay reveals nothing\", () =>",
+                  "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"cvFailureBody\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{cvCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-09 · Unauthenticated issue is refused",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "CHV-10 · After the cooldown, a resend rotates (wait 60s first)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
+                  "// Read the NEW code from the capture file. The previous one is now",
+                  "// superseded: confirming with it must fail, and with the new one succeed."
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-13 · Confirm is rate-limited (RUN LAST — exhausts the budget)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const n = Number(pm.environment.get(\"cvConfirmAttempts\") || 0) + 1;",
+                  "pm.environment.set(\"cvConfirmAttempts\", n);",
+                  "",
+                  "if (n <= 10) {",
+                  "  pm.test(\"attempt \" + n + \" of 11 — still answered by the capability\", () =>",
+                  "    pm.response.to.have.status(400));",
+                  "} else {",
+                  "  pm.test(\"attempt 11 — the per-IP limiter engages\", () =>",
+                  "    pm.response.to.have.status(429));",
+                  "  pm.test(\"and it is the limiter, not the capability's cooldown\", () =>",
+                  "    pm.expect(pm.response.json().error.type).to.eql(\"rate_limit\"));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges",
+                "confirm"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"ZZZZZZZZZZZZ\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Send this eleven times. Attempts 1-10 answer 400; the 11th answers 429 with type \"rate_limit\" — the per-IP limiter, distinct from CHV-03's per-address cooldown.\n\nREQUIRES the restart CHV-12 performs. Six confirmations are already spent by CHV-04, 05, 06, 08 and CHV-10's two, so against a budget of ten the limiter would otherwise engage on this scenario's FIFTH attempt, not its eleventh. The restart clears the in-memory counter. Skipping CHV-12 breaks this scenario's arithmetic.\n\nIt then blocks confirmations for fifteen minutes, which is why nothing may follow it."
+          }
+        }
+      ]
     }
   ],
   "auth": {
