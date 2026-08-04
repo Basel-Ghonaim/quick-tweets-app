@@ -89,7 +89,11 @@ const lineOf = (text: string, index: number) => text.slice(0, index).split("\n")
 const DECLARATION = /(--[\w-]+)\s*:/g; // `--x:` — a custom-property declaration
 const INLINE_KEY = /["'`](--[\w-]+)["'`]\s*:/g; // `"--x":` — a TSX inline-style key
 const LITERAL_REF = /var\(\s*(--[\w-]+)\s*[,)]/g; // `var(--x)` / `var(--x, …)`
-const INTERPOLATED_REF = /var\(\s*(--[\w-]*?)\$\{[A-Za-z0-9_]+\}([\w-]*)\)/g; // `var(--prefix${role}suffix)`
+// `var(--prefix${color}suffix)` — pinned to the `color` identifier, because what
+// follows expands the match over the role union. An interpolation of any other
+// prop would be expanded into role names that were never meant to exist and
+// reported as undefined.
+const INTERPOLATED_REF = /var\(\s*(--[\w-]*?)\$\{color\}([\w-]*)\)/g;
 
 function inventory(): Inventory {
   const designTokens = new Set<string>();
