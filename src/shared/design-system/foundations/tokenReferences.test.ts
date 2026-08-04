@@ -25,11 +25,12 @@ import { describe, expect, test } from "vitest";
 const SRC = join(process.cwd(), "src");
 
 /**
- * The `color` prop's role union — the domain of every interpolated
- * `var(--color-${color}-…)` reference. It is the check's own source of truth so a
- * rename of any role's token surfaces here instead of resolving to an undefined
- * variable at runtime; it mirrors the `ButtonColor` / `InputColor` /
- * `CheckboxColor` / `FileInputColor` prop unions.
+ * The `color` prop's role union — the domain of every interpolated role reference
+ * `var(--…${color}…)`, whatever the token's prefix (`--control-fill-${color}`,
+ * `--control-on-surface-${color}`, or the legacy `--color-${color}-…`). It is the
+ * check's own source of truth so a rename of any role's token surfaces here rather
+ * than resolving to an undefined variable at runtime; it mirrors the `ButtonColor`
+ * / `InputColor` / `CheckboxColor` / `FileInputColor` prop unions.
  */
 const ROLES = [
   "primary",
@@ -88,7 +89,7 @@ const lineOf = (text: string, index: number) => text.slice(0, index).split("\n")
 const DECLARATION = /(--[\w-]+)\s*:/g; // `--x:` — a custom-property declaration
 const INLINE_KEY = /["'`](--[\w-]+)["'`]\s*:/g; // `"--x":` — a TSX inline-style key
 const LITERAL_REF = /var\(\s*(--[\w-]+)\s*[,)]/g; // `var(--x)` / `var(--x, …)`
-const INTERPOLATED_REF = /var\(\s*--color-\$\{[A-Za-z0-9_]+\}-([\w-]+)\)/g; // `var(--color-${role}-suffix)`
+const INTERPOLATED_REF = /var\(\s*(--[\w-]*?)\$\{[A-Za-z0-9_]+\}([\w-]*)\)/g; // `var(--prefix${role}suffix)`
 
 function inventory(): Inventory {
   const designTokens = new Set<string>();
@@ -117,7 +118,7 @@ function inventory(): Inventory {
       for (const match of text.matchAll(INTERPOLATED_REF)) {
         const line = lineOf(text, match.index ?? 0);
         for (const role of ROLES)
-          references.push({ name: `--color-${role}-${match[1]}`, file: posix, line, scope: scopeOf(posix) });
+          references.push({ name: `${match[1]}${role}${match[2]}`, file: posix, line, scope: scopeOf(posix) });
       }
     }
   }
