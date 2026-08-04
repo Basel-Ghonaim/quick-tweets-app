@@ -103,7 +103,7 @@
   width: 1.25em;
   height: 1.25em;
   border: var(--border-width-medium) solid currentColor;
-  border-right-color: transparent;
+  border-inline-end-color: transparent;
   border-radius: var(--border-radius-full);
   animation: button-spin 0.75s linear infinite;
 }
