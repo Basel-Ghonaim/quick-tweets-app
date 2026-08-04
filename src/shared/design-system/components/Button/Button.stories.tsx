@@ -6,6 +6,11 @@ const meta = {
   title: "Design System/Actions/Button",
   component: Button,
   tags: ["autodocs"],
+  parameters: {
+    // a11y is promoted to failing for this migrated component; the global default
+    // stays reporting until every component has migrated onto the semantic tier.
+    a11y: { test: "error" },
+  },
   argTypes: {
     variant: { control: "select", options: ["contained", "outlined", "ghost"] },
     color: {
