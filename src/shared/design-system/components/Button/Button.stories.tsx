@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "./Button";
-import type { ButtonColor, ButtonState, ButtonVariant } from "./Button.types";
+import type { ButtonColor, ButtonSize, ButtonState, ButtonVariant } from "./Button.types";
 
 const meta = {
   title: "Design System/Actions/Button",
@@ -32,6 +32,7 @@ type Story = StoryObj<typeof meta>;
 const VARIANTS: ButtonVariant[] = ["contained", "outlined", "ghost"];
 const STATES: ButtonState[] = ["idle", "active", "loading", "disabled"];
 const COLORS: ButtonColor[] = ["primary", "secondary", "success", "warning", "error", "info"];
+const SIZES: ButtonSize[] = ["small", "medium", "large"];
 
 // --- Base Default Story
 export const Default: Story = {
@@ -79,6 +80,20 @@ export const StateMatrix: Story = {
             </Button>
           ))}
         </div>
+      ))}
+    </div>
+  ),
+};
+
+// Every size, so WI-4A's per-size intents render — the control-spacing padding
+// (--control-padding-*) and the composite text styles (--type-control-label-*).
+export const Sizes: Story = {
+  render: () => (
+    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+      {SIZES.map((size) => (
+        <Button key={size} size={size}>
+          {size}
+        </Button>
       ))}
     </div>
   ),
