@@ -6,4 +6,14 @@
   --type-control-label-small: 500 var(--font-size-xs) / var(--line-height-base) var(--font-family-base);
   --type-control-label-medium: 500 var(--font-size-sm) / var(--line-height-base) var(--font-family-base);
   --type-control-label-large: 500 var(--font-size-base) / var(--line-height-base) var(--font-family-base);
+
+  /* Not a lighter label: a label names the control, while an option's text is
+     content the reader is choosing between, so it carries the weight of body copy. */
+  --type-control-option-small: 400 var(--font-size-xs) / var(--line-height-base) var(--font-family-base);
+  --type-control-option-medium: 400 var(--font-size-sm) / var(--line-height-base) var(--font-family-base);
+  --type-control-option-large: 400 var(--font-size-base) / var(--line-height-base) var(--font-family-base);
+
+  /* One size, not three: helper and error text stays the same beside a small
+     control and a large one, so a per-size ramp would name values no one sets (D8). */
+  --type-control-helper: 400 var(--font-size-xs) / var(--line-height-base) var(--font-family-base);
 }
