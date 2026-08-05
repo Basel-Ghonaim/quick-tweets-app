@@ -11,5 +11,8 @@
   --control-padding-block-medium: var(--space-2);
   --control-padding-block-large: var(--space-3);
 
-  --control-gap: var(--space-2); /* between a control's own parts (icon and label); fixed across sizes today (D8) */
+  /* Two gaps, not one: parts sitting beside each other are spaced more widely than
+     parts stacked above each other. Neither varies with the control's size (D8). */
+  --control-gap-inline: var(--space-2);
+  --control-gap-block: var(--space-1);
 }
