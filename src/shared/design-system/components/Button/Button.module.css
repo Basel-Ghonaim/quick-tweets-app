@@ -3,7 +3,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--control-gap);
+  gap: var(--control-gap-inline);
   border-radius: var(--border-radius-md);
   cursor: pointer;
   transition: all var(--motion-interactive);
