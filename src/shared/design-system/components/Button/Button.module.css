@@ -3,37 +3,33 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--control-gap);
   border-radius: var(--border-radius-md);
-  font-family: var(--font-family-base);
-  font-weight: 500;
   cursor: pointer;
-  /* Premium geometric easing curve */
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--motion-interactive);
   border: var(--border-width-thin) solid transparent;
-  line-height: var(--line-height-base, 1.5);
 }
 
 .button:disabled,
 .state-disabled {
-  opacity: 0.6;
+  opacity: var(--control-opacity-disabled);
   pointer-events: none;
   cursor: not-allowed;
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: var(--motion-press);
 }
 
 .state-loading {
-  opacity: 0.8;
+  opacity: var(--control-opacity-loading);
   cursor: not-allowed;
   pointer-events: none;
 }
 
-/* Hard coded state-active for programmatic overrides */
+/* state-active mirrors :active for programmatic overrides */
 .state-active {
-  transform: scale(0.98);
+  transform: var(--motion-press);
 }
 
 .fullWidth {
@@ -42,18 +38,18 @@
 
 /* Scalable sizing without height constraints */
 .size-small {
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-xs);
+  padding: var(--control-padding-block-small) var(--control-padding-inline-small);
+  font: var(--type-control-label-small);
 }
 
 .size-medium {
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-sm);
+  padding: var(--control-padding-block-medium) var(--control-padding-inline-medium);
+  font: var(--type-control-label-medium);
 }
 
 .size-large {
-  padding: var(--space-3) var(--space-6);
-  font-size: var(--font-size-base);
+  padding: var(--control-padding-block-large) var(--control-padding-inline-large);
+  font: var(--type-control-label-large);
 }
 
 .variant-contained {
@@ -105,7 +101,7 @@
   border: var(--border-width-medium) solid currentColor;
   border-inline-end-color: transparent;
   border-radius: var(--border-radius-full);
-  animation: button-spin 0.75s linear infinite;
+  animation: button-spin var(--motion-spin) infinite;
 }
 
 @keyframes button-spin {
