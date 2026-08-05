@@ -1,0 +1,9 @@
+/* Typography — intent tier as composite text styles (ADR 0011 Decision 6), not a
+   size ramp. Bundled through the `font` shorthand so a call site applies the whole
+   style in one declaration and cannot pick size and weight apart. No tracking token:
+   no control sets a non-default letter-spacing, so one would name a value no one uses (D8). */
+:root {
+  --type-control-label-small: 500 var(--font-size-xs) / var(--line-height-base) var(--font-family-base);
+  --type-control-label-medium: 500 var(--font-size-sm) / var(--line-height-base) var(--font-family-base);
+  --type-control-label-large: 500 var(--font-size-base) / var(--line-height-base) var(--font-family-base);
+}
