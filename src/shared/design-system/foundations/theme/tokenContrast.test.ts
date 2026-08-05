@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 
@@ -24,6 +24,13 @@ const TOKENS_DIR = join(process.cwd(), "src/shared/design-system/foundations/tok
 const THEME_DIR = join(process.cwd(), "src/shared/design-system/foundations/theme");
 
 type Rgb = [number, number, number];
+
+const cssFilesUnder = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) return cssFilesUnder(full);
+    return entry.name.endsWith(".css") ? [full] : [];
+  });
 
 function declarationsFor(cssText: string, selector: string): Map<string, string> {
   const css = cssText.replace(/\/\*[\s\S]*?\*\//g, "");
@@ -91,7 +98,14 @@ const PAIRS: Pair[] = [
   ...SURFACES.map((bg) => ({ fg: "--focus-ring", bg, min: 3 })),
 ];
 
-const root = declarationsFor(readFileSync(join(TOKENS_DIR, "colors.css"), "utf8"), ":root");
+// Every `:root` declaration under the token tree, not one named file: the tiers
+// are separated by directory, so which file a primitive sits in is free to change
+// without this check silently resolving to nothing.
+const root = new Map(
+  cssFilesUnder(TOKENS_DIR).flatMap((file) => [
+    ...declarationsFor(readFileSync(file, "utf8"), ":root"),
+  ]),
+);
 const themes = {
   light: declarationsFor(readFileSync(join(THEME_DIR, "light.css"), "utf8"), '[data-theme="light"]'),
   dark: declarationsFor(readFileSync(join(THEME_DIR, "dark.css"), "utf8"), '[data-theme="dark"]'),
