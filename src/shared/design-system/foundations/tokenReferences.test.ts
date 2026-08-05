@@ -11,7 +11,7 @@ import { describe, expect, test } from "vitest";
  *
  * Enforcement follows the tier model (ADR 0010 Decision 3) rather than one rule
  * for every property. A Design Token — defined under foundations/tokens or
- * foundations/theme — must exist: a fallback does not excuse a missing one,
+ * foundations/resolution — must exist: a fallback does not excuse a missing one,
  * because the fallback is exactly what hides the silent rename. A component token
  * — a component's own inline-style key or module-CSS declaration — is
  * runtime-parameterised, so its fallback is its legitimate default. Classification
@@ -69,7 +69,7 @@ function walk(dir: string, extension: string, found: string[] = []): string[] {
 
 const isDesignTokenSite = (posixPath: string) =>
   posixPath.includes("design-system/foundations/tokens/") ||
-  posixPath.includes("design-system/foundations/theme/");
+  posixPath.includes("design-system/foundations/resolution/");
 
 /** The owning unit of a file — the signal that tells a component-local knob (one
  *  owner) from a cross-cutting token (many owners). */

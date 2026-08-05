@@ -8,7 +8,7 @@ import { describe, expect, test } from "vitest";
  * per-theme one only once the key sets are identical.
  */
 
-const THEME_DIR = join(process.cwd(), "src/shared/design-system/foundations/theme");
+const THEME_DIR = join(process.cwd(), "src/shared/design-system/foundations/resolution/theme");
 
 function keysDefinedIn(file: string): Set<string> {
   const css = readFileSync(join(THEME_DIR, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");

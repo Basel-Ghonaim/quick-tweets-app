@@ -21,7 +21,7 @@ import { describe, expect, test } from "vitest";
  */
 
 const TOKENS_DIR = join(process.cwd(), "src/shared/design-system/foundations/tokens");
-const THEME_DIR = join(process.cwd(), "src/shared/design-system/foundations/theme");
+const THEME_DIR = join(process.cwd(), "src/shared/design-system/foundations/resolution/theme");
 
 type Rgb = [number, number, number];
 

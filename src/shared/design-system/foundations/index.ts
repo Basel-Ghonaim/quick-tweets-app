@@ -1,3 +1,3 @@
 import "./main.css";
-export * from "./theme";
+export * from "./resolution";
 import "./tokens";
