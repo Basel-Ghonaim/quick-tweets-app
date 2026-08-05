@@ -1,26 +1,3 @@
-[data-theme="dark"] {
-  /* surfaces */
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-surface-hover: #334155;
-  --color-surface-active: #475569;
-  --color-surface-disabled: #64748b;
-
-  /* text */
-  --color-text-primary: #f9fafb;
-  --color-text-secondary: #cbd5f5;
-  --color-text-tertiary: #94a3b8;
-  --color-text-muted: #94a3b8;
-
-  /* border */
-  --color-border: #374151;
-  --color-border-hover: #4b5563;
-
-  /* brand */
-  --color-primary: var(--blue-500);
-  --color-primary-hover: var(--blue-600);
-}
-
 /* Semantic tier (ADR 0010 Decision 3) — values provisional. */
 [data-theme="dark"] {
   --surface-page: var(--palette-slate-900);

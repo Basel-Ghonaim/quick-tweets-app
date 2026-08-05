@@ -8,10 +8,14 @@ import { describe, expect, test } from "vitest";
  * per-theme one only once the key sets are identical.
  */
 
-const THEME_DIR = join(process.cwd(), "src/shared/design-system/foundations/resolution/theme");
+const FOUNDATIONS = join(process.cwd(), "src/shared/design-system/foundations");
+const THEME_DIR = join(FOUNDATIONS, "resolution/theme");
+// The bootstrap set is still a resolution of the same axis until WI-10 removes it,
+// so it is held to parity too — extracting it must not quietly halve this check.
+const LEGACY_THEME_DIR = join(FOUNDATIONS, "legacy/theme");
 
-function keysDefinedIn(file: string): Set<string> {
-  const css = readFileSync(join(THEME_DIR, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+function keysDefinedIn(dir: string, file: string): Set<string> {
+  const css = readFileSync(join(dir, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
   return new Set([...css.matchAll(/(--[\w-]+)\s*:/g)].map((match) => match[1]));
 }
 
@@ -23,15 +27,20 @@ function symmetricDifference(a: Set<string>, b: Set<string>): string[] {
 }
 
 describe("theme key parity", () => {
-  test("light and dark resolve an identical semantic key set", () => {
-    const light = keysDefinedIn("light.css");
-    const dark = keysDefinedIn("dark.css");
-    // Guard against a vacuous pass: two empty sets are trivially equal, so a
-    // parsing regression could hide a real divergence. Require a real inventory.
-    expect(light.size).toBeGreaterThan(10);
-    expect(dark.size).toBeGreaterThan(10);
-    expect(symmetricDifference(light, dark)).toEqual([]);
-  });
+  for (const [name, dir] of [
+    ["semantic", THEME_DIR],
+    ["legacy", LEGACY_THEME_DIR],
+  ] as const) {
+    test(`light and dark resolve an identical ${name} key set`, () => {
+      const light = keysDefinedIn(dir, "light.css");
+      const dark = keysDefinedIn(dir, "dark.css");
+      // Guard against a vacuous pass: two empty sets are trivially equal, so a
+      // parsing regression could hide a real divergence. Require a real inventory.
+      expect(light.size).toBeGreaterThan(10);
+      expect(dark.size).toBeGreaterThan(10);
+      expect(symmetricDifference(light, dark)).toEqual([]);
+    });
+  }
 
   test("the comparison reports a key present in only one theme", () => {
     expect(symmetricDifference(new Set(["--a", "--b"]), new Set(["--a"]))).toEqual(["--b"]);
