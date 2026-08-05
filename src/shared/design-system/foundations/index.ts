@@ -1,3 +1,4 @@
 import "./main.css";
-export * from "./theme";
+import "./legacy";
+export * from "./resolution";
 import "./tokens";
