@@ -1,5 +1,5 @@
 .button {
-  composes: focusRing from "../../foundations/focusRing.module.css";
+  composes: focusRing from "../../foundations/composition/focusRing.module.css";
   display: inline-flex;
   align-items: center;
   justify-content: center;
