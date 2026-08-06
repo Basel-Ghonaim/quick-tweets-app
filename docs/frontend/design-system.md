@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the frontend **design-system conventions** — the design-token model, theming, the component-authoring pattern, the variant model, and how the system is organized. It owns the **rules**, not a component catalog: it never documents individual components (`Button`, `Input`, …) prop-by-prop. It does **not** own schema-driven **form binding** and the `SchemaField` seam (the [frontend forms](forms.md) document), the app layout (the [frontend architecture](architecture.md)), or the design **principles** these conventions apply ([Engineering Principles](../development/engineering-principles.md)).
 > **Scope:** The shared UI foundations and components in `src/shared/design-system/`.
 > **Maturity:** This document describes the **currently implemented** design-system conventions. It covers only what exists today and will expand as the system grows; anything not described here is **not yet a stabilized convention** — either not yet built, or present but not yet settled enough to document — and is **not** something the architecture has rejected.
-> **Version:** 1.0
-> **Last Updated:** 2026-06-30
+> **Version:** 1.1
+> **Last Updated:** 2026-08-05
 > **Owner:** Basel Ghonaim
 
 ## Design tokens
@@ -35,6 +35,19 @@ Every component follows the same shape, so a new one is predictable to build and
 - **Accessibility** — `useId` links label and control; validity is exposed via `aria-invalid`; error text is announced with `role="alert"` and, where an error id is rendered, linked to the control via `aria-describedby`. Where a native control is visually replaced, the real control stays present and accessible (e.g. a visually-hidden native checkbox behind a custom box).
 
 **The rule:** a new component adopts this layout, ref pattern, styling approach, prop vocabulary, and accessibility baseline; departures are deliberate exceptions, not new defaults.
+
+## Component anatomy
+
+Two structures, composable rather than nested — the second is not the first's inner detail.
+
+- **Adorned Control** — *prefix · control · suffix*. A control flanked on the **inline axis** by affordances whose composition it owns. A caller supplies a node per side and never a layout, so supplying one can never displace an affordance the control composes itself.
+- **Field** — *label · control slot · description · error*, together with the wiring that associates them. The association is derived, not remembered: a field cannot render a message without linking it.
+
+An **Adorned Field** is a Field whose control is an Adorned Control. The two are independent — `Button` is an Adorned Control and **not** a Field, carrying leading and trailing affordances with no label, description or error.
+
+**The boundary.** Prefix and suffix are positions on the **inline axis**. A block control whose affordances sit at an edge — a counter beneath, a resize handle in a corner — is not an Adorned Control, and widening the shape to admit one is how a superset of every consumer's needs gets built instead of a contract.
+
+**This is vocabulary, not structure.** No shared adornment component exists: one would be structure with a single consumer, and what its contract should be is something a real second consumer settles.
 
 ## The variant model
 

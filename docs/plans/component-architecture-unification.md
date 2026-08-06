@@ -61,18 +61,9 @@ ComponentName/
 
 Named `parts/` rather than `components/`, because "components inside a component" reads as a nesting error. **Pure helpers are not hooks** and never live in `hooks/`. Bounded by **E3**: a folder appears when it has content.
 
-### 3.4 The anatomy, named
+### 3.4 The anatomy
 
-Two structures, composable rather than nested — the second is not the first's inner detail:
-
-- **Adorned Control** — *prefix · control · suffix*. A control flanked on the **inline axis** by affordances it owns the composition of.
-- **Field** — *label · control slot · description · error*, with the wiring that associates them.
-
-An **Adorned Field** is a Field whose control is an Adorned Control. The two are independent: the Pilot Control is an Adorned Control and **not** a Field — it carries leading and trailing affordances with no label, description or error — which is the evidence that this anatomy belongs to controls generally rather than to any one component.
-
-**Its boundary, named now rather than discovered later.** Prefix and suffix are positions on the **inline axis**. A block control whose affordances sit at an edge — a counter beneath, a resize handle in a corner — is **not** an Adorned Control, and widening the shape to admit one is how a superset of every consumer's needs gets built.
-
-**This is vocabulary, not structure.** No shared component is built for it: one would be structure with a single consumer, and what a general adornment component's contract should be is something a real second consumer settles.
+**Owned by [`design-system.md`](../frontend/design-system.md)** — Control, Field, Adorned Control, Adorned Field, and the inline-axis boundary. This plan applies the vocabulary and never redefines it; a plan ends `Historical`, so a concept living only here would lose its owner when the effort closes.
 
 ### 3.5 Component roles
 
