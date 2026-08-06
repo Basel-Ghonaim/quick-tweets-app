@@ -43,13 +43,18 @@ A plan is organized around its *strategy and structure*, not a task list. The us
 
 ## Updating a Plan
 
-A plan is a living document while `Active`: it evolves across pull requests (Documentation Work Items) as the effort's **strategy, sequencing, or risks** change. It does **not** track per-Work-Item progress or status — that belongs to the Issues, which the plan links and never mirrors (an execution plan owns the strategy, sequencing, rationale, risk, and structure; Issues own implementation, status, progress, and acceptance criteria — see [Documentation Strategy §5](../architecture/documentation-strategy.md)). Update `Last Updated` on each change.
+A plan is a living document while `Active`: it evolves as the effort's **strategy, sequencing, or risks** change. **It is never updated in a branch of its own.** A plan change is committed in the branch where the need for it was discovered; if no branch is open at the time, the next implementation branch carries it as its **first commit**, before implementation begins. Plan-only branches add documentation noise to the history without producing implementation value — a plan evolves with the work that justifies the change. It does **not** track per-Work-Item progress or status — that belongs to the Issues, which the plan links and never mirrors (an execution plan owns the strategy, sequencing, rationale, risk, and structure; Issues own implementation, status, progress, and acceptance criteria — see [Documentation Strategy §5](../architecture/documentation-strategy.md)). Update `Last Updated` on each change.
+
+## Authoring a Plan
+
+A new plan is drafted under `.project/` — the architect's working area, outside the tracked tree — while it is the **architect's working document rather than project documentation**. Ownership belongs to the architecture role; implementers consume approved plans and do not author them. On approval the plan moves into `docs/plans/` **in the first branch of its first Work Item**, and from that commit it is project documentation. No branch is ever created solely to author or adopt a plan.
 
 ## Plan Index
 
 | Plan | Type | Status | Parent Issue |
 |---|---|---|---|
 | [channel-verification.md](channel-verification.md) | Execution | Active | [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403) |
+| [component-architecture-unification.md](component-architecture-unification.md) | Execution | Active | [#465](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/465) |
 | [design-system-reestablishment.md](design-system-reestablishment.md) | Execution | Active | [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414) |
 | [login-registration-refinements.md](login-registration-refinements.md) | Execution | Active | [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384) |
 | [media-implementation.md](media-implementation.md) | Execution | Active | [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305) |
