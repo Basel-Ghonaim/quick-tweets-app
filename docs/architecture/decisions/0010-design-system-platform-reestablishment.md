@@ -3,6 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-07-31
 > **Deciders:** Basel Ghonaim
+> **Revised:** 2026-08-05 — Decision 2's test for *speculative* replaced: a capability is disqualified by being **ungrounded**, not by being **unused**. Decision itself unchanged.
 
 ## Context
 
@@ -20,7 +21,17 @@ Re-establish the Design System as a **platform that owns the product's presentat
 
 1. **The Design System is a platform that owns the presentation language.** It is a **platform, not a feature**: features depend on it, it depends on no feature, and it **never imports a feature**. Its **single authority is the mapping from declared UI *intent* to *appearance and behavior*** — a consumer declares intent (a primary action, a danger state, a raised surface, a text input) and the DS is the sole authority on what that looks and behaves like. **Consumers own composition and content; the DS owns the language they compose in.**
 
-2. **Foundation precedes adoption — with a guardrail.** The DS's existence precedes its consumers; the feature "no-consumer" deferral does not gate the foundation. **But this ADR decides the domain, boundary, ownership, and invariants only.** The **concrete vocabulary and component contracts are shaped and validated by the first real consumers**; **speculative specifics** — tokens or component APIs with no consuming surface — are **reserved, not frozen**, until a consumer needs them. This is the same *design-for-the-abstraction-don't-build-it* discipline as [ADR 0009](0009-channel-verification-platform-capability.md): decide the boundary now; do not freeze what only a real consumer can validate.
+2. **Foundation precedes adoption — and a missing consumer is not what makes something speculative.** The Design System is designed against the **product it will serve**, not against the surfaces that happen to exist today. A current consumer is **evidence that a capability is needed**; its absence is not evidence that the capability is not part of the language. **Speculative** means *ungrounded*, and a capability is grounded when **any one** of the following holds:
+
+   - **(i) Platform basis** — the concept already exists in the element or medium being wrapped. `disabled`, `readOnly`, `required`, `checked` are HTML: they have defined semantics and accessibility contracts, so nothing is being invented.
+   - **(ii) Named commitment** — the concept is named in a decision or roadmap already taken.
+   - **(iii) Set completion** — the concept is the missing member of an axis already opened. Given `isInvalid` and `isLoading`, `disabled` is not new vocabulary; it is a hole in a set already declared.
+
+   A capability with **no platform basis, no named commitment, and completing no open set** is speculative and stays **reserved, not built**.
+
+   **Two limits keep this bounded.** *Roles are admissible; granularities are not* — `--type-heading` is a role that can be named with confidence, while `--type-heading-{1..6}` is a claim about how many heading levels the product has, which only a design or a real consumer settles. And *values remain provisional*: authoring ahead of a design is safe precisely because a value is a swap, so authoring a role must never harden into a commitment to its value.
+
+   **This ADR still decides the domain, boundary, ownership, and invariants only.** Concrete names, ramps, and values remain execution concerns. The discipline is the same as [ADR 0009](0009-channel-verification-platform-capability.md)'s — *design the abstraction, don't over-build it* — with the test corrected: what disqualifies a capability is being ungrounded, not being unused.
 
 3. **Token architecture — three tiers, one binding rule, token-type agnostic.** Tokens are organized in **three tiers**: **Primitive** (raw, theme-invariant values; no intent; DS-internal) → **Semantic** (intent-named roles; the layer consumers bind to; where theme resolution occurs) → **Component** (optional, scoped, **derived** from semantic — names a component's local concerns, never new appearance). **Binding invariant:** a consumer binds only to **semantic** tokens (or its own component tokens derived from them) — **never** primitives, **never** hardcoded values. **This architecture is token-type agnostic** — it governs color, spacing, typography, elevation, motion, and any future token type **identically, and is defined once for all of them.** **Interaction states** (hover / active / disabled / …) are a **dimension within** the semantic and component tiers, **not a fourth tier**: the semantic layer provides emphasis steps, the component decides which step a state consumes. **Aliases** are a **mechanism, not a tier**; an additional brand/theme indirection layer is introduced **only when a real second binding exists.**
 
@@ -76,4 +87,4 @@ These are **intentionally deferred** and are **execution/implementation concerns
 - **The bootstrap-era drift is retired by construction** as the architecture's invariants are enforced — the binding rule ends primitive-direct/hardcoded consumption, key-parity ends theme drift, and the owned focus indicator ends per-component focus duplication. These are consequences of the invariants, tracked as implementation Work Items, not decided here.
 - **Ratified by accepting this ADR:** the **platform-vs-feature** classification (the Design System is a platform) and the **foundation-precedes-adoption** stance — with its guardrail — for this effort.
 - **Contract/doc impact:** the [API contract](../../api/api-contract.md) is unaffected (this is presentation only); `design-system.md` and the frontend architecture docs co-version with the DS where they reference it, as the rebuild lands.
-- This ADR is **immutable once accepted**; its status moves from `Proposed` to `Accepted` **on merge**. A future change to this direction is a new, **superseding** ADR.
+- Status moves from `Proposed` to `Accepted` **on merge**. Its lifecycle thereafter — revisable in place while the project is a `Foundation`, immutable once `Stable`, and superseded outright when the decision itself changes — is the [Documentation Strategy](../documentation-strategy.md)'s, not restated here.

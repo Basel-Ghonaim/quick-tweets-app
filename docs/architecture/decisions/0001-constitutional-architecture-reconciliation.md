@@ -49,4 +49,4 @@ Finalize and reconcile the constitutional architecture:
 - The Documentation Strategy, CLAUDE.md, and the Migration Plan are updated in this change to match.
 - The legacy `src/docs/Principles/*` files remain on disk, now orphaned — no authoritative pointer references them — and are therefore non-authoritative pending their migration Work Item.
 - This ADR **initializes the ADR register** (`docs/architecture/decisions/`) and establishes the `NNNN-title` file-naming convention.
-- Per the Documentation Strategy, this ADR is immutable once accepted; a future change to this decision is recorded as a new, superseding ADR. The status moves from `Proposed` to `Accepted` on merge.
+- Status moves from `Proposed` to `Accepted` **on merge**. Its lifecycle thereafter — revisable in place while the project is a `Foundation`, immutable once `Stable`, and superseded outright when the decision itself changes — is the [Documentation Strategy](../documentation-strategy.md)'s, not restated here.

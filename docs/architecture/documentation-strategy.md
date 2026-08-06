@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.1
-> **Last Updated:** 2026-07-14
+> **Version:** 1.2
+> **Last Updated:** 2026-08-05
 > **Owner:** Basel Ghonaim
 
 
@@ -32,7 +32,7 @@ These principles are binding. They mirror the project's engineering principles (
 4. **Describe intent and conventions, not inventory.** No document enumerates the file tree or narrates code that is self-evident in the repository. Documentation explains *patterns and reasons*, not *file listings*.
 5. **Document only what exists.** A section is written only when the code it describes exists. Speculative or aspirational documentation is not permitted.
 6. **Future work lives in the issue tracker**, not in documentation — except that the *strategy and sequencing* of a multi-Work-Item effort may be captured in an **execution plan** (`plans/`, a distinct lifecycle-governed class — see [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md)), which links to the tracker's live status and never restates it.
-7. **Significant decisions are recorded as ADRs** (see §8) and are immutable once accepted.
+7. **Significant decisions are recorded as ADRs** (see §8), revisable in place while the project is in its `Foundation` phase and immutable once it is `Stable`.
 8. **Documentation is versioned with the code that obligates it** (see §10), in the same change, under the same review.
 9. **Documentation describes the *intended* architecture; the code is the source of truth for the *actual* state.** Where the two diverge, the deviation is recorded as an architecture finding (see §9) — it is never normalized into the design documentation as if it were intentional.
 
@@ -79,7 +79,7 @@ docs/
     documentation-strategy.md    ← this document (the documentation constitution)
     system-overview.md           ← topology and request lifecycle across frontend/backend/database
     data-model.md                ← schema rationale (relationships, cascade, indexing); refers to schema.prisma
-    decisions/                   ← ADRs: one immutable file per architectural decision
+    decisions/                   ← ADRs: one file per architectural decision
     findings/                    ← architecture findings, tech debt, and design concerns (one file per finding)
 
   api/
@@ -194,9 +194,14 @@ Do not create ADRs for routine implementation work, small refactors, naming chan
 ### ADR rules
 - **Location:** `architecture/decisions/`.
 - **One decision per file.** Each ADR records a single decision.
-- **Immutability:** an accepted ADR is never edited to change its decision. If a decision changes, a **new** ADR is written that supersedes the old one, and the old one is marked superseded with a link forward. The historical record is preserved.
+- **Lifecycle — the project declares an architectural phase, and the phase decides whether an ADR may be revised.**
+  - **`Foundation`** (the current phase). An accepted ADR **may be revised in place** when the revision *clarifies, corrects, narrows or widens an existing criterion while leaving the decision itself standing*. A revision carries a `> **Revised:**` line in the header stating the date and what changed in one sentence.
+  - **`Stable`.** Accepted ADRs become **immutable**; a change is a new ADR that supersedes the old one, and the old one is marked superseded with a link forward.
+  - **A new ADR is required in either phase** when the decision itself changes, the architectural philosophy changes, or a new direction is introduced — replacing Clean Architecture with a feature architecture, or CSS Modules with a utility framework, is a new ADR whatever the phase.
+  - **The phase is declared, never inferred.** It is recorded here, and moving to `Stable` is itself an architectural decision. Current phase: **`Foundation`**.
+  - **Why the phase exists.** A foundation is revised faster than it is superseded: during it, most changes sharpen a criterion rather than reverse a decision, and minting an ADR for each produces a chain of near-duplicates that obscures the decision instead of preserving it. The cost is real and accepted — a reader of a revised ADR sees its current form, not its evolution. Git preserves the prior text, and the `Revised:` line is what tells a reader to go looking.
 - **Content:** the context that forced the decision, the decision itself, the alternatives considered, and the consequences (trade-offs accepted). ADRs explain *why*, not *how*.
-- **Status:** each ADR carries a status of `Proposed`, `Accepted`, or `Superseded`.
+- **Status:** each ADR carries a status of `Proposed`, `Accepted`, or `Superseded`. A revised ADR stays `Accepted` — revision is not a status.
 - **Authority:** ADRs are the single owner of architectural rationale **that no other document owns**. Where a platform, contract, or feature document owns a decision, it owns that decision's rationale too, and an ADR does not duplicate it. Other documents link to ADRs rather than re-explaining a decision they do not own.
 
 ---

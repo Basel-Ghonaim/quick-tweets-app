@@ -4,6 +4,7 @@
 > **Date:** 2026-08-04
 > **Deciders:** Basel Ghonaim
 > **Amends:** [ADR 0010](0010-design-system-platform-reestablishment.md) — Decision 3
+> **Revised:** 2026-08-05 — Decision 1 now cites ADR 0010 Decision 2's corrected test for *speculative*; the criterion itself is unchanged.
 
 ## Context
 
@@ -26,7 +27,7 @@ The test that survives both is neither. A family needs an intent layer when it h
    - **(a) Contextual resolution.** Its values must resolve differently along some contextual axis — theme, density, reduced motion, script, direction, brand, platform.
    - **(b) Role divergence.** Two of its values are the same magnitude today but serve different purposes, so they must be free to diverge. This is the condition the fill / on-surface split already satisfied, and it applies **I4** and ADR 0010 Decision 4 unchanged.
 
-   A family meeting neither is bound directly from its **curated primitive scale**, and its semantic tier stays **empty until a reason appears** — the same *reserve, don't build* discipline ADR 0010 Decision 2 already applies to speculative tokens.
+   A family meeting neither is bound directly from its **curated primitive scale**, and its semantic tier stays **empty until a reason appears**. "A reason" is ADR 0010 Decision 2's test — a platform basis, a named commitment, or an axis this family completes — not the presence of a consumer.
 
 2. **Token-type agnosticism means the model is defined once, not that every family populates every tier.** The architecture is authored once and governs any family, present or future; which tiers a given family populates is decided by the criterion in Decision 1. The **Component** tier was already optional under ADR 0010 Decision 3; the **Semantic** tier is now optional on the same terms and by the same reasoning. The tiers themselves, their order, and their meanings are unchanged.
 
@@ -43,7 +44,7 @@ The test that survives both is neither. A family needs an intent layer when it h
    | **Motion** | intent | **reduced motion is (a)** — the same structural need theme creates for colour |
    | **Spacing** | **hybrid** | control-scoped spacing qualifies under (a) via density; **layout spacing does not** and continues to bind the scale directly |
    | **Border radius, border width** | scale | neither condition met; a second brand would introduce (a) for radius, and the tier is authored then, not now |
-   | **Shadow** | undecided | no consumer has been reached yet; classified when one is, since black shadows on a dark surface may make it (a) |
+   | **Shadow** | undecided | classified at its first consumer — not to gate admission, but because whether black shadows on a dark surface force a theme resolution is *evidence* only a rendered consumer supplies |
 
 6. **Typography's intent tier is composed of text styles, not sizes.** Where typography qualifies it exposes **composite styles** — size, weight, line-height and tracking bound together as one named intent — because those values are never independently chosen and choosing them separately is how typographic consistency decays. A font-size ramp with a separate weight token is not a semantic typography tier; it is the primitive scale with extra names.
 
