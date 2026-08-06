@@ -1,7 +1,7 @@
-import React, { forwardRef } from "react";
+import { forwardRef } from "react";
 import styles from "./Button.module.css";
 import type { ButtonProps } from "./Button.types";
-import { classNames } from "../shared";
+import { classNames, customProperties } from "../shared";
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -23,17 +23,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => {
-    const dynamicStyles = {
-      "--btn-bg": `var(--control-fill-${color})`,
-      "--btn-bg-hover": `var(--control-fill-${color}-hover)`,
-      "--btn-border": `var(--control-fill-${color})`,
-      "--btn-text":
-        variant === "contained"
-          ? `var(--control-fill-${color}-text)`
-          : `var(--control-on-surface-${color})`,
-      "--btn-bg-alpha": `var(--control-fill-${color}-subtle)`,
-      ...style,
-    } as React.CSSProperties;
+    const dynamicStyles = customProperties(
+      {
+        "--btn-bg": `var(--control-fill-${color})`,
+        "--btn-bg-hover": `var(--control-fill-${color}-hover)`,
+        "--btn-border": `var(--control-fill-${color})`,
+        "--btn-text":
+          variant === "contained"
+            ? `var(--control-fill-${color}-text)`
+            : `var(--control-on-surface-${color})`,
+        "--btn-bg-alpha": `var(--control-fill-${color}-subtle)`,
+      },
+      style,
+    );
 
     return (
       <button

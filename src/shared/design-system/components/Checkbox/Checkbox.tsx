@@ -1,7 +1,7 @@
-import React, { forwardRef } from "react";
+import { forwardRef } from "react";
 import styles from "./Checkbox.module.css";
 import type { CheckboxProps } from "./Checkbox.types";
-import { classNames, useFieldA11y } from "../shared";
+import { classNames, customProperties, useFieldA11y } from "../shared";
 import { CheckIcon } from "../../icons";
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
@@ -14,6 +14,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       errorMessage,
       helperText,
       className,
+      style,
       disabled,
       id,
       ...props
@@ -27,10 +28,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       helperText,
     });
 
-    const dynamicStyles = {
-      "--checkbox-color": `var(--color-${color}-primary)`,
-      "--checkbox-alpha": `var(--color-${color}-alpha)`,
-    } as React.CSSProperties;
+    const dynamicStyles = customProperties(
+      {
+        "--checkbox-color": `var(--color-${color}-primary)`,
+        "--checkbox-alpha": `var(--color-${color}-alpha)`,
+      },
+      style,
+    );
 
     return (
       <div
