@@ -3,11 +3,12 @@ import type { ControlSize, Role } from "../../foundations";
 
 /**
  * Native attributes the control vocabulary shadows. `size` is an integer width
- * on an input and `color` is a legacy presentational attribute; both are
+ * on an input, `color` is a legacy presentational attribute, and `prefix` is an
+ * RDFa attribute no control uses but the adornment anatomy names. All three are
  * omitted once here rather than per component, which is how the layer ended up
  * with three spellings of one size prop.
  */
-type ShadowedNativeAttributes = "size" | "color";
+type ShadowedNativeAttributes = "size" | "color" | "prefix";
 
 /** The native surface of the element a control wraps, minus what it shadows. */
 export type NativeProps<E extends ElementType> = Omit<

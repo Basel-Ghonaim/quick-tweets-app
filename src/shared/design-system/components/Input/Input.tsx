@@ -1,91 +1,114 @@
-import React, { forwardRef, useId, useState } from "react";
+import { forwardRef, useState } from "react";
 import styles from "./Input.module.css";
 import type { InputProps } from "./Input.types";
-import { EyeIcon, EyeOffIcon } from "@shared/design-system/icons";
+import { PasswordToggle } from "./parts/PasswordToggle";
+import { classNames, customProperties, useFieldA11y } from "../shared";
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       variant = "outlined",
       color = "primary",
-      inputSize = "medium",
+      size = "medium",
       isInvalid = false,
       isLoading = false,
       fullWidth = false,
-      leftIcon,
-      rightIcon,
-      errorMessage,
-      className = "",
-      style,
+      prefix,
+      suffix,
       label,
+      errorMessage,
+      helperText,
+      className,
+      style,
       disabled,
+      id,
       type,
       ...props
     },
     ref,
   ) => {
-    const generatedId = useId();
-    const errorId = `${generatedId}-error`;
-    const containerClasses = [
-      styles.container,
-      styles[`variant-${variant}`],
-      styles[`size-${inputSize}`],
-      fullWidth ? styles.fullWidth : "",
-      isInvalid ? styles.isInvalid : "",
-      disabled ? styles.isDisabled : "",
-      leftIcon ? styles.hasLeftIcon : "",
-      rightIcon || isLoading || type === "password" ? styles.hasRightIcon : "",
-      className,
-    ]
-      .filter(Boolean)
-      .join(" ");
-
-    const dynamicStyles = {
-      "--input-border-focus": `var(--color-${color}-primary)`,
-      "--input-border-alpha": `var(--color-${color}-alpha)`,
-      ...style,
-    } as React.CSSProperties;
+    const { controlId, errorId, helperId, showError, describedBy } = useFieldA11y({
+      id,
+      isInvalid,
+      errorMessage,
+      helperText,
+    });
 
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-    const actualType =
-      type === "password" ? (isPasswordVisible ? "text" : "password") : type;
+    const isPassword = type === "password";
+
+    // The affordances the field composes itself. A caller's `suffix` sits
+    // alongside them rather than replacing them, so supplying one can never
+    // remove the means of revealing a password or the busy indicator.
+    const ownedSuffix = isLoading ? (
+      <span className={styles.spinner} aria-hidden="true" />
+    ) : isPassword ? (
+      <PasswordToggle
+        controlId={controlId}
+        disabled={disabled}
+        className={styles.passwordToggle}
+        onToggle={setIsPasswordVisible}
+      />
+    ) : null;
+
+    const hasSuffix = Boolean(suffix) || ownedSuffix !== null;
 
     return (
-      <div className={containerClasses} style={dynamicStyles}>
-        {label && <div className={styles.label}>{label}</div>}
-        <div className={styles.wrapper}>
-          {leftIcon && <span className={styles.icon}>{leftIcon}</span>}
+      <div
+        className={classNames(
+          styles.root,
+          styles[`variant-${variant}`],
+          styles[`size-${size}`],
+          fullWidth && styles.fullWidth,
+          isInvalid && styles.isInvalid,
+          disabled && styles.isDisabled,
+          Boolean(prefix) && styles.hasPrefix,
+          hasSuffix && styles.hasSuffix,
+          className,
+        )}
+        style={customProperties(
+          {
+            "--input-border-focus": `var(--color-${color}-primary)`,
+            "--input-border-alpha": `var(--color-${color}-alpha)`,
+          },
+          style,
+        )}
+      >
+        {label && (
+          <label className={styles.label} htmlFor={controlId}>
+            {label}
+          </label>
+        )}
+
+        <div className={styles.control}>
+          {prefix && <span className={styles.adornment}>{prefix}</span>}
+
           <input
             ref={ref}
-            type={actualType}
+            id={controlId}
+            type={isPassword && isPasswordVisible ? "text" : type}
             className={styles.input}
             disabled={disabled}
-            aria-invalid={isInvalid}
-            aria-describedby={isInvalid && errorMessage ? errorId : undefined}
+            aria-invalid={isInvalid || undefined}
+            aria-describedby={describedBy}
             {...props}
           />
 
-          {type === "password" && (
-            <button
-              type="button"
-              className={styles.passwordToggle}
-              onClick={() => setIsPasswordVisible((prev) => !prev)}
-              tabIndex={-1}
-            >
-              {isPasswordVisible ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
-            </button>
-          )}
-
-          {isLoading ? (
-            <span className={styles.icon}>
-              <span className={styles.spinner} aria-hidden="true" />
+          {hasSuffix && (
+            <span className={styles.adornment}>
+              {ownedSuffix}
+              {suffix}
             </span>
-          ) : rightIcon ? (
-            <span className={styles.icon}>{rightIcon}</span>
-          ) : null}
+          )}
         </div>
 
-        {isInvalid && errorMessage && (
+        {helperText && (
+          <span id={helperId} className={styles.helperText}>
+            {helperText}
+          </span>
+        )}
+
+        {showError && (
           <span id={errorId} className={styles.errorMessage} role="alert">
             {errorMessage}
           </span>
