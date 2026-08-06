@@ -28,11 +28,13 @@ Theme values live in `foundations/theme/`. **Light is the default**, defined on 
 
 Every component follows the same shape, so a new one is predictable to build and to consume:
 
-- **File layout** — one folder per component: `Component.tsx`, `Component.types.ts`, `Component.module.css`, `Component.stories.tsx`, and an `index.ts` barrel.
-- **Ref & identity** — `forwardRef` to the underlying native element, with an explicit `displayName`.
-- **Styling** — **CSS Modules** for static rules; **runtime CSS custom properties** for the dynamic, token-driven parts (e.g. a component sets `--x-color: var(--color-${color}-primary)` from its props). Class names are composed from a base class plus `variant-*`, `size-*`, and state flags, filtered and joined.
-- **Prop vocabulary** — a shared vocabulary reused across components: `variant`, `color` (the six-role scale above), a size prop **named to avoid clashing with native attributes** (e.g. `inputSize`, `checkboxSize`), `isInvalid` + `errorMessage`, `fullWidth`, `leftIcon`/`rightIcon`, and `label`. Props **extend the native element** (`ComponentPropsWithRef<…>`, `Omit`-ing the clashing native `size`/`color`), so standard attributes pass through.
-- **Accessibility** — `useId` links label and control; validity is exposed via `aria-invalid`; error text is announced with `role="alert"` and, where an error id is rendered, linked to the control via `aria-describedby`. Where a native control is visually replaced, the real control stays present and accessible (e.g. a visually-hidden native checkbox behind a custom box).
+- **File layout** — one folder per component: `Component.tsx`, `Component.types.ts`, `Component.module.css`, `Component.stories.tsx`, and an `index.ts` barrel. Beyond those, a responsibility earns a directory at its **second** member and stays a flat, self-describing file below it: `hooks/`, `parts/` (internal sub-components, never exported), `variants/`, `constants.ts`. A folder is never created empty in anticipation.
+- **Grouping** — components sit under the anatomy they belong to: `controls/`, `fields/`, `display/`. Categories are created when something populates them, and Storybook titles follow the same taxonomy so the code and the catalogue never disagree.
+- **Ref & identity** — `forwardRef` to the underlying native element, with an explicit `displayName`. Where a component owns the element and its internals need it, the ref is **published** with `useImperativeHandle` rather than cast — `forwardRef` may hand over a callback ref, and casting one fails silently.
+- **Styling** — **CSS Modules** for static rules; **runtime CSS custom properties** for the token-driven parts. The root class is `.root`; the rest are `variant-*`, `size-*`, and `is*` state flags. Class lists are composed with the shared helper, and custom properties are merged with the caller's `style` through the shared typed helper rather than cast at each call site.
+- **Prop vocabulary** — declared once and imported, never redeclared: the role scale and the control sizes come from the foundations, and the prop contract adds `isInvalid` / `isLoading` plus the field's `label`, `errorMessage` and `helperText`. Props **extend the native element**, with the attributes the vocabulary shadows omitted **once** in the shared contract. `disabled` is never redeclared — it belongs to the element.
+- **Variant props** — a component whose variants take different props is a **discriminated union** on `variant`, so a prop belonging to one variant cannot be passed with another.
+- **Accessibility** — the field's ids and its `aria-describedby` are **derived by the shared hook**, so a component cannot render a message without associating it. Validity is exposed via `aria-invalid`; error text is announced with `role="alert"`. Where a native control is visually replaced, the real control stays present and accessible.
 
 **The rule:** a new component adopts this layout, ref pattern, styling approach, prop vocabulary, and accessibility baseline; departures are deliberate exceptions, not new defaults.
 
@@ -67,9 +69,15 @@ Icons are a uniform, interchangeable set: every icon accepts the same `IconProps
 
 ## Organization & public API
 
-The system is organized by responsibility: `foundations/` (tokens + theme), `components/` (one folder each), `icons/` (the icon set + its shared contract), and `utils/` (small presentational helpers). **Barrels are the public API** — each component's `index.ts`, the `components/` barrel, and the design-system root `index.ts` (which also imports `foundations/` for its side-effect CSS).
+The system is organized by responsibility: `foundations/` (the token tiers, the resolution axes, and the language's enumerated scales), `components/` (grouped by anatomy, with the contract and helpers every component shares under `components/shared/`), and `icons/`.
 
-**The rule:** the barrels are the **only** public surface. Everything inside a component or module — variant folders, hooks, sub-components, and utilities — is private implementation and is **never imported directly**; consumers import solely from the design-system barrels.
+**The barrels are the only public surface.** Everything inside a component — variant folders, hooks, parts, helpers — is private implementation. A consumer imports the design-system root and nothing deeper, and the layer never imports itself through its own alias.
+
+**Three checks keep this true rather than merely stated:**
+
+- Every `styles.x` a component reads exists in the stylesheet its root owns. A CSS Module resolves an unknown class to `undefined` and renders the element unstyled with no error anywhere, so nothing else can see a rename that missed a call site.
+- No consumer reaches past the root barrel, and no file in the layer imports through the public alias.
+- Every `var(--…)` reference resolves to a definition, and no token is declared both axis-invariantly and under a resolution axis.
 
 ## Relationship to forms, and a known cycle
 
