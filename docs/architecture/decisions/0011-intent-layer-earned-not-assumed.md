@@ -44,7 +44,7 @@ The test that survives both is neither. A family needs an intent layer when it h
    | **Motion** | intent | **reduced motion is (a)** — the same structural need theme creates for colour |
    | **Spacing** | **hybrid** | control-scoped spacing qualifies under (a) via density; **layout spacing does not** and continues to bind the scale directly |
    | **Border radius, border width** | scale | neither condition met; a second brand would introduce (a) for radius, and the tier is authored then, not now |
-   | **Shadow** | undecided | no consumer has been reached yet; classified when one is, since black shadows on a dark surface may make it (a) |
+   | **Shadow** | undecided | classified at its first consumer — not to gate admission, but because whether black shadows on a dark surface force a theme resolution is *evidence* only a rendered consumer supplies |
 
 6. **Typography's intent tier is composed of text styles, not sizes.** Where typography qualifies it exposes **composite styles** — size, weight, line-height and tracking bound together as one named intent — because those values are never independently chosen and choosing them separately is how typographic consistency decays. A font-size ramp with a separate weight token is not a semantic typography tier; it is the primitive scale with extra names.
 

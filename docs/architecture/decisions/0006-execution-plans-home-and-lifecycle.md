@@ -54,4 +54,4 @@ Introduce a formal home and lifecycle for execution plans, without a new governa
 - The Documentation Migration Plan is the category's first inhabitant; **relocating it into `docs/plans/` and marking it `Historical` is a separate follow-up Work Item** (it repoints links in ADR 0001, the Strategy, and the README — link-integrity maintenance per Strategy §11.5, not a decision change). This ADR does not move it.
 - Documentation Principles 5 and 6 are **clarified in scope** (permanent reference documentation), not weakened.
 - The Execution Standard and the Documentation Strategy retain governance ownership; this ADR adds only the pointers that wire the category in.
-- Immutable once accepted; status moves from `Proposed` to `Accepted` on merge. A future change to this direction is a new, superseding ADR.
+- Status moves from `Proposed` to `Accepted` **on merge**. Its lifecycle thereafter — revisable in place while the project is a `Foundation`, immutable once `Stable`, and superseded outright when the decision itself changes — is the [Documentation Strategy](../documentation-strategy.md)'s, not restated here.
