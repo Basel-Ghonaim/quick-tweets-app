@@ -25,14 +25,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const dynamicStyles = customProperties(
       {
-        "--btn-bg": `var(--control-fill-${color})`,
-        "--btn-bg-hover": `var(--control-fill-${color}-hover)`,
-        "--btn-border": `var(--control-fill-${color})`,
-        "--btn-text":
+        "--button-bg": `var(--control-fill-${color})`,
+        "--button-bg-hover": `var(--control-fill-${color}-hover)`,
+        "--button-border": `var(--control-fill-${color})`,
+        "--button-text":
           variant === "contained"
             ? `var(--control-fill-${color}-text)`
             : `var(--control-on-surface-${color})`,
-        "--btn-bg-alpha": `var(--control-fill-${color}-subtle)`,
+        "--button-bg-alpha": `var(--control-fill-${color}-subtle)`,
       },
       style,
     );

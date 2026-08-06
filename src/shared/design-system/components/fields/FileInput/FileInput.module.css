@@ -301,21 +301,6 @@
   background-color: var(--color-surface, white);
 }
 
-.fileListOverlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  background-color: var(--file-input-alpha, rgba(59, 130, 246, 0.1));
-  border: var(--border-width-medium, 2px) solid var(--file-input-color, var(--color-primary-primary));
-  border-radius: var(--border-radius-lg, 12px);
-  z-index: 2;
-  color: var(--file-input-color, var(--color-primary-primary));
-}
-
 .fileListRow {
   display: flex;
   align-items: center;
@@ -520,31 +505,6 @@
 }
 
 /* ── Edit badge (bottom-right floating button on filled state) ── */
-
-.avatarEditBadge {
-  position: absolute;
-  bottom: 4px;
-  right: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--color-text-secondary, #6b7280);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  z-index: 3;
-  opacity: 1;
-}
-
-.avatarEditBadge:hover {
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08);
-  color: var(--file-input-color, var(--color-primary-primary));
-}
 
 /* ── Hover overlay (subtle — only on filled state) ── */
 

@@ -7,10 +7,6 @@
   font-family: var(--font-family-base);
 }
 
-.fullWidth {
-  width: 100%;
-}
-
 /* ─── Row: box + label side-by-side ─────────────────────────────────────── */
 
 .row {
