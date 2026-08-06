@@ -3,7 +3,6 @@ import { ICON_DEFAULTS } from "../icon.types";
 
 export const UploadIcon = ({
   size = ICON_DEFAULTS.size,
-  color = ICON_DEFAULTS.color,
   strokeWidth = ICON_DEFAULTS.strokeWidth,
   className,
 }: IconProps) => (
@@ -12,7 +11,7 @@ export const UploadIcon = ({
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke={color}
+    stroke="currentColor"
     strokeWidth={strokeWidth}
     strokeLinecap="round"
     strokeLinejoin="round"
