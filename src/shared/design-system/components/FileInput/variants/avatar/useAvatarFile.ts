@@ -8,8 +8,10 @@ interface UseAvatarFileOptions {
   accept?: string;
   maxSize?: number;
   disabled: boolean;
-  onChange?: (files: File | File[] | null) => void;
-  onNativeChange?: React.ChangeEventHandler<HTMLInputElement>;
+  /** The parsed selection, reported whenever it changes. */
+  onFilesChange?: (files: File[]) => void;
+  /** The platform's own handler, forwarded from the hidden input. */
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   onValidationError: (error: string) => void;
 }
 
@@ -49,8 +51,8 @@ export function useAvatarFile({
   accept,
   maxSize,
   disabled,
+  onFilesChange,
   onChange,
-  onNativeChange,
   onValidationError,
 }: UseAvatarFileOptions): UseAvatarFileReturn {
   const [file, setFile] = useState<File | null>(null);
@@ -128,9 +130,9 @@ export function useAvatarFile({
     (newFile: File) => {
       setFile(newFile);
       onValidationError("");
-      onChange?.(newFile);
+      onFilesChange?.([newFile]);
     },
-    [onChange, onValidationError],
+    [onFilesChange, onValidationError],
   );
 
   // ── Click handler ──
@@ -155,9 +157,9 @@ export function useAvatarFile({
       }
 
       selectFile(result.valid[0]);
-      onNativeChange?.(e);
+      onChange?.(e);
     },
-    [accept, maxSize, onValidationError, selectFile, onNativeChange],
+    [accept, maxSize, onValidationError, selectFile, onChange],
   );
 
   // ── Drop handler ──
@@ -215,11 +217,12 @@ export function useAvatarFile({
       e.stopPropagation();
       setFile(null);
       onValidationError("");
-      onChange?.(null);
+      // An empty selection, not an absent one: the control still exists.
+      onFilesChange?.([]);
       // Reset native input so re-selecting the same file works
       if (inputRef.current) inputRef.current.value = "";
     },
-    [onChange, onValidationError, inputRef],
+    [onFilesChange, onValidationError, inputRef],
   );
 
   // ── Replace file (triggers file picker) ──

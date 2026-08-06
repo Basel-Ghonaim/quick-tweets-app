@@ -1,5 +1,6 @@
 import styles from "../../FileInput.module.css";
-import type { DropzoneInputProps } from "./DropzoneInput.types";
+import type { VariantContext } from "../variant.types";
+import { customProperties } from "../../../shared";
 import { useDropzoneFiles } from "./useDropzoneFiles";
 import { DragOverlay } from "./parts/DragOverlay";
 import { DropzoneEmpty } from "./parts/DropzoneEmpty";
@@ -17,26 +18,34 @@ import { FileList } from "./parts/FileList";
  * - **Image-only** (accept="image/*"): Thumbnail grid with add-more and X delete
  * - **General files**: Bordered list with file type icons and inline previews
  */
+interface DropzoneInputProps {
+  context: VariantContext;
+  multiple: boolean;
+  maxFiles?: number;
+  minFiles?: number;
+}
+
 export const DropzoneInput = ({
-  inputRef,
-  generatedId,
-  errorId,
-  helperId,
-  name,
-  accept,
-  maxSize,
+  context,
   multiple,
   maxFiles,
   minFiles,
-  disabled,
-  isInvalid,
-  errorMessage,
-  helperText,
-  color,
-  onChange,
-  onNativeChange,
-  onValidationError,
 }: DropzoneInputProps) => {
+  const {
+    inputRef,
+    controlId,
+    describedBy,
+    name,
+    accept,
+    maxSize,
+    disabled,
+    isInvalid,
+    color,
+    onChange,
+    onFilesChange,
+    onValidationError,
+  } = context;
+
   const dropzone = useDropzoneFiles({
     inputRef,
     accept,
@@ -46,16 +55,16 @@ export const DropzoneInput = ({
     minFiles,
     disabled,
     onChange,
-    onNativeChange,
+    onFilesChange,
     onValidationError,
   });
 
   // ── Shared ──
 
-  const dynamicStyles = {
+  const dynamicStyles = customProperties({
     "--file-input-color": `var(--color-${color}-primary)`,
     "--file-input-alpha": `var(--color-${color}-alpha)`,
-  } as React.CSSProperties;
+  });
 
   const dragProps = {
     onDrop: dropzone.handleDrop,
@@ -75,7 +84,7 @@ export const DropzoneInput = ({
   const hiddenInput = (
     <input
       ref={inputRef}
-      id={generatedId}
+      id={controlId}
       type="file"
       name={name}
       accept={accept}
@@ -83,12 +92,8 @@ export const DropzoneInput = ({
       disabled={disabled}
       className={styles.nativeInput}
       onChange={dropzone.handleFileChange}
-      aria-invalid={isInvalid}
-      aria-describedby={
-        [isInvalid && errorMessage ? errorId : "", helperText ? helperId : ""]
-          .filter(Boolean)
-          .join(" ") || undefined
-      }
+      aria-invalid={isInvalid || undefined}
+      aria-describedby={describedBy}
     />
   );
 

@@ -1,171 +1,128 @@
-import { forwardRef, useId, useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import styles from "./FileInput.module.css";
 import type { FileInputProps } from "./FileInput.types";
+import type { VariantContext } from "./variants/variant.types";
 import { StandardInput, DropzoneInput, AvatarInput } from "./variants";
+import { classNames, useFieldA11y } from "../shared";
 
 export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
-  (
-    {
+  (props, ref) => {
+    const {
       name,
       label,
-      variant = "standard",
-      avatarShape = "circle",
-      avatarFill = "default",
-      avatarBorder = "dashed",
-      avatarSize = 120,
       color = "primary",
       accept,
       maxSize,
-      multiple = false,
-      maxFiles,
-      minFiles,
       isInvalid = false,
       errorMessage,
       helperText,
       disabled = false,
       fullWidth = false,
-      className = "",
-      children,
+      className,
+      id,
       onChange,
-      onNativeChange,
-    },
-    ref,
-  ) => {
-    const generatedId = useId();
-    const errorId = `${generatedId}-error`;
-    const helperId = `${generatedId}-helper`;
-    const internalRef = useRef<HTMLInputElement>(null);
-    const inputRef = (ref as React.RefObject<HTMLInputElement>) ?? internalRef;
+      onFilesChange,
+    } = props;
+
+    // The shell owns the element and the variants need a real object ref to
+    // open the picker, so the forwarded ref is *published* rather than passed
+    // through. The previous cast to RefObject silently mishandled a callback
+    // ref, which is the other half of what forwardRef may hand you.
+    const inputRef = useRef<HTMLInputElement>(null);
+    useImperativeHandle(ref, () => inputRef.current as HTMLInputElement, []);
+
     const [validationError, setValidationError] = useState("");
 
-    const hasError = isInvalid || !!validationError;
+    // A constraint the variant enforced outranks one the caller declared, and
+    // whichever is shown is the one the control is described by — the internal
+    // error previously rendered with no id, so nothing pointed at it.
+    const effectiveError = validationError || errorMessage;
+    const hasError = isInvalid || Boolean(validationError);
 
-    const containerClasses = [
-      styles.container,
-      fullWidth ? styles.fullWidth : "",
-      variant === "avatar" ? styles.avatarContainer : "",
-      hasError ? styles.isInvalid : "",
-      disabled ? styles.isDisabled : "",
-      className,
-    ]
-      .filter(Boolean)
-      .join(" ");
+    const { controlId, errorId, helperId, showError, describedBy } = useFieldA11y({
+      id,
+      isInvalid: hasError,
+      errorMessage: effectiveError,
+      helperText,
+    });
+
+    const context: VariantContext = {
+      inputRef,
+      controlId,
+      describedBy,
+      name,
+      accept,
+      maxSize,
+      disabled,
+      isInvalid: hasError,
+      color,
+      onChange,
+      onFilesChange,
+      onValidationError: setValidationError,
+    };
 
     const renderVariant = () => {
-      switch (variant) {
-        case "standard":
-          return (
-            <StandardInput
-              inputRef={inputRef}
-              generatedId={generatedId}
-              errorId={errorId}
-              helperId={helperId}
-              name={name}
-              accept={accept}
-              maxSize={maxSize}
-              multiple={multiple}
-              maxFiles={maxFiles}
-              minFiles={minFiles}
-              disabled={disabled}
-              isInvalid={isInvalid}
-              errorMessage={errorMessage}
-              helperText={helperText}
-              color={color}
-              avatarShape={avatarShape}
-              avatarFill={avatarFill}
-              avatarBorder={avatarBorder}
-              avatarSize={avatarSize}
-              children={children}
-              onChange={onChange}
-              onNativeChange={onNativeChange}
-              onValidationError={setValidationError}
-            />
-          );
-
+      switch (props.variant) {
         case "dropzone":
           return (
             <DropzoneInput
-              inputRef={inputRef}
-              generatedId={generatedId}
-              errorId={errorId}
-              helperId={helperId}
-              name={name}
-              accept={accept}
-              maxSize={maxSize}
-              multiple={multiple}
-              maxFiles={maxFiles}
-              minFiles={minFiles}
-              disabled={disabled}
-              isInvalid={isInvalid}
-              errorMessage={errorMessage}
-              helperText={helperText}
-              color={color}
-              avatarShape={avatarShape}
-              avatarFill={avatarFill}
-              avatarBorder={avatarBorder}
-              avatarSize={avatarSize}
-              onChange={onChange}
-              onNativeChange={onNativeChange}
-              onValidationError={setValidationError}
+              context={context}
+              multiple={props.multiple ?? false}
+              maxFiles={props.maxFiles}
+              minFiles={props.minFiles}
             />
           );
 
         case "avatar":
           return (
             <AvatarInput
-              inputRef={inputRef}
-              generatedId={generatedId}
-              errorId={errorId}
-              helperId={helperId}
-              name={name}
-              accept={accept}
-              maxSize={maxSize}
-              multiple={false}
-              disabled={disabled}
-              isInvalid={isInvalid}
-              errorMessage={errorMessage}
-              helperText={helperText}
-              color={color}
-              avatarShape={avatarShape}
-              avatarFill={avatarFill}
-              avatarBorder={avatarBorder}
-              avatarSize={avatarSize}
-              onChange={onChange}
-              onNativeChange={onNativeChange}
-              onValidationError={setValidationError}
+              context={context}
+              avatarShape={props.avatarShape ?? "circle"}
+              avatarFill={props.avatarFill ?? "default"}
+              avatarBorder={props.avatarBorder ?? "dashed"}
+              avatarSize={props.avatarSize ?? 120}
             />
           );
 
         default:
-          return null;
+          return (
+            <StandardInput
+              context={context}
+              multiple={props.multiple ?? false}
+              trigger={props.children}
+            />
+          );
       }
     };
 
     return (
-      <div className={containerClasses}>
+      <div
+        className={classNames(
+          styles.root,
+          fullWidth && styles.fullWidth,
+          props.variant === "avatar" && styles.avatarContainer,
+          hasError && styles.isInvalid,
+          disabled && styles.isDisabled,
+          className,
+        )}
+      >
         {label && (
-          <label htmlFor={generatedId} className={styles.label}>
+          <label htmlFor={controlId} className={styles.label}>
             {label}
           </label>
         )}
 
         {renderVariant()}
 
-        {helperText && !isInvalid && !validationError && (
+        {helperText && !showError && (
           <span id={helperId} className={styles.helperText}>
             {helperText}
           </span>
         )}
 
-        {validationError && (
-          <span className={styles.errorMessage} role="alert">
-            {validationError}
-          </span>
-        )}
-
-        {isInvalid && errorMessage && !validationError && (
+        {showError && (
           <span id={errorId} className={styles.errorMessage} role="alert">
-            {errorMessage}
+            {effectiveError}
           </span>
         )}
       </div>
