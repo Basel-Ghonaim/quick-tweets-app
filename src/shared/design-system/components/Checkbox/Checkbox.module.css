@@ -1,6 +1,6 @@
 /* ─── Container ──────────────────────────────────────────────────────────── */
 
-.container {
+.root {
   display: inline-flex;
   flex-direction: column;
   gap: var(--space-1, 4px);
@@ -88,7 +88,7 @@
 
 /* ─── Hover (when not disabled and not invalid) ──────────────────────────── */
 
-.container:not(.isInvalid) .row:hover .box {
+.root:not(.isInvalid) .row:hover .box {
   border-color: var(--checkbox-color);
 }
 
@@ -133,4 +133,9 @@
   font-size: var(--font-size-xs);
   color: var(--color-error-primary);
   line-height: var(--line-height-base, 1.5);
+}
+
+.helperText {
+  font: var(--type-control-helper);
+  color: var(--color-text-secondary);
 }

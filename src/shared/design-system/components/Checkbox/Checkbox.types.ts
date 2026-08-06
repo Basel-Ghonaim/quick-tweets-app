@@ -1,22 +1,12 @@
-import type { ComponentPropsWithRef } from "react";
+import type { FieldProps, NativeProps } from "../shared";
 
-export type CheckboxColor =
-  | "primary"
-  | "secondary"
-  | "success"
-  | "warning"
-  | "error"
-  | "info";
-
-export type CheckboxSize = "small" | "medium" | "large";
-
+/**
+ * A Field whose control is a native checkbox. `type` is omitted because the
+ * component fixes it — a caller changing it would change what the component is.
+ */
 export interface CheckboxProps
-  extends Omit<ComponentPropsWithRef<"input">, "size" | "color" | "type"> {
-  /** Text label rendered beside the checkbox */
+  extends Omit<NativeProps<"input">, "type">,
+    Omit<FieldProps, "isLoading"> {
+  /** Text label rendered beside the control. */
   label: string;
-  color?: CheckboxColor;
-  checkboxSize?: CheckboxSize;
-  isInvalid?: boolean;
-  /** Error message shown below the checkbox when isInvalid is true */
-  errorMessage?: string;
 }
