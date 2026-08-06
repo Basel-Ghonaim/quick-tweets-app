@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { validateDropzoneFiles } from "./validateDropzoneFiles";
+import { validateSelection } from "../validateSelection";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -135,7 +135,7 @@ export function useDropzoneFiles({
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
-      const result = validateDropzoneFiles(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize });
       if (result.error) {
         onValidationError(result.error);
         e.target.value = "";
@@ -166,7 +166,7 @@ export function useDropzoneFiles({
       const files = e.dataTransfer.files;
       if (!files || files.length === 0) return;
 
-      const result = validateDropzoneFiles(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize });
       if (result.error) {
         onValidationError(result.error);
         return;

@@ -1,4 +1,4 @@
-import { formatSize } from "@shared/design-system/utils";
+import { formatSize } from "../formatSize";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -24,7 +24,7 @@ interface ValidationResult {
  *
  * @returns `{ valid }` if all pass, `{ valid: [], error }` on first failure
  */
-export function validateDropzoneFiles(
+export function validateSelection(
   files: FileList,
   options: ValidationOptions,
 ): ValidationResult {

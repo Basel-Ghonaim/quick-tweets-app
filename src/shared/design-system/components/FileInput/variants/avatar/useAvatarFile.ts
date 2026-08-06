@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { validateDropzoneFiles } from "../dropzone/validateDropzoneFiles";
+import { validateSelection } from "../validateSelection";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export interface UseAvatarFileReturn {
  * Encapsulates all state and logic for the Avatar variant.
  *
  * Single-file only — accepts one image or one video.
- * Reuses `validateDropzoneFiles` for accept/maxSize validation.
+ * Reuses `validateSelection` for accept/maxSize validation.
  */
 export function useAvatarFile({
   inputRef,
@@ -147,7 +147,7 @@ export function useAvatarFile({
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
-      const result = validateDropzoneFiles(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize });
       if (result.error) {
         onValidationError(result.error);
         e.target.value = "";
@@ -172,7 +172,7 @@ export function useAvatarFile({
       const files = e.dataTransfer.files;
       if (!files || files.length === 0) return;
 
-      const result = validateDropzoneFiles(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize });
       if (result.error) {
         onValidationError(result.error);
         return;

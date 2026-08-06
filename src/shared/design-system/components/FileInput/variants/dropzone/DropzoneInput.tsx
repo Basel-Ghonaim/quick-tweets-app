@@ -1,10 +1,10 @@
 import styles from "../../FileInput.module.css";
 import type { DropzoneInputProps } from "./DropzoneInput.types";
 import { useDropzoneFiles } from "./useDropzoneFiles";
-import { DragOverlay } from "./components/DragOverlay";
-import { DropzoneEmpty } from "./components/DropzoneEmpty";
-import { ImageGrid } from "./components/ImageGrid";
-import { FileList } from "./components/FileList";
+import { DragOverlay } from "./parts/DragOverlay";
+import { DropzoneEmpty } from "./parts/DropzoneEmpty";
+import { ImageGrid } from "./parts/ImageGrid";
+import { FileList } from "./parts/FileList";
 
 /**
  * Dropzone variant for FileInput.

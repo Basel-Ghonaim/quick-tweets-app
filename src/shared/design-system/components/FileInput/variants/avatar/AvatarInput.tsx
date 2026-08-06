@@ -1,8 +1,8 @@
 import styles from "../../FileInput.module.css";
 import type { AvatarInputProps } from "./AvatarInput.types";
 import { useAvatarFile } from "./useAvatarFile";
-import { AvatarEmpty } from "./components/AvatarEmpty";
-import { AvatarOverlay } from "./components/AvatarOverlay";
+import { AvatarEmpty } from "./parts/AvatarEmpty";
+import { AvatarOverlay } from "./parts/AvatarOverlay";
 
 /**
  * Avatar variant for FileInput.

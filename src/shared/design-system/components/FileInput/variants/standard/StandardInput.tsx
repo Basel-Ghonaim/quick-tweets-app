@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { UploadIcon } from "@shared/design-system/icons";
-import { formatSize } from "@shared/design-system/utils";
+import { formatSize } from "../../formatSize";
 import type { StandardInputProps } from "./StandardInput.types";
 import styles from "../../FileInput.module.css";
 
