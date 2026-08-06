@@ -60,7 +60,7 @@ export const SchemaField = ({
             variant="avatar"
             name={name}
             label={label}
-            onNativeChange={onChange}
+            onChange={onChange}
             isInvalid={isInvalid}
             errorMessage={error ?? undefined}
             fullWidth
@@ -74,7 +74,7 @@ export const SchemaField = ({
             multiple
             name={name}
             label={label}
-            onNativeChange={onChange}
+            onChange={onChange}
             isInvalid={isInvalid}
             errorMessage={error ?? undefined}
             fullWidth

@@ -71,20 +71,20 @@ describe("SchemaField seam (#248, #249)", () => {
     expect(child?.props.checked).toBe(true);
   });
 
-  it("maps file to a FileInput (avatar variant) wired via onNativeChange", () => {
+  it("maps file to a FileInput (avatar variant) wired via the native onChange", () => {
     const { child } = invoke({ ...base, type: "file" });
     expect(child?.type).toBe(FileInput);
     expect(child?.props.variant).toBe("avatar");
-    expect(child?.props.onNativeChange).toBe(base.onChange);
+    expect(child?.props.onChange).toBe(base.onChange);
     expect(child?.props.fullWidth).toBe(true);
   });
 
-  it("maps file-multiple to a FileInput (standard variant, multiple) via onNativeChange", () => {
+  it("maps file-multiple to a FileInput (standard variant, multiple) via the native onChange", () => {
     const { child } = invoke({ ...base, type: "file-multiple" });
     expect(child?.type).toBe(FileInput);
     expect(child?.props.variant).toBe("standard");
     expect(child?.props.multiple).toBe(true);
-    expect(child?.props.onNativeChange).toBe(base.onChange);
+    expect(child?.props.onChange).toBe(base.onChange);
     expect(child?.props.fullWidth).toBe(true);
   });
 

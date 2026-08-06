@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { FileInput } from "./FileInput";
+import type { FileInputProps } from "./FileInput.types";
 
 const meta = {
   title: "Design System/Forms/FileInput",
@@ -24,6 +25,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+// The props a variant owns are only valid with that variant, so a story states
+// which one it exercises. Typing them all against the union would collapse the
+// variant-specific args to `never` — the union refusing what it is meant to.
+type DropzoneStory = StoryObj<Extract<FileInputProps, { variant: "dropzone" }>>;
+type AvatarStory = StoryObj<Extract<FileInputProps, { variant: "avatar" }>>;
+
 export const Standard: Story = {
   args: {
     name: "file-input",
@@ -33,7 +40,7 @@ export const Standard: Story = {
   },
 };
 
-export const Dropzone: Story = {
+export const Dropzone: DropzoneStory = {
   args: {
     name: "file-input",
     label: "Upload Files",
@@ -42,7 +49,7 @@ export const Dropzone: Story = {
   },
 };
 
-export const Avatar: Story = {
+export const Avatar: AvatarStory = {
   args: {
     name: "file-input",
     label: "Profile Image",
@@ -98,14 +105,14 @@ export const ImagesOnly: Story = {
   },
 };
 
-export const DropzoneDisabled: Story = {
+export const DropzoneDisabled: DropzoneStory = {
   args: {
     ...Dropzone.args,
     disabled: true,
   },
 };
 
-export const DropzoneWithHelper: Story = {
+export const DropzoneWithHelper: DropzoneStory = {
   args: {
     ...Dropzone.args,
     helperText: "Drag files here or click to browse",
@@ -113,7 +120,7 @@ export const DropzoneWithHelper: Story = {
   },
 };
 
-export const DropzoneMultiFile: Story = {
+export const DropzoneMultiFile: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload Documents",
@@ -122,7 +129,7 @@ export const DropzoneMultiFile: Story = {
   },
 };
 
-export const DropzoneMaxFiles: Story = {
+export const DropzoneMaxFiles: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload Documents (max 3)",
@@ -132,7 +139,7 @@ export const DropzoneMaxFiles: Story = {
   },
 };
 
-export const DropzoneMinFiles: Story = {
+export const DropzoneMinFiles: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload Documents (min 2)",
@@ -142,7 +149,7 @@ export const DropzoneMinFiles: Story = {
   },
 };
 
-export const DropzoneImageGrid: Story = {
+export const DropzoneImageGrid: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload Images",
@@ -152,7 +159,7 @@ export const DropzoneImageGrid: Story = {
   },
 };
 
-export const DropzoneImageGridMax5: Story = {
+export const DropzoneImageGridMax5: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload Images (max 5)",
@@ -163,7 +170,7 @@ export const DropzoneImageGridMax5: Story = {
   },
 };
 
-export const DropzoneImageGridSuccess: Story = {
+export const DropzoneImageGridSuccess: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Gallery Upload",
@@ -174,7 +181,7 @@ export const DropzoneImageGridSuccess: Story = {
   },
 };
 
-export const DropzoneFileList: Story = {
+export const DropzoneFileList: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload Documents",
@@ -183,7 +190,7 @@ export const DropzoneFileList: Story = {
   },
 };
 
-export const DropzonePdfOnly: Story = {
+export const DropzonePdfOnly: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload PDF Files",
@@ -193,7 +200,7 @@ export const DropzonePdfOnly: Story = {
   },
 };
 
-export const DropzonePdfMax5: Story = {
+export const DropzonePdfMax5: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload PDF (max 5)",
@@ -204,7 +211,7 @@ export const DropzonePdfMax5: Story = {
   },
 };
 
-export const DropzoneMixed: Story = {
+export const DropzoneMixed: DropzoneStory = {
   args: {
     ...Dropzone.args,
     label: "Upload Documents & Images",
@@ -218,7 +225,7 @@ export const DropzoneMixed: Story = {
 // AVATAR VARIANT
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const AvatarCircle: Story = {
+export const AvatarCircle: AvatarStory = {
   args: {
     name: "avatar",
     label: "Profile Picture",
@@ -230,7 +237,7 @@ export const AvatarCircle: Story = {
   },
 };
 
-export const AvatarCircleOutline: Story = {
+export const AvatarCircleOutline: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Profile Picture (Outline)",
@@ -238,7 +245,7 @@ export const AvatarCircleOutline: Story = {
   },
 };
 
-export const AvatarRectangle: Story = {
+export const AvatarRectangle: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Cover Image",
@@ -247,7 +254,7 @@ export const AvatarRectangle: Story = {
   },
 };
 
-export const AvatarRectangleOutline: Story = {
+export const AvatarRectangleOutline: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Cover Image (Outline)",
@@ -256,7 +263,7 @@ export const AvatarRectangleOutline: Story = {
   },
 };
 
-export const AvatarDisabled: Story = {
+export const AvatarDisabled: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Avatar (Disabled)",
@@ -265,7 +272,7 @@ export const AvatarDisabled: Story = {
   },
 };
 
-export const AvatarVideo: Story = {
+export const AvatarVideo: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Video Avatar",
@@ -274,7 +281,7 @@ export const AvatarVideo: Story = {
   },
 };
 
-export const AvatarWithError: Story = {
+export const AvatarWithError: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Avatar (Error)",
@@ -283,7 +290,7 @@ export const AvatarWithError: Story = {
   },
 };
 
-export const AvatarSuccess: Story = {
+export const AvatarSuccess: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Avatar (Success Color)",
@@ -292,7 +299,7 @@ export const AvatarSuccess: Story = {
   },
 };
 
-export const AvatarSolidBorder: Story = {
+export const AvatarSolidBorder: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Solid Border",
@@ -302,7 +309,7 @@ export const AvatarSolidBorder: Story = {
   },
 };
 
-export const AvatarNoBorder: Story = {
+export const AvatarNoBorder: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "No Border",
@@ -311,7 +318,7 @@ export const AvatarNoBorder: Story = {
   },
 };
 
-export const AvatarLarge: Story = {
+export const AvatarLarge: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Large Avatar (180px)",
@@ -320,7 +327,7 @@ export const AvatarLarge: Story = {
   },
 };
 
-export const AvatarSmall: Story = {
+export const AvatarSmall: AvatarStory = {
   args: {
     ...AvatarCircle.args,
     label: "Small Avatar (80px)",

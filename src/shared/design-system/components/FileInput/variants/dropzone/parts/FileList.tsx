@@ -3,7 +3,7 @@ import {
   PlusIcon,
   FileTypeIcon,
 } from "@shared/design-system/icons";
-import { formatSize } from "@shared/design-system/utils";
+import { formatSize } from "../../../formatSize";
 import styles from "../../../FileInput.module.css";
 
 interface FileListProps {

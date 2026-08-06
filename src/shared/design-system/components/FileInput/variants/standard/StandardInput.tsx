@@ -1,93 +1,88 @@
-import { useState } from "react";
-import { UploadIcon } from "@shared/design-system/icons";
-import { formatSize } from "@shared/design-system/utils";
-import type { StandardInputProps } from "./StandardInput.types";
+import { useState, type ReactNode } from "react";
+import { UploadIcon } from "../../../../icons";
+import { formatSize } from "../../formatSize";
+import type { VariantContext } from "../variant.types";
+import { customProperties } from "../../../shared";
 import styles from "../../FileInput.module.css";
 
+interface StandardInputProps {
+  context: VariantContext;
+  multiple: boolean;
+  /** Replaces the default trigger content. */
+  trigger?: ReactNode;
+}
+
 /**
- * Standard variant for FileInput.
+ * A trigger and the name of what is selected.
  *
- * Renders a hidden native file input, a styled trigger button,
- * and a file name display. Owns its own state (displayName)
- * and change handling (validation + forwarding).
+ * The lightest of the three: it presents the selection as text rather than a
+ * preview, so it owns no object URLs and needs no lifetime management.
  */
 export const StandardInput = ({
-  inputRef,
-  generatedId,
-  errorId,
-  helperId,
-  name,
-  accept,
-  maxSize,
+  context,
   multiple,
-  disabled,
-  isInvalid,
-  errorMessage,
-  helperText,
-  color,
-  children,
-  onChange,
-  onNativeChange,
-  onValidationError,
+  trigger,
 }: StandardInputProps) => {
+  const {
+    inputRef,
+    controlId,
+    describedBy,
+    name,
+    accept,
+    maxSize,
+    disabled,
+    isInvalid,
+    color,
+    onChange,
+    onFilesChange,
+    onValidationError,
+  } = context;
+
   const [displayName, setDisplayName] = useState("");
 
-  /** Dynamic CSS variables injected at runtime based on color prop */
-  const dynamicStyles = {
-    "--file-input-color": `var(--color-${color}-primary)`,
-    "--file-input-alpha": `var(--color-${color}-alpha)`,
-  } as React.CSSProperties;
-
-  /** Opens the native file picker when the trigger button is clicked */
-  const handleTriggerClick = () => {
+  const openPicker = () => {
     if (disabled) return;
     inputRef.current?.click();
   };
 
-  /** Reads the selected file(s), validates size, and forwards to onChange */
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files;
+    if (!selected || selected.length === 0) return;
 
-    // Validate maxSize — reject if any file exceeds the limit
+    const files = Array.from(selected);
+
     if (maxSize) {
-      const oversized = Array.from(files).find((f) => f.size > maxSize);
+      const oversized = files.find((file) => file.size > maxSize);
       if (oversized) {
         onValidationError(
           `"${oversized.name}" exceeds the ${formatSize(maxSize)} limit`,
         );
-        // Reset the native input so the same file can be re-selected
-        e.target.value = "";
+        // Reset so the same file can be chosen again after the message is read.
+        event.target.value = "";
         return;
       }
     }
 
-    // Clear any previous validation error
     onValidationError("");
+    setDisplayName(
+      files.length === 1 ? files[0].name : `${files.length} files selected`,
+    );
 
-    // Update display name from the event (not from ref during render)
-    if (files.length === 1) {
-      setDisplayName(files[0].name);
-    } else {
-      setDisplayName(`${files.length} files selected`);
-    }
-
-    // Forward the raw native event to form engines
-    onNativeChange?.(e);
-
-    if (multiple) {
-      onChange?.(Array.from(files));
-    } else {
-      onChange?.(files[0]);
-    }
+    onChange?.(event);
+    onFilesChange?.(files);
   };
 
   return (
-    <div className={styles.standardWrapper} style={dynamicStyles}>
-      {/* Hidden native file input — accessible but invisible */}
+    <div
+      className={styles.standardWrapper}
+      style={customProperties({
+        "--file-input-color": `var(--color-${color}-primary)`,
+        "--file-input-alpha": `var(--color-${color}-alpha)`,
+      })}
+    >
       <input
         ref={inputRef}
-        id={generatedId}
+        id={controlId}
         type="file"
         name={name}
         accept={accept}
@@ -95,26 +90,17 @@ export const StandardInput = ({
         disabled={disabled}
         className={styles.nativeInput}
         onChange={handleFileChange}
-        aria-invalid={isInvalid}
-        aria-describedby={
-          [
-            isInvalid && errorMessage ? errorId : "",
-            helperText ? helperId : "",
-          ]
-            .filter(Boolean)
-            .join(" ") || undefined
-        }
+        aria-invalid={isInvalid || undefined}
+        aria-describedby={describedBy}
       />
 
-      {/* Trigger button — clicking this opens the file picker */}
       <button
         type="button"
         className={styles.triggerButton}
-        onClick={handleTriggerClick}
+        onClick={openPicker}
         disabled={disabled}
-        tabIndex={0}
       >
-        {children ?? (
+        {trigger ?? (
           <>
             <UploadIcon size={16} />
             <span>Choose file</span>
@@ -122,10 +108,7 @@ export const StandardInput = ({
         )}
       </button>
 
-      {/* File name display */}
-      <span className={styles.fileName}>
-        {displayName || "No file chosen"}
-      </span>
+      <span className={styles.fileName}>{displayName || "No file chosen"}</span>
     </div>
   );
 };

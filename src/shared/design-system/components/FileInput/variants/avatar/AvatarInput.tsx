@@ -1,8 +1,10 @@
 import styles from "../../FileInput.module.css";
-import type { AvatarInputProps } from "./AvatarInput.types";
+import type { VariantContext } from "../variant.types";
+import type { AvatarBorder, AvatarFill, AvatarShape } from "../../FileInput.types";
+import { customProperties } from "../../../shared";
 import { useAvatarFile } from "./useAvatarFile";
-import { AvatarEmpty } from "./components/AvatarEmpty";
-import { AvatarOverlay } from "./components/AvatarOverlay";
+import { AvatarEmpty } from "./parts/AvatarEmpty";
+import { AvatarOverlay } from "./parts/AvatarOverlay";
 
 /**
  * Avatar variant for FileInput.
@@ -17,45 +19,54 @@ import { AvatarOverlay } from "./components/AvatarOverlay";
  *
  * Single-file only — accepts one image or one video.
  */
+interface AvatarInputProps {
+  context: VariantContext;
+  avatarShape: AvatarShape;
+  avatarFill: AvatarFill;
+  avatarBorder: AvatarBorder;
+  avatarSize: number;
+}
+
 export const AvatarInput = ({
-  inputRef,
-  generatedId,
-  errorId,
-  helperId,
-  name,
-  accept,
-  maxSize,
-  disabled,
-  isInvalid,
-  errorMessage,
-  helperText,
-  color,
+  context,
   avatarShape,
   avatarFill,
   avatarBorder,
   avatarSize,
-  onChange,
-  onNativeChange,
-  onValidationError,
 }: AvatarInputProps) => {
+  const {
+    inputRef,
+    controlId,
+    describedBy,
+    name,
+    accept,
+    maxSize,
+    disabled,
+    isInvalid,
+    color,
+    onChange,
+    onFilesChange,
+    onValidationError,
+  } = context;
+
   const avatar = useAvatarFile({
     inputRef,
     accept,
     maxSize,
     disabled,
     onChange,
-    onNativeChange,
+    onFilesChange,
     onValidationError,
   });
 
   // ── CSS variables ──
 
-  const dynamicStyles = {
+  const dynamicStyles = customProperties({
     "--file-input-color": `var(--color-${color}-primary)`,
     "--file-input-alpha": `var(--color-${color}-alpha)`,
     "--avatar-size": `${avatarSize}px`,
     "--avatar-border-style": avatarBorder,
-  } as React.CSSProperties;
+  });
 
   // ── Container classes ──
 
@@ -87,7 +98,7 @@ export const AvatarInput = ({
   const hiddenInput = (
     <input
       ref={inputRef}
-      id={generatedId}
+      id={controlId}
       type="file"
       name={name}
       accept={accept}
@@ -95,12 +106,8 @@ export const AvatarInput = ({
       disabled={disabled}
       className={styles.nativeInput}
       onChange={avatar.handleFileChange}
-      aria-invalid={isInvalid}
-      aria-describedby={
-        [isInvalid && errorMessage ? errorId : "", helperText ? helperId : ""]
-          .filter(Boolean)
-          .join(" ") || undefined
-      }
+      aria-invalid={isInvalid || undefined}
+      aria-describedby={describedBy}
     />
   );
 

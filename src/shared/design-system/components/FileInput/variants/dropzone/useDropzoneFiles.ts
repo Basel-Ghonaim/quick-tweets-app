@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { validateDropzoneFiles } from "./validateDropzoneFiles";
+import { validateSelection } from "../validateSelection";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -11,8 +11,10 @@ interface UseDropzoneFilesOptions {
   maxFiles?: number;
   minFiles?: number;
   disabled: boolean;
-  onChange?: (files: File | File[] | null) => void;
-  onNativeChange?: React.ChangeEventHandler<HTMLInputElement>;
+  /** The parsed selection, reported whenever it changes. */
+  onFilesChange?: (files: File[]) => void;
+  /** The platform's own handler, forwarded from the hidden input. */
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   onValidationError: (error: string) => void;
 }
 
@@ -52,8 +54,8 @@ export function useDropzoneFiles({
   maxFiles,
   minFiles,
   disabled,
+  onFilesChange,
   onChange,
-  onNativeChange,
   onValidationError,
 }: UseDropzoneFilesOptions): UseDropzoneFilesReturn {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -95,15 +97,13 @@ export function useDropzoneFiles({
 
   // ── File forwarding ──
 
+  // Always a list, single-file mode included: a caller that handles one shape
+  // handles both, and the cardinality is already declared by `multiple`.
   const forwardFiles = useCallback(
     (files: File[]) => {
-      if (multiple) {
-        onChange?.(files);
-      } else {
-        onChange?.(files[0]);
-      }
+      onFilesChange?.(files);
     },
-    [multiple, onChange],
+    [onFilesChange],
   );
 
   // ── File accumulation ──
@@ -135,7 +135,7 @@ export function useDropzoneFiles({
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
-      const result = validateDropzoneFiles(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize });
       if (result.error) {
         onValidationError(result.error);
         e.target.value = "";
@@ -148,10 +148,10 @@ export function useDropzoneFiles({
         return;
       }
 
-      onNativeChange?.(e);
+      onChange?.(e);
       forwardFiles(accumulated);
     },
-    [accept, maxSize, onValidationError, accumulateFiles, onNativeChange, forwardFiles],
+    [accept, maxSize, onValidationError, accumulateFiles, onChange, forwardFiles],
   );
 
   // ── Drop handler ──
@@ -166,7 +166,7 @@ export function useDropzoneFiles({
       const files = e.dataTransfer.files;
       if (!files || files.length === 0) return;
 
-      const result = validateDropzoneFiles(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize });
       if (result.error) {
         onValidationError(result.error);
         return;
