@@ -45,7 +45,7 @@ export const LoginForm = () => {
       <Button
         type="submit"
         fullWidth
-        state={isSubmitting ? "loading" : "idle"}
+        isLoading={isSubmitting}
         loadingText="Signing in…"
         className={styles.submit}
       >

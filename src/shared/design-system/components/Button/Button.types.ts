@@ -1,21 +1,14 @@
-import type { ComponentPropsWithRef, ReactNode } from "react";
+import type { ReactNode } from "react";
+import type { ControlProps, NativeProps } from "../shared";
 
 export type ButtonVariant = "contained" | "outlined" | "ghost";
-export type ButtonState = "idle" | "active" | "loading" | "disabled";
-export type ButtonColor =
-  | "primary"
-  | "secondary"
-  | "success"
-  | "warning"
-  | "error"
-  | "info";
-export type ButtonSize = "small" | "medium" | "large";
 
-export interface ButtonProps extends ComponentPropsWithRef<"button"> {
+/**
+ * A Control, not a Field: it names itself, so it carries no label, no
+ * description and no error of its own.
+ */
+export interface ButtonProps extends NativeProps<"button">, ControlProps {
   variant?: ButtonVariant;
-  state?: ButtonState;
-  color?: ButtonColor;
-  size?: ButtonSize;
   fullWidth?: boolean;
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
