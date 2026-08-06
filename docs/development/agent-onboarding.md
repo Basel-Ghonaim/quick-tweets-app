@@ -33,7 +33,7 @@ Above all of them sits one rule from [CLAUDE.md](../../CLAUDE.md): **code is aut
 
 **An ADR is closed.** It is not reopened during implementation. If your work appears to contradict it, that is a **stop** — either you have misread it, or it needs a superseding ADR, and both are the architectural lead's to resolve.
 
-**An Active plan governs.** Its sequencing, invariants, and pinned decisions bind you. **You do not amend it.** If preparation contradicts the plan, report it; amending is a Documentation Work Item.
+**An Active plan governs.** Its sequencing, invariants, and pinned decisions bind you — you do not *reopen* them. But when your work reveals that the plan is wrong or incomplete, **you correct it in your own branch**, as a commit separate from the implementation. A plan evolves with the work that justifies the change, never in a branch of its own. What still escalates rather than being absorbed is a change to a **pinned decision** or to the effort's **boundary** — that is proposed, not taken.
 
 **The division is fixed** ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md)): the plan owns strategy, sequencing, and rationale; the **Issue owns acceptance criteria** — which means **you derive them**. They are not handed to you.
 

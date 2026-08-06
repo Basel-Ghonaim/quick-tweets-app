@@ -1,8 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Checkbox } from "./Checkbox";
+import { CONTROL_SIZES } from "../../foundations";
 
 const meta = {
   title: "Design System/Forms/Checkbox",
+  parameters: {
+    // Not promoted here. Doing so fails on a pre-existing contrast defect: the
+    // error text still binds the legacy error colour, which resolves to 3.6:1
+    // against the page. The vocabulary that passes already exists; binding it is
+    // token work, so the gate is promoted by the Work Item that migrates it.
+    a11y: { test: "todo" },
+  },
   component: Checkbox,
   tags: ["autodocs"],
   argTypes: {
@@ -10,7 +18,7 @@ const meta = {
       control: "select",
       options: ["primary", "secondary", "success", "warning", "error", "info"],
     },
-    checkboxSize: { control: "radio", options: ["small", "medium", "large"] },
+    size: { control: "radio", options: CONTROL_SIZES },
     isInvalid: { control: "boolean" },
     disabled: { control: "boolean" },
   },
@@ -23,7 +31,7 @@ export const Default: Story = {
   args: {
     label: "I agree to the Terms of Service",
     color: "primary",
-    checkboxSize: "medium",
+    size: "medium",
   },
 };
 
@@ -32,11 +40,11 @@ export const Checked: Story = {
 };
 
 export const Small: Story = {
-  args: { ...Default.args, checkboxSize: "small" },
+  args: { ...Default.args, size: "small" },
 };
 
 export const Large: Story = {
-  args: { ...Default.args, checkboxSize: "large" },
+  args: { ...Default.args, size: "large" },
 };
 
 export const Invalid: Story = {

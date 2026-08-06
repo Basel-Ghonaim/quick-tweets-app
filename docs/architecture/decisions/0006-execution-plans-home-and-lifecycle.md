@@ -3,6 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-07-14
 > **Deciders:** Basel Ghonaim
+> **Revised:** 2026-08-05 — the `Draft` stage gains a location: a plan is drafted outside the tracked tree and enters `docs/plans/` on approval. Lifecycle and home otherwise unchanged.
 
 ## Context
 
@@ -24,7 +25,7 @@ Introduce a formal home and lifecycle for execution plans, without a new governa
 1. **Home — `docs/plans/`.** Execution plans live in a **top-level** documentation category, because they are **project-level** artifacts (migration, execution, refactoring, release plans), not development-only. The category's operative convention (lifecycle, plan-header template, and boundary) lives in `docs/plans/README.md`.
 
 2. **Lifecycle — `Draft → Active → Historical`.**
-   - **Draft** — authored and under review; not yet governing.
+   - **Draft** — authored and under review; not yet governing, and **not yet project documentation**. A draft lives in the architect's working area outside the tracked tree; it enters `docs/plans/` on approval, in the first branch of its first Work Item.
    - **Active** — approved and governing an in-flight effort; the live reference, maintained for the effort's *strategy and shape* (not per-Work-Item status).
    - **Historical** — archived and read-only; the effort has concluded and the durable knowledge is now owned by the permanent documents, to which the plan links forward.
 

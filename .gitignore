@@ -42,3 +42,7 @@ plans
 
 # Local AI working drafts (never committed or pushed)
 .project/
+
+# Media blobs written by the local-disk storage adapter (UPLOAD_DIR) — runtime
+# data, never source.
+server/uploads/

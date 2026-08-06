@@ -2,6 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, test } from "vitest";
 
+import { ROLES } from "./vocabulary";
+
 /**
  * Mechanical enforcement of the binding rule (ADR 0010 Decision 3): every
  * `var(--…)` reference must resolve to a definition. Because components build
@@ -25,21 +27,14 @@ import { describe, expect, test } from "vitest";
 const SRC = join(process.cwd(), "src");
 
 /**
- * The `color` prop's role union — the domain of every interpolated role reference
- * `var(--…${color}…)`, whatever the token's prefix (`--control-fill-${color}`,
- * `--control-on-surface-${color}`, or the legacy `--color-${color}-…`). It is the
- * check's own source of truth so a rename of any role's token surfaces here rather
- * than resolving to an undefined variable at runtime; it mirrors the `ButtonColor`
- * / `InputColor` / `CheckboxColor` / `FileInputColor` prop unions.
+ * The domain of every interpolated role reference `var(--…${color}…)`, whatever
+ * the token's prefix.
+ *
+ * Imported rather than mirrored. A local copy made this check agree with itself
+ * instead of with the components: a role added to one and not the other left an
+ * interpolated reference resolving to an undefined custom property at runtime,
+ * which is the exact failure this check exists to catch.
  */
-const ROLES = [
-  "primary",
-  "secondary",
-  "success",
-  "warning",
-  "error",
-  "info",
-] as const;
 
 type Reference = { name: string; file: string; line: number; scope: string };
 type Inventory = {

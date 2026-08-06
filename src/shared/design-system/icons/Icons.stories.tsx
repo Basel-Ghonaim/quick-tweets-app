@@ -29,7 +29,7 @@ const IconPlayground = (props: IconProps & { icon: string }) => {
   };
 
   const Icon = icons[props.icon] ?? UploadIcon;
-  return <Icon size={props.size} color={props.color} strokeWidth={props.strokeWidth} />;
+  return <Icon size={props.size} strokeWidth={props.strokeWidth} />;
 };
 
 const meta = {
@@ -42,7 +42,6 @@ const meta = {
       options: ["Upload", "Trash", "X", "Check", "Eye", "EyeOff", "Search", "ChevronDown", "User", "Camera"],
     },
     size: { control: { type: "range", min: 12, max: 64, step: 4 } },
-    color: { control: "color" },
     strokeWidth: { control: { type: "range", min: 1, max: 4, step: 0.5 } },
   },
 } satisfies Meta<typeof IconPlayground>;
@@ -54,7 +53,6 @@ export const Playground: Story = {
   args: {
     icon: "Upload",
     size: 24,
-    color: "currentColor",
     strokeWidth: 2,
   },
 };

@@ -1,4 +1,4 @@
-.button {
+.root {
   composes: focusRing from "../../foundations/composition/focusRing.module.css";
   display: inline-flex;
   align-items: center;
@@ -10,33 +10,26 @@
   border: var(--border-width-thin) solid transparent;
 }
 
-.button:disabled,
-.state-disabled {
+.root:disabled {
   opacity: var(--control-opacity-disabled);
   pointer-events: none;
   cursor: not-allowed;
 }
 
-.button:active:not(:disabled) {
+.root:active:not(:disabled) {
   transform: var(--motion-press);
 }
 
-.state-loading {
+/* Loading is disabled at the element, so this only carries the distinct dimming
+   that tells the two apart. */
+.isLoading:disabled {
   opacity: var(--control-opacity-loading);
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-/* state-active mirrors :active for programmatic overrides */
-.state-active {
-  transform: var(--motion-press);
 }
 
 .fullWidth {
   width: 100%;
 }
 
-/* Scalable sizing without height constraints */
 .size-small {
   padding: var(--control-padding-block-small) var(--control-padding-inline-small);
   font: var(--type-control-label-small);

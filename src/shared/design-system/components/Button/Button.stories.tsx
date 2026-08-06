@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "./Button";
-import type { ButtonColor, ButtonSize, ButtonState, ButtonVariant } from "./Button.types";
+import type { ButtonVariant } from "./Button.types";
+import { CONTROL_SIZES, ROLES } from "../../foundations";
 
 const meta = {
   title: "Design System/Actions/Button",
@@ -17,11 +18,9 @@ const meta = {
       control: "select",
       options: ["primary", "secondary", "success", "warning", "error", "info"],
     },
-    state: {
-      control: "select",
-      options: ["idle", "active", "loading", "disabled"],
-    },
-    size: { control: "radio", options: ["small", "medium", "large"] },
+    size: { control: "radio", options: CONTROL_SIZES },
+    isLoading: { control: "boolean" },
+    disabled: { control: "boolean" },
     fullWidth: { control: "boolean" },
   },
 } satisfies Meta<typeof Button>;
@@ -30,9 +29,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const VARIANTS: ButtonVariant[] = ["contained", "outlined", "ghost"];
-const STATES: ButtonState[] = ["idle", "active", "loading", "disabled"];
-const COLORS: ButtonColor[] = ["primary", "secondary", "success", "warning", "error", "info"];
-const SIZES: ButtonSize[] = ["small", "medium", "large"];
+// Availability is two independent flags, so the matrix enumerates their
+// combinations rather than the positions of a single enum.
+const AVAILABILITY = [
+  { label: "idle", props: {} },
+  { label: "loading", props: { isLoading: true } },
+  { label: "disabled", props: { disabled: true } },
+] as const;
 
 // --- Base Default Story
 export const Default: Story = {
@@ -40,7 +43,6 @@ export const Default: Story = {
     children: "Button",
     variant: "contained",
     color: "primary",
-    state: "idle",
     size: "medium",
   },
 };
@@ -54,29 +56,26 @@ export const Ghost: Story = {
   args: { ...Default.args, variant: "ghost" },
 };
 
-// --- State Examples
-export const Active: Story = {
-  args: { ...Default.args, state: "active" },
-};
-
+// --- Availability
 export const Loading: Story = {
-  args: { ...Default.args, state: "loading", loadingText: "Submitting..." },
+  args: { ...Default.args, isLoading: true, loadingText: "Submitting..." },
 };
 
 export const Disabled: Story = {
-  args: { ...Default.args, state: "disabled" },
+  args: { ...Default.args, disabled: true },
 };
 
-// Every variant in every interaction state — the surface the a11y check and the
-// theme switcher exercise. Switch the toolbar theme to see both resolutions.
+// Every variant in every availability combination — the surface the a11y check
+// and the theme switcher exercise. Switch the toolbar theme to see both
+// resolutions.
 export const StateMatrix: Story = {
   render: () => (
     <div style={{ display: "grid", gap: "1rem" }}>
       {VARIANTS.map((variant) => (
         <div key={variant} style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          {STATES.map((state) => (
-            <Button key={state} variant={variant} state={state} loadingText="Loading">
-              {variant} · {state}
+          {AVAILABILITY.map(({ label, props }) => (
+            <Button key={label} variant={variant} loadingText="Loading" {...props}>
+              {variant} · {label}
             </Button>
           ))}
         </div>
@@ -90,7 +89,7 @@ export const StateMatrix: Story = {
 export const Sizes: Story = {
   render: () => (
     <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-      {SIZES.map((size) => (
+      {CONTROL_SIZES.map((size) => (
         <Button key={size} size={size}>
           {size}
         </Button>
@@ -106,7 +105,7 @@ export const Roles: Story = {
     <div style={{ display: "grid", gap: "1rem" }}>
       {VARIANTS.map((variant) => (
         <div key={variant} style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-          {COLORS.map((color) => (
+          {ROLES.map((color) => (
             <Button key={color} variant={variant} color={color}>
               {color}
             </Button>

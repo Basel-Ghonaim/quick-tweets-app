@@ -139,7 +139,7 @@ function resolveCategory(fileName?: string, mimeType?: string): FileCategory {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-interface FileTypeIconProps extends Omit<IconProps, "color"> {
+interface FileTypeIconProps extends IconProps {
   /** File name — used to detect extension (e.g. "report.pdf") */
   fileName?: string;
   /** MIME type — fallback when extension is ambiguous */
@@ -160,6 +160,9 @@ export const FileTypeIcon = ({
   fileName,
   mimeType,
   size = 18,
+  // Lighter than the shared default: this icon is a document outline dense with
+  // detail, and the shared weight closes its interior at the sizes it renders at.
+  strokeWidth = 1.5,
   className,
 }: FileTypeIconProps) => {
   const category = resolveCategory(fileName, mimeType);
@@ -171,7 +174,7 @@ export const FileTypeIcon = ({
       viewBox="0 0 24 24"
       fill="none"
       stroke={category.color}
-      strokeWidth={1.5}
+      strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}

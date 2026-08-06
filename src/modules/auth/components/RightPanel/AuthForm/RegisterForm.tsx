@@ -49,7 +49,7 @@ export const RegisterForm = () => {
       <Button
         type="submit"
         fullWidth
-        state={isSubmitting ? "loading" : "idle"}
+        isLoading={isSubmitting}
         loadingText="Creating account…"
         className={styles.submit}
       >
