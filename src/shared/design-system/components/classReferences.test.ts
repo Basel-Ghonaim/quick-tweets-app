@@ -37,22 +37,34 @@ const referencedIn = (source: string): string[] => [
   ...[...source.matchAll(/styles\[`([^`$]*)`\]/g)].map((m) => m[1]),
 ];
 
-/** Component roots: a directory holding its own stylesheet. */
-const componentRoots = readdirSync(COMPONENTS, { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .map((entry) => join(COMPONENTS, entry.name))
-  .filter((dir) => filesUnder(dir, ".module.css").length > 0);
+/**
+ * A component root is the directory that *owns* a stylesheet — found by
+ * descending until one appears, so the taxonomy directories above a component
+ * are traversed rather than treated as components themselves. Two components
+ * grouped under one category must not share a class set.
+ */
+const componentRoots = (dir: string): string[] =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (!entry.isDirectory()) return [];
+    const full = join(dir, entry.name);
+    const ownsStylesheet = readdirSync(full).some((name) =>
+      name.endsWith(".module.css"),
+    );
+    return ownsStylesheet ? [full] : componentRoots(full);
+  });
+
+const roots = componentRoots(COMPONENTS);
 
 describe("component class references", () => {
   test("every referenced class exists in its component's stylesheet", () => {
     // A clean result is only trustworthy if the scan saw the components: zero
     // references would pass vacuously if the traversal or the patterns broke.
-    expect(componentRoots.length).toBeGreaterThan(2);
+    expect(roots.length).toBeGreaterThan(2);
 
     const missing: string[] = [];
     let referenceCount = 0;
 
-    for (const root of componentRoots) {
+    for (const root of roots) {
       const defined = new Set<string>();
       for (const css of filesUnder(root, ".module.css")) {
         for (const name of definedIn(readFileSync(css, "utf8"))) defined.add(name);

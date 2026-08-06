@@ -1,0 +1,104 @@
+.root {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--control-gap-inline);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all var(--motion-interactive);
+  border: var(--border-width-thin) solid transparent;
+}
+
+.root:disabled {
+  opacity: var(--control-opacity-disabled);
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.root:active:not(:disabled) {
+  transform: var(--motion-press);
+}
+
+/* Loading is disabled at the element, so this only carries the distinct dimming
+   that tells the two apart. */
+.isLoading:disabled {
+  opacity: var(--control-opacity-loading);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.size-small {
+  padding: var(--control-padding-block-small) var(--control-padding-inline-small);
+  font: var(--type-control-label-small);
+}
+
+.size-medium {
+  padding: var(--control-padding-block-medium) var(--control-padding-inline-medium);
+  font: var(--type-control-label-medium);
+}
+
+.size-large {
+  padding: var(--control-padding-block-large) var(--control-padding-inline-large);
+  font: var(--type-control-label-large);
+}
+
+.variant-contained {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+  border-color: var(--btn-bg);
+}
+
+.variant-contained:hover:not(:disabled) {
+  background-color: var(--btn-bg-hover);
+  border-color: var(--btn-bg-hover);
+}
+
+.variant-outlined {
+  background-color: transparent;
+  color: var(--btn-text);
+  border-color: var(--btn-border);
+}
+
+.variant-outlined:hover:not(:disabled) {
+  background-color: var(--btn-bg-alpha);
+  border-color: var(--btn-border);
+}
+
+.variant-ghost {
+  background-color: transparent;
+  color: var(--btn-text);
+  border-color: transparent;
+}
+
+.variant-ghost:hover:not(:disabled) {
+  background-color: var(--btn-bg-alpha);
+}
+
+/* Optical alignment for Icons inside Button */
+.icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icon > svg {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.spinner {
+  width: 1.25em;
+  height: 1.25em;
+  border: var(--border-width-medium) solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: var(--border-radius-full);
+  animation: button-spin var(--motion-spin) infinite;
+}
+
+@keyframes button-spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}

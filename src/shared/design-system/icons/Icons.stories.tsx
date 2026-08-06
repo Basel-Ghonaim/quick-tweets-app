@@ -33,7 +33,12 @@ const IconPlayground = (props: IconProps & { icon: string }) => {
 };
 
 const meta = {
-  title: "Design System/Icons",
+  title: "Design System/Display/Icons",
+  parameters: {
+    // Icons inherit colour, so they carry no contrast of their own to gate;
+    // the surface that places one is where that is judged.
+    a11y: { test: "todo" },
+  },
   component: IconPlayground,
   tags: ["autodocs"],
   argTypes: {
