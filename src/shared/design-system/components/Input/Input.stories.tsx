@@ -1,8 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Input } from "./Input";
+import { CONTROL_SIZES } from "../../foundations";
 
 const meta = {
   title: "Design System/Forms/Input",
+  parameters: {
+    // Not promoted here, for the reason recorded on the Pilot Field: the legacy
+    // colour bindings still fail contrast. The Work Item that migrates them
+    // promotes the gate.
+    a11y: { test: "todo" },
+  },
   component: Input,
   tags: ["autodocs"],
   argTypes: {
@@ -11,7 +18,7 @@ const meta = {
       control: "select",
       options: ["primary", "secondary", "success", "warning", "error", "info"],
     },
-    inputSize: { control: "radio", options: ["small", "medium", "large"] },
+    size: { control: "radio", options: CONTROL_SIZES },
     isInvalid: { control: "boolean" },
     isLoading: { control: "boolean" },
     fullWidth: { control: "boolean" },
@@ -26,7 +33,7 @@ export const Default: Story = {
     placeholder: "Enter text...",
     variant: "outlined",
     color: "primary",
-    inputSize: "medium",
+    size: "medium",
   },
 };
 
@@ -49,7 +56,7 @@ export const Loading: Story = {
 export const WithIcons: Story = {
   args: { 
     ...Default.args, 
-    leftIcon: <span>🔍</span>, 
-    rightIcon: <span>❌</span> 
+    prefix: <span>🔍</span>,
+    suffix: <span>❌</span> 
   },
 };

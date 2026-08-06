@@ -1,27 +1,17 @@
-import type { ComponentPropsWithRef, ReactNode } from "react";
+import type { ReactNode } from "react";
+import type { FieldProps, NativeProps } from "../shared";
 
 export type InputVariant = "outlined" | "filled" | "underlined";
-export type InputColor =
-  | "primary"
-  | "secondary"
-  | "success"
-  | "warning"
-  | "error"
-  | "info";
-export type InputSize = "small" | "medium" | "large";
 
-export interface InputProps extends Omit<
-  ComponentPropsWithRef<"input">,
-  "size" | "color"
-> {
+/**
+ * A Field whose control is an Adorned Control: the affordances flanking it are
+ * composed here, so a caller supplies a node per side and never a layout.
+ */
+export interface InputProps extends NativeProps<"input">, FieldProps {
   variant?: InputVariant;
-  color?: InputColor;
-  inputSize?: InputSize; // use inputSize because HTML specifies size as an integer for width
-  isInvalid?: boolean;
-  isLoading?: boolean;
   fullWidth?: boolean;
-  leftIcon?: ReactNode;
-  rightIcon?: ReactNode;
-  label?: string;
-  errorMessage?: string;
+  /** Rendered before the control on the inline axis. */
+  prefix?: ReactNode;
+  /** Rendered after the control, alongside any affordance the field owns. */
+  suffix?: ReactNode;
 }

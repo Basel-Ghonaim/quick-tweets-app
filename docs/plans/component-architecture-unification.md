@@ -19,7 +19,7 @@ Continuing the token migration onto that base would bind a stable presentation l
 
 ## 2. Boundary declaration
 
-**Covers:** the shared control contract (role, size, state, and the native-collision policy); the icon contract; the shared helpers; the **Field / Control anatomy**; the canonical component layout (§3.3); the Variant Field's contract; the components directory taxonomy; and the public surface with its enforcement.
+**Covers:** the shared control contract (role, size, state, and the native-collision policy); the icon contract; the shared helpers; the **Field / Adorned Control anatomy** (§3.4); the canonical component layout (§3.3); the Variant Field's contract; the components directory taxonomy; and the public surface with its enforcement.
 
 **Does not cover:** any **token or CSS work** — that is the Design System plan, resumed after this one; any **new component**; any **visual or behavioural change**; the form seam, beyond keeping it compiling; and a **component-test tier**.
 
@@ -61,7 +61,20 @@ ComponentName/
 
 Named `parts/` rather than `components/`, because "components inside a component" reads as a nesting error. **Pure helpers are not hooks** and never live in `hooks/`. Bounded by **E3**: a folder appears when it has content.
 
-### 3.4 Component roles
+### 3.4 The anatomy, named
+
+Two structures, composable rather than nested — the second is not the first's inner detail:
+
+- **Adorned Control** — *prefix · control · suffix*. A control flanked on the **inline axis** by affordances it owns the composition of.
+- **Field** — *label · control slot · description · error*, with the wiring that associates them.
+
+An **Adorned Field** is a Field whose control is an Adorned Control. The two are independent: the Pilot Control is an Adorned Control and **not** a Field — it carries leading and trailing affordances with no label, description or error — which is the evidence that this anatomy belongs to controls generally rather than to any one component.
+
+**Its boundary, named now rather than discovered later.** Prefix and suffix are positions on the **inline axis**. A block control whose affordances sit at an edge — a counter beneath, a resize handle in a corner — is **not** an Adorned Control, and widening the shape to admit one is how a superset of every consumer's needs gets built.
+
+**This is vocabulary, not structure.** No shared component is built for it: one would be structure with a single consumer, and what a general adornment component's contract should be is something a real second consumer settles.
+
+### 3.5 Component roles
 
 The plan names architectural roles, not components. The mapping is recorded here once so the roles govern and the identities can change:
 
@@ -69,7 +82,7 @@ The plan names architectural roles, not components. The mapping is recorded here
 |---|---|---|
 | **Pilot Control** | the smallest component that is a Control — interactive, no field chrome | `Button` |
 | **Pilot Field** | the smallest component that is a Field | `Checkbox` |
-| **Adorned Field** | a Field whose control carries inline affordances before and after it | `Input` |
+| **Adorned Field** | a Field whose control is an Adorned Control (§3.4) | `Input` |
 | **Variant Field** | a Field that renders through variants and does not extend a native element | `FileInput` |
 | **Existing consumers** | the surfaces that compose these components today | the form seam, and the one feature module |
 
