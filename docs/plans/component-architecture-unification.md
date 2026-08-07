@@ -1,9 +1,9 @@
 # Component Architecture Unification — Execution Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-05
+> **Last Updated:** 2026-08-06
 > **Parent Issue:** [#465](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/465)
 > **Supersedes:** —
 
@@ -125,4 +125,12 @@ CA-4 (public surface + taxonomy)
 
 ## 8. Reconciliation
 
-*Added as this plan approaches `Historical`: where each Work Item's durable facts landed, and the forward links. The component-authoring conventions this effort settles are owned by [`design-system.md`](../frontend/design-system.md), which the Design System plan rewrites at its close.*
+The effort is complete; the conventions it settled are owned by [`design-system.md`](../frontend/design-system.md) and this plan is read-only.
+
+**Where the durable facts landed.** The component-authoring convention, the anatomy, the grouping, and the public-surface rule are all in the platform document. The language's enumerated scales live in the foundations; the prop contract and the shared helpers live beside the components that use them.
+
+**What is enforced rather than documented.** Three checks, each written after the failure it prevents was observed rather than imagined: class references resolve, the public surface holds in both directions, and — from the token effort — every token reference resolves and no token is declared at two residencies. The last of these caught a silent regression during this effort's own final pass.
+
+**What was deliberately left.** The components still bind legacy colour tokens, so three accessibility gates sit at reporting rather than failing, each with its reason recorded in its stories file. That is the token migration's to close, not this effort's — the Design System plan resumes there. The one off-scale font size remains recorded as a stop for the Work Item that reaches it.
+
+**What was refused.** Extracting the avatar variant into its own component: 15 of 19 props shared and two hooks that are the same selection lifecycle at different cardinality. The extraction trigger is recorded — image *editing*, which is a different responsibility from selection.
