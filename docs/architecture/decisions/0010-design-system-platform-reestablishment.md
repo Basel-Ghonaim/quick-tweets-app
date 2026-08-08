@@ -4,6 +4,7 @@
 > **Date:** 2026-07-31
 > **Deciders:** Basel Ghonaim
 > **Revised:** 2026-08-05 — Decision 2's test for *speculative* replaced: a capability is disqualified by being **ungrounded**, not by being **unused**. Decision itself unchanged.
+> **Revised:** 2026-08-08 — Decision 2 gains one clause: consumer count is evidence, not a gate, and what is admitted is a shared concept rather than a shared value. Decision itself unchanged.
 
 ## Context
 
@@ -28,6 +29,8 @@ Re-establish the Design System as a **platform that owns the product's presentat
    - **(iii) Set completion** — the concept is the missing member of an axis already opened. Given `isInvalid` and `isLoading`, `disabled` is not new vocabulary; it is a hole in a set already declared.
 
    A capability with **no platform basis, no named commitment, and completing no open set** is speculative and stays **reserved, not built**.
+
+   **Consumer count is evidence, never a gate.** Several approved consumers make a concept obvious; one or none does not disqualify it. What is admitted is a **shared design concept, never a shared value** — a literal two components happen to use stays component-owned unless the language is what they are agreeing on.
 
    **Two limits keep this bounded.** *Roles are admissible; granularities are not* — `--type-heading` is a role that can be named with confidence, while `--type-heading-{1..6}` is a claim about how many heading levels the product has, which only a design or a real consumer settles. And *values remain provisional*: authoring ahead of a design is safe precisely because a value is a swap, so authoring a role must never harden into a commitment to its value.
 
