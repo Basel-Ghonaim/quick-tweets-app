@@ -2,6 +2,10 @@
 [data-theme="light"] {
   --surface-page: var(--palette-neutral-50);
   --surface-default: var(--palette-neutral-0);
+  /* A resting fill that recedes from the surface it sits on — a filled input, not
+     a hovered one. It resolves per theme because "recessed" inverts: darker than
+     the surface on light, lighter on dark. */
+  --surface-subtle: var(--palette-neutral-100);
   --surface-hover: var(--palette-neutral-100);
   --surface-active: var(--palette-neutral-200);
 

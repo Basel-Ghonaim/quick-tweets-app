@@ -2,6 +2,7 @@
 [data-theme="dark"] {
   --surface-page: var(--palette-slate-900);
   --surface-default: var(--palette-slate-800);
+  --surface-subtle: var(--palette-slate-700);
   --surface-hover: var(--palette-slate-700);
   --surface-active: var(--palette-slate-600);
 

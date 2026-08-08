@@ -1,8 +1,24 @@
 /* The single owned focus indicator (ADR 0010 Decision 5). A component composes
-   this class instead of declaring its own ring, so the indicator is defined once
-   and stays consistent across the system; it consumes --focus-ring, which every
-   theme resolves above 3:1 against every surface. Keyboard focus only. */
-.focusRing:focus-visible {
+   one of these instead of declaring a ring of its own, so the indicator is
+   defined once and stays consistent across the system; it consumes --focus-ring,
+   which every theme resolves above 3:1 against every surface. Keyboard focus only.
+
+   Three attachments, one indicator: on the focused element itself; on a wrapper
+   that owns the visible boundary the element sits inside; and on a sibling, when
+   the focusable element is visually replaced. The wrapper form matches a *direct*
+   child, because an interactive affordance sits in a slot and rings itself — a
+   wrapper reacting to any descendant would ring twice and tell a keyboard user
+   nothing about where focus actually is. */
+.focusRing:focus-visible,
+.focusRingWithin:has(> :focus-visible),
+:focus-visible ~ .focusRingProxy {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+/* Composed alongside one of the above where a clipping ancestor would cut an
+   outward ring: the indicator is the same, drawn inward. Kept here rather than
+   parameterised, so the override cannot lose a cascade race with the component. */
+.focusRingInset:focus-visible {
+  outline-offset: -2px;
 }

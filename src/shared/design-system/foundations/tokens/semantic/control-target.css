@@ -1,0 +1,7 @@
+/* The minimum hit target for anything interactive — WCAG 2.5.8 Target Size
+   (Minimum), which is a platform basis rather than a design choice, so it is
+   named once and not re-argued per affordance. Theme-invariant: a target is a
+   physical constraint, and no resolution axis changes a finger. */
+:root {
+  --control-target-min: 24px;
+}
