@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** The authoritative source for the project's **code-design principles** — the patterns and rules that define what good code looks like here. Binding on all contributors, human and AI.
 > **Scope:** Owns *principles* (the timeless "why" and "what good looks like"). It does **not** own *mechanisms* (the current "how"), which live in the relevant platform, security, and contract documents, nor *process* (Git, commits, reviews), which lives in the Engineering Execution Standard.
-> **Version:** 1.1
-> **Last Updated:** 2026-07-29
+> **Version:** 1.2
+> **Last Updated:** 2026-08-08
 > **Owner:** Basel Ghonaim
 
 ## How to read this document
@@ -109,6 +109,7 @@ Branch and commit naming are *process* conventions, owned by the Engineering Exe
 Comments preserve knowledge the code itself cannot express. Prefer clear naming, expressive types, and good responsibility boundaries over comments that explain the code; before adding one, ask whether a safe local naming or structure change would remove the need for it — without expanding the current task's scope.
 
 - **Explain *why*, not *what*.** Do not restate a line, type, interface, or function that already reads clearly; a well-named declaration needs no paragraph re-describing what TypeScript already says.
+- **As long as its reason, and no longer.** A block that recounts a decision, its history, and the alternatives weighed has moved documentation into the source, where it will drift and where no one owns it. Give the reason in a sentence or two and point to the owner for the rest.
 - **A comment earns its place** when it preserves reasoning the code cannot show: an architectural rationale, an invariant, a security/safety or concurrency constraint, a non-obvious ordering, a real workaround and why it exists, an external constraint, or intentional behavior that would otherwise look wrong.
 - **No development provenance.** Source comments — **and test descriptions/docstrings** — must not record where a change came from: no Issue/PR numbers, branch names, work-item labels (`WI-C`), development milestones (`M9`), or execution-plan steps. That history belongs in Git commits, PRs, Issues, and Execution Plans, which are its **correct home** — a commit message *should* cite the work item that a source comment must not.
 - **Durable pointers are permitted — and differ from provenance.** A comment may point to where a lasting constraint or decision lives: an ADR, a recorded architecture **Finding**, or the owning document (`see ADR 0005`, `Finding 0002`). The test is *purpose*: a stable pointer to a durable artifact is fine; "this came from WI-C / PR #392" is not. Prefer pointing to durable documentation over copying it into the source.
