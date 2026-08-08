@@ -1,19 +1,30 @@
-/* Typography — intent tier as composite text styles (ADR 0011 Decision 6), not a
-   size ramp. Bundled through the `font` shorthand so a call site applies the whole
-   style in one declaration and cannot pick size and weight apart. No tracking token:
-   no control sets a non-default letter-spacing, so one would name a value no one uses (D8). */
+/* Composite text styles (ADR 0011 Decision 6): the `font` shorthand keeps size and
+   weight inseparable at the call site. No tracking — no control sets one. */
 :root {
-  --type-control-label-small: 500 var(--font-size-xs) / var(--line-height-base) var(--font-family-base);
-  --type-control-label-medium: 500 var(--font-size-sm) / var(--line-height-base) var(--font-family-base);
-  --type-control-label-large: 500 var(--font-size-base) / var(--line-height-base) var(--font-family-base);
+  /* Control text scales with the control, Field text follows the form's hierarchy.
+     The prefix carries the rule: --type-control-* takes a size suffix, --type-field-*
+     never does. */
 
-  /* Not a lighter label: a label names the control, while an option's text is
-     content the reader is choosing between, so it carries the weight of body copy. */
-  --type-control-option-small: 400 var(--font-size-xs) / var(--line-height-base) var(--font-family-base);
-  --type-control-option-medium: 400 var(--font-size-sm) / var(--line-height-base) var(--font-family-base);
-  --type-control-option-large: 400 var(--font-size-base) / var(--line-height-base) var(--font-family-base);
+  /* An action carries emphasis weight; content carries body weight. */
+  --type-control-action-small: 500 var(--font-size-xs) / var(--line-height-base)
+    var(--font-family-base);
+  --type-control-action-medium: 500 var(--font-size-sm) /
+    var(--line-height-base) var(--font-family-base);
+  --type-control-action-large: 500 var(--font-size-base) /
+    var(--line-height-base) var(--font-family-base);
 
-  /* One size, not three: helper and error text stays the same beside a small
-     control and a large one, so a per-size ramp would name values no one sets (D8). */
-  --type-control-helper: 400 var(--font-size-xs) / var(--line-height-base) var(--font-family-base);
+  /* A checkbox's text binds this, not --type-field-label: it is the field's
+     accessible name, but it sits on the control's inline axis and scales with it. */
+  --type-control-content-small: 400 var(--font-size-xs) /
+    var(--line-height-base) var(--font-family-base);
+  --type-control-content-medium: 400 var(--font-size-sm) /
+    var(--line-height-base) var(--font-family-base);
+  --type-control-content-large: 400 var(--font-size-base) /
+    var(--line-height-base) var(--font-family-base);
+
+  /* One size each: a field's text reads the same beside a small control and a large one. */
+  --type-field-label: 500 var(--font-size-sm) / var(--line-height-base)
+    var(--font-family-base);
+  --type-field-description: 400 var(--font-size-xs) / var(--line-height-base)
+    var(--font-family-base);
 }

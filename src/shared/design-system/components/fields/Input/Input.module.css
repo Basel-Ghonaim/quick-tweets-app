@@ -2,15 +2,13 @@
   display: inline-flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--space-1, 4px);
+  gap: var(--field-gap);
   position: relative;
-  font-family: var(--font-family-base);
 }
 
 .label {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-text-primary);
+  font: var(--type-field-label);
+  color: var(--text-primary);
 }
 
 .fullWidth {
@@ -19,71 +17,64 @@
 
 .input {
   width: 100%;
-  font-family: inherit;
   outline: none;
   border: none;
-  background: var(--color-surface);
-  color: inherit;
-  line-height: var(--line-height-base, 1.5);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--surface-default);
+  color: var(--text-primary);
+  transition: all var(--motion-interactive);
 }
 
 .input::placeholder {
-  color: var(--color-text-muted, var(--gray-500));
+  color: var(--text-muted);
 }
 
-/* Scalable sizes mapped to Button without heights */
 .size-small .input {
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--font-size-xs);
+  padding: var(--control-padding-block-small)
+    var(--control-padding-inline-small);
+  font: var(--type-control-content-small);
 }
 
 .size-medium .input {
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--font-size-sm);
+  padding: var(--control-padding-block-medium)
+    var(--control-padding-inline-medium);
+  font: var(--type-control-content-medium);
 }
 
 .size-large .input {
-  padding: var(--space-3) var(--space-6);
-  font-size: var(--font-size-base);
+  padding: var(--control-padding-block-large)
+    var(--control-padding-inline-large);
+  font: var(--type-control-content-large);
 }
 
-/* Optical Alignment for Input Icons */
 .adornment {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--gray-500);
-  padding: 0 var(--space-2);
+  color: var(--text-muted);
+  padding-inline: var(--control-gap-inline);
 }
 
+/* Sized in `em` so an adornment tracks the control's own text rather than the
+   size prop, which is what keeps it optically matched at every size. */
 .adornment > svg {
   width: 1.25em;
   height: 1.25em;
 }
 
-.size-small.hasPrefix .input {
-  padding-left: 0;
-}
-.size-medium.hasPrefix .input {
-  padding-left: 0;
-}
+.size-small.hasPrefix .input,
+.size-medium.hasPrefix .input,
 .size-large.hasPrefix .input {
-  padding-left: 0;
+  padding-inline-start: 0;
 }
 
-.size-small.hasSuffix .input {
-  padding-right: 0;
-}
-.size-medium.hasSuffix .input {
-  padding-right: 0;
-}
+.size-small.hasSuffix .input,
+.size-medium.hasSuffix .input,
 .size-large.hasSuffix .input {
-  padding-right: 0;
+  padding-inline-end: 0;
 }
 
-/* Base Wrapper Styles */
 .control {
+  composes: focusRingWithin from "../../../foundations/composition/focusRing.module.css";
   display: flex;
   align-items: center;
   width: 100%;
@@ -91,57 +82,51 @@
   border: var(--border-width-thin) solid transparent;
   background-color: transparent;
   overflow: hidden;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--motion-interactive);
 }
 
-/* Variants & Glowing Halo Math */
 .variant-outlined .control {
   background-color: transparent;
-  border-color: var(--gray-200);
+  border-color: var(--border-default);
 }
 
 .variant-outlined.isInvalid .control {
-  border-color: var(--color-error-primary);
+  border-color: var(--role-fill-error);
 }
 
-.variant-outlined:focus-within .control {
+.variant-outlined .control:has(> :focus-visible) {
   border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px var(--input-border-alpha);
 }
 
 .variant-filled .control {
-  background-color: var(--gray-100);
+  background-color: var(--surface-subtle);
   border-color: transparent;
 }
 
-.variant-filled:focus-within .control {
+.variant-filled .control:has(> :focus-visible) {
   background-color: transparent;
   border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px var(--input-border-alpha);
 }
 
 .variant-filled.isInvalid .control {
-  border-color: var(--color-error-primary);
+  border-color: var(--role-fill-error);
 }
 
-/* Underline variant changes border-bottom, glow might be different or standard */
 .variant-underlined .control {
   border-radius: 0;
-  border-bottom: var(--border-width-medium) solid var(--gray-200);
+  border-block-end: var(--border-width-medium) solid var(--border-default);
 }
 
-.variant-underlined:focus-within .control {
-  border-bottom-color: var(--input-border-focus);
-  box-shadow: 0 1px 0 0 var(--input-border-focus);
+.variant-underlined .control:has(> :focus-visible) {
+  border-block-end-color: var(--input-border-focus);
 }
 
 .variant-underlined.isInvalid .control {
-  border-bottom-color: var(--color-error-primary);
+  border-block-end-color: var(--role-fill-error);
 }
 
-/* Disabled State */
 .isDisabled {
-  opacity: 0.6;
+  opacity: var(--control-opacity-disabled);
   cursor: not-allowed;
 }
 
@@ -150,14 +135,13 @@
   pointer-events: none;
 }
 
-/* Spinner */
 .spinner {
   width: 1.25em;
   height: 1.25em;
-  border: var(--border-width-medium) solid var(--color-text-muted, var(--gray-500));
-  border-right-color: transparent;
+  border: var(--border-width-medium) solid var(--text-muted);
+  border-inline-end-color: transparent;
   border-radius: var(--border-radius-full);
-  animation: input-spin 0.75s linear infinite;
+  animation: input-spin var(--motion-spin) infinite;
 }
 
 @keyframes input-spin {
@@ -166,36 +150,36 @@
   }
 }
 
+/* Inset, because the control clips its children to its own radius and would
+   otherwise cut an outward ring. */
 .passwordToggle {
+  composes: focusRing focusRingInset from "../../../foundations/composition/focusRing.module.css";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* An interactive affordance carries its own hit target: the icon alone is
+     smaller than one (WCAG 2.5.8). */
+  min-inline-size: var(--control-target-min);
+  min-block-size: var(--control-target-min);
   background: transparent;
   border: none;
-  font-family: inherit;
-  font-size: var(--font-size-xs, 0.75rem);
-  font-weight: 600;
-  color: var(--color-primary);
+  color: var(--role-on-surface-primary);
   cursor: pointer;
-  padding: 0 var(--space-3, 12px);
-  outline: none;
+  padding-inline: var(--control-gap-inline);
   user-select: none;
-  transition: opacity var(--transition-fast, 0.2s);
+  transition: opacity var(--motion-interactive);
 }
 
 .passwordToggle:hover {
   opacity: 0.8;
 }
 
-.passwordToggle:focus-visible {
-  text-decoration: underline;
-}
-
-/* Error Message */
 .errorMessage {
-  font-size: var(--font-size-xs);
-  color: var(--color-error-primary);
-  line-height: var(--line-height-base, 1.5);
+  font: var(--type-field-description);
+  color: var(--role-on-surface-error);
 }
 
 .helperText {
-  font: var(--type-control-helper);
-  color: var(--color-text-secondary);
+  font: var(--type-field-description);
+  color: var(--text-secondary);
 }

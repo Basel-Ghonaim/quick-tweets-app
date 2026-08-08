@@ -67,10 +67,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           className,
         )}
         style={customProperties(
-          {
-            "--input-border-focus": `var(--color-${color}-primary)`,
-            "--input-border-alpha": `var(--color-${color}-alpha)`,
-          },
+          { "--input-border-focus": `var(--role-fill-${color})` },
           style,
         )}
       >

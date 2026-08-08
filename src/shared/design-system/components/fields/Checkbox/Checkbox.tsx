@@ -30,8 +30,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 
     const dynamicStyles = customProperties(
       {
-        "--checkbox-color": `var(--color-${color}-primary)`,
-        "--checkbox-alpha": `var(--color-${color}-alpha)`,
+        "--checkbox-color": `var(--role-fill-${color})`,
+        "--checkbox-text": `var(--role-fill-${color}-text)`,
       },
       style,
     );

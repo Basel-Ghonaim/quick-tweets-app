@@ -1,0 +1,22 @@
+/* Control and Field spacing — intent tier (ADR 0011 Decision 5): control-internal
+   padding and gap earn a tier, page layout does not. Logical axes throughout, so the
+   vocabulary is direction-agnostic (I6). Density is the earning axis; no density
+   theme exists to resolve into, so its resolution is not built. */
+:root {
+  --control-padding-inline-small: var(--space-2);
+  --control-padding-inline-medium: var(--space-4);
+  --control-padding-inline-large: var(--space-6);
+
+  --control-padding-block-small: var(--space-1);
+  --control-padding-block-medium: var(--space-2);
+  --control-padding-block-large: var(--space-3);
+
+  /* Between a control's own parts, on the inline axis the anatomy is defined on.
+     Does not vary with the control's size. */
+  --control-gap-inline: var(--space-2);
+
+  /* Between a Field's stacked parts — label, control, description, error. A Field
+     concept, not a control one: it spaces the anatomy around the control, so it is
+     independent of the control's size. */
+  --field-gap: var(--space-1);
+}
