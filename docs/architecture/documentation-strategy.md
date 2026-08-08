@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.2
-> **Last Updated:** 2026-08-05
+> **Version:** 1.3
+> **Last Updated:** 2026-08-08
 > **Owner:** Basel Ghonaim
 
 
@@ -200,9 +200,11 @@ Do not create ADRs for routine implementation work, small refactors, naming chan
   - **A new ADR is required in either phase** when the decision itself changes, the architectural philosophy changes, or a new direction is introduced — replacing Clean Architecture with a feature architecture, or CSS Modules with a utility framework, is a new ADR whatever the phase.
   - **The phase is declared, never inferred.** It is recorded here, and moving to `Stable` is itself an architectural decision. Current phase: **`Foundation`**.
   - **Why the phase exists.** A foundation is revised faster than it is superseded: during it, most changes sharpen a criterion rather than reverse a decision, and minting an ADR for each produces a chain of near-duplicates that obscures the decision instead of preserving it. The cost is real and accepted — a reader of a revised ADR sees its current form, not its evolution. Git preserves the prior text, and the `Revised:` line is what tells a reader to go looking.
-- **Content:** the context that forced the decision, the decision itself, the alternatives considered, and the consequences (trade-offs accepted). ADRs explain *why*, not *how*.
+- **Content:** the context that forced the decision, the decision itself, the alternatives considered, and the consequences (trade-offs accepted). ADRs explain *why*, not *how* — the decision, the principle behind it, and the boundary it draws. Mechanism, file layout, naming, and other implementation detail belong to the document that owns the area, which keeps an ADR short enough to stay read.
+- **Prohibit a capability only for an architectural reason.** A blanket prohibition is itself a decision with a blast radius: it forecloses uses no one has needed yet, and the cost lands on whoever needs one first. Forbid a capability only where permitting it would breach a stated boundary or invariant; otherwise state the **condition** under which it is admissible.
 - **Status:** each ADR carries a status of `Proposed`, `Accepted`, or `Superseded`. A revised ADR stays `Accepted` — revision is not a status.
 - **Authority:** ADRs are the single owner of architectural rationale **that no other document owns**. Where a platform, contract, or feature document owns a decision, it owns that decision's rationale too, and an ADR does not duplicate it. Other documents link to ADRs rather than re-explaining a decision they do not own.
+- **That authority is real, but not absolute.** An accepted ADR is followed by default. It is not infallible: a decision can be wrong, or can stop fitting the system it governs as that system grows. When that is found, the decision is **revised or superseded through the lifecycle above** — raised, decided, and recorded. What is never acceptable is either silent deviation or the opposite failure: knowingly building something wrong to keep a document intact. The record serves the architecture; where it does not, the record changes.
 
 ---
 
