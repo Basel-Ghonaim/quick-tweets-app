@@ -13,7 +13,7 @@
 All visual values are **CSS custom properties**, separated by tier under `foundations/tokens/`:
 
 - **Primitives** — raw scales (`--palette-blue-600`, `--space-2`, `--font-size-base`). Not consumed by components, with one stated exception: border **radius and width** carry their tier on the curated scale itself, so a component binds them directly.
-- **Intent** — the tier a family earns rather than one it is given ([ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md)): role fills and on-surface text across the six roles (`--control-fill-error`, `--control-on-surface-primary`), surfaces and text (`--surface-subtle`, `--text-muted`), control spacing, motion, and composite text styles. A family that earns no intent tier is a result, not a gap.
+- **Intent** — the tier a family earns rather than one it is given ([ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md)): role fills and on-surface text across the six roles (`--role-fill-error`, `--role-on-surface-primary`), surfaces and text (`--surface-subtle`, `--text-muted`), control spacing, motion, and composite text styles. A family that earns no intent tier is a result, not a gap.
 
 **The rule:** a component binds **at the tier its family carries**, never at a primitive scale and never at a hardcoded value. A missing token is a **stop** — the vocabulary is extended deliberately, because the first reach for a primitive is what reintroduced the drift the layer was rebuilt to remove.
 

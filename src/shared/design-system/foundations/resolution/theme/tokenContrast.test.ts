@@ -90,11 +90,11 @@ type Pair = { fg: string; bg: string; min: number };
 const PAIRS: Pair[] = [
   ...TEXT.flatMap((fg) => SURFACES.map((bg) => ({ fg, bg, min: 4.5 }))),
   ...ROLES.flatMap((r) => [
-    { fg: `--control-fill-${r}-text`, bg: `--control-fill-${r}`, min: 4.5 },
-    { fg: `--control-fill-${r}-text`, bg: `--control-fill-${r}-hover`, min: 4.5 },
+    { fg: `--role-fill-${r}-text`, bg: `--role-fill-${r}`, min: 4.5 },
+    { fg: `--role-fill-${r}-text`, bg: `--role-fill-${r}-hover`, min: 4.5 },
   ]),
-  ...ROLES.flatMap((r) => SURFACES.map((bg) => ({ fg: `--control-on-surface-${r}`, bg, min: 4.5 }))),
-  ...ROLES.map((r) => ({ fg: `--control-fill-${r}`, bg: "--surface-page", min: 3 })),
+  ...ROLES.flatMap((r) => SURFACES.map((bg) => ({ fg: `--role-on-surface-${r}`, bg, min: 4.5 }))),
+  ...ROLES.map((r) => ({ fg: `--role-fill-${r}`, bg: "--surface-page", min: 3 })),
   ...SURFACES.map((bg) => ({ fg: "--focus-ring", bg, min: 3 })),
 ];
 

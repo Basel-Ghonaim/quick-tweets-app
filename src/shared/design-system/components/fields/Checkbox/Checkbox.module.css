@@ -85,7 +85,7 @@
 }
 
 .isInvalid .box {
-  border-color: var(--control-fill-error);
+  border-color: var(--role-fill-error);
 }
 
 .isDisabled {
@@ -114,7 +114,7 @@
 
 .errorMessage {
   font: var(--type-field-description);
-  color: var(--control-on-surface-error);
+  color: var(--role-on-surface-error);
 }
 
 .helperText {

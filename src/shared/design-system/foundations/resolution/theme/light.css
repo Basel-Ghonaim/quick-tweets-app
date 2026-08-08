@@ -3,8 +3,9 @@
   --surface-page: var(--palette-neutral-50);
   --surface-default: var(--palette-neutral-0);
   /* A resting fill that recedes from the surface it sits on — a filled input, not
-     a hovered one. It resolves per theme because "recessed" inverts: darker than
-     the surface on light, lighter on dark. */
+     a hovered one. Shares a value with --surface-hover in both themes: the palette
+     has no step between them, so a filled control cannot yet distinguish rest from
+     hover by surface alone. */
   --surface-subtle: var(--palette-neutral-100);
   --surface-hover: var(--palette-neutral-100);
   --surface-active: var(--palette-neutral-200);
@@ -21,65 +22,59 @@
   --focus-ring: var(--palette-blue-500);
 }
 
-/* Interaction role tokens (ADR 0010 Decision 3). The `control-` prefix is the
-   fence: this vocabulary is scoped to what the components exercise, so a card or a
-   banner reaching for it is the compositional vocabulary that stays reserved.
-   On-surface is the role as text on a surface, resolved per theme because no single
-   value clears 4.5:1 against both a light and a dark surface. It stays distinct
-   from the fill token even where the two values coincide. */
+/* Role tokens (ADR 0010 Decision 3). `role` is the semantic visual role — primary,
+   error, and the rest — never the ARIA `role` attribute. Any component that carries
+   one binds these, so they are not scoped to controls: an alert and a badge express
+   a role without being one. On-surface is the role as text on a neutral surface,
+   resolved per theme because no single value clears 4.5:1 against both. */
 [data-theme="light"] {
-  --control-on-surface-primary: var(--palette-blue-700);
-  --control-on-surface-secondary: var(--palette-neutral-600);
-  --control-on-surface-success: var(--palette-green-700);
-  --control-on-surface-warning: var(--palette-amber-700);
-  --control-on-surface-error: var(--palette-red-600);
-  --control-on-surface-info: var(--palette-blue-600);
+  --role-on-surface-primary: var(--palette-blue-700);
+  --role-on-surface-secondary: var(--palette-neutral-600);
+  --role-on-surface-success: var(--palette-green-700);
+  --role-on-surface-warning: var(--palette-amber-700);
+  --role-on-surface-error: var(--palette-red-600);
+  --role-on-surface-info: var(--palette-blue-600);
 }
 
-/* Fill / boundary role tokens (ADR 0010 Decision 3) — the role as a filled
-   background or border, kept distinct from on-surface text because the two answer
-   to different contrast criteria. The values are theme-invariant, which is
-   permitted; the keys are still declared in every theme, because `:root` matches
-   the same element as the theme selector at equal specificity and loads after it —
-   a token placed there would outrank every theme instead of being overridden by
-   one. `text` is the contrast-paired on-fill text; `subtle` a translucent wash. */
+/* The role as a filled background or border, kept distinct from on-surface text
+   because the two answer to different contrast criteria. Declared in every theme
+   even where the values coincide: `:root` matches the same element at equal
+   specificity and loads afterwards, so a token there would outrank every theme.
+   `text` is the contrast-paired on-fill text; `subtle` a translucent wash. */
 [data-theme="light"] {
-  --control-fill-primary: var(--palette-blue-600);
-  --control-fill-primary-hover: var(--palette-blue-700);
-  --control-fill-primary-text: var(--palette-neutral-0);
-  --control-fill-primary-subtle: var(--palette-blue-a10);
+  --role-fill-primary: var(--palette-blue-600);
+  --role-fill-primary-hover: var(--palette-blue-700);
+  --role-fill-primary-text: var(--palette-neutral-0);
+  --role-fill-primary-subtle: var(--palette-blue-a10);
 
-  --control-fill-secondary: var(--palette-neutral-500);
-  --control-fill-secondary-hover: var(--palette-neutral-600);
-  --control-fill-secondary-text: var(--palette-neutral-0);
-  --control-fill-secondary-subtle: var(--palette-neutral-a10);
+  --role-fill-secondary: var(--palette-neutral-500);
+  --role-fill-secondary-hover: var(--palette-neutral-600);
+  --role-fill-secondary-text: var(--palette-neutral-0);
+  --role-fill-secondary-subtle: var(--palette-neutral-a10);
 
-  --control-fill-success: var(--palette-green-700);
-  --control-fill-success-hover: var(--palette-green-800);
-  --control-fill-success-text: var(--palette-neutral-0);
-  --control-fill-success-subtle: var(--palette-green-a10);
+  --role-fill-success: var(--palette-green-700);
+  --role-fill-success-hover: var(--palette-green-800);
+  --role-fill-success-text: var(--palette-neutral-0);
+  --role-fill-success-subtle: var(--palette-green-a10);
 
-  --control-fill-warning: var(--palette-amber-700);
-  --control-fill-warning-hover: var(--palette-amber-800);
-  --control-fill-warning-text: var(--palette-neutral-0);
-  --control-fill-warning-subtle: var(--palette-amber-a10);
+  --role-fill-warning: var(--palette-amber-700);
+  --role-fill-warning-hover: var(--palette-amber-800);
+  --role-fill-warning-text: var(--palette-neutral-0);
+  --role-fill-warning-subtle: var(--palette-amber-a10);
 
-  --control-fill-error: var(--palette-red-600);
-  --control-fill-error-hover: var(--palette-red-700);
-  --control-fill-error-text: var(--palette-neutral-0);
-  --control-fill-error-subtle: var(--palette-red-a10);
+  --role-fill-error: var(--palette-red-600);
+  --role-fill-error-hover: var(--palette-red-700);
+  --role-fill-error-text: var(--palette-neutral-0);
+  --role-fill-error-subtle: var(--palette-red-a10);
 
-  --control-fill-info: var(--palette-blue-600);
-  --control-fill-info-hover: var(--palette-blue-700);
-  --control-fill-info-text: var(--palette-neutral-0);
-  --control-fill-info-subtle: var(--palette-blue-a10);
+  --role-fill-info: var(--palette-blue-600);
+  --role-fill-info-hover: var(--palette-blue-700);
+  --role-fill-info-text: var(--palette-neutral-0);
+  --role-fill-info-subtle: var(--palette-blue-a10);
 }
 
-/* Control state emphasis (ADR 0011 Decision 1a). Disabled and loading are named
-   states resting on theme as the axis: a high-contrast theme (ADR 0010 Decision 4)
-   is the likeliest to re-resolve a disabled state, since dimming by opacity is what
-   harms the contrast the DS owns in every theme (Decision 5). Identical across the
-   committed themes today, declared in each per the fill note above so none outranks. */
+/* Control state emphasis (ADR 0011 Decision 1a). On the theme axis because a
+   high-contrast theme is the likeliest to re-resolve a state dimmed by opacity. */
 [data-theme="light"] {
   --control-opacity-disabled: 0.6;
   --control-opacity-loading: 0.8;

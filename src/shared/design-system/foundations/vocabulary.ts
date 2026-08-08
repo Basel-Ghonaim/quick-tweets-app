@@ -1,14 +1,11 @@
 /**
  * The enumerated scales the presentation language is built from.
  *
- * They live in foundations rather than beside the components because the
- * semantic tier is *named* by them — `--control-fill-<role>`,
- * `--control-padding-inline-<size>` — so tokens and components must agree on one
- * list. The check that guards those token names needs the same list, and a
- * foundations check may not import a component.
- *
- * Exported as `as const` arrays rather than bare unions because the check
- * iterates them at runtime: a union alone would leave it mirroring the values.
+ * They live in foundations because the semantic tier is *named* by them —
+ * `--role-fill-<role>`, `--control-padding-inline-<size>` — and the check that
+ * guards those names needs the same list, which a foundations check cannot import
+ * from a component. Runtime arrays rather than bare unions, so the check iterates
+ * the values instead of mirroring them.
  */
 
 export const ROLES = [

@@ -1,16 +1,11 @@
-/* Typography — intent tier as composite text styles (ADR 0011 Decision 6), not a
-   size ramp. The `font` shorthand is what makes it composite: a call site applies
-   the whole style and cannot pick size and weight apart. No tracking is bundled —
-   no control sets a non-default letter-spacing, so it would name a value no one
-   uses (D8). */
+/* Composite text styles (ADR 0011 Decision 6): the `font` shorthand keeps size and
+   weight inseparable at the call site. No tracking — no control sets one. */
 :root {
-  /* Control text scales with the control; Field text does not. Text inside the
-     control sits in a box whose padding scaled with `size`, so it has to follow,
-     while a Field's label and description answer to the form's hierarchy instead.
-     The prefix carries that rule: a --type-control-* token takes a size suffix and
-     a --type-field-* token never does. */
+  /* Control text scales with the control, Field text follows the form's hierarchy.
+     The prefix carries the rule: --type-control-* takes a size suffix, --type-field-*
+     never does. */
 
-  /* An action names what it does, so it carries emphasis weight. */
+  /* An action carries emphasis weight; content carries body weight. */
   --type-control-action-small: 500 var(--font-size-xs) / var(--line-height-base)
     var(--font-family-base);
   --type-control-action-medium: 500 var(--font-size-sm) /
@@ -18,11 +13,8 @@
   --type-control-action-large: 500 var(--font-size-base) /
     var(--line-height-base) var(--font-family-base);
 
-  /* Content is what the reader reads or chooses between — a typed value, an
-     option's text — so it carries the weight of body copy. A checkbox's text binds
-     this and not --type-field-label: it is the field's accessible name, but it sits
-     on the control's inline axis and scales with it. These name typographic roles,
-     never ARIA ones. */
+  /* A checkbox's text binds this, not --type-field-label: it is the field's
+     accessible name, but it sits on the control's inline axis and scales with it. */
   --type-control-content-small: 400 var(--font-size-xs) /
     var(--line-height-base) var(--font-family-base);
   --type-control-content-medium: 400 var(--font-size-sm) /
@@ -30,9 +22,7 @@
   --type-control-content-large: 400 var(--font-size-base) /
     var(--line-height-base) var(--font-family-base);
 
-  /* One size each: a field's label and its description read the same beside a
-     small control and a large one, so a per-size ramp would name values no one
-     sets (D8). */
+  /* One size each: a field's text reads the same beside a small control and a large one. */
   --type-field-label: 500 var(--font-size-sm) / var(--line-height-base)
     var(--font-family-base);
   --type-field-description: 400 var(--font-size-xs) / var(--line-height-base)

@@ -89,7 +89,7 @@
 }
 
 .variant-outlined.isInvalid .control {
-  border-color: var(--control-fill-error);
+  border-color: var(--role-fill-error);
 }
 
 .variant-outlined .control:has(> :focus-visible) {
@@ -107,7 +107,7 @@
 }
 
 .variant-filled.isInvalid .control {
-  border-color: var(--control-fill-error);
+  border-color: var(--role-fill-error);
 }
 
 .variant-underlined .control {
@@ -120,7 +120,7 @@
 }
 
 .variant-underlined.isInvalid .control {
-  border-block-end-color: var(--control-fill-error);
+  border-block-end-color: var(--role-fill-error);
 }
 
 .isDisabled {
@@ -161,7 +161,7 @@
   min-block-size: var(--control-target-min);
   background: transparent;
   border: none;
-  color: var(--control-on-surface-primary);
+  color: var(--role-on-surface-primary);
   cursor: pointer;
   padding-inline: var(--control-gap-inline);
   user-select: none;
@@ -174,7 +174,7 @@
 
 .errorMessage {
   font: var(--type-field-description);
-  color: var(--control-on-surface-error);
+  color: var(--role-on-surface-error);
 }
 
 .helperText {
