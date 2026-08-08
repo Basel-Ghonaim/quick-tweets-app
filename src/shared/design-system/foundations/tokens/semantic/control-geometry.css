@@ -1,0 +1,13 @@
+/* Control geometry — dimensions controls must agree on, as distinct from the
+   intrinsic geometry a single component owns. */
+:root {
+  /* The minimum hit target for anything interactive — WCAG 2.5.8, a platform basis
+     rather than a design choice. Theme-invariant: no resolution axis changes a finger. */
+  --control-target-min: 24px;
+
+  /* The visible box of a selection control. Shared because a checkbox and a radio
+     sit in the same form and must align; the glyph inside each is its own. */
+  --control-selection-size-small: 14px;
+  --control-selection-size-medium: 18px;
+  --control-selection-size-large: 22px;
+}

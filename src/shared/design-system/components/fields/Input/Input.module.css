@@ -2,7 +2,7 @@
   display: inline-flex;
   flex-direction: column;
   align-items: stretch;
-  gap: var(--control-gap-block);
+  gap: var(--field-gap);
   position: relative;
 }
 
@@ -29,7 +29,8 @@
 }
 
 .size-small .input {
-  padding: var(--control-padding-block-small) var(--control-padding-inline-small);
+  padding: var(--control-padding-block-small)
+    var(--control-padding-inline-small);
   font: var(--type-control-content-small);
 }
 
@@ -40,7 +41,8 @@
 }
 
 .size-large .input {
-  padding: var(--control-padding-block-large) var(--control-padding-inline-large);
+  padding: var(--control-padding-block-large)
+    var(--control-padding-inline-large);
   font: var(--type-control-content-large);
 }
 

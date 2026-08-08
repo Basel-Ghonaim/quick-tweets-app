@@ -1,7 +1,7 @@
 .root {
   display: inline-flex;
   flex-direction: column;
-  gap: var(--control-gap-block);
+  gap: var(--field-gap);
 }
 
 .row {
@@ -10,6 +10,8 @@
   gap: var(--control-gap-inline);
   cursor: pointer;
   user-select: none;
+  /* The row is the hit target — the box alone is under the minimum at every size. */
+  min-block-size: var(--control-target-min);
 }
 
 .nativeInput {
@@ -32,19 +34,17 @@
   transition: all var(--motion-interactive);
 }
 
-/* A control's intrinsic geometry, not vocabulary: no other control has a square
-   dimension of its own, so a token here would name a value one component sets. */
 .size-small .box {
-  width: 14px;
-  height: 14px;
+  inline-size: var(--control-selection-size-small);
+  block-size: var(--control-selection-size-small);
 }
 .size-medium .box {
-  width: 18px;
-  height: 18px;
+  inline-size: var(--control-selection-size-medium);
+  block-size: var(--control-selection-size-medium);
 }
 .size-large .box {
-  width: 22px;
-  height: 22px;
+  inline-size: var(--control-selection-size-large);
+  block-size: var(--control-selection-size-large);
 }
 
 .icon {
@@ -57,6 +57,8 @@
   display: inline-flex;
 }
 
+/* The glyph is this component's own: a radio's dot is a different proportion of
+   the same box. */
 .size-small .icon > svg {
   width: 10px;
   height: 10px;
