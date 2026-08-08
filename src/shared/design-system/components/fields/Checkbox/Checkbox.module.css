@@ -132,6 +132,6 @@
 }
 
 .helperText {
-  font: var(--type-control-helper);
+  font: var(--type-field-description);
   color: var(--color-text-secondary);
 }

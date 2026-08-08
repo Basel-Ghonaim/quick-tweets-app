@@ -84,8 +84,6 @@ export const StateMatrix: Story = {
   ),
 };
 
-// Every size, so WI-4A's per-size intents render — the control-spacing padding
-// (--control-padding-*) and the composite text styles (--type-control-label-*).
 export const Sizes: Story = {
   render: () => (
     <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>

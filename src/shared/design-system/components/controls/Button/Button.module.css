@@ -32,17 +32,17 @@
 
 .size-small {
   padding: var(--control-padding-block-small) var(--control-padding-inline-small);
-  font: var(--type-control-label-small);
+  font: var(--type-control-action-small);
 }
 
 .size-medium {
   padding: var(--control-padding-block-medium) var(--control-padding-inline-medium);
-  font: var(--type-control-label-medium);
+  font: var(--type-control-action-medium);
 }
 
 .size-large {
   padding: var(--control-padding-block-large) var(--control-padding-inline-large);
-  font: var(--type-control-label-large);
+  font: var(--type-control-action-large);
 }
 
 .variant-contained {
