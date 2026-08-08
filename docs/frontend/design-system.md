@@ -4,25 +4,26 @@
 > **Authority:** The authoritative source for the frontend **design-system conventions** — the design-token model, theming, the component-authoring pattern, the variant model, and how the system is organized. It owns the **rules**, not a component catalog: it never documents individual components (`Button`, `Input`, …) prop-by-prop. It does **not** own schema-driven **form binding** and the `SchemaField` seam (the [frontend forms](forms.md) document), the app layout (the [frontend architecture](architecture.md)), or the design **principles** these conventions apply ([Engineering Principles](../development/engineering-principles.md)).
 > **Scope:** The shared UI foundations and components in `src/shared/design-system/`.
 > **Maturity:** This document describes the **currently implemented** design-system conventions. It covers only what exists today and will expand as the system grows; anything not described here is **not yet a stabilized convention** — either not yet built, or present but not yet settled enough to document — and is **not** something the architecture has rejected.
-> **Version:** 1.1
-> **Last Updated:** 2026-08-05
+> **Version:** 1.2
+> **Last Updated:** 2026-08-08
 > **Owner:** Basel Ghonaim
 
 ## Design tokens
 
-All visual values are **CSS custom properties**, defined under `foundations/tokens/` (colors, typography, spacing, border, shadow, transitions, breakpoints, z-index) in three tiers:
+All visual values are **CSS custom properties**, separated by tier under `foundations/tokens/`:
 
-- **Primitives** — raw scales (`--blue-500`, `--gray-200`, `--font-size-base`). Never consumed directly by components.
-- **Semantic role tokens** — map a role to primitives across a fixed palette of six roles (`primary`, `secondary`, `success`, `warning`, `error`, `info`), each exposing `…-primary`, `…-secondary`, and `…-alpha` (e.g. `--color-primary-primary`, `--color-error-alpha`).
-- **Theme-scoped tokens** — surfaces, text, and border values that change with the theme (`--color-surface`, `--color-text-primary`, `--color-border`).
+- **Primitives** — raw scales (`--palette-blue-600`, `--space-2`, `--font-size-base`). Not consumed by components, with one stated exception: border **radius and width** carry their tier on the curated scale itself, so a component binds them directly.
+- **Intent** — the tier a family earns rather than one it is given ([ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md)): role fills and on-surface text across the six roles (`--control-fill-error`, `--control-on-surface-primary`), surfaces and text (`--surface-subtle`, `--text-muted`), control spacing, motion, and composite text styles. A family that earns no intent tier is a result, not a gap.
 
-**The rule:** components reference **semantic** tokens, never primitives and never hard-coded values; new values are added as tokens in the appropriate `foundations/tokens/` file. This keeps every component themeable and consistent by construction.
+**The rule:** a component binds **at the tier its family carries**, never at a primitive scale and never at a hardcoded value. A missing token is a **stop** — the vocabulary is extended deliberately, because the first reach for a primitive is what reintroduced the drift the layer was rebuilt to remove.
+
+**Typography is composite, and its prefix carries a rule.** Text styles bundle weight, size, line height and family into one `font` declaration, so a call site cannot pick them apart. `--type-control-*` is text inside the control — an action's caption, a value, an option — and **takes a size suffix**, because it sits in a box whose padding scaled with `size`. `--type-field-*` is the Field's own text — its label and its description — and **never takes one**: that text answers to the form's hierarchy, not to one control's density. A checkbox's text binds the control form despite being the field's accessible name, because it sits on the control's inline axis and scales with it; these name typographic roles, never ARIA ones.
 
 ## Theming
 
-Theme values live in `foundations/theme/`. **Light is the default**, defined on `:root`; **dark** overrides the theme-scoped tokens under `[data-theme="dark"]`. Switching themes is therefore setting a single `data-theme` attribute on a root element — no component code participates.
+Theme is a **resolution axis**, not a tier — the first of possibly several, which is why it lives under `foundations/resolution/theme/` rather than at the top level. Each theme resolves the same keys under `[data-theme="…"]`, so switching themes is setting one attribute and no component code participates.
 
-**The rule:** theme-dependent values live only in the theme layer; a component **never branches on the theme**, it consumes the theme-scoped tokens and re-themes for free.
+**The rule:** a token whose value varies with a theme is declared **in every theme file and never in `:root`** — `:root` matches the same element at equal specificity and loads afterwards, so a token placed there would outrank every theme instead of being overridden by one. A component never branches on the theme; it binds the key and re-themes for free.
 
 ## Component-authoring convention
 
@@ -35,6 +36,7 @@ Every component follows the same shape, so a new one is predictable to build and
 - **Prop vocabulary** — declared once and imported, never redeclared: the role scale and the control sizes come from the foundations, and the prop contract adds `isInvalid` / `isLoading` plus the field's `label`, `errorMessage` and `helperText`. Props **extend the native element**, with the attributes the vocabulary shadows omitted **once** in the shared contract. `disabled` is never redeclared — it belongs to the element.
 - **Variant props** — a component whose variants take different props is a **discriminated union** on `variant`, so a prop belonging to one variant cannot be passed with another.
 - **Accessibility** — the field's ids and its `aria-describedby` are **derived by the shared hook**, so a component cannot render a message without associating it. Validity is exposed via `aria-invalid`; error text is announced with `role="alert"`. Where a native control is visually replaced, the real control stays present and accessible.
+- **Focus** — a component **never declares a ring of its own**; it composes the owned indicator. Because the element that receives focus is not always the element that should show it, the indicator has four attachment forms sharing one definition: on the focused element, on a wrapper that owns the visible boundary, on a sibling when the control is visually replaced, and inset where a clipping ancestor would cut an outward ring. The wrapper form matches a **direct child**, so an interactive affordance in a slot rings itself instead of the wrapper ringing twice.
 
 **The rule:** a new component adopts this layout, ref pattern, styling approach, prop vocabulary, and accessibility baseline; departures are deliberate exceptions, not new defaults.
 
@@ -43,6 +45,8 @@ Every component follows the same shape, so a new one is predictable to build and
 Two structures, composable rather than nested — the second is not the first's inner detail.
 
 - **Adorned Control** — *prefix · control · suffix*. A control flanked on the **inline axis** by affordances whose composition it owns. A caller supplies a node per side and never a layout, so supplying one can never displace an affordance the control composes itself.
+  - An affordance is **decorative** or **interactive**, and the distinction settles four things at once: whether it is focusable, whether it needs an accessible name, whether it carries the owned focus indicator, and whether it must meet the minimum hit target (`--control-target-min`, WCAG 2.5.8). It is decided by **interactivity, never by appearance** — a select's chevron looks like a control and is not one.
+  - An interactive affordance is **Button-like** by nature: transparent fill, pointer cursor, disabled opacity, owned indicator, accessible name. No shared abstraction exists yet, because there is one such affordance; what its contract should be is something a second one settles.
 - **Field** — *label · control slot · description · error*, together with the wiring that associates them. The association is derived, not remembered: a field cannot render a message without linking it.
 
 An **Adorned Field** is a Field whose control is an Adorned Control. The two are independent — `Button` is an Adorned Control and **not** a Field, carrying leading and trailing affordances with no label, description or error.
@@ -73,11 +77,12 @@ The system is organized by responsibility: `foundations/` (the token tiers, the 
 
 **The barrels are the only public surface.** Everything inside a component — variant folders, hooks, parts, helpers — is private implementation. A consumer imports the design-system root and nothing deeper, and the layer never imports itself through its own alias.
 
-**Three checks keep this true rather than merely stated:**
+**Four checks keep this true rather than merely stated**, each written after observing the failure it prevents:
 
 - Every `styles.x` a component reads exists in the stylesheet its root owns. A CSS Module resolves an unknown class to `undefined` and renders the element unstyled with no error anywhere, so nothing else can see a rename that missed a call site.
 - No consumer reaches past the root barrel, and no file in the layer imports through the public alias.
 - Every `var(--…)` reference resolves to a definition, and no token is declared both axis-invariantly and under a resolution axis.
+- Every component binds **at the tier its family carries**. Resolving is not enough — a legacy or primitive reference resolves too — so this is what makes the superseded set safe to delete. Surfaces still awaiting migration are listed explicitly, and an entry must still be in violation, so a migrated component cannot leave its own exemption behind.
 
 ## Relationship to forms, and a known cycle
 
