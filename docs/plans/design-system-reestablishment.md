@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-05
+> **Last Updated:** 2026-08-08
 > **Parent Issue:** [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414)
 > **Supersedes:** —
 
@@ -243,15 +243,20 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ### WI-5 — Input and Checkbox
 - **Goal & rationale:** apply the proven pattern, **in a single pass**. **It follows WI-4A** because the pattern must be proven for *every* family before it is repeated (**D17**); it can run in parallel with WI-6 and WI-7, which touch disjoint files.
-- **Scope:** migrate both components so every reference binds **at the tier its family carries** (**D20**) — their **36** primitive-direct non-colour references included — plus the owned focus indicator and logical properties; update their stories to exercise every state in both themes.
-- **Non-goals:** no redesign; no API change; no FileInput; **no new vocabulary** — a gap is a stop (**D15**); **no second pass** — these components are opened once and leave nothing for a later family sweep (**D17**).
+- **Scope:** migrate both components so every reference binds **at the tier its family carries** (**D20**) — their **36** primitive-direct non-colour references included, of which **7** are border and already at their tier, so **29** move — plus their **25** legacy colour references and **4** injected role bindings; the owned focus indicator and logical properties; stories exercising every state in both themes.
+- **Amended (2026-08-08).** Preparation found four gaps that the migration cannot bind around, so this Work Item admits what it must and refuses the rest:
+  - **The type vocabulary is misnamed, and WI-5 is the first Work Item that would spread it.** `--type-control-label-*` has one consumer — Button's *caption* — and has never been bound to a `<label>`; `--type-control-option-*` has none. The names are corrected to the anatomy they serve, **values unchanged**: `--type-control-action-*` (control text that is the action), `--type-control-content-*` (control text — a value, an option), `--type-field-label` and `--type-field-description` (Field-level text). **The prefix carries the coupling rule: a `--type-control-*` token takes a size suffix, a `--type-field-*` token never does.** Costed at 3 lines of Button today against ~15 after WI-7.
+  - **`--type-field-label` and `--surface-subtle` are authored here.** Both are grounded under [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2 by a consumer that renders them today *and* by set completion — the Field's third text role, and the surface axis's missing resting step. `--surface-subtle` also fixes a live defect: the filled Input's `--gray-100` is theme-invariant, so it renders a light box on the dark page.
+  - **`--control-target-min` is authored here on platform basis** — WCAG 2.5.8 Target Size (Minimum), admission ground (i). It replaces the password toggle's `--space-3` inline padding, which was an attempt at a hit target that padded only one axis and reached 42 × 18.
+  - **A control's intrinsic geometry is its own, not vocabulary.** Checkbox's box and checkmark dimensions stay in the component: a single consumer, no other control has an intrinsic square dimension, and the precedent is Button's `1.25em` icon and spinner sizing accepted at WI-4A. This is a stated carve-out from **I1**, not a silent one.
+- **Non-goals:** no redesign; no API change; no FileInput; **no vocabulary beyond the four gaps named above** — any further gap is a stop (**D15**); **no second pass** (**D17**); **no affordance abstraction** — an interactive affordance is Button-like (transparent fill, owned indicator, disabled opacity, accessible name), and consolidating it is a component decision revisited when a **second** interactive affordance appears, not a token decision taken here; **no typography for affordances** — every affordance named is an icon, so the role has no consumer (**D8**).
 - **Dependencies:** **WI-4C** (hard).
-- **Boundary validated:** that the vocabulary holds for **validity and selection states** — the surfaces Button does not exercise — and that the single-pass migration proven on the pilot generalises.
-- **Invariants protected:** **I1**, **I3**, **I5**, **I6**.
-- **Verification:** as WI-4A, for both components — every reference at the tier its family carries, no hardcoded value, no focus ring of their own — including the invalid/error state path.
-- **DoD:** both components fully migrated and story-covered; checker green; typecheck + unit green.
-- **Commit/PR boundary:** one PR.
-- **Stop-risks:** as WI-4 — a missing token is a vocabulary decision taken in its own Work Item, never a primitive reach and never authored here.
+- **Boundary validated:** that the vocabulary holds for **validity and selection states** — the surfaces Button does not exercise — and that the single-pass migration proven on the pilot generalises. The amendment adds a second boundary: that the type vocabulary **names roles rather than components**, tested against the eight Fields the effort will eventually carry, not the two in front of it.
+- **Invariants protected:** **I1** (with the geometry carve-out stated above), **I3**, **I5**, **I6**.
+- **Verification:** as WI-4A, for both components — every reference at the tier its family carries, no hardcoded value, no focus ring of their own — including the invalid/error state path. The owned indicator is proven to attach in all three of its forms, and the binding rule is proven **mechanically** rather than by eye.
+- **DoD:** both components fully migrated and story-covered; the deferred a11y gates promoted to failing; checker green; typecheck + unit green; Storybook green.
+- **Commit/PR boundary:** one PR, with the vocabulary correction as its own commit ahead of either migration.
+- **Stop-risks:** a missing token beyond the three admitted above is a **stop**, not a fifth admission — the amendment is bounded by what preparation found, and momentum is exactly what **D15** exists to refuse. If promoting the a11y gates surfaces a contrast failure the colour migration does not fix, that is a stop rather than a weakened gate (the call **CA-1** made).
 
 ### WI-6 — FileInput
 - **Goal & rationale:** the worst case, isolated. **It gets its own Work Item** because it carries by far the heaviest drift — **62** primitive-direct non-colour references *and* hardcoded hex and rgba throughout, across three variants — so folding it into a shared PR would make that review unreadable. **It follows WI-4A** for the same reason as WI-5, and runs in parallel with it.
