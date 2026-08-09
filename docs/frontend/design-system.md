@@ -75,9 +75,13 @@ This pattern is a design-system convention, not the property of any single compo
 
 ## Icons
 
-Icons are a uniform, interchangeable set: every icon accepts the same `IconProps` (`size`, `color`, `strokeWidth`, `className`) and applies shared `ICON_DEFAULTS` (size `24`, `color: "currentColor"`, `strokeWidth: 2`). They render as stroke-based SVGs that inherit the surrounding text color via `currentColor`.
+Icons are a uniform, interchangeable set: every icon accepts the same `IconProps` (`size`, `strokeWidth`, `className`) and applies shared `ICON_DEFAULTS` (size `24`, `strokeWidth: 2`). **Colour is deliberately absent from the contract** — an icon inherits `currentColor`, so its colour is set by binding a token on an ancestor and an icon can never be handed a raw value.
 
 **The rule:** a new icon implements `IconProps` and the shared defaults, so any icon can replace another without changing the consumer (Liskov substitution).
+
+**A component that cannot keep that promise does not claim it.** `FileTypeIcon` draws its colour from a file-format table and carries its own size and stroke defaults, so it is typed separately rather than implementing `IconProps` — it is a format classifier that renders an SVG, not an interchangeable icon. Its colours stay with that table: they encode **format identity**, not a role in this product's language, and two of them have no expression in the palette at all. Four coincide with palette values, which is coincidence rather than identity.
+
+**Open, and owned by the `Icon` component when it is built:** the set sizes in pixels through a prop, while controls size icons optically in `em` against their own text. Two mechanisms for one question, left to the component that will own icon sizing rather than settled around it.
 
 ## Organization & public API
 
