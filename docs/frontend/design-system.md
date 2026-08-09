@@ -87,6 +87,8 @@ Icons are a uniform, interchangeable set: every icon accepts the same `IconProps
 
 The system is organized by responsibility: `foundations/` (the token tiers, the resolution axes, and the language's enumerated scales), `components/` (grouped by anatomy, with the contract and helpers every component shares under `components/shared/`), and `icons/`.
 
+**The layer owns no global stylesheet.** It resets nothing, styles no bare element, and applies nothing to the document — that markup belongs to the application, which sets its own ground and mounts the layer. For the same reason the vocabulary **names** a typeface and never loads one: which face to use is the language's, how it is delivered is the application's, and a platform that hardcoded a CDN would be choosing a host for every consumer.
+
 **The barrels are the only public surface.** Everything inside a component — variant folders, hooks, parts, helpers — is private implementation. A consumer imports the design-system root and nothing deeper, and the layer never imports itself through its own alias.
 
 **Four checks keep this true rather than merely stated**, each written after observing the failure it prevents:
