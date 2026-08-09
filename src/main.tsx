@@ -9,6 +9,7 @@ import { bootstrap } from "@app/bootstrap";
 import { applyTheme } from "@app/theme";
 
 import "./shared/design-system";
+import "./app/app.css";
 
 // Wire shared infrastructure (authClient) with app-layer dependencies (Redux)
 bootstrap();
