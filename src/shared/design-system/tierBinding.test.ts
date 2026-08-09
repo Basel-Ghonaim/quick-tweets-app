@@ -27,17 +27,26 @@ import { ROLES } from "./foundations/vocabulary";
  * reference by interpolation, and a pattern that stops at the `$` reads
  * `--color-${role}-primary` as `--color-` and matches nothing — which is how two
  * FileInput variants kept injecting superseded tokens through a migration.
+ *
+ * The two halves are scoped differently, because they answer to different owners.
+ * **The superseded set is banned everywhere in `src/`**: it is what makes deleting
+ * that set provably safe, and a consumer holding one reference is enough to block
+ * it. **The primitive tier rule applies to the Design System layer only**: a
+ * consumer legitimately composes with the curated scales, and with the type scale
+ * where the language deliberately authors no role.
  */
 
-const LAYER = join(process.cwd(), "src/shared/design-system");
+const SRC = join(process.cwd(), "src");
+const LAYER = join(SRC, "shared", "design-system");
 const FOUNDATIONS = join(LAYER, "foundations");
 
 /** Curated scales a component may bind directly. */
 const TIER_BEARING_PRIMITIVES = ["border.css", "spacing.css"];
 
 /**
- * Surfaces still awaiting migration. An entry must still be in violation, so a
- * component that migrates cannot leave its own exemption behind.
+ * Surfaces still awaiting migration, as `src/`-relative path prefixes. Empty now;
+ * the guard below is what keeps it that way — an entry must still be in violation,
+ * so a surface that migrates cannot leave its own exemption behind.
  */
 const PENDING: string[] = [];
 
@@ -57,54 +66,78 @@ const declaredIn = (files: string[]): Set<string> =>
     ),
   );
 
-const label = (file: string) => relative(LAYER, file).split(sep).join("/");
+const label = (file: string) => relative(SRC, file).split(sep).join("/");
 
-const offLimits = new Set([
-  ...declaredIn(
-    filesUnder(join(FOUNDATIONS, "tokens/primitive"), /\.css$/).filter(
-      (file) => !TIER_BEARING_PRIMITIVES.some((name) => file.endsWith(name)),
-    ),
+const superseded = declaredIn(filesUnder(join(FOUNDATIONS, "legacy"), /\.css$/));
+
+const rawPrimitives = declaredIn(
+  filesUnder(join(FOUNDATIONS, "tokens/primitive"), /\.css$/).filter(
+    (file) => !TIER_BEARING_PRIMITIVES.some((name) => file.endsWith(name)),
   ),
-  ...declaredIn(filesUnder(join(FOUNDATIONS, "legacy"), /\.css$/)),
-]);
+);
 
-const consumers = [
-  ...filesUnder(join(LAYER, "components"), /\.(css|tsx)$/),
-  ...filesUnder(join(LAYER, "icons"), /\.(css|tsx)$/),
-].filter((file) => !/\.(test|stories)\.tsx$/.test(file));
+const sources = (root: string) =>
+  filesUnder(root, /\.(css|tsx)$/).filter(
+    (file) => !/\.(test|stories)\.tsx$/.test(file),
+  );
+
+/** Everything that could hold a reference — the layer and its consumers alike. */
+const everything = sources(SRC).filter(
+  (file) => !file.startsWith(join(FOUNDATIONS) + sep),
+);
+
+const layerComponents = [
+  ...sources(join(LAYER, "components")),
+  ...sources(join(LAYER, "icons")),
+];
 
 const expand = (name: string): string[] =>
   name.includes("${")
     ? ROLES.map((role) => name.replace(/\$\{[^}]*\}/g, role))
     : [name];
 
-const violationsIn = (file: string): string[] =>
-  [...readFileSync(file, "utf8").matchAll(/var\(\s*(--[^),\s]+)/g)]
-    .flatMap((m) => expand(m[1]))
-    .filter((name) => offLimits.has(name))
+const referencesIn = (file: string): string[] =>
+  [...readFileSync(file, "utf8").matchAll(/var\(\s*(--[^),\s]+)/g)].flatMap((m) =>
+    expand(m[1]),
+  );
+
+const violationsIn = (file: string, banned: Set<string>): string[] =>
+  referencesIn(file)
+    .filter((name) => banned.has(name))
     .map((name) => `${label(file)} — ${name}`);
 
 const isPending = (file: string) =>
   PENDING.some((prefix) => label(file).startsWith(prefix));
 
-describe("component tier binding", () => {
-  test("a migrated component reaches for no primitive or superseded token", () => {
-    // A clean result is only trustworthy if the scan saw the layer.
-    expect(offLimits.size).toBeGreaterThan(20);
-    expect(consumers.length).toBeGreaterThan(20);
+describe("tier binding", () => {
+  test("nothing anywhere references the superseded set", () => {
+    // A clean result is only trustworthy if the scan saw the tree.
+    expect(superseded.size).toBeGreaterThan(20);
+    expect(everything.length).toBeGreaterThan(40);
 
-    const violations = consumers
+    const violations = everything.flatMap((file) =>
+      violationsIn(file, superseded),
+    );
+
+    expect([...new Set(violations)].sort()).toEqual([]);
+  });
+
+  test("a component reaches for no raw primitive", () => {
+    expect(rawPrimitives.size).toBeGreaterThan(10);
+    expect(layerComponents.length).toBeGreaterThan(20);
+
+    const violations = layerComponents
       .filter((file) => !isPending(file))
-      .flatMap(violationsIn);
+      .flatMap((file) => violationsIn(file, rawPrimitives));
 
     expect([...new Set(violations)].sort()).toEqual([]);
   });
 
   test("every pending surface is still pending", () => {
     const stillViolating = PENDING.filter((prefix) =>
-      consumers
+      layerComponents
         .filter((file) => label(file).startsWith(prefix))
-        .some((file) => violationsIn(file).length > 0),
+        .some((file) => violationsIn(file, rawPrimitives).length > 0),
     );
 
     expect(stillViolating.sort()).toEqual([...PENDING].sort());
