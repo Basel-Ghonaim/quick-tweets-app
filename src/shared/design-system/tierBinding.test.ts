@@ -48,7 +48,7 @@ const TIER_BEARING_PRIMITIVES = ["border.css", "spacing.css"];
  * the guard below is what keeps it that way — an entry must still be in violation,
  * so a surface that migrates cannot leave its own exemption behind.
  */
-const PENDING: string[] = [];
+const PENDING = ["shared/design-system/foundations/main.css"];
 
 const filesUnder = (dir: string, match: RegExp): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -81,9 +81,14 @@ const sources = (root: string) =>
     (file) => !/\.(test|stories)\.tsx$/.test(file),
   );
 
-/** Everything that could hold a reference — the layer and its consumers alike. */
+/**
+ * Everything that could hold a reference — the layer and its consumers alike.
+ * Only the superseded set itself is excluded, since its members define each other;
+ * `main.css` is deliberately *not*, because two bindings there are the last thing
+ * standing between the set and its deletion.
+ */
 const everything = sources(SRC).filter(
-  (file) => !file.startsWith(join(FOUNDATIONS) + sep),
+  (file) => !file.startsWith(join(FOUNDATIONS, "legacy") + sep),
 );
 
 const layerComponents = [
@@ -115,9 +120,9 @@ describe("tier binding", () => {
     expect(superseded.size).toBeGreaterThan(20);
     expect(everything.length).toBeGreaterThan(40);
 
-    const violations = everything.flatMap((file) =>
-      violationsIn(file, superseded),
-    );
+    const violations = everything
+      .filter((file) => !isPending(file))
+      .flatMap((file) => violationsIn(file, superseded));
 
     expect([...new Set(violations)].sort()).toEqual([]);
   });
@@ -135,9 +140,13 @@ describe("tier binding", () => {
 
   test("every pending surface is still pending", () => {
     const stillViolating = PENDING.filter((prefix) =>
-      layerComponents
+      [...everything, ...layerComponents]
         .filter((file) => label(file).startsWith(prefix))
-        .some((file) => violationsIn(file, rawPrimitives).length > 0),
+        .some(
+          (file) =>
+            violationsIn(file, superseded).length > 0 ||
+            violationsIn(file, rawPrimitives).length > 0,
+        ),
     );
 
     expect(stillViolating.sort()).toEqual([...PENDING].sort());
