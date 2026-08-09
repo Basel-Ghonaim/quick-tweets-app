@@ -2,7 +2,6 @@ import { useState, type ReactNode } from "react";
 import { UploadIcon } from "../../../../../icons";
 import { formatSize } from "../../formatSize";
 import type { VariantContext } from "../variant.types";
-import { customProperties } from "../../../../shared";
 import styles from "../../FileInput.module.css";
 
 interface StandardInputProps {
@@ -32,7 +31,6 @@ export const StandardInput = ({
     maxSize,
     disabled,
     isInvalid,
-    color,
     onChange,
     onFilesChange,
     onValidationError,
@@ -75,10 +73,6 @@ export const StandardInput = ({
   return (
     <div
       className={styles.standardWrapper}
-      style={customProperties({
-        "--file-input-color": `var(--color-${color}-primary)`,
-        "--file-input-alpha": `var(--color-${color}-alpha)`,
-      })}
     >
       <input
         ref={inputRef}

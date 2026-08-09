@@ -64,6 +64,20 @@ export const Avatar: AvatarStory = {
   },
 };
 
+// One per variant: the role reaches all three through the shell, and two of them
+// used to ignore it entirely.
+export const StandardRoleColour: Story = {
+  args: { ...Standard.args, color: "success" },
+};
+
+export const DropzoneRoleColour: DropzoneStory = {
+  args: { ...Dropzone.args, color: "success" },
+};
+
+export const AvatarRoleColour: AvatarStory = {
+  args: { ...Avatar.args, color: "success" },
+};
+
 export const Invalid: Story = {
   args: {
     ...Standard.args,

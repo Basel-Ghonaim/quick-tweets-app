@@ -1,6 +1,5 @@
 import styles from "../../FileInput.module.css";
 import type { VariantContext } from "../variant.types";
-import { customProperties } from "../../../../shared";
 import { useDropzoneFiles } from "./useDropzoneFiles";
 import { DragOverlay } from "./parts/DragOverlay";
 import { DropzoneEmpty } from "./parts/DropzoneEmpty";
@@ -40,7 +39,6 @@ export const DropzoneInput = ({
     maxSize,
     disabled,
     isInvalid,
-    color,
     onChange,
     onFilesChange,
     onValidationError,
@@ -60,11 +58,6 @@ export const DropzoneInput = ({
   });
 
   // ── Shared ──
-
-  const dynamicStyles = customProperties({
-    "--file-input-color": `var(--color-${color}-primary)`,
-    "--file-input-alpha": `var(--color-${color}-alpha)`,
-  });
 
   const dragProps = {
     onDrop: dropzone.handleDrop,
@@ -107,7 +100,6 @@ export const DropzoneInput = ({
       return (
         <div
           className={zoneClasses}
-          style={dynamicStyles}
           onClick={dropzone.handleZoneClick}
           {...dragProps}
           role="button"
@@ -129,7 +121,6 @@ export const DropzoneInput = ({
     return (
       <div
         className={styles.imageGridWrapper}
-        style={dynamicStyles}
         {...dragProps}
       >
         {hiddenInput}
@@ -154,7 +145,6 @@ export const DropzoneInput = ({
     return (
       <div
         className={zoneClasses}
-        style={dynamicStyles}
         onClick={dropzone.handleZoneClick}
         {...dragProps}
         role="button"
@@ -176,7 +166,6 @@ export const DropzoneInput = ({
   return (
     <div
       className={styles.fileListWrapper}
-      style={dynamicStyles}
       {...dragProps}
     >
       {hiddenInput}

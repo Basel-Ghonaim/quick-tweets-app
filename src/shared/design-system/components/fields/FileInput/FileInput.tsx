@@ -62,7 +62,6 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       maxSize,
       disabled,
       isInvalid: hasError,
-      color,
       onChange,
       onFilesChange,
       onValidationError: setValidationError,

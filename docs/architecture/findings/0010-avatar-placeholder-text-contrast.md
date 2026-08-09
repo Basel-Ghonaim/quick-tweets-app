@@ -4,6 +4,7 @@
 > **Date:** 2026-08-09
 > **Affected areas:** `src/shared/design-system/components/fields/FileInput/FileInput.module.css` (`.avatarText`), `src/shared/design-system/components/fields/FileInput/FileInput.stories.tsx`
 > **Reported by:** Basel Ghonaim (surfaced by promoting the accessibility gate during WI-6)
+> **Owned by:** [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477) — the design decision and the gate promotion
 
 ## Observation
 
@@ -32,7 +33,7 @@ WI-6 is a migration: it binds values to the vocabulary and does not change them.
 
 Choosing among those under migration momentum is what the effort's stop rule exists to prevent, and it is the same call [CA-1](../../plans/component-architecture-unification.md) made when the Pilot Field's gate failed on a legacy colour.
 
-**Consequence:** FileInput's accessibility gate stays at `todo` while every other migrated component's is `error`. It is the only component left reporting rather than failing, and it stays that way until this is decided.
+**Consequence:** tracked as [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477), which owns the decision and the gate promotion. FileInput's accessibility gate stays at `todo` while every other migrated component's is `error`. It is the only component left reporting rather than failing, and it stays that way until this is decided.
 
 ## Related
 

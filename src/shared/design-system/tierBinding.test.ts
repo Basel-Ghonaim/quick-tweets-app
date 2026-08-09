@@ -2,6 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, test } from "vitest";
 
+import { ROLES } from "./foundations/vocabulary";
+
 /**
  * A component binds at the tier its family carries (ADR 0010 Decision 3): it
  * reaches for the semantic and intent tiers and never for a primitive scale or
@@ -20,6 +22,11 @@ import { describe, expect, test } from "vitest";
  * Which of the two a spacing reference should have been is a review judgement the
  * checker cannot make: it resolves references and cannot see whether a bound token
  * is a scale position or an intent (I1).
+ *
+ * Interpolated names are expanded before matching. A component builds a role
+ * reference by interpolation, and a pattern that stops at the `$` reads
+ * `--color-${role}-primary` as `--color-` and matches nothing — which is how two
+ * FileInput variants kept injecting superseded tokens through a migration.
  */
 
 const LAYER = join(process.cwd(), "src/shared/design-system");
@@ -66,9 +73,14 @@ const consumers = [
   ...filesUnder(join(LAYER, "icons"), /\.(css|tsx)$/),
 ].filter((file) => !/\.(test|stories)\.tsx$/.test(file));
 
+const expand = (name: string): string[] =>
+  name.includes("${")
+    ? ROLES.map((role) => name.replace(/\$\{[^}]*\}/g, role))
+    : [name];
+
 const violationsIn = (file: string): string[] =>
-  [...readFileSync(file, "utf8").matchAll(/var\(\s*(--[a-z0-9-]+)/g)]
-    .map((m) => m[1])
+  [...readFileSync(file, "utf8").matchAll(/var\(\s*(--[^),\s]+)/g)]
+    .flatMap((m) => expand(m[1]))
     .filter((name) => offLimits.has(name))
     .map((name) => `${label(file)} — ${name}`);
 
