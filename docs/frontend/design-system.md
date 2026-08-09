@@ -5,7 +5,7 @@
 > **Scope:** The shared UI foundations and components in `src/shared/design-system/`.
 > **Maturity:** This document describes the **currently implemented** design-system conventions. It covers only what exists today and will expand as the system grows; anything not described here is **not yet a stabilized convention** — either not yet built, or present but not yet settled enough to document — and is **not** something the architecture has rejected.
 > **Version:** 1.2
-> **Last Updated:** 2026-08-08
+> **Last Updated:** 2026-08-09
 > **Owner:** Basel Ghonaim
 
 ## Design tokens
@@ -19,7 +19,9 @@ All visual values are **CSS custom properties**, separated by tier under `founda
 
 **The prefix names the anatomy that owns the concept.** `--role-*` is the **semantic visual role** — primary, error, and the rest — *never* the ARIA `role` attribute; anything that carries one binds it, including components that are not controls. `--control-*` is what only an interactive control has: density, disabled and loading emphasis, the minimum hit target, the selection box. `--field-*` is the Field anatomy's own — its label, its description, the gap between its stacked parts.
 
-**The rule:** a component binds **at the tier its family carries**, never at a primitive scale and never at a hardcoded value. A missing token is a **stop** — the vocabulary is extended deliberately, because the first reach for a primitive is what reintroduced the drift the layer was rebuilt to remove.
+**The rule:** a component binds **at the tier its family carries**, never at a primitive scale. A missing token is a **stop** — the vocabulary is extended deliberately, because the first reach for a primitive is what reintroduced the drift the layer was rebuilt to remove.
+
+**The rule's domain is the language, not every value.** Colour, spacing, typography, motion and elevation bind. A component's intrinsic geometry, its own choreography and its implementation details are *outside* the rule rather than exceptions to it — a checkbox's checkmark scale, an icon affordance's hover dimming, a tile's label squeezed to fit it. The question is never "is this a literal?" but "is this something components must agree on?" Two roles resolving to the same value likewise stay two tokens: coincidence is not identity.
 
 **Typography is composite, and the same prefix rule decides its size axis.** Text styles bundle weight, size, line height and family into one `font` declaration, so a call site cannot pick them apart. `--type-control-*` **takes a size suffix**, because it sits in a box whose padding scaled with `size`; `--type-field-*` **never does**, because that text answers to the form's hierarchy rather than one control's density. A checkbox's text binds the control form despite being the field's accessible name — it sits on the control's inline axis and scales with it.
 

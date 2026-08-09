@@ -2,10 +2,8 @@
 [data-theme="light"] {
   --surface-page: var(--palette-neutral-50);
   --surface-default: var(--palette-neutral-0);
-  /* A resting fill that recedes from the surface it sits on — a filled input, not
-     a hovered one. Shares a value with --surface-hover in both themes: the palette
-     has no step between them, so a filled control cannot yet distinguish rest from
-     hover by surface alone. */
+  /* A resting fill that recedes from the surface it sits on — a filled input, not a
+     hovered one. */
   --surface-subtle: var(--palette-neutral-100);
   --surface-hover: var(--palette-neutral-100);
   --surface-active: var(--palette-neutral-200);

@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-08
+> **Last Updated:** 2026-08-09
 > **Parent Issue:** [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414)
 > **Supersedes:** —
 
@@ -32,7 +32,7 @@ It is a **strategy document**: it owns the effort's **execution order, boundarie
 
 Each Work Item cites the invariants it protects by identifier. Those marked ✅ are mechanically verifiable.
 
-- **I1 — Binding rule.** A consumer binds to the **semantic** token where its family has one (or to its own component tokens derived from it), and to the **curated primitive scale** where its family has none under [ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md)'s criterion — **never a hardcoded value.** The prohibition on literals is absolute; *which* families carry a semantic tier is a review judgement, because the checker resolves references and cannot see whether a bound token is a scale position or an intent.
+- **I1 — Binding rule.** A consumer binds to the **semantic** token where its family has one (or to its own component tokens derived from it), and to the **curated primitive scale** where its family has none under [ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md)'s criterion — **never a hardcoded value.** The rule's domain is the **presentation language**: colour, spacing, typography, motion, elevation. A value that is not language — a component's intrinsic geometry, its own choreography, an implementation detail — is *outside* the rule, not an exception to it, and the test is whether components must agree on it ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decisions 2 and 3). *Which* families carry a semantic tier is a review judgement, because the checker resolves references and cannot see whether a bound token is a scale position or an intent.
 - **I2 — Key parity.** Every theme defines the **same** set of semantic keys; a theme is a complete resolution, never a partial override. ✅
 - **I3 — Theme transparency.** Components know nothing about themes and never branch on them. ✅
 - **I4 — Responsibility purity.** Each semantic token carries **one** responsibility, and is never collapsed with another merely because two current themes render them identically.
@@ -78,7 +78,7 @@ Each Work Item cites the invariants it protects by identifier. Those marked ✅ 
 **Stable** means *ready for product adoption* — not *finished forever*. The effort reaches it when **all nine** hold:
 
 1. The legacy token set is **retired** — deleted, not merely unused.
-2. Every component and consumer binds at the tier its family carries — semantic where one is earned, the curated scale where none is — and **no hardcoded values** anywhere (**I1**, [ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md)).
+2. Every component and consumer binds at the tier its family carries — semantic where one is earned, the curated scale where none is — and no design-language value left unbound (**I1**, [ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md)).
 3. **Theme switching works** through the typed contract, with full **key parity** across themes (**I2**, **I9**).
 4. The **undefined-token checker is green** — zero unresolvable references (**D12**).
 5. **Storybook is the verification environment**, exercising both themes and every interaction state (**D2**).
@@ -262,7 +262,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ### WI-6 — FileInput
 - **Goal & rationale:** the worst case, isolated. **It gets its own Work Item** because it carries by far the heaviest drift — **62** primitive-direct non-colour references *and* hardcoded hex and rgba throughout, across three variants — so folding it into a shared PR would make that review unreadable. **It follows WI-4A** for the same reason as WI-5, and runs in parallel with it.
-- **Scope:** migrate all three variants so every reference binds **at the tier its family carries** (**D20**), plus the owned focus indicator and logical properties; replace every hardcoded value; update stories. **Shadow is classified and, if it earns one, authored here** — its four hardcoded `rgba(0,0,0,…)` declarations are the family's first and only consumer, and black shadows barely read on a dark surface, which is the evidence for or against a contextual axis. **Two further concepts are named here so they do not fall through**: an **overlay scrim** (the avatar overlay's `rgba(0,0,0,0.6)`; Dialog, Menu and Tooltip are the approved consumers that follow) and **semantic layering** for its two raw `z-index` declarations (Select, Tooltip, Menu and Dialog stack against each other, which a primitive scale cannot express). Both are classified under **D20** like any other family: a tier is earned, not assumed.
+- **Scope:** migrate all three variants so every reference binds **at the tier its family carries** (**D20**), plus the owned focus indicator and logical properties; bind every value that is design language, leaving what is the component's own; update stories. **Shadow is classified and, if it earns one, authored here** — its four hardcoded `rgba(0,0,0,…)` declarations are the family's first and only consumer, and black shadows barely read on a dark surface, which is the evidence for or against a contextual axis. **Two further concepts are named here so they do not fall through**: an **overlay scrim** (the avatar overlay's `rgba(0,0,0,0.6)`; Dialog, Menu and Tooltip are the approved consumers that follow) and **semantic layering** for its two raw `z-index` declarations (Select, Tooltip, Menu and Dialog stack against each other, which a primitive scale cannot express). Both are classified under **D20** like any other family: a tier is earned, not assumed.
 - **Non-goals:** no redesign; no variant restructuring; no change to its upload behaviour; **no new vocabulary beyond the shadow family assigned to it** (**D15**); **no second pass** (**D17**).
 - **Dependencies:** **WI-4C** (hard).
 - **Boundary validated:** the binding rule **under the worst case** — if the vocabulary survives this component, it survives the codebase.
