@@ -3,8 +3,7 @@
 .root {
   display: inline-flex;
   flex-direction: column;
-  gap: var(--space-1, 4px);
-  font-family: var(--font-family-base);
+  gap: var(--field-gap);
 }
 
 .fullWidth {
@@ -18,9 +17,8 @@
 /* ─── Label ──────────────────────────────────────────────────────────────── */
 
 .label {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-text-primary);
+  font: var(--type-label-medium);
+  color: var(--text-primary);
 }
 
 /* ─── Hidden native file input ───────────────────────────────────────────── */
@@ -44,32 +42,29 @@
 
 /* Trigger button — styled like a soft outlined button */
 .triggerButton {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  font-family: var(--font-family-base);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--file-input-color, var(--color-primary-primary));
-  background-color: var(--color-surface);
-  border: var(--border-width-thin) solid var(--gray-200);
+  gap: var(--control-gap-inline);
+  padding: var(--control-padding-block-medium)
+    var(--control-padding-inline-medium);
+  font: var(--type-label-medium);
+  color: var(--file-input-color);
+  background-color: var(--surface-default);
+  border: var(--border-width-thin) solid var(--border-default);
   border-radius: var(--border-radius-md);
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  line-height: var(--line-height-base, 1.5);
+  transition: all var(--motion-interactive);
 }
 
 .triggerButton:hover:not(:disabled) {
-  border-color: var(--file-input-color, var(--color-primary-primary));
-  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  border-color: var(--file-input-color);
+  background-color: var(--file-input-alpha);
 }
 
 .triggerButton:focus-visible {
-  outline: none;
-  border-color: var(--file-input-color, var(--color-primary-primary));
-  box-shadow: 0 0 0 3px var(--file-input-alpha, var(--color-primary-alpha));
+  border-color: var(--file-input-color);
 }
 
 .triggerButton:active:not(:disabled) {
@@ -83,9 +78,8 @@
 
 /* File name text */
 .fileName {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  line-height: var(--line-height-base, 1.5);
+  font: var(--type-body-medium);
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -95,37 +89,29 @@
 /* ─── Helper text ────────────────────────────────────────────────────────── */
 
 .helperText {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  line-height: var(--line-height-base, 1.5);
+  font: var(--type-body-small);
+  color: var(--text-secondary);
 }
 
 /* ─── Error message ──────────────────────────────────────────────────────── */
 
 .errorMessage {
-  font-size: var(--font-size-xs);
-  color: var(--color-error-primary);
-  line-height: var(--line-height-base, 1.5);
+  font: var(--type-body-small);
+  color: var(--role-on-surface-error);
 }
 
 /* ─── Invalid state ──────────────────────────────────────────────────────── */
 
 .isInvalid .triggerButton {
-  border-color: var(--color-error-primary);
-  color: var(--color-error-primary);
+  border-color: var(--role-fill-error);
+  color: var(--role-on-surface-error);
 }
 
-.isInvalid .triggerButton:focus-visible {
-  box-shadow: 0 0 0 3px var(--color-error-alpha, rgba(239, 68, 68, 0.15));
-}
 
 .isInvalid .dropzoneWrapper {
-  border-color: var(--color-error-primary);
+  border-color: var(--role-fill-error);
 }
 
-.isInvalid .dropzoneWrapper:focus-visible {
-  box-shadow: 0 0 0 3px var(--color-error-alpha, rgba(239, 68, 68, 0.15));
-}
 
 /* ─── Disabled state ─────────────────────────────────────────────────────── */
 
@@ -137,51 +123,47 @@
 /* ─── Dropzone Variant ───────────────────────────────────────────────────── */
 
 .dropzoneWrapper {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--control-gap-inline);
   width: 100%;
   min-height: 160px;
   padding: var(--space-6);
-  border: var(--border-width-medium, 2px) dashed var(--file-input-color, var(--color-primary-primary));
-  border-radius: var(--border-radius-lg, 12px);
+  border: var(--border-width-medium) dashed var(--file-input-color);
+  border-radius: var(--border-radius-lg);
   background-color: transparent;
   cursor: pointer;
-  color: var(--file-input-color, var(--color-primary-primary));
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--file-input-color);
+  transition: all var(--motion-interactive);
 }
 
 .dropzoneWrapper:hover:not(.isDisabled *) {
-  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  background-color: var(--file-input-alpha);
 }
 
 .dropzoneWrapper:focus-visible {
-  outline: none;
-  border-color: var(--file-input-color, var(--color-primary-primary));
-  box-shadow: 0 0 0 3px var(--file-input-alpha, var(--color-primary-alpha));
+  border-color: var(--file-input-color);
 }
 
 /* Active drag-over state — file being dragged over the zone */
 .isDragOver {
-  border-color: var(--file-input-color, var(--color-primary-primary));
+  border-color: var(--file-input-color);
   border-style: solid;
-  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  background-color: var(--file-input-alpha);
   transform: scale(1.01);
 }
 
 .dropzoneTitle {
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  color: var(--color-text-primary);
-  line-height: var(--line-height-base, 1.5);
+  font: var(--type-label-medium);
+  color: var(--text-primary);
 }
 
 .dropzoneSubtext {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
-  line-height: var(--line-height-base, 1.5);
+  font: var(--type-body-small);
+  color: var(--text-secondary);
 }
 
 /* ─── Image Grid Mode ────────────────────────────────────────────────────── */
@@ -194,7 +176,7 @@
 .imageGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, 80px);
-  gap: var(--space-2);
+  gap: var(--control-gap-inline);
   width: 100%;
 }
 
@@ -205,12 +187,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  background-color: var(--file-input-alpha, rgba(59, 130, 246, 0.1));
-  border: var(--border-width-medium, 2px) solid var(--file-input-color, var(--color-primary-primary));
-  border-radius: var(--border-radius-lg, 12px);
+  gap: var(--control-gap-inline);
+  background-color: var(--file-input-alpha);
+  border: var(--border-width-medium) solid var(--file-input-color);
+  border-radius: var(--border-radius-lg);
   z-index: 2;
-  color: var(--file-input-color, var(--color-primary-primary));
+  color: var(--file-input-color);
 }
 
 /* ─── Thumbnails ─────────────────────────────────────────────────────────── */
@@ -221,12 +203,12 @@
   height: 80px;
   border-radius: var(--border-radius-md);
   overflow: hidden;
-  border: var(--border-width-thin) solid var(--gray-200);
-  transition: border-color 0.15s ease;
+  border: var(--border-width-thin) solid var(--border-default);
+  transition: border-color var(--motion-reveal);
 }
 
 .thumbnailWrapper:hover {
-  border-color: var(--file-input-color, var(--color-primary-primary));
+  border-color: var(--file-input-color);
 }
 
 .thumbnailImg {
@@ -239,8 +221,8 @@
 
 .thumbnailRemoveBtn {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  inset-block-start: 4px;
+  inset-inline-end: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -249,11 +231,13 @@
   padding: 0;
   border: none;
   border-radius: 50%;
+  /* Dims the photograph so the overlay's controls read against it — legibility
+     over media, not the modality a dialog's backdrop expresses. */
   background-color: rgba(0, 0, 0, 0.6);
   color: white;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s ease;
+  transition: opacity var(--motion-reveal);
 }
 
 .thumbnailWrapper:hover .thumbnailRemoveBtn {
@@ -261,7 +245,7 @@
 }
 
 .thumbnailRemoveBtn:hover {
-  background-color: var(--color-error-primary);
+  background-color: var(--role-fill-error);
 }
 
 /* ─── "Add more" Button ──────────────────────────────────────────────────── */
@@ -274,20 +258,20 @@
   gap: var(--space-1);
   width: 80px;
   height: 80px;
-  border: var(--border-width-medium, 2px) dashed var(--gray-200);
+  border: var(--border-width-medium) dashed var(--border-default);
   border-radius: var(--border-radius-md);
   background-color: transparent;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   cursor: pointer;
   font-size: 10px;
   font-weight: 500;
-  transition: all 0.15s ease;
+  transition: all var(--motion-reveal);
 }
 
 .addMoreBtn:hover {
-  border-color: var(--file-input-color, var(--color-primary-primary));
-  color: var(--file-input-color, var(--color-primary-primary));
-  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  border-color: var(--file-input-color);
+  color: var(--file-input-color);
+  background-color: var(--file-input-alpha);
 }
 
 /* ─── File List Mode (non-image) ─────────────────────────────────────────── */
@@ -295,45 +279,44 @@
 .fileListWrapper {
   position: relative;
   width: 100%;
-  border: var(--border-width-thin) solid var(--gray-200);
-  border-radius: var(--border-radius-lg, 12px);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: var(--border-radius-lg);
   overflow: hidden;
-  background-color: var(--color-surface, white);
+  background-color: var(--surface-default);
 }
 
 .fileListRow {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--control-gap-inline);
   padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--gray-100);
+  border-block-end: var(--border-width-thin) solid var(--border-default);
   min-width: 0;
-  transition: background-color 0.15s ease;
+  transition: background-color var(--motion-reveal);
 }
 
 .fileListRow:last-of-type {
-  border-bottom: none;
+  border-block-end: none;
 }
 
 .fileListRow:hover {
-  background-color: var(--color-surface-hover, rgba(0, 0, 0, 0.02));
+  background-color: var(--surface-hover);
 }
 
 .fileListThumb {
   width: 24px;
   height: 24px;
-  border-radius: var(--border-radius-sm, 4px);
+  border-radius: var(--border-radius-sm);
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--border-default);
 }
 
 .fileListName {
   flex: 1;
   min-width: 0;
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  color: var(--color-text-primary);
+  font: var(--type-label-small);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -341,8 +324,8 @@
 }
 
 .fileListSize {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  font: var(--type-body-small);
+  color: var(--text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -354,16 +337,16 @@
   padding: var(--space-1);
   border: none;
   background: transparent;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   cursor: pointer;
-  border-radius: var(--border-radius-sm, 4px);
+  border-radius: var(--border-radius-sm);
   flex-shrink: 0;
-  transition: all 0.15s ease;
+  transition: all var(--motion-reveal);
 }
 
 .fileListRemoveBtn:hover {
-  color: var(--color-error-primary);
-  background-color: var(--color-error-alpha, rgba(239, 68, 68, 0.1));
+  color: var(--role-on-surface-error);
+  background-color: var(--role-fill-error-subtle);
 }
 
 /* ─── "Add more" Row (file list mode) ────────────────────────────────────── */
@@ -372,29 +355,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--control-gap-inline);
   width: calc(100% - var(--space-2) * 2);
   margin: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  border: var(--border-width-medium, 2px) dashed var(--gray-200);
+  border: var(--border-width-medium) dashed var(--border-default);
   border-radius: var(--border-radius-md);
   background-color: transparent;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   cursor: pointer;
-  font-size: var(--font-size-xs);
-  font-weight: 500;
-  transition: all 0.15s ease;
+  font: var(--type-label-small);
+  transition: all var(--motion-reveal);
 }
 
 .addMoreRow:hover {
-  border-color: var(--file-input-color, var(--color-primary-primary));
-  color: var(--file-input-color, var(--color-primary-primary));
-  background-color: var(--file-input-alpha, var(--color-primary-alpha));
+  border-color: var(--file-input-color);
+  color: var(--file-input-color);
+  background-color: var(--file-input-alpha);
 }
 
 /* ─── Avatar Variant ─────────────────────────────────────────────────────── */
 
 .avatarWrapper {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
   position: relative;
   display: flex;
   flex-direction: column;
@@ -403,8 +386,8 @@
   gap: var(--space-1);
   cursor: pointer;
   overflow: hidden;
-  transition: all 0.25s ease;
-  color: var(--color-text-tertiary, #9ca3af);
+  transition: all var(--motion-expand);
+  color: var(--text-tertiary);
 }
 
 /* ── Shape modifiers ── */
@@ -419,42 +402,41 @@
   width: 100%;
   max-width: var(--avatar-size, 240px);
   aspect-ratio: 4 / 3;
-  border-radius: var(--border-radius-lg, 12px);
+  border-radius: var(--border-radius-lg);
 }
 
 /* ── Fill modifiers ── */
 
 .avatarDefault {
-  border: var(--border-width-thick, 2px) var(--avatar-border-style, dashed) var(--gray-200, #e5e7eb);
-  background-color: var(--gray-50, #f9fafb);
+  border: var(--border-width-thick) var(--avatar-border-style, dashed) var(--border-default);
+  background-color: var(--surface-subtle);
 }
 
 .avatarDefault:hover {
-  border-color: var(--file-input-color, var(--color-primary-primary));
-  background-color: var(--file-input-alpha, var(--color-primary-alpha));
-  color: var(--file-input-color, var(--color-primary-primary));
+  border-color: var(--file-input-color);
+  background-color: var(--file-input-alpha);
+  color: var(--file-input-color);
   transform: scale(1.02);
 }
 
 .avatarOutline {
-  border: var(--border-width-thick, 2px) var(--avatar-border-style, dashed) transparent;
-  background-color: var(--gray-100, #f3f4f6);
+  border: var(--border-width-thick) var(--avatar-border-style, dashed) transparent;
+  background-color: var(--surface-subtle);
 }
 
 .avatarOutline:hover {
-  background-color: var(--file-input-alpha, var(--color-primary-alpha));
-  color: var(--file-input-color, var(--color-primary-primary));
+  background-color: var(--file-input-alpha);
+  color: var(--file-input-color);
   transform: scale(1.02);
 }
 
 /* ── Avatar text ── */
 
 .avatarText {
-  font-size: var(--font-size-xs);
-  font-weight: 500;
+  font: var(--type-label-small);
   user-select: none;
   opacity: 0.7;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-interactive);
 }
 
 .avatarWrapper:hover .avatarText {
@@ -485,7 +467,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: filter 0.25s ease;
+  transition: filter var(--motion-expand);
 }
 
 .avatarWrapper:hover .avatarPreviewImg {
@@ -494,13 +476,15 @@
 
 /* ── Drag-over highlight ── */
 
-.avatarDragOver {
-  box-shadow: 0 0 0 3px var(--file-input-color, var(--color-primary-primary)) !important;
-  background-color: var(--file-input-alpha, var(--color-primary-alpha)) !important;
+/* Specificity matched to the fill variants' :hover rules it overrides, rather
+   than forced past them. */
+.avatarWrapper.avatarDragOver {
+  box-shadow: 0 0 0 3px var(--file-input-color);
+  background-color: var(--file-input-alpha);
 }
 
 .avatarDragOver .avatarText {
-  color: var(--file-input-color, var(--color-primary-primary));
+  color: var(--file-input-color);
   opacity: 1;
 }
 
@@ -515,7 +499,7 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--motion-expand);
   z-index: 2;
 }
 
@@ -536,10 +520,13 @@
   height: 36px;
   border: none;
   border-radius: 50%;
+  /* This control sits over an arbitrary photograph, so its wash and its shadow
+     are legibility against unknown content rather than the system's elevation:
+     nothing else has to agree with them, and no theme governs what is behind. */
   background: rgba(255, 255, 255, 0.9);
-  color: var(--color-text-secondary, #6b7280);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--motion-interactive);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
@@ -550,5 +537,5 @@
 }
 
 .avatarOverlayBtnDanger:hover {
-  color: var(--color-error-primary, #ef4444);
+  color: var(--role-on-surface-error);
 }

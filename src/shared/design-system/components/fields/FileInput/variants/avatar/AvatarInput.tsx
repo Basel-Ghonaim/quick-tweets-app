@@ -43,7 +43,6 @@ export const AvatarInput = ({
     maxSize,
     disabled,
     isInvalid,
-    color,
     onChange,
     onFilesChange,
     onValidationError,
@@ -62,8 +61,6 @@ export const AvatarInput = ({
   // ── CSS variables ──
 
   const dynamicStyles = customProperties({
-    "--file-input-color": `var(--color-${color}-primary)`,
-    "--file-input-alpha": `var(--color-${color}-alpha)`,
     "--avatar-size": `${avatarSize}px`,
     "--avatar-border-style": avatarBorder,
   });
