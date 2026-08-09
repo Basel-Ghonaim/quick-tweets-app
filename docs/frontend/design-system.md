@@ -90,7 +90,7 @@ The system is organized by responsibility: `foundations/` (the token tiers, the 
 - Every `styles.x` a component reads exists in the stylesheet its root owns. A CSS Module resolves an unknown class to `undefined` and renders the element unstyled with no error anywhere, so nothing else can see a rename that missed a call site.
 - No consumer reaches past the root barrel, and no file in the layer imports through the public alias.
 - Every `var(--…)` reference resolves to a definition, and no token is declared both axis-invariantly and under a resolution axis.
-- Every component binds **at the tier its family carries**. Resolving is not enough — a legacy or primitive reference resolves too — so this is what makes the superseded set safe to delete. Surfaces still awaiting migration are listed explicitly, and an entry must still be in violation, so a migrated component cannot leave its own exemption behind.
+- Every component binds **at the tier its family carries**. Resolving is not enough — a legacy or primitive reference resolves too — so this is what makes the superseded set safe to delete. Border and spacing are exempt as **curated scales** a component may compose with directly; palette, typography and the transition scale are raw and must arrive through an intent. Surfaces still awaiting migration are listed explicitly, and an entry must still be in violation, so a migrated component cannot leave its own exemption behind.
 
 ## Relationship to forms, and a known cycle
 
