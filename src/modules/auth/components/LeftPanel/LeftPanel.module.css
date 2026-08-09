@@ -1,3 +1,6 @@
+/* The brand panel is always dark, whatever the theme, so its gradient stops and
+   decorative orbs are this panel's own composition rather than surface roles —
+   a theme-resolved token here would invert them. */
 .panel {
   position: relative;
   flex: 0 0 50%;
@@ -8,7 +11,7 @@
   padding: var(--space-12) var(--space-10);
   background: linear-gradient(
     135deg,
-    var(--blue-900) 0%,
+    var(--palette-blue-900) 0%,
     #0c1a3a 40%,
     #0a0f2e 100%
   );
@@ -24,8 +27,8 @@
     rgba(59, 130, 246, 0.25) 0%,
     transparent 70%
   );
-  top: -120px;
-  right: -160px;
+  inset-block-start: -120px;
+  inset-inline-end: -160px;
   pointer-events: none;
 }
 
@@ -39,8 +42,8 @@
     rgba(99, 102, 241, 0.2) 0%,
     transparent 70%
   );
-  bottom: -80px;
-  left: -100px;
+  inset-block-end: -80px;
+  inset-inline-start: -100px;
   pointer-events: none;
 }
 

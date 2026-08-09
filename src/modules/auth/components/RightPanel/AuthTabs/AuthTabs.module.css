@@ -2,21 +2,21 @@
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  background: var(--color-surface-active);
+  background: var(--surface-active);
   border-radius: var(--border-radius-lg);
   padding: var(--space-1);
 }
 
 .pill {
   position: absolute;
-  top: var(--space-1);
-  left: var(--space-1);
+  inset-block-start: var(--space-1);
+  inset-inline-start: var(--space-1);
   width: calc(50% - var(--space-1));
   height: calc(100% - calc(var(--space-1) * 2));
-  background: var(--color-surface);
+  background: var(--surface-default);
   border-radius: calc(var(--border-radius-lg) - 2px);
   box-shadow: var(--shadow-sm);
-  transition: transform var(--transition-medium);
+  transition: transform var(--motion-expand);
   pointer-events: none;
   z-index: 0;
 }
@@ -28,15 +28,15 @@
   font-size: var(--font-size-sm);
   font-weight: 500;
   font-family: var(--font-family-base);
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   background: transparent;
   border: none;
   border-radius: calc(var(--border-radius-lg) - 2px);
   cursor: pointer;
-  transition: color var(--transition-fast);
+  transition: color var(--motion-interactive);
 }
 
 .active {
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   font-weight: 600;
 }

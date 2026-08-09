@@ -18,9 +18,9 @@
   padding: var(--space-3) var(--space-4);
   font-size: var(--font-size-sm);
   font-family: var(--font-family-base);
-  color: var(--color-error-secondary);
-  background: var(--color-error-alpha);
-  border: var(--border-width-thin) solid var(--color-error-primary);
+  color: var(--role-on-surface-error);
+  background: var(--role-fill-error-subtle);
+  border: var(--border-width-thin) solid var(--role-fill-error);
   border-radius: var(--border-radius-md);
   line-height: 1.5;
 }
@@ -33,33 +33,33 @@
 
 .termsLabel {
   font-size: var(--font-size-xs);
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   line-height: 1.5;
   cursor: pointer;
 }
 
 .termsLink {
-  color: var(--color-primary);
+  color: var(--palette-blue-500);
   font-weight: 500;
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: color var(--motion-interactive);
 }
 
 .termsLink:hover {
-  color: var(--color-primary-hover);
+  color: var(--palette-blue-600);
   text-decoration: underline;
 }
 
 .submit {
   grid-column: 1 / -1;
-  margin-top: var(--space-1);
+  margin-block-start: var(--space-1);
 }
 
 /* Visual separator before checkbox fields */
 .form > [data-type="checkbox"] {
-  margin-top: var(--space-1);
-  padding-top: var(--space-3);
-  border-top: var(--border-width-thin) solid var(--gray-100);
+  margin-block-start: var(--space-1);
+  padding-block-start: var(--space-3);
+  border-block-start: var(--border-width-thin) solid var(--border-default);
 }
 
 /* Tablet & below: collapse to single column */
