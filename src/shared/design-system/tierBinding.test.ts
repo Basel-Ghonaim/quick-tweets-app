@@ -48,7 +48,7 @@ const TIER_BEARING_PRIMITIVES = ["border.css", "spacing.css"];
  * the guard below is what keeps it that way — an entry must still be in violation,
  * so a surface that migrates cannot leave its own exemption behind.
  */
-const PENDING = ["shared/design-system/foundations/main.css"];
+const PENDING: string[] = [];
 
 const filesUnder = (dir: string, match: RegExp): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -83,9 +83,8 @@ const sources = (root: string) =>
 
 /**
  * Everything that could hold a reference — the layer and its consumers alike.
- * Only the superseded set itself is excluded, since its members define each other;
- * `main.css` is deliberately *not*, because two bindings there are the last thing
- * standing between the set and its deletion.
+ * Only the superseded set itself is excluded, since its members define each other.
+ * With the pending list empty, nothing outside it points at the set any more.
  */
 const everything = sources(SRC).filter(
   (file) => !file.startsWith(join(FOUNDATIONS, "legacy") + sep),

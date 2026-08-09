@@ -1,0 +1,16 @@
+/* The application shell's own ground. Only what the application genuinely owns
+   lives here — this is not the retired global stylesheet under another name. */
+
+/* Retained on evidence rather than habit: Design System components set
+   `width: 100%` alongside padding and borders, so they overflow under the content
+   box. The layer cannot guarantee this itself because it does not own the
+   document, so the application that mounts it does. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: var(--surface-page);
+  color: var(--text-primary);
+}
