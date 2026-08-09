@@ -1,30 +1,26 @@
 /* Composite text styles (ADR 0011 Decision 6): the `font` shorthand keeps size and
-   weight inseparable at the call site. No tracking — no control sets one. */
+   weight inseparable at the call site. No tracking — no consumer sets one. */
 :root {
-  /* Control text scales with the control, Field text follows the form's hierarchy.
-     The prefix carries the rule: --type-control-* takes a size suffix, --type-field-*
-     never does. */
+  /* Two typographic roles, not two namespaces. `label` names or identifies
+     something — a button's caption, a field's label, an alert's title. `body` is
+     read as content — a typed value, an option, a message. Neither is tied to an
+     anatomy or to an ARIA meaning.
 
-  /* An action carries emphasis weight; content carries body weight. */
-  --type-control-action-small: 500 var(--font-size-xs) / var(--line-height-base)
+     small/medium/large are *typography* sizes, not ControlSize. A component that
+     maps its own `size` prop onto them is making a component choice; the mapping
+     is not universal, and FileInput already does not make it. */
+
+  --type-label-small: 500 var(--font-size-xs) / var(--line-height-base)
     var(--font-family-base);
-  --type-control-action-medium: 500 var(--font-size-sm) /
-    var(--line-height-base) var(--font-family-base);
-  --type-control-action-large: 500 var(--font-size-base) /
-    var(--line-height-base) var(--font-family-base);
-
-  /* A checkbox's text binds this, not --type-field-label: it is the field's
-     accessible name, but it sits on the control's inline axis and scales with it. */
-  --type-control-content-small: 400 var(--font-size-xs) /
-    var(--line-height-base) var(--font-family-base);
-  --type-control-content-medium: 400 var(--font-size-sm) /
-    var(--line-height-base) var(--font-family-base);
-  --type-control-content-large: 400 var(--font-size-base) /
-    var(--line-height-base) var(--font-family-base);
-
-  /* One size each: a field's text reads the same beside a small control and a large one. */
-  --type-field-label: 500 var(--font-size-sm) / var(--line-height-base)
+  --type-label-medium: 500 var(--font-size-sm) / var(--line-height-base)
     var(--font-family-base);
-  --type-field-description: 400 var(--font-size-xs) / var(--line-height-base)
+  --type-label-large: 500 var(--font-size-base) / var(--line-height-base)
+    var(--font-family-base);
+
+  --type-body-small: 400 var(--font-size-xs) / var(--line-height-base)
+    var(--font-family-base);
+  --type-body-medium: 400 var(--font-size-sm) / var(--line-height-base)
+    var(--font-family-base);
+  --type-body-large: 400 var(--font-size-base) / var(--line-height-base)
     var(--font-family-base);
 }

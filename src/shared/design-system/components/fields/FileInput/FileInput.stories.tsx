@@ -5,9 +5,9 @@ import type { FileInputProps } from "./FileInput.types";
 const meta = {
   title: "Design System/Fields/FileInput",
   parameters: {
-    // Not promoted, for the reason recorded on the other fields: the legacy
-    // colour bindings still fail contrast. The Work Item that migrates them
-    // promotes the gate.
+    // Not promoted: the avatar placeholder composites --text-tertiary through
+    // opacity 0.7 and lands at 2.59:1. Predates the migration, and every remedy
+    // is a design decision — recorded as Finding 0010.
     a11y: { test: "todo" },
   },
   component: FileInput,
@@ -62,6 +62,20 @@ export const Avatar: AvatarStory = {
     variant: "avatar",
     color: "primary",
   },
+};
+
+// One per variant: the role reaches all three through the shell, and two of them
+// used to ignore it entirely.
+export const StandardRoleColour: Story = {
+  args: { ...Standard.args, color: "success" },
+};
+
+export const DropzoneRoleColour: DropzoneStory = {
+  args: { ...Dropzone.args, color: "success" },
+};
+
+export const AvatarRoleColour: AvatarStory = {
+  args: { ...Avatar.args, color: "success" },
 };
 
 export const Invalid: Story = {

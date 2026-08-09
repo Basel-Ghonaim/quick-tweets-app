@@ -1,4 +1,3 @@
-import type { Role } from "../../../../foundations";
 
 /**
  * What the shell hands every variant: the identity of the hidden input, the
@@ -20,7 +19,6 @@ export interface VariantContext {
   maxSize?: number;
   disabled: boolean;
   isInvalid: boolean;
-  color: Role;
   /** The parsed selection. */
   onFilesChange?: (files: File[]) => void;
   /** The platform's own handler, forwarded to the hidden input. */

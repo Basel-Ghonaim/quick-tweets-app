@@ -2,6 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, test } from "vitest";
 
+import { ROLES } from "./foundations/vocabulary";
+
 /**
  * A component binds at the tier its family carries (ADR 0010 Decision 3): it
  * reaches for the semantic and intent tiers and never for a primitive scale or
@@ -12,22 +14,32 @@ import { describe, expect, test } from "vitest";
  * component migrations enforced this rule by reading the diff. It is also what
  * makes the superseded set safe to delete: nothing may still point at it.
  *
- * The exception is stated by definition file rather than by name. Border radius
- * and width carry their tier on the curated scale itself, so a component binding
- * those is already correct.
+ * The exceptions are stated by definition file rather than by name. Border and
+ * spacing are *curated scales*, and a component composing its own internal layout
+ * binds them directly — that is what a curated scale is for. Palette, typography
+ * and the transition scale are raw, and must reach a component through an intent.
+ *
+ * Which of the two a spacing reference should have been is a review judgement the
+ * checker cannot make: it resolves references and cannot see whether a bound token
+ * is a scale position or an intent (I1).
+ *
+ * Interpolated names are expanded before matching. A component builds a role
+ * reference by interpolation, and a pattern that stops at the `$` reads
+ * `--color-${role}-primary` as `--color-` and matches nothing — which is how two
+ * FileInput variants kept injecting superseded tokens through a migration.
  */
 
 const LAYER = join(process.cwd(), "src/shared/design-system");
 const FOUNDATIONS = join(LAYER, "foundations");
 
-/** Primitive files whose tokens *are* the tier their family carries. */
-const TIER_BEARING_PRIMITIVES = ["border.css"];
+/** Curated scales a component may bind directly. */
+const TIER_BEARING_PRIMITIVES = ["border.css", "spacing.css"];
 
 /**
  * Surfaces still awaiting migration. An entry must still be in violation, so a
  * component that migrates cannot leave its own exemption behind.
  */
-const PENDING = ["components/fields/FileInput"];
+const PENDING: string[] = [];
 
 const filesUnder = (dir: string, match: RegExp): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -61,9 +73,14 @@ const consumers = [
   ...filesUnder(join(LAYER, "icons"), /\.(css|tsx)$/),
 ].filter((file) => !/\.(test|stories)\.tsx$/.test(file));
 
+const expand = (name: string): string[] =>
+  name.includes("${")
+    ? ROLES.map((role) => name.replace(/\$\{[^}]*\}/g, role))
+    : [name];
+
 const violationsIn = (file: string): string[] =>
-  [...readFileSync(file, "utf8").matchAll(/var\(\s*(--[a-z0-9-]+)/g)]
-    .map((m) => m[1])
+  [...readFileSync(file, "utf8").matchAll(/var\(\s*(--[^),\s]+)/g)]
+    .flatMap((m) => expand(m[1]))
     .filter((name) => offLimits.has(name))
     .map((name) => `${label(file)} — ${name}`);
 

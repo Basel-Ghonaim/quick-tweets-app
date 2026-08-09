@@ -3,7 +3,7 @@ import styles from "./FileInput.module.css";
 import type { FileInputProps } from "./FileInput.types";
 import type { VariantContext } from "./variants/variant.types";
 import { StandardInput, DropzoneInput, AvatarInput } from "./variants";
-import { classNames, useFieldA11y } from "../../shared";
+import { classNames, customProperties, useFieldA11y } from "../../shared";
 
 export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
   (props, ref) => {
@@ -46,6 +46,13 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       helperText,
     });
 
+    // Injected by the shell rather than per variant: all three render the role,
+    // and only the avatar used to set it — so `color` did nothing on the others.
+    const roleColour = customProperties({
+      "--file-input-color": `var(--role-fill-${color})`,
+      "--file-input-alpha": `var(--role-fill-${color}-subtle)`,
+    });
+
     const context: VariantContext = {
       inputRef,
       controlId,
@@ -55,7 +62,6 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
       maxSize,
       disabled,
       isInvalid: hasError,
-      color,
       onChange,
       onFilesChange,
       onValidationError: setValidationError,
@@ -105,6 +111,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           disabled && styles.isDisabled,
           className,
         )}
+        style={roleColour}
       >
         {label && (
           <label htmlFor={controlId} className={styles.label}>

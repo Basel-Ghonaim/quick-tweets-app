@@ -5,7 +5,7 @@
 > **Scope:** The shared UI foundations and components in `src/shared/design-system/`.
 > **Maturity:** This document describes the **currently implemented** design-system conventions. It covers only what exists today and will expand as the system grows; anything not described here is **not yet a stabilized convention** — either not yet built, or present but not yet settled enough to document — and is **not** something the architecture has rejected.
 > **Version:** 1.2
-> **Last Updated:** 2026-08-08
+> **Last Updated:** 2026-08-09
 > **Owner:** Basel Ghonaim
 
 ## Design tokens
@@ -19,9 +19,13 @@ All visual values are **CSS custom properties**, separated by tier under `founda
 
 **The prefix names the anatomy that owns the concept.** `--role-*` is the **semantic visual role** — primary, error, and the rest — *never* the ARIA `role` attribute; anything that carries one binds it, including components that are not controls. `--control-*` is what only an interactive control has: density, disabled and loading emphasis, the minimum hit target, the selection box. `--field-*` is the Field anatomy's own — its label, its description, the gap between its stacked parts.
 
-**The rule:** a component binds **at the tier its family carries**, never at a primitive scale and never at a hardcoded value. A missing token is a **stop** — the vocabulary is extended deliberately, because the first reach for a primitive is what reintroduced the drift the layer was rebuilt to remove.
+**The rule:** a component binds **at the tier its family carries**, never at a primitive scale. A missing token is a **stop** — the vocabulary is extended deliberately, because the first reach for a primitive is what reintroduced the drift the layer was rebuilt to remove.
 
-**Typography is composite, and the same prefix rule decides its size axis.** Text styles bundle weight, size, line height and family into one `font` declaration, so a call site cannot pick them apart. `--type-control-*` **takes a size suffix**, because it sits in a box whose padding scaled with `size`; `--type-field-*` **never does**, because that text answers to the form's hierarchy rather than one control's density. A checkbox's text binds the control form despite being the field's accessible name — it sits on the control's inline axis and scales with it.
+**The rule's domain is the language, not every value.** Colour, spacing, typography, motion and elevation bind. A component's intrinsic geometry, its own choreography and its implementation details are *outside* the rule rather than exceptions to it — a checkbox's checkmark scale, an icon affordance's hover dimming, a tile's label squeezed to fit it. The question is never "is this a literal?" but "is this something components must agree on?" Two roles resolving to the same value likewise stay two tokens: coincidence is not identity.
+
+**Typography names typographic concepts, and is the one family the anatomy prefix does not govern.** Text styles bundle weight, size, line height and family into one `font` declaration, so a call site cannot pick them apart. There are two roles: **`label`** is text whose purpose is to name or identify — a button's caption, a field's label, an alert's title — and **`body`** is text read as content — a typed value, an option, a message. Neither is an anatomy and neither is an ARIA meaning: an alert's title is a label though an alert is not a control, and a link's text is whatever it sits inside.
+
+**`small · medium · large` are typography sizes, not `ControlSize`.** A component decides how its own `size` maps onto them, and that mapping is **not universal** — Button, Input and Checkbox map 1:1 today; FileInput inherits `size` and does not vary its text at all. A component with no `size` prop simply picks the step it needs. Deliberately unauthored: a **heading** ramp, which only a design settles, and a **caption** role — secondary metadata is `body` at the small step plus a muted colour, so colour carries the demotion rather than a third type role.
 
 ## Theming
 
@@ -86,7 +90,7 @@ The system is organized by responsibility: `foundations/` (the token tiers, the 
 - Every `styles.x` a component reads exists in the stylesheet its root owns. A CSS Module resolves an unknown class to `undefined` and renders the element unstyled with no error anywhere, so nothing else can see a rename that missed a call site.
 - No consumer reaches past the root barrel, and no file in the layer imports through the public alias.
 - Every `var(--…)` reference resolves to a definition, and no token is declared both axis-invariantly and under a resolution axis.
-- Every component binds **at the tier its family carries**. Resolving is not enough — a legacy or primitive reference resolves too — so this is what makes the superseded set safe to delete. Surfaces still awaiting migration are listed explicitly, and an entry must still be in violation, so a migrated component cannot leave its own exemption behind.
+- Every component binds **at the tier its family carries**. Resolving is not enough — a legacy or primitive reference resolves too — so this is what makes the superseded set safe to delete. Border and spacing are exempt as **curated scales** a component may compose with directly; palette, typography and the transition scale are raw and must arrive through an intent. Surfaces still awaiting migration are listed explicitly, and an entry must still be in violation, so a migrated component cannot leave its own exemption behind.
 
 ## Relationship to forms, and a known cycle
 
