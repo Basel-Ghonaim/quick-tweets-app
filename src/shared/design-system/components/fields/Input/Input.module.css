@@ -7,7 +7,7 @@
 }
 
 .label {
-  font: var(--type-field-label);
+  font: var(--type-label-medium);
   color: var(--text-primary);
 }
 
@@ -31,19 +31,19 @@
 .size-small .input {
   padding: var(--control-padding-block-small)
     var(--control-padding-inline-small);
-  font: var(--type-control-content-small);
+  font: var(--type-body-small);
 }
 
 .size-medium .input {
   padding: var(--control-padding-block-medium)
     var(--control-padding-inline-medium);
-  font: var(--type-control-content-medium);
+  font: var(--type-body-medium);
 }
 
 .size-large .input {
   padding: var(--control-padding-block-large)
     var(--control-padding-inline-large);
-  font: var(--type-control-content-large);
+  font: var(--type-body-large);
 }
 
 .adornment {
@@ -175,11 +175,11 @@
 }
 
 .errorMessage {
-  font: var(--type-field-description);
+  font: var(--type-body-small);
   color: var(--role-on-surface-error);
 }
 
 .helperText {
-  font: var(--type-field-description);
+  font: var(--type-body-small);
   color: var(--text-secondary);
 }

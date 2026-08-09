@@ -105,21 +105,21 @@
 }
 
 .size-small .label {
-  font: var(--type-control-content-small);
+  font: var(--type-body-small);
 }
 .size-medium .label {
-  font: var(--type-control-content-medium);
+  font: var(--type-body-medium);
 }
 .size-large .label {
-  font: var(--type-control-content-large);
+  font: var(--type-body-large);
 }
 
 .errorMessage {
-  font: var(--type-field-description);
+  font: var(--type-body-small);
   color: var(--role-on-surface-error);
 }
 
 .helperText {
-  font: var(--type-field-description);
+  font: var(--type-body-small);
   color: var(--text-secondary);
 }
