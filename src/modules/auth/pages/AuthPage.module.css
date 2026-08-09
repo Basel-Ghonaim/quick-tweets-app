@@ -4,8 +4,8 @@
   display: flex;
   min-height: 100vh;
   font-family: var(--font-family-base);
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
+  background-color: var(--surface-page);
+  color: var(--text-primary);
 }
 
 /* Small tablet & below: stack panels vertically */

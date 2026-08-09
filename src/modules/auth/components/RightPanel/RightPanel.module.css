@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-10) var(--space-8);
-  background-color: var(--color-bg);
+  background-color: var(--surface-page);
 }
 
 .card {
@@ -30,14 +30,14 @@
   font-family: var(--font-family-heading);
   font-size: var(--font-size-2xl);
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .subtitle {
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   line-height: 1.5;
 }
 

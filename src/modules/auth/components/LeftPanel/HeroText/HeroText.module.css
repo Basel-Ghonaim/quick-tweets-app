@@ -1,3 +1,6 @@
+/* Display type and text over the always-dark brand panel: local by decision, not
+   by omission. The Design System deliberately authors no heading role — a ramp is
+   a design's to settle — and D7 forbids sourcing one from this prototype. */
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -14,7 +17,7 @@
 }
 
 .accent {
-  background: linear-gradient(90deg, var(--blue-500), #818cf8);
+  background: linear-gradient(90deg, var(--palette-blue-500), #818cf8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
