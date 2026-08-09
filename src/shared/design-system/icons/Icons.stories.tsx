@@ -35,9 +35,9 @@ const IconPlayground = (props: IconProps & { icon: string }) => {
 const meta = {
   title: "Design System/Display/Icons",
   parameters: {
-    // Icons inherit colour, so they carry no contrast of their own to gate;
-    // the surface that places one is where that is judged.
-    a11y: { test: "todo" },
+    // An icon inherits colour and has none of its own to gate, but the catalogue
+    // that places them is a surface like any other and is held to the same bar.
+    a11y: { test: "error" },
   },
   component: IconPlayground,
   tags: ["autodocs"],
@@ -83,8 +83,8 @@ export const Catalog: Story = {
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(5, 1fr)",
-        gap: "24px",
-        padding: "24px",
+        gap: "var(--space-6)",
+        padding: "var(--space-6)",
       }}>
         {allIcons.map(({ name, Icon }) => (
           <div
@@ -93,11 +93,13 @@ export const Catalog: Story = {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: "8px",
+              gap: "var(--space-2)",
             }}
           >
             <Icon size={24} />
-            <span style={{ fontSize: "12px", color: "#666" }}>{name}</span>
+            <span style={{ font: "var(--type-body-small)", color: "var(--text-secondary)" }}>
+              {name}
+            </span>
           </div>
         ))}
       </div>
@@ -109,7 +111,7 @@ export const Catalog: Story = {
 export const Sizes: Story = {
   args: { icon: "Upload" },
   render: () => (
-    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
       <UploadIcon size={16} />
       <UploadIcon size={24} />
       <UploadIcon size={32} />

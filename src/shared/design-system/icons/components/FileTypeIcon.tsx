@@ -1,8 +1,13 @@
-import type { IconProps } from "../icon.types";
-
 /**
- * Maps a file to its category based on extension or MIME type.
- * Returns a tuple: [label, color, pathData].
+ * A file format's identity: what to call it, how to draw it, and the colour the
+ * wider world already associates with it.
+ *
+ * The colours stay here rather than becoming Design System tokens. They encode
+ * *format identity*, not this product's roles — a PDF is not an `error` and a
+ * spreadsheet is not a `success` — and two of them have no expression in the
+ * palette at all. That four coincide with palette values is coincidence, not
+ * identity. Colour is one column of this table beside the label and the path,
+ * and splitting it out would put one fact in two homes.
  */
 type FileCategory = {
   label: string;
@@ -139,7 +144,19 @@ function resolveCategory(fileName?: string, mimeType?: string): FileCategory {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-interface FileTypeIconProps extends IconProps {
+/**
+ * Deliberately not `IconProps`. That contract promises any icon can replace any
+ * other and that none is ever handed a raw colour; this one draws its colour
+ * from data and carries its own size and stroke defaults, so it would be
+ * claiming a substitutability it cannot honour.
+ */
+interface FileTypeIconProps {
+  /** Rendered width and height in pixels. */
+  size?: number;
+  /** SVG stroke width. */
+  strokeWidth?: number;
+  /** Additional CSS class for positioning. */
+  className?: string;
   /** File name — used to detect extension (e.g. "report.pdf") */
   fileName?: string;
   /** MIME type — fallback when extension is ambiguous */
@@ -147,10 +164,7 @@ interface FileTypeIconProps extends IconProps {
 }
 
 /**
- * Renders a file-type-specific icon with automatic color.
- *
- * Detects the file category from extension or MIME type and renders
- * the appropriate document icon with a matching color.
+ * Renders the icon for a file's format, resolved from its extension or MIME type.
  *
  * @example
  * <FileTypeIcon fileName="report.pdf" size={18} />
@@ -160,8 +174,8 @@ export const FileTypeIcon = ({
   fileName,
   mimeType,
   size = 18,
-  // Lighter than the shared default: this icon is a document outline dense with
-  // detail, and the shared weight closes its interior at the sizes it renders at.
+  // Lighter than the rest of the set: this is a document outline dense with
+  // detail, and a heavier weight closes its interior at the sizes it renders at.
   strokeWidth = 1.5,
   className,
 }: FileTypeIconProps) => {
