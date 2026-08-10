@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, test } from "vitest";
 
@@ -34,9 +34,14 @@ const label = (file: string) =>
 const declaredIn = (file: string): string | undefined =>
   /\/\*\s*Disposition:\s*([a-z-]+)/.exec(readFileSync(file, "utf8"))?.[1];
 
+/**
+ * `legacy/` need not exist. D23 keeps it as the route a superseded family takes,
+ * and the route outlives the families that have used it — so `superseded` stays a
+ * valid disposition with, at present, nothing carrying it.
+ */
 const families = [
   ...stylesheets(join(FOUNDATIONS, "tokens")),
-  ...stylesheets(LEGACY),
+  ...(existsSync(LEGACY) ? stylesheets(LEGACY) : []),
 ];
 
 describe("token family disposition", () => {

@@ -13,9 +13,6 @@ import { describe, expect, test } from "vitest";
  * its `:root` copy outrank *every* theme rather than be overridden by one. Worse,
  * `tokenContrast` resolves a theme before the root, the opposite order — so the
  * page would render one value while the contrast check certified another.
- *
- * `legacy/` is held to the same rule at both of its residencies: it is still a
- * live part of the cascade until WI-10 removes it.
  */
 
 const FOUNDATIONS = join(process.cwd(), "src/shared/design-system/foundations");
@@ -44,8 +41,10 @@ function declaredIn(dirs: string[], selectorTest: (selector: string) => boolean)
   return found;
 }
 
-const axisInvariant = declaredIn(["tokens", "legacy"], (s) => s === ":root");
-const axisResolved = declaredIn(["resolution", "legacy"], (s) => s.startsWith("[data-theme"));
+const axisInvariant = declaredIn(["tokens"], (s) => s === ":root");
+const axisResolved = declaredIn(["resolution"], (s) =>
+  s.startsWith("[data-theme"),
+);
 
 describe("token residency", () => {
   test("no key is declared both axis-invariantly and under a resolution axis", () => {

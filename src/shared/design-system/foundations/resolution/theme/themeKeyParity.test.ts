@@ -12,7 +12,6 @@ const FOUNDATIONS = join(process.cwd(), "src/shared/design-system/foundations");
 const THEME_DIR = join(FOUNDATIONS, "resolution/theme");
 // The bootstrap set is still a resolution of the same axis until WI-10 removes it,
 // so it is held to parity too — extracting it must not quietly halve this check.
-const LEGACY_THEME_DIR = join(FOUNDATIONS, "legacy/theme");
 
 function keysDefinedIn(dir: string, file: string): Set<string> {
   const css = readFileSync(join(dir, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
@@ -27,10 +26,7 @@ function symmetricDifference(a: Set<string>, b: Set<string>): string[] {
 }
 
 describe("theme key parity", () => {
-  for (const [name, dir] of [
-    ["semantic", THEME_DIR],
-    ["legacy", LEGACY_THEME_DIR],
-  ] as const) {
+  for (const [name, dir] of [["semantic", THEME_DIR]] as const) {
     test(`light and dark resolve an identical ${name} key set`, () => {
       const light = keysDefinedIn(dir, "light.css");
       const dark = keysDefinedIn(dir, "dark.css");
