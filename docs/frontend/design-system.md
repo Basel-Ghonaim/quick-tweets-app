@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the frontend **design-system conventions** — the design-token model, theming, the component-authoring pattern, the variant model, and how the system is organized. It owns the **rules**, not a component catalog: it never documents individual components (`Button`, `Input`, …) prop-by-prop. It does **not** own schema-driven **form binding** and the `SchemaField` seam (the [frontend forms](forms.md) document), the app layout (the [frontend architecture](architecture.md)), or the design **principles** these conventions apply ([Engineering Principles](../development/engineering-principles.md)).
 > **Scope:** The shared UI foundations and components in `src/shared/design-system/`.
 > **Maturity:** This document describes the **currently implemented** design-system conventions. It covers only what exists today and will expand as the system grows; anything not described here is **not yet a stabilized convention** — either not yet built, or present but not yet settled enough to document — and is **not** something the architecture has rejected.
-> **Version:** 1.2
-> **Last Updated:** 2026-08-09
+> **Version:** 1.3
+> **Last Updated:** 2026-08-10
 > **Owner:** Basel Ghonaim
 
 ## Design tokens
@@ -13,7 +13,10 @@
 All visual values are **CSS custom properties**, separated by tier under `foundations/tokens/`:
 
 - **Primitives** — raw scales (`--palette-blue-600`, `--space-2`, `--font-size-base`). Not consumed by components, with one stated exception: border **radius and width** carry their tier on the curated scale itself, so a component binds them directly.
+
 - **Intent** — the tier a family earns rather than one it is given ([ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md)): role fills and on-surface text across the six roles (`--role-fill-error`, `--role-on-surface-primary`), surfaces and text (`--surface-subtle`, `--text-muted`), control and field spacing, control geometry, motion, and composite text styles. A family that earns no intent tier is a result, not a gap.
+
+Every family **declares its disposition** — `active`, `superseded`, or `intentionally-unconsumed` — and a check verifies the declaration exists and agrees with where the file sits. **This is not a consumer check.** A family nobody uses may be perfectly good curated vocabulary; what is not acceptable is a family whose status nobody has decided. Whether a disposition is *right* stays a review judgement.
 
 **A token names a shared concept, never a shared value.** Two components writing the same literal is not a token; the language is what they must *agree* on. Several approved consumers make a concept obvious, but they are evidence rather than a gate — the Design System precedes its consumers ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2). A value only one component can ever express stays component-owned: a checkbox's checkmark scale and an icon affordance's hover dimming are the component's, while the checkbox *box* is shared, because a radio renders the same box in the same form.
 

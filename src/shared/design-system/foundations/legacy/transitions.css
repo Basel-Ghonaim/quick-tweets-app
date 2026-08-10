@@ -1,3 +1,8 @@
+/* Disposition: superseded
+
+   Replaced by --motion-*, which is established and consumed across the
+   components and the application. Retired under D23 because its replacement
+   exists and is proven, not because nothing points at it. */
 :root {
   --transition-fast: 0.15s ease-in-out;
   --transition-medium: 0.3s ease-in-out;

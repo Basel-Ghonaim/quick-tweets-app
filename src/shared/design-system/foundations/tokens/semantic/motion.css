@@ -1,10 +1,10 @@
-/* Motion â€” intent tier (ADR 0011 Decision 1a). Authored alongside the legacy
+/* Disposition: active */
+/* Motion — intent tier (ADR 0011 Decision 1a). Authored alongside the legacy
    --transition-* scale (D11). Values are literal here by choice: nothing binds a
    raw duration or easing alone, so a primitive motion scale would serve no one (D8).
-   --transition-{fast,medium,slow} (0.15/0.3/0.5s ease-in-out) is still live in
-   Auth, whose migration retires it â€” reveal and expand are close enough to land on.
+   The --transition-* scale it replaced is now superseded and sits in legacy/.
    Reduced motion is the earning axis; its mechanism is out of scope and a token is
-   not sufficient anyway â€” zeroing the spin's duration freezes it mid-rotation. */
+   not sufficient anyway — zeroing the spin's duration freezes it mid-rotation. */
 :root {
   /* interactive-state transition */
   --motion-interactive: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -15,7 +15,7 @@
 
   /* An element entering or leaving, as distinct from one changing state in place. */
   --motion-reveal: 0.15s ease;
-  /* A change big enough to follow â€” a panel opening, a preview growing. At the
+  /* A change big enough to follow — a panel opening, a preview growing. At the
      interactive duration it reads as a jump rather than a movement. */
   --motion-expand: 0.25s ease;
   /* A change that should be noticed: the curve overshoots its end value and
