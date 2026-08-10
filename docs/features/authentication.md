@@ -35,7 +35,7 @@ The feature implements almost nothing generic itself — it configures and compo
 | Requests with credentials + auth | the authenticated Axios client | [Frontend API Client](../frontend/api-client.md) |
 | The token model it participates in | in-memory access token, `HttpOnly` refresh cookie | [API client](../frontend/api-client.md) (client half) · [Backend Security](../backend/security.md) (server half) |
 | Its forms | schema configs driving the form engine | [Frontend Forms](../frontend/forms.md) |
-| Its controls | `SchemaField`-bound inputs, buttons | [Frontend Design System](../frontend/design-system.md) |
+| Its controls | `SchemaField`-bound inputs, buttons | [Frontend Design System](../frontend/design-system/README.md) |
 | One typed error shape | normalized `AppError` | [Frontend Error Handling](../frontend/error-handling.md) |
 | Its data entities (`User`, `RefreshToken`) | the schema behind the endpoints | [Data model](../architecture/data-model.md) |
 

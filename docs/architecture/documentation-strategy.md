@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.3
-> **Last Updated:** 2026-08-08
+> **Version:** 1.4
+> **Last Updated:** 2026-08-10
 > **Owner:** Basel Ghonaim
 
 
@@ -95,7 +95,7 @@ docs/
     state-and-data.md            ← Redux and RTK Query strategy
     error-handling.md            ← AppError normalization pipeline
     forms.md                     ← schema-driven form engine (validation, form state, field inference) + SchemaField seam
-    design-system.md             ← presentation only: components, design tokens, theme, typography
+    design-system/               ← the Design System: boundary, Foundation contract, authoring contract
 
   features/
     <feature>.md                 ← one document per implemented feature capability
@@ -110,7 +110,7 @@ docs/
 ```
 
 ### Single-root rule and the code-adjacent exemption
-`docs/` is the only authoritative documentation root. A `README.md` may remain beside a reusable code unit **only** when all of the following hold: it documents the usage of that single code unit, it contains no feature or contract material, and it is indexed from `docs/README.md`. Such a file is a usage pointer, never an authoritative source; the authoritative source remains the relevant document under `docs/`.
+`docs/` is the only authoritative documentation root. A `README.md` may remain beside code **only** when all of the following hold: it documents the usage of a single code unit **or navigates to the authoritative sources for a subsystem**, it contains no feature or contract material, and it is reachable from `docs/README.md` (§11.6). Such a file is a usage pointer or a map, never an authoritative source; the authoritative source remains the relevant document under `docs/`. A map is admitted because a document that states no rules cannot become a competing authority ([ADR 0012](decisions/0012-foundation-contract-independent-of-consumer-adoption.md)).
 
 ### Structure rules
 - **No directory-tree document.** The repository is the source of truth for structure. Documents explain conventions, not file inventories.
@@ -152,7 +152,7 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Error normalization pipeline | `frontend/error-handling.md` | feature documents, `frontend/api-client.md` |
 | Axios API client (clients, interceptors, retry, 401-refresh) | `frontend/api-client.md` | feature documents |
 | Schema-driven form engine (validation, state, inference, SchemaField seam) | `frontend/forms.md` | feature documents |
-| Design system (components, tokens, theme, typography) | `frontend/design-system.md` | feature documents, `frontend/forms.md` |
+| Design system (design language, authoring conventions) | `frontend/design-system/` | feature documents, `frontend/forms.md` |
 | Project history | Git history | `project/overview.md` (status only) |
 | Planned/future work | Issue tracker (issues, milestones) | `project/overview.md` (link only) |
 
@@ -261,6 +261,6 @@ Because most documents are thin and link-based, **most code changes require no d
 3. **Changing this strategy.** This document is itself governed: a material change to the documentation strategy is an architectural decision and requires an ADR plus the normal review and merge process. Routine clarifications follow the standard documentation pull-request flow.
 4. **Language and form.** Documentation is written in English, in clear and concise prose, as durable reference material — not as meeting notes, proposals, or revision logs.
 5. **Link integrity.** Cross-document links are part of the contract. A change that moves or renames a document must update the documents that link to it, and a verification pass confirms no broken links remain.
-6. **Single entry point.** `docs/README.md` is the canonical map of the documentation set. Every document is reachable and classified from it, including any permitted code-adjacent usage README.
+6. **Single entry point.** `docs/README.md` is the canonical map of the documentation set. Every document is **reachable** and classified from it — directly, or through **one** designated index that is itself classified there. The principle is discoverability, not enumeration: a flat list that grows with the component count becomes the directory inventory §4 forbids ([ADR 0012](decisions/0012-foundation-contract-independent-of-consumer-adoption.md)).
 7. **Alignment with engineering principles.** This strategy applies the project's core engineering principles — single responsibility, one source of truth, and dependence on stable references over copies — to documentation. Documentation practice and engineering practice are held to the same standard.
 8. **Constitutional documents.** A small set of documents is *constitutional* — they govern how the project's documentation, engineering, and execution work, and every other document and contribution is subordinate to them. The constitution comprises [CLAUDE.md](../../CLAUDE.md) (the AI bootstrap and entry pointer), this **Documentation Strategy** (documentation governance), the [Engineering Principles](../development/engineering-principles.md) (code design), and the [Engineering Execution Standard](../development/engineering-execution-standard.md) (process and execution). A material change to any constitutional document is an architectural decision, recorded as an ADR (§8) and given the heightened review the Engineering Execution Standard expects. The [Documentation Migration Plan](../plans/documentation-migration-plan.md) is a binding execution plan, not a constitutional document. See [ADR 0001](decisions/0001-constitutional-architecture-reconciliation.md).

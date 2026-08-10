@@ -85,7 +85,7 @@ Each Work Item cites the invariants it protects by identifier. Those marked ✅ 
 6. A **single owned focus indicator** — no per-component focus rings remain, **mechanically checked** rather than trusted (**I5**, **D18**).
 7. **AA contrast holds in both themes** for every guaranteed relationship (**I5**).
 8. **Logical properties throughout** — direction-agnostic authoring, no physical properties (**I6**).
-9. **`design-system.md` is rewritten** to the re-established architecture, superseding its bootstrap-era model.
+9. **The Design System documentation is rewritten** to the re-established architecture, superseding its bootstrap-era model.
 
 ## 4. Strategy & sequencing
 
@@ -334,14 +334,14 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ### WI-10 — Retire the legacy set
 - **Goal & rationale:** delete the superseded vocabulary now that nothing outside it refers to the set — proven mechanically by **WI-9**, not asserted. **Split from the original WI-10 (2026-08-10):** that Work Item paired the deletion with a rewrite of the platform document. The deletion is code and is unblocked; the rewrite is a documentation-architecture effort with its own model to settle. Pairing them would hold dead code in the tree for a documentation reason, which is the inverted dependency the effort exists to remove. The rewrite is now **WI-10A**.
-- **Scope:** remove the superseded token set, its barrel, and the barrel's import; **reconcile the four checks that read `legacy/`** — deleting the directory breaks three at load and one at an assertion. Each check gets a **decided disposition**, never a workaround: the tier check's superseded ban is **removed as subsumed** (with the tokens gone a reference cannot resolve, and the reference check already fails on that), its `legacy/` exclusion becomes dead code, the theme-parity check drops the legacy pair, and the disposition and residency checks **tolerate the directory's absence**.
+- **Scope:** remove the superseded token set, its barrel, and the barrel's import; **reconcile the four checks that read `legacy/`** — deleting the directory breaks three at load and one at an assertion. Each check gets a **decided disposition**, never a workaround: the tier check's superseded ban is **removed** — its purpose was to prove the set had no consumers so it could be deleted, and that purpose expires with the deletion; its `legacy/` exclusion becomes dead code, the theme-parity check drops the legacy pair, and the disposition and residency checks **tolerate the directory's absence**.
 - **The `legacy/` concept outlives its inhabitants.** **D23** remains ratified and is the route for the next retirement; git cannot track an empty directory, so the checks tolerate absence rather than the rule being deleted along with its contents.
 - **Non-goals:** **no replacement tokens**; **no new check** unless a guarantee would otherwise genuinely be lost; no redesign; no token-architecture change; **no documentation rewrite** (**WI-10A**'s); no change to active tokens or curated scales.
 - **Dependencies:** **WI-8A** (hard — it released the last two bindings) and **WI-9** (hard — it produced the proof).
 - **Boundary validated:** that a superseded vocabulary can be removed **as a consequence of decisions already taken**, rather than as an act of judgement at deletion time.
 - **Invariants protected:** **I1** — active tokens and curated scales are untouched.
 - **Verification:** the superseded vocabulary appears nowhere in the active source tree; no import resolves to a deleted path; no prose references the deleted files; no check retains a scan root that no longer exists; typecheck, unit, Storybook and both builds green.
-- **DoD:** the set is gone, the four checks are reconciled with their dispositions recorded, and the guarantee that nothing references it is carried by the reference check rather than by a ban with no subject.
+- **DoD:** the set is gone and the four checks are reconciled with their dispositions recorded. Removing the ban gives up an independent **resurrection guard** — the reference check catches a reintroduced name only where it is used in more than one unit — and that is accepted knowingly: the ban's purpose ended with the deletion, and a check carrying a list of dead names would be vocabulary kept alive by inertia.
 - **Commit/PR boundary:** one PR, three commits — the plan split, the check reconciliation *while the directory still exists*, then a pure deletion. That order means the deletion cannot break a check.
 - **Stop-risks:** if an active consumer still references the set, or a supposedly superseded token is still required by an active contract, **stop** — and never resolve it by inventing a replacement. If removing the superseded ban would leave a guarantee genuinely unproven, keep the check with an explicit retired-name list rather than deleting it silently.
 
