@@ -1,3 +1,4 @@
+/* Disposition: active */
 /* Composite text styles (ADR 0011 Decision 6): the `font` shorthand keeps size and
    weight inseparable at the call site. No tracking — no consumer sets one. */
 :root {

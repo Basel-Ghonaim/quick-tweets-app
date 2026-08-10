@@ -1,8 +1,8 @@
+/* Disposition: active */
 /* Motion — intent tier (ADR 0011 Decision 1a). Authored alongside the legacy
    --transition-* scale (D11). Values are literal here by choice: nothing binds a
    raw duration or easing alone, so a primitive motion scale would serve no one (D8).
-   --transition-{fast,medium,slow} (0.15/0.3/0.5s ease-in-out) is still live in
-   Auth, whose migration retires it — reveal and expand are close enough to land on.
+   The --transition-* scale it replaced is now superseded and sits in legacy/.
    Reduced motion is the earning axis; its mechanism is out of scope and a token is
    not sufficient anyway — zeroing the spin's duration freezes it mid-rotation. */
 :root {
