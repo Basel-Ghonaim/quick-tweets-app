@@ -44,15 +44,11 @@ When a component has **materially different interaction modes**, it is built as 
 - each **variant** owns its own folder and implements a **single shared contract** the shell supplies;
 - because every variant satisfies the same contract, the shell treats them uniformly and a new one slots in without changing the shell.
 
-This is a convention available to any component, not a property of the ones that currently use it.
+This is a convention available to any component, not a property of the components that use it.
 
 ## Component-owned values
 
-The [Foundation's local / shared boundary](foundation.md) is the rule; this is what it means when authoring.
-
-A value stays with the component when **only that component can express it** — intrinsic geometry, its own choreography, a treatment that exists because of where the component is placed rather than what it means. Such a value is **not a violation of the binding rule**; it is outside the rule's domain, and it does not become a token because it is written as a literal.
-
-A value leaves the component when a **second consumer must agree on the concept** — not when a second consumer happens to write the same number. Promotion goes to the layer that can own the concept, and both become consumers of it.
+Whether a value stays with the component, becomes shared, or is promoted is decided by the [Foundation's local / shared boundary](foundation.md), which owns that rule. This document adds only what follows from it when authoring.
 
 Where a component-owned value would surprise a reader — because the surrounding code binds tokens and this one does not — **say why at the value**, briefly. That is the comment's job: the reason, not the history.
 

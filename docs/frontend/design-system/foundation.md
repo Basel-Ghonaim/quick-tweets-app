@@ -106,7 +106,7 @@ The two are independent. A Field whose control is an Adorned Control is both; a 
 
 ## Enforcement
 
-These rules are **mechanically enforced wherever they can be**, and the checks in the layer are the authority on what is currently enforced — not a list here, which would go stale the first time one was added.
+These rules are **mechanically enforced wherever they can be**, and the checks in the layer are the authority on what is enforced — not a list here, which would go stale the first time one was added. **A rule earns a check once its failure has actually been observed**, so the check set records what has gone wrong rather than what might.
 
 What a check cannot decide stays a review judgement: a check can see that a reference resolves and where a token is declared, but not whether the tier a consumer chose was the right one.
 

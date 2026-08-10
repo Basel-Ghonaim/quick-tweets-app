@@ -21,12 +21,3 @@ because one would go stale the first time something moved.
 | What props does it take? What variants exist? | its TypeScript types |
 | What is enforced automatically? | the `*.test.ts` checks in this layer |
 | Is a known problem already recorded? | the [findings register](../../../docs/architecture/findings/) |
-
-## Two things worth knowing before you change anything
-
-**Executable sources outrank prose.** Where TypeScript, Storybook or a check states a
-fact, that is the fact — documentation links to it and never mirrors it.
-
-**A rule that only exists in prose is not enforced.** If you add one that could be
-checked, check it; the layer's convention is that a rule gets a check once its failure
-has actually been observed.
