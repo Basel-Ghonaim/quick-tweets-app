@@ -64,8 +64,7 @@ function walk(dir: string, extension: string, found: string[] = []): string[] {
 
 const isDesignTokenSite = (posixPath: string) =>
   posixPath.includes("design-system/foundations/tokens/") ||
-  posixPath.includes("design-system/foundations/resolution/") ||
-  posixPath.includes("design-system/foundations/legacy/");
+  posixPath.includes("design-system/foundations/resolution/");
 
 /** The owning unit of a file — the signal that tells a component-local knob (one
  *  owner) from a cross-cutting token (many owners). */
