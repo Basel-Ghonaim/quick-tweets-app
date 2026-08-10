@@ -1,10 +1,9 @@
 /* Disposition: active */
-/* Motion — intent tier (ADR 0011 Decision 1a). Authored alongside the legacy
-   --transition-* scale (D11). Values are literal here by choice: nothing binds a
-   raw duration or easing alone, so a primitive motion scale would serve no one (D8).
-   The --transition-* scale it replaced is now superseded and sits in legacy/.
-   Reduced motion is the earning axis; its mechanism is out of scope and a token is
-   not sufficient anyway — zeroing the spin's duration freezes it mid-rotation. */
+/* Motion — intent tier (ADR 0011 Decision 1a). Values are literal here by choice:
+   nothing binds a raw duration or easing alone, so a primitive motion scale would
+   serve no one (D8). Reduced motion is the earning axis; its mechanism is out of
+   scope and a token would not be sufficient anyway — zeroing the spin's duration
+   freezes it mid-rotation. */
 :root {
   /* interactive-state transition */
   --motion-interactive: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
