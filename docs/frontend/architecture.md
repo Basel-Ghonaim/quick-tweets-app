@@ -83,7 +83,7 @@ Each platform subsystem is owned by its own document — this index is the map, 
 | `api/` + `rtk-query/` (transport) | how requests leave the frontend | [Frontend API Client](api-client.md) |
 | `errors/` | the error-normalization pipeline | [Frontend Error Handling](error-handling.md) |
 | `schema-form/` | the schema-driven form engine | [Frontend Forms](forms.md) |
-| `design-system/` | tokens, theming, component conventions | [Frontend Design System](design-system.md) |
+| `design-system/` | tokens, theming, component conventions | [Frontend Design System](design-system/README.md) |
 | `rtk-query/` (cache/data layer) | the RTK Query cache and data layer | the frontend state-and-data document *(deferred until the data layer matures)* |
 
 ### Thin utilities (owned here)

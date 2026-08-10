@@ -51,4 +51,4 @@ The single canonical `SchemaField` — the live, richer implementation — was r
 ## Links
 
 - Surfaced during documentation-migration planning: [Migration Plan §7](../../plans/documentation-migration-plan.md).
-- The intended one-directional relationship will be described by `frontend/forms.md` and `frontend/design-system.md` when they are authored (Phase E), each linking back to this finding.
+- The intended one-directional relationship will be described by `frontend/forms.md` and `frontend/design-system/` when they are authored (Phase E), each linking back to this finding.

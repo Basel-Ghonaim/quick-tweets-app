@@ -40,4 +40,4 @@ A future architectural review — followed by a dedicated Feature Work Item — 
 ## Links
 
 - Correctness / public-API facets delivered in [Issue #249](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/249).
-- Seam ownership and the intended one-directional `schema-form → design-system` relationship: [`frontend/forms.md`](../../frontend/forms.md), [`frontend/design-system.md`](../../frontend/design-system.md), and [Finding 0001](0001-schema-form-design-system-cycle.md).
+- Seam ownership and the intended one-directional `schema-form → design-system` relationship: [`frontend/forms.md`](../../frontend/forms.md), [`frontend/design-system/`](../../frontend/design-system/README.md), and [Finding 0001](0001-schema-form-design-system-cycle.md).

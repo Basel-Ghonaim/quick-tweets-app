@@ -63,7 +63,7 @@ Named `parts/` rather than `components/`, because "components inside a component
 
 ### 3.4 The anatomy
 
-**Owned by [`design-system.md`](../frontend/design-system.md)** — Control, Field, Adorned Control, Adorned Field, and the inline-axis boundary. This plan applies the vocabulary and never redefines it; a plan ends `Historical`, so a concept living only here would lose its owner when the effort closes.
+**Owned by [the Design System documentation](../frontend/design-system/README.md)** — Control, Field, Adorned Control, Adorned Field, and the inline-axis boundary. This plan applies the vocabulary and never redefines it; a plan ends `Historical`, so a concept living only here would lose its owner when the effort closes.
 
 ### 3.5 Component roles
 
@@ -125,7 +125,7 @@ CA-4 (public surface + taxonomy)
 
 ## 8. Reconciliation
 
-The effort is complete; the conventions it settled are owned by [`design-system.md`](../frontend/design-system.md) and this plan is read-only.
+The effort is complete; the conventions it settled are owned by [the Design System documentation](../frontend/design-system/README.md) and this plan is read-only.
 
 **Where the durable facts landed.** The component-authoring convention, the anatomy, the grouping, and the public-surface rule are all in the platform document. The language's enumerated scales live in the foundations; the prop contract and the shared helpers live beside the components that use them.
 

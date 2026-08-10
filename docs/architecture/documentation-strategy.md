@@ -95,7 +95,7 @@ docs/
     state-and-data.md            ← Redux and RTK Query strategy
     error-handling.md            ← AppError normalization pipeline
     forms.md                     ← schema-driven form engine (validation, form state, field inference) + SchemaField seam
-    design-system.md             ← presentation only: components, design tokens, theme, typography
+    design-system/               ← the Design System: boundary, Foundation contract, authoring contract
 
   features/
     <feature>.md                 ← one document per implemented feature capability
@@ -152,7 +152,7 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Error normalization pipeline | `frontend/error-handling.md` | feature documents, `frontend/api-client.md` |
 | Axios API client (clients, interceptors, retry, 401-refresh) | `frontend/api-client.md` | feature documents |
 | Schema-driven form engine (validation, state, inference, SchemaField seam) | `frontend/forms.md` | feature documents |
-| Design system (components, tokens, theme, typography) | `frontend/design-system.md` | feature documents, `frontend/forms.md` |
+| Design system (design language, authoring conventions) | `frontend/design-system/` | feature documents, `frontend/forms.md` |
 | Project history | Git history | `project/overview.md` (status only) |
 | Planned/future work | Issue tracker (issues, milestones) | `project/overview.md` (link only) |
 
