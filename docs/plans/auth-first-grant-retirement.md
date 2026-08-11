@@ -1,11 +1,12 @@
 # Auth-First Onboarding & Pre-auth Grant Retirement — Execution Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Migration
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-07-27
+> **Last Updated:** 2026-08-11
 > **Parent Issue:** [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357)
 > **Supersedes:** —
+> **Archived:** 2026-08-11 — completed. Its durable facts now live in [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md), [`schema.prisma`](../../server/prisma/schema.prisma), the [API contract](../api/api-contract.md), the [data model](../architecture/data-model.md), and [`backend/media.md`](../backend/media.md); this plan is retained as provenance.
 
 This plan translates **[ADR 0008 — Auth-First Onboarding and Retirement of the Pre-auth Upload Grant](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md)** into an ordered set of independently reviewable Work Items. ADR 0008 is **settled**: this plan **sequences its implementation and never reopens its boundaries, ownership, contracts, or invariants.** It owns the effort's strategy, sequence, ordering invariants, gates, and risks; each Work Item's acceptance criteria, status, and progress belong to that Work Item's Issue (created when it begins), which this plan links and never mirrors.
 
@@ -122,7 +123,7 @@ The boundaries are settled by ADR 0008; these are contained Work-Item choices, e
 
 ## 7. Reconciliation targets
 
-*Where durable knowledge lands as the effort completes (named now; the full record is written at `Historical`).*
+*Where the effort's durable knowledge landed. Verified on `main` at archival: `MediaObject.uploaderId` is `NOT NULL` and carries no grant columns; `MEDIA_GRANT_SECRET` is absent from the env schema and `.env.example`; the API contract exposes no grant endpoint or evidence header and does expose `PATCH`/`GET /users/me`; and `ReclaimReason` is the single `"unreferenced"` class. One finding was recorded and is [Resolved](../architecture/findings/0007-grant-access-token-shared-secret.md).*
 
 - **`server/prisma/schema.prisma`** — `uploaderId NOT NULL`; `grantId`/`grantExpiresAt`/grant uniqueness removed.
 - **`docs/api/api-contract.md`** — remove `POST /media/grants` + grant evidence; `POST /media` auth-required; register loses `avatar`; add `PATCH`/`GET /users/me`; profile responses resolve the avatar.
