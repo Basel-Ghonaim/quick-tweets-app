@@ -1,11 +1,12 @@
 # Design System Re-establishment — Execution Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-09
+> **Last Updated:** 2026-08-11
 > **Parent Issue:** [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414)
 > **Supersedes:** —
+> **Archived:** 2026-08-11 — completed. Its durable facts now live in the [Design System documentation](../frontend/design-system/README.md) and in ADRs [0010](../architecture/decisions/0010-design-system-platform-reestablishment.md), [0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md) and [0012](../architecture/decisions/0012-foundation-contract-independent-of-consumer-adoption.md); this plan is retained as provenance.
 
 This plan sequences the re-establishment of the **Design System** into fifteen independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) (Accepted), as amended in its Decision 3 by [ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md) (Accepted). Together they own the boundary, ownership, and invariants, and this plan never reopens them.
 
@@ -376,4 +377,57 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ## 8. Reconciliation
 
-*Added as this plan approaches `Historical`: where each Work Item's durable facts landed in the permanent documents, which findings were recorded, and the forward links. the Design System documentation is rewritten in **WI-10A** and thereafter owns the operative conventions; [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) retains only the boundary, ownership, and rationale.*
+The effort is **complete**. Every Work Item is merged; the durable knowledge has left this plan for the documents that own it, and this plan is now read-only provenance — how the effort was reasoned about and sequenced, not what the system currently guarantees.
+
+### Where the durable facts landed
+
+| What | Now owned by |
+|---|---|
+| The design language — tiers, admission, the local/shared boundary, naming, residency, disposition, anatomy | [Foundation contract](../frontend/design-system/foundation.md) |
+| How a component in the layer is built | [Component-authoring contract](../frontend/design-system/components.md) |
+| The layer's boundary, the Foundation-versus-adoption model, the public surface | [Design System README](../frontend/design-system/README.md) |
+| Why each rule exists — rationale, alternatives, limits | [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md), [ADR 0011](../architecture/decisions/0011-intent-layer-earned-not-assumed.md), [ADR 0012](../architecture/decisions/0012-foundation-contract-independent-of-consumer-adoption.md) |
+| Where to find any of it, from inside the code | the navigation map at `src/shared/design-system/README.md` |
+
+The pinned constraints in §3 were working rules for the effort. Those that outlive it are now stated by the Foundation contract; **D21** (residency) and **D23** (the retirement route) are the two that moved verbatim. The rest were sequencing decisions and expire here.
+
+### The Definition of Stable, criterion by criterion
+
+Nine criteria, each with what proves it rather than an assertion that it holds.
+
+| § | Criterion | Proof |
+|---|---|---|
+| 1 | Legacy set retired | the directory does not exist; nothing in `src/` or `index.html` references it |
+| 2 | Everything binds at its family's tier | `tierBinding` — **partial**, see below |
+| 3 | Theme switching with key parity | `themeKeyParity`, and the typed theme contract |
+| 4 | Undefined-token checker green | `tokenReferences` |
+| 5 | Storybook exercises both themes and every state | the Storybook run, 66 assertions |
+| 6 | A single owned focus indicator, mechanically checked | `focusIndicator`, green with **zero exemptions** |
+| 7 | AA contrast in both themes for every guaranteed relationship | `tokenContrast` — **scoped**, see below |
+| 8 | Logical properties throughout | audited: no physical positional or edge property remains in any stylesheet |
+| 9 | The documentation rewritten to the re-established architecture | the three contract documents above |
+
+**Criterion 2 is demonstrated in part, as §7 anticipated.** The check proves no component reaches a raw primitive; whether a binding sits at the tier its family *earns* is a review judgement no check can make (**D20**).
+
+**Criterion 7 holds as scoped, and the scope is narrower than it reads.** The contrast check asserts token *pairs*. Two defects fall outside that set and are recorded rather than hidden: a hover fill below 3:1 in the dark theme, and a placeholder composited through `opacity`, which is not a token relationship at all.
+
+### Findings recorded
+
+| Finding | Owner |
+|---|---|
+| [0008](../architecture/findings/0008-role-fill-hover-boundary-contrast-dark.md) — hover fill below 3:1 in dark | open; the check asserts resting values only |
+| [0010](../architecture/findings/0010-avatar-placeholder-text-contrast.md) — placeholder text at 2.59:1 | [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477), which also owns promoting the last accessibility gate |
+| [0011](../architecture/findings/0011-breakpoint-tokens-unconsumable-mechanism.md) — breakpoints unusable in a media query | open; revisit when a real responsive design arrives with a valid mechanism |
+| [0012](../architecture/findings/0012-no-shared-stacking-concept.md) — no shared stacking concept | open; the first two floating components that overlap will settle the order |
+
+### Where the effort departed from this plan
+
+- **Sixteen Work Items, not fifteen.** WI-10 was split into the deletion and the documentation rewrite, because pairing them would have held dead code in the tree for a documentation reason.
+- **A resurrection guard was given up.** Retiring the legacy set removed the check that banned its names. The reference check catches a reintroduced name only where it is used in more than one unit. Accepted knowingly: the ban's purpose was to prove the set had no consumers so it could be deleted, and that purpose ended with the deletion.
+- **Three families were removed rather than conformed**, and one was retired. WI-9's premise — that an unconsumed family is unfinished — was wrong, and correcting it changed three of its four answers.
+- **The documentation was restructured, not rewritten in place.** A single document describing current state could not be made into a contract by editing its sentences; the header defined it as a state description, and the coupling returned twice before that was addressed ([ADR 0012](../architecture/decisions/0012-foundation-contract-independent-of-consumer-adoption.md)).
+
+### What is deliberately not claimed
+
+That the vocabulary is **sufficient** for pages that do not yet exist. Sufficiency is proven on adoption (**D10**). A later surface needing a token it does not find is the normal extension of a stable foundation, not a defect of this effort — and the Foundation contract is written so that adding one changes no rule.
+
