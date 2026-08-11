@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** The authoritative source for **how work is executed** in this repository — work items, the Git lifecycle, commits, scope control, review, and the authority to make decisions. Binding on all contributors, human and AI.
 > **Scope:** Owns *process and execution*. It does **not** own *code design* ([Engineering Principles](engineering-principles.md)) or *documentation governance* ([Documentation Strategy](../architecture/documentation-strategy.md)).
-> **Version:** 1.1
-> **Last Updated:** 2026-08-02
+> **Version:** 1.2
+> **Last Updated:** 2026-08-11
 > **Owner:** Basel Ghonaim
 
 ## How to read this document
@@ -157,6 +157,9 @@ Every Work Item ends in a **Pull Request**; a substantial Work Item also has an 
 
 - **Title:** follows the commit convention (§6).
 - **Body:** a short summary (what + why), the type of change, and **ticket linking** — `Closes #<issue>` for a substantial Work Item, so the merge closes its Issue. A **trivial** Work Item has no Issue, so its contract (scope + acceptance criteria) lives directly in the PR body.
+- **Evidence:** the verification actually run and its result, and **what was not run**, and why. Silence never implies a pass.
+- **Base:** the SHA the branch was rebased onto immediately before review was requested. A green run against a stale base is evidence about that base, not about `main`.
+- **Uncited premises:** any rule or fact the work relied on that cannot be cited to a tracked `file:line` — or *none*. A premise held in memory rather than in the repository does not present itself as an assumption, so it is invisible at review unless it is named.
 - **Labels and assignee:** as for the Issue. A Pull Request carries both even when its Work Item is trivial and has no Issue — that is precisely when the PR is the only record of ownership.
 - **Self-checklist:** a checklist confirming the **Definition of Done** (§9) before review is requested.
 
