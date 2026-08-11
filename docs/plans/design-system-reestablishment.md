@@ -355,3 +355,25 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **DoD:** the three documents plus the map exist, the ADR records the model and the amendments, and `design-system.md` is gone.
 - **Commit/PR boundary:** one PR, three commits — the ADR, the documents, the map and index reconciliation.
 - **Stop-risks:** if the contract cannot be written without asserting something the code does not do, **stop and record it** — a documentation Work Item does not change code.
+
+## 6. Risks & mitigations (effort-wide)
+
+- **Silent rename is the defining hazard.** Token names are built by string interpolation and passed as strings from stories, so no compiler or linter catches a break. Mitigation: **WI-1 first**, and every later Work Item keeps the checker green.
+- **A contrast failure may be a vocabulary failure.** If AA cannot be met without collapsing two responsibilities into one token, the vocabulary is wrong, not the value. **This risk has already materialised** — WI-4's preparation found one token bound as a fill, as on-surface text, and as a border — which is why the mitigation is stated as a rule and not a hope: check contrast in **WI-3, WI-3A and WI-4**, never at the end, and author the fix in a vocabulary Work Item (**D15**) rather than the migration that found it.
+- **The pilot may under-represent.** **D17** proves each family's vocabulary on Button, but Button exercises no **validity** or **selection** state, so a family can be sufficient for it and short for Input, Checkbox or FileInput. This is the acknowledged cost of one pilot rather than four. Mitigation: WI-5 and WI-6 name those surfaces as the boundary they validate, and a gap found there is a **stop** into a vocabulary Work Item — never a primitive reach, and never authored inside the migration.
+- **No visual regression net.** There are no Design System component tests and no snapshots — and none are introduced here (**D19**) — while Storybook's a11y gate is local rather than CI-enforced (**D2**, **D3**). Appearance can change silently. Mitigation: stories exercising every state, migration Work Items that preserve appearance by intent, and honest reporting when a change is observed. The residual risk is real and is accepted knowingly rather than mitigated away.
+- **Values are provisional (D9).** A future design will replace them. Mitigation: the tier model keeps values out of components, so a redesign is a palette swap — provided no Work Item lets a value reach a component.
+- **Auth is a prototype, not a reference (D7).** The risk is that migrating it quietly promotes prototype brand decisions into the platform. Mitigation: WI-8's explicit stop-risk, and the rule that unhoused brand values stay local.
+- **Scope creep toward "while we're here".** New components, a design language, or a visual-regression system are all out (§2). Mitigation: discoveries are **recorded, not absorbed**.
+
+## 7. Completion criteria (whole effort)
+
+- All fifteen Work Items merged to `main`, each green under the CI gate, each leaving the application fully working.
+- **All nine Definition-of-Stable criteria (§3.3) hold**, with the mechanically verifiable ones (**I2**, **I3**, **I6**, **I8**, and the checker) demonstrated rather than asserted. **I1** is demonstrated only in part — the checker proves every reference resolves, but whether a binding sits at the tier its family earns is a review judgement (**D20**).
+- The legacy token set is **deleted**, and the Design System documentation describes the re-established architecture.
+- No out-of-scope item was pulled in: no redesign, no new components, no visual-regression system, no product pages.
+- **What is deliberately *not* claimed:** that the vocabulary is *sufficient* for pages that do not yet exist. Sufficiency is proven on **adoption** (**D10**); a later page needing a new token is normal extension of a stable foundation, not a defect of this effort.
+
+## 8. Reconciliation
+
+*Added as this plan approaches `Historical`: where each Work Item's durable facts landed in the permanent documents, which findings were recorded, and the forward links. the Design System documentation is rewritten in **WI-10A** and thereafter owns the operative conventions; [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) retains only the boundary, ownership, and rationale.*
