@@ -116,6 +116,12 @@ npm run dev -- --port 5174 --strictPort
 npx storybook dev -p 6007
 ```
 
+### A temporary safeguard: no `git stash` while more than one worktree exists
+
+Check with `git worktree list`. `refs/stash` is a **single stack shared by every worktree**, while the index and `HEAD` are per-tree — so a `git stash` in one tree and a `git stash pop` in another applies the wrong changes into the wrong working tree, silently and with no error. Use a scratch commit instead. It binds the main tree as much as a linked one.
+
+**This is a temporary safeguard, not a rule about `git stash`.** It exists only because the project is currently worked by parallel Workers across multiple worktrees, and it is scoped to that arrangement: it is not a general Git convention, not an engineering standard, and nothing is wrong with `git stash` in a single-tree checkout. **It is removed or narrowed as soon as the parallel-worktree workflow ends or the shared-stash hazard no longer applies** — the condition is stated here precisely so its expiry is checkable rather than forgotten. It lives in this document, and deliberately not in the [Engineering Execution Standard](engineering-execution-standard.md), because it constrains an *environment*, not the way work is executed.
+
 ### Branching from `main` inside a linked worktree
 
 Git refuses to check out a branch another worktree already holds, and the main tree normally holds `main` — so the Standard's *"update `main`, then branch"* ([EES §5](engineering-execution-standard.md)) cannot be followed literally here. Cut the branch from the remote ref:
