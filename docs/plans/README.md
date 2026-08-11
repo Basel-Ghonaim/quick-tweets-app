@@ -57,7 +57,7 @@ A new plan is drafted under `.project/` — the architect's working area, outsid
 |---|---|---|---|
 | [channel-verification.md](channel-verification.md) | Execution | Active | [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403) |
 | [component-architecture-unification.md](component-architecture-unification.md) | Execution | Historical | [#465](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/465) |
-| [design-system-reestablishment.md](design-system-reestablishment.md) | Execution | Active | [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414) |
+| [design-system-reestablishment.md](design-system-reestablishment.md) | Execution | Historical | [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414) |
 | [login-registration-refinements.md](login-registration-refinements.md) | Execution | Active | [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384) |
 | [media-implementation.md](media-implementation.md) | Execution | Active | [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305) |
 | [auth-first-grant-retirement.md](auth-first-grant-retirement.md) | Migration | Active | [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357) |
