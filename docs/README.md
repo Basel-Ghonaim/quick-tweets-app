@@ -48,7 +48,7 @@ This is the **map** of the project's documentation — every document, what it o
 
 ## The constitution
 
-A small set of documents governs everything else: [CLAUDE.md](../CLAUDE.md) (the AI bootstrap), the [Documentation Strategy](architecture/documentation-strategy.md), the [Engineering Principles](development/engineering-principles.md), and the [Engineering Execution Standard](development/engineering-execution-standard.md). A material change to any of them is an architectural decision (see [ADR 0001](architecture/decisions/0001-constitutional-architecture-reconciliation.md)).
+A small set of documents governs everything else: [CLAUDE.md](../CLAUDE.md) (the AI bootstrap), the [Documentation Strategy](architecture/documentation-strategy.md), the [Engineering Principles](development/engineering-principles.md), and the [Engineering Execution Standard](development/engineering-execution-standard.md). A change to one of them is judged by the same ADR threshold as any other change; being constitutional raises the review, not the artifact ([Documentation Strategy §11.3](architecture/documentation-strategy.md)).
 
 ## How to read this set
 
