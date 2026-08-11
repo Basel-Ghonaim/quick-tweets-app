@@ -157,6 +157,7 @@ Every Work Item ends in a **Pull Request**; a substantial Work Item also has an 
 
 - **Title:** follows the commit convention (§6).
 - **Body:** a short summary (what + why), the type of change, and **ticket linking** — `Closes #<issue>` for a substantial Work Item, so the merge closes its Issue. A **trivial** Work Item has no Issue, so its contract (scope + acceptance criteria) lives directly in the PR body.
+- **Evidence:** the verification actually run and its result, and **what was not run**, and why. Silence never implies a pass.
 - **Labels and assignee:** as for the Issue. A Pull Request carries both even when its Work Item is trivial and has no Issue — that is precisely when the PR is the only record of ownership.
 - **Self-checklist:** a checklist confirming the **Definition of Done** (§9) before review is requested.
 
