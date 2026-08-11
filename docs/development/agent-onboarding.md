@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for **how an agent joins this project and starts working** — the reading order, the judgment calls, and the habits that turn the constitution into behaviour. It owns the *on-ramp*, never the rules themselves: every rule referenced here is owned by the [Engineering Execution Standard](engineering-execution-standard.md), the [Engineering Principles](engineering-principles.md), or the [Documentation Strategy](../architecture/documentation-strategy.md), and is **linked, never restated**.
 > **Scope:** Any agent — or new contributor — picking up work in this repository. It covers orientation, decision authority in practice, and the mistakes newcomers actually make. It is not a summary of the project.
-> **Version:** 1.0
-> **Last Updated:** 2026-08-02
+> **Version:** 1.1
+> **Last Updated:** 2026-08-11
 > **Owner:** Basel Ghonaim
 
 ## Why this document exists
@@ -100,7 +100,7 @@ An **architectural deviation** becomes a [Finding](../architecture/findings/); a
 
 You never amend a plan, never accept your own work, and never merge it. When unsure which lane you are in, escalate.
 
-**Parallel work.** More than one agent may be active, sometimes in separate worktrees. Two rules: **write only where you were assigned**, and **sync to the latest `main` before starting** — another track may have merged since your last look.
+**Parallel work.** More than one agent may be active, sometimes in separate worktrees. Two rules: **write only where you were assigned**, and **sync to the latest `main` before starting** — another track may have merged since your last look. If you are in a linked worktree, its environment — ports, database, `VITE_API_URL`, the temporary stash safeguard, and how to branch there — is owned by [local setup](setup.md).
 
 ## 10. Operating principles
 
