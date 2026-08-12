@@ -1,6 +1,6 @@
 # ADR 0013: Applications and a Cross-Tier Packages Layer in a Single Workspace
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-08-12
 > **Deciders:** Basel Ghonaim
 > **Supersedes:** [ADR 0003](0003-cross-tier-shared-facts-leaf-packages.md)
