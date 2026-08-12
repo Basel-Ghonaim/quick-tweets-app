@@ -14,9 +14,9 @@ dist
 dist-ssr
 *.local
 
-# Server
-server/.env
-server/src/generated
+# API application
+apps/api/.env
+apps/api/src/generated
 # Captured mail — full message bodies, i.e. single-use secrets on disk.
 # Deliberately unanchored: the destination resolves against the working
 # directory, so anchoring it would hold only when the process starts in server/.
@@ -45,4 +45,4 @@ plans
 
 # Media blobs written by the local-disk storage adapter (UPLOAD_DIR) — runtime
 # data, never source.
-server/uploads/
+apps/api/uploads/
