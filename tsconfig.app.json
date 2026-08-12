@@ -7,8 +7,7 @@
     "module": "ESNext",
     "types": ["vite/client"],
 
-    /* Path Aliases */
-    "baseUrl": ".",
+    /* Path Aliases — resolved relative to this file, so no `baseUrl` is needed. */
     "paths": {
       "@shared/*": ["./src/shared/*"],
       "@modules/*": ["./src/modules/*"],
