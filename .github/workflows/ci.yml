@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: server
+        working-directory: apps/api
     env:
       # Placeholder — `prisma generate` reads the schema but does not connect to a
       # database, so no real DATABASE_URL is needed to generate the client.
@@ -38,7 +38,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: server/package-lock.json
+          cache-dependency-path: apps/api/package-lock.json
       - run: npm ci
       - run: npm run db:generate # generate the Prisma client (gitignored; required to type-check)
       - run: npm run typecheck
