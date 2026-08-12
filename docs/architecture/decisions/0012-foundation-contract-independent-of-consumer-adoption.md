@@ -1,6 +1,6 @@
 # ADR 0012: A Foundation Contract Documented Independently of Consumer Adoption
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-08-10
 > **Deciders:** Basel Ghonaim
 > **Amends:** [Documentation Strategy](../documentation-strategy.md) §4 and §11.6
