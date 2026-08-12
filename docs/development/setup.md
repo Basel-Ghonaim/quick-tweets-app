@@ -12,7 +12,7 @@
 Two applications share one repository:
 
 - **Frontend** — the repository root: React 19 + Redux Toolkit + React Router, built with Vite and TypeScript.
-- **Backend** — `server/`: Express 5 + Prisma + PostgreSQL, with its own `package.json` and scripts.
+- **Backend** — `apps/api/`: Express 5 + Prisma + PostgreSQL, with its own `package.json` and scripts.
 
 Each half has its own dependencies and is installed and run independently; a few root scripts run both together.
 
@@ -27,7 +27,7 @@ Dependencies live in two `package.json` files — install both:
 
 ```bash
 npm install            # frontend (repository root)
-npm install --prefix server   # backend
+npm install --prefix apps/api   # backend
 ```
 
 ## Configure the backend environment
@@ -35,7 +35,7 @@ npm install --prefix server   # backend
 The backend validates its environment at startup (fail-fast) and refuses to boot if anything required is missing or malformed. Copy the template and fill it in:
 
 ```bash
-cp server/.env.example server/.env
+cp apps/api/.env.example apps/api/.env
 ```
 
 | Variable | Required | Default | Notes |
@@ -47,9 +47,9 @@ cp server/.env.example server/.env
 | `JWT_EXPIRES_IN` | no | `15m` | Access-token lifetime (short-lived by design — see [Backend Security](../backend/security.md)) |
 | `CORS_ORIGIN` | no | `http://localhost:5173` | The single allowed frontend origin |
 
-> [**Outdated** — the in-flight Media work (M4 onward, continuing through M11) introduced backend environment requirements not fully reflected in this table. The authoritative list is the env schema at `server/src/config/env.ts`; the server fails fast at startup and names anything missing. To be reconciled at M12.]
+> [**Outdated** — the in-flight Media work (M4 onward, continuing through M11) introduced backend environment requirements not fully reflected in this table. The authoritative list is the env schema at `apps/api/src/config/env.ts`; the server fails fast at startup and names anything missing. To be reconciled at M12.]
 
-`server/.env` is gitignored — never commit it.
+`apps/api/.env` is gitignored — never commit it.
 
 The **frontend** needs no `.env` in a single working tree: it calls `http://localhost:4000/api/v1` by default. To point it elsewhere, set `VITE_API_URL`. **A linked worktree does need one** — without it the frontend drives the other tree's backend and database; see [Working in a linked worktree](#working-in-a-linked-worktree).
 
@@ -61,7 +61,7 @@ First create the database your `DATABASE_URL` names (the `.env.example` template
 createdb quick_tweets
 ```
 
-The backend uses Prisma 7, which reads the database URL from `server/prisma.config.ts` (not from `schema.prisma`) and generates its client into `server/src/generated/prisma/` (under the gitignored `server/src/generated/`). From `server/`:
+The backend uses Prisma 7, which reads the database URL from `apps/api/prisma.config.ts` (not from `schema.prisma`) and generates its client into `apps/api/src/generated/prisma/` (under the gitignored `apps/api/src/generated/`). From `apps/api/`:
 
 ```bash
 npx prisma generate        # generate the Prisma client
@@ -84,15 +84,15 @@ Or run each half on its own:
 
 ```bash
 npm run dev            # frontend only (Vite dev server)
-npm run server         # backend only (delegates to server's dev script)
+npm run dev --prefix apps/api   # backend only
 npm run storybook      # the design-system component workshop
 ```
 
-The backend's own dev server (`npm run dev` inside `server/`) runs under `tsx` in watch mode.
+The backend's own dev server (`npm run dev` inside `apps/api/`) runs under `tsx` in watch mode.
 
 ## Working in a linked worktree
 
-A second working tree created with `git worktree add` shares this repository's history and its `.git` directory, but **nothing else**: it has its own `node_modules`, its own `server/.env`, and its own `server/uploads/`. Two trees can run at once — provided each owns a distinct backend port, database, and frontend origin, because none of those is namespaced by the checkout.
+A second working tree created with `git worktree add` shares this repository's history and its `.git` directory, but **nothing else**: it has its own `node_modules`, its own `apps/api/.env`, and its own `apps/api/uploads/`. Two trees can run at once — provided each owns a distinct backend port, database, and frontend origin, because none of those is namespaced by the checkout.
 
 | | Main tree — `D:\quick-tweets-app` | Linked tree — `D:\quick-tweet-worker-2` |
 |---|---|---|
@@ -103,7 +103,7 @@ A second working tree created with `git worktree add` shares this repository's h
 | `VITE_API_URL` | unset — defaults to `:4000` | `http://localhost:4001/api/v1` |
 | Storybook | `6006` | `6007` |
 
-The backend half is configured by each tree's own `server/.env`. **The frontend half is not.** `VITE_API_URL` falls back to a hardcoded `http://localhost:4000/api/v1`, so a linked tree that does not set it silently drives the *main* tree's backend and writes into the *main* tree's database, with nothing failing. Set it in a root `.env.local`, which `*.local` already ignores:
+The backend half is configured by each tree's own `apps/api/.env`. **The frontend half is not.** `VITE_API_URL` falls back to a hardcoded `http://localhost:4000/api/v1`, so a linked tree that does not set it silently drives the *main* tree's backend and writes into the *main* tree's database, with nothing failing. Set it in a root `.env.local`, which `*.local` already ignores:
 
 ```
 VITE_API_URL=http://localhost:4001/api/v1
@@ -150,10 +150,10 @@ A `503` with `"db": "disconnected"` means the server is running but `DATABASE_UR
 
 ```bash
 npm run build                  # frontend: type-check then Vite production build
-npm run build --prefix server  # backend: TypeScript compile to server/dist
+npm run build --prefix apps/api  # backend: TypeScript compile to apps/api/dist
 ```
 
-The backend production entry point is `npm run start --prefix server` (`node dist/server.js`).
+The backend production entry point is `npm run start --prefix apps/api` (`node dist/server.js`).
 
 ---
 
