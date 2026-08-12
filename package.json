@@ -14,7 +14,8 @@
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check:boundaries": "vitest run checks/boundaries.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -24,6 +25,7 @@
     "eslint-plugin-storybook": "^10.3.4",
     "globals": "^16.5.0",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.48.0"
+    "typescript-eslint": "^8.48.0",
+    "vitest": "^4.1.2"
   }
 }
