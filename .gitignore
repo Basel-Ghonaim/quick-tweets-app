@@ -8,8 +8,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-src/master
-src/shared/components/propmt
 dist
 dist-ssr
 *.local
