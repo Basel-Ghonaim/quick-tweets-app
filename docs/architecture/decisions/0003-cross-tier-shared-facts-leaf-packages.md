@@ -1,6 +1,6 @@
 # ADR 0003: Cross-Tier Shared Facts — a Workspace Foundation of Independent Zero-Dependency Leaf Packages
 
-> **Status:** Accepted
+> **Status:** Superseded by [ADR 0013](0013-applications-and-cross-tier-packages.md)
 > **Date:** 2026-07-09
 > **Deciders:** Basel Ghonaim
 
