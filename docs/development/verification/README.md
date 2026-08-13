@@ -88,7 +88,7 @@ runbook's [Reset strategy](verification-runbook.md#reset-strategy). In short:
 
 - **Soft reset** — a `TRUNCATE` script that clears data and keeps the schema.
 - **Full reset** — `npx prisma migrate reset` for a pristine baseline.
-- **Bytes on disk** under `server/uploads/` are **not** cleared by SQL — Media
+- **Bytes on disk** under `apps/api/uploads/` are **not** cleared by SQL — Media
   owns physical deletion and M11 does not exist yet. Delete them by hand for a
   truly clean slate. (Their accumulation is exactly what M11 will address; seeing
   them pile up here is a preview of why reclamation is needed.)

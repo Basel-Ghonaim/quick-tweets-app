@@ -435,10 +435,10 @@ UPDATE users SET avatar_media_id = NULL;   -- release avatar refs before removin
 TRUNCATE TABLE media_objects RESTART IDENTITY CASCADE;
 DELETE FROM users WHERE email LIKE '%@verify.local';
 ```
-> Uploaded **bytes on disk** (under `server/uploads/`) are *not* removed by SQL —
+> Uploaded **bytes on disk** (under `apps/api/uploads/`) are *not* removed by SQL —
 > Media owns physical deletion and M11 does not exist yet. Clearing the registry
 > rows leaves those files as orphaned bytes. For this manual phase that is
-> harmless; delete `server/uploads/*` by hand if you want a truly clean slate.
+> harmless; delete `apps/api/uploads/*` by hand if you want a truly clean slate.
 
 **2. Full DB reset (schema + data).**
 ```

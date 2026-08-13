@@ -11,8 +11,8 @@
 
 quick-tweets is a Twitter/X-style social application, built as a clean-architecture reference project where engineering quality is a first-class deliverable alongside product functionality. It is a monorepo of two applications:
 
-- a **React 19 + Redux Toolkit** frontend (`src/`);
-- an **Express 5 + Prisma + PostgreSQL** backend (`server/`).
+- a **React 19 + Redux Toolkit** frontend (`apps/web/`);
+- an **Express 5 + Prisma + PostgreSQL** backend (`apps/api/`).
 
 The product centres on short posts — "tweets" of at most 280 characters — and the social interactions around them: replies, likes, public user profiles, and a follow graph.
 
@@ -29,7 +29,7 @@ The **backend exposes the full product surface; the frontend currently implement
 | **User profiles** — public profile with tweet / like / follower / following counts | Implemented (read-only) | Not yet |
 | **Follows** — follow and unfollow, follower and following lists | Implemented | Not yet |
 
-The data model behind these capabilities — `User`, `RefreshToken`, `Tweet`, `Comment`, `Like`, `Follow` — is owned by the Prisma schema, [`server/prisma/schema.prisma`](../../server/prisma/schema.prisma).
+The data model behind these capabilities — `User`, `RefreshToken`, `Tweet`, `Comment`, `Like`, `Follow` — is owned by the Prisma schema, [`apps/api/prisma/schema.prisma`](../../apps/api/prisma/schema.prisma).
 
 **Scope boundaries in the current version:** tweet images and file uploads are not implemented (the `image` field exists but is always `null`), and profiles are read-only (there is no profile-edit endpoint).
 

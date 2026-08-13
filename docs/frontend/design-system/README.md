@@ -55,7 +55,7 @@ One fact has one canonical owner. Every other document links to it and none rede
 | What does this component look like and do? | Storybook |
 | What props does it take? | its TypeScript types |
 | What is mechanically enforced? | the checks in the layer |
-| Where is any of the above, from inside the code? | the map at `src/shared/design-system/README.md` |
+| Where is any of the above, from inside the code? | the map at `apps/web/src/shared/design-system/README.md` |
 
 **Executable sources outrank prose.** Where TypeScript, Storybook or a check states a fact, documentation links to it and does not mirror it — a mirror has nothing enforcing it.
 

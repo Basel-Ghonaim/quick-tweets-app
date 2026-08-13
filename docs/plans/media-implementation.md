@@ -149,7 +149,7 @@ ADR 0005 deliberately left these open. Each is settled in its **own** record —
 *Where the durable knowledge migrates when the effort completes (the full record is written at `Historical`). Named now so the destinations are known.*
 
 - **`docs/backend/media.md`** (new, at M12) — the operative owner of all media mechanisms (module interface, port, registry model, validation/ingest/attach/accounting, read delivery + security posture, reclamation + coordination). ADR 0005 then retains only boundary + rationale.
-- **`server/prisma/schema.prisma`** — field-level truth: the `MediaObject` model, `TweetMedia`, `User.profileImage` repurposed to a reference, `Tweet.image` retired.
+- **`apps/api/prisma/schema.prisma`** — field-level truth: the `MediaObject` model, `TweetMedia`, `User.profileImage` repurposed to a reference, `Tweet.image` retired.
 - **`docs/architecture/data-model.md`** — the relationship/cascade/index rationale (feature→Media direction, `MediaObject` unaware of referrers, `TweetMedia` ordering, tweet-delete removes references while Media reclaims).
 - **`docs/api/api-contract.md`** — the ingest route, `GET /media/:token`, media-reference fields, the tweet media collection superseding `image:null`, and the realized `415`/`413`.
 - **`docs/backend/security.md`** and **`docs/architecture/system-overview.md`** — summarize-and-link cross-refs (the read-serving posture; the top-level media route in the request lifecycle).

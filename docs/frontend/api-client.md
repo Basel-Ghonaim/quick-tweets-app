@@ -2,7 +2,7 @@
 
 > **Status:** Active.
 > **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the [frontend error handling](error-handling.md) document), the **RTK Query cache/data layer** (the frontend state-and-data document, deferred), or the **server** side of the token model ([Backend Security](../backend/security.md)).
-> **Scope:** The shared transport mechanisms in `src/shared/api/` and `src/shared/rtk-query/`. Per-feature data access lives in the feature documents; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
+> **Scope:** The shared transport mechanisms in `apps/web/src/shared/api/` and `apps/web/src/shared/rtk-query/`. Per-feature data access lives in the feature documents; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Version:** 1.0
 > **Last Updated:** 2026-06-30
 > **Owner:** Basel Ghonaim
@@ -11,8 +11,8 @@
 
 The frontend reaches the backend through **two transport stacks**, kept in strictly separate folders:
 
-- **Axios** (`src/shared/api/`) — used by the **Authentication** feature (login, register, refresh, logout).
-- **RTK Query `fetchBaseQuery`** (`src/shared/rtk-query/`) — used by **all other features** (tweets, comments, likes, …).
+- **Axios** (`apps/web/src/shared/api/`) — used by the **Authentication** feature (login, register, refresh, logout).
+- **RTK Query `fetchBaseQuery`** (`apps/web/src/shared/rtk-query/`) — used by **all other features** (tweets, comments, likes, …).
 
 The selection rule is therefore by feature: Authentication is served by the Axios stack; every newer feature is served by RTK Query. This split — Axios for Authentication, RTK Query for everything else — reflects the **current implementation**, not a permanent architectural constraint. Both attach the same access token and rely on the same `HttpOnly` refresh cookie issued by the backend.
 

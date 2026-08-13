@@ -2,7 +2,7 @@
 
 > **Status:** Active.
 > **Authority:** The authoritative source for the **authentication feature** — what it does, how its flows work, how it **composes** the platform, and its feature-specific configuration and policies. It owns the feature, **not the mechanisms it composes**: every shared mechanism it touches is owned by a platform document and linked here, never restated.
-> **Scope:** The auth feature module (`src/modules/auth/`) and its behavior. The wire contract is the [API contract](../api/api-contract.md)'s; the server-side security mechanisms are [Backend Security](../backend/security.md)'s; the transport and the client half of the token model are the [frontend API client](../frontend/api-client.md)'s.
+> **Scope:** The auth feature module (`apps/web/src/modules/auth/`) and its behavior. The wire contract is the [API contract](../api/api-contract.md)'s; the server-side security mechanisms are [Backend Security](../backend/security.md)'s; the transport and the client half of the token model are the [frontend API client](../frontend/api-client.md)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organization is the current implementation of **this feature only — explicitly not the canonical template for future features** (the template is deliberately deferred by the [frontend architecture](../frontend/architecture.md) until a second feature validates or reshapes it). Anything not described here is not yet built, not architecturally rejected.
 > **Version:** 1.2
 > **Last Updated:** 2026-07-30

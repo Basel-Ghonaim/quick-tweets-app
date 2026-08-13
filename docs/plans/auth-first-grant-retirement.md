@@ -6,7 +6,7 @@
 > **Last Updated:** 2026-08-11
 > **Parent Issue:** [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357)
 > **Supersedes:** —
-> **Archived:** 2026-08-11 — completed. Its durable facts now live in [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md), [`schema.prisma`](../../server/prisma/schema.prisma), the [API contract](../api/api-contract.md), the [data model](../architecture/data-model.md), and [`backend/media.md`](../backend/media.md); this plan is retained as provenance.
+> **Archived:** 2026-08-11 — completed. Its durable facts now live in [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md), [`schema.prisma`](../../apps/api/prisma/schema.prisma), the [API contract](../api/api-contract.md), the [data model](../architecture/data-model.md), and [`backend/media.md`](../backend/media.md); this plan is retained as provenance.
 
 This plan translates **[ADR 0008 — Auth-First Onboarding and Retirement of the Pre-auth Upload Grant](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md)** into an ordered set of independently reviewable Work Items. ADR 0008 is **settled**: this plan **sequences its implementation and never reopens its boundaries, ownership, contracts, or invariants.** It owns the effort's strategy, sequence, ordering invariants, gates, and risks; each Work Item's acceptance criteria, status, and progress belong to that Work Item's Issue (created when it begins), which this plan links and never mirrors.
 
