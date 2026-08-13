@@ -5,12 +5,15 @@ on:
   push:
     branches: [main]
 
-# Lightweight gate: type-check + fast unit tests for both tiers.
+# Lightweight gate: type-check + fast unit tests for both applications.
 # The Storybook/Playwright browser tests and the build step are intentionally
 # out of this gate for now.
+#
+# One workspace means one lockfile, so every job installs from the root and
+# shares a single npm cache key; work is then targeted with `--workspace`.
 jobs:
-  frontend:
-    name: Frontend — typecheck + unit tests
+  web:
+    name: Web — typecheck + unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,15 +22,15 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm run test
+      - run: npm run typecheck --workspace @quick-tweets/web
+      - run: npm run test --workspace @quick-tweets/web
+      # Repository-level, not the web's. It runs here only because this job
+      # exists; it earns its own job when a packages/* consumer does.
+      - run: npm run check:boundaries
 
-  backend:
-    name: Backend — typecheck + unit tests
+  api:
+    name: API — typecheck + unit tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/api
     env:
       # Placeholder — `prisma generate` reads the schema but does not connect to a
       # database, so no real DATABASE_URL is needed to generate the client.
@@ -38,8 +41,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: apps/api/package-lock.json
       - run: npm ci
-      - run: npm run db:generate # generate the Prisma client (gitignored; required to type-check)
-      - run: npm run typecheck
-      - run: npm run test
+      - run: npm run db:generate --workspace @quick-tweets/api # generate the Prisma client (gitignored; required to type-check)
+      - run: npm run typecheck --workspace @quick-tweets/api
+      - run: npm run test --workspace @quick-tweets/api

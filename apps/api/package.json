@@ -1,5 +1,5 @@
 {
-  "name": "quick-tweets-server",
+  "name": "@quick-tweets/api",
   "version": "1.0.0",
   "description": "Backend API for Quick Tweets — Express + Prisma + PostgreSQL",
   "type": "module",

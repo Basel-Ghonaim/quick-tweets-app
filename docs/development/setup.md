@@ -11,7 +11,7 @@
 
 Two applications share one repository:
 
-- **Frontend** — the repository root: React 19 + Redux Toolkit + React Router, built with Vite and TypeScript.
+- **Frontend** — `apps/web/`: React 19 + Redux Toolkit + React Router, built with Vite and TypeScript.
 - **Backend** — `apps/api/`: Express 5 + Prisma + PostgreSQL, with its own `package.json` and scripts.
 
 Each half has its own dependencies and is installed and run independently; a few root scripts run both together.
@@ -23,11 +23,10 @@ Each half has its own dependencies and is installed and run independently; a few
 
 ## Install
 
-Dependencies live in two `package.json` files — install both:
+The repository is one npm workspace; a single install at the root covers both applications:
 
 ```bash
-npm install            # frontend (repository root)
-npm install --prefix apps/api   # backend
+npm install            # one workspace install covers both applications
 ```
 
 ## Configure the backend environment
@@ -84,11 +83,11 @@ Or run each half on its own:
 
 ```bash
 npm run dev            # frontend only (Vite dev server)
-npm run dev --prefix apps/api   # backend only
-npm run storybook      # the design-system component workshop
+npm run dev:api        # backend only
+npm run storybook --workspace @quick-tweets/web   # the design-system component workshop
 ```
 
-The backend's own dev server (`npm run dev` inside `apps/api/`) runs under `tsx` in watch mode.
+The backend's own dev server (`npm run dev` inside `apps/api/`) runs under `tsx` in watch mode. Root scripts delegate to a workspace; anything not wrapped at the root is reachable with `--workspace @quick-tweets/web` or `--workspace @quick-tweets/api`.
 
 ## Working in a linked worktree
 
@@ -103,7 +102,7 @@ A second working tree created with `git worktree add` shares this repository's h
 | `VITE_API_URL` | unset — defaults to `:4000` | `http://localhost:4001/api/v1` |
 | Storybook | `6006` | `6007` |
 
-The backend half is configured by each tree's own `apps/api/.env`. **The frontend half is not.** `VITE_API_URL` falls back to a hardcoded `http://localhost:4000/api/v1`, so a linked tree that does not set it silently drives the *main* tree's backend and writes into the *main* tree's database, with nothing failing. Set it in a root `.env.local`, which `*.local` already ignores:
+The backend half is configured by each tree's own `apps/api/.env`. **The frontend half is not.** `VITE_API_URL` falls back to a hardcoded `http://localhost:4000/api/v1`, so a linked tree that does not set it silently drives the *main* tree's backend and writes into the *main* tree's database, with nothing failing. Set it in `apps/web/.env.local` — Vite reads env files from the directory holding its config, not from the repository root — which `*.local` already ignores:
 
 ```
 VITE_API_URL=http://localhost:4001/api/v1
@@ -113,7 +112,7 @@ Vite does not pin its port and falls back to the next free one, so the port a tr
 
 ```bash
 npm run dev -- --port 5174 --strictPort
-npx storybook dev -p 6007
+cd apps/web && npx storybook dev -p 6007
 ```
 
 ### A temporary safeguard: no `git stash` while more than one worktree exists
@@ -149,11 +148,12 @@ A `503` with `"db": "disconnected"` means the server is running but `DATABASE_UR
 ## Build
 
 ```bash
-npm run build                  # frontend: type-check then Vite production build
-npm run build --prefix apps/api  # backend: TypeScript compile to apps/api/dist
+npm run build                  # both applications
+npm run build --workspace @quick-tweets/web  # frontend: type-check then Vite production build
+npm run build --workspace @quick-tweets/api  # backend: TypeScript compile to apps/api/dist
 ```
 
-The backend production entry point is `npm run start --prefix apps/api` (`node dist/server.js`).
+The backend production entry point is `npm run start --workspace @quick-tweets/api` (`node dist/server.js`).
 
 ---
 
