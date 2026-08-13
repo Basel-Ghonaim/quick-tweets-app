@@ -47,7 +47,7 @@ A plan is a living document while `Active`: it evolves as the effort's **strateg
 
 ## Authoring a Plan
 
-A new plan is drafted under `.project/` — the architect's working area, outside the tracked tree — while it is the **architect's working document rather than project documentation**. Ownership belongs to the architecture role; implementers consume approved plans and do not author them. On approval the plan moves into `docs/plans/` **in the first branch of its first Work Item**, and from that commit it is project documentation. No branch is ever created solely to author or adopt a plan.
+A new plan is drafted outside the tracked tree — under `.project/`, or wherever the analysis is being done — while it is still a **working document rather than project documentation**. Drafting belongs to whoever holds the analysis, commonly a Worker together with the human; drafting is not authority, and a plan governs only once approved. On approval the plan moves into `docs/plans/` **in the first branch of its first Work Item**, and from that commit it is project documentation. No branch is ever created solely to author or adopt a plan.
 
 **A new plan, and a full refactor of an existing one, are reviewed and approved before implementation begins.** They are not amendments and do not ride into a branch mid-effort — the approved plan is what the first Work Item is cut against. Every other plan change *is* an amendment and follows *Updating a Plan* above.
 
