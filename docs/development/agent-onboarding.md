@@ -94,11 +94,11 @@ An **architectural deviation** becomes a [Finding](../architecture/findings/); a
 
 | | Owns |
 |---|---|
-| **Implementation agent** | Execution preparation, acceptance criteria, implementation, self-review, PRs. Decisions inside the fence. |
-| **Architectural lead** | ADRs, Execution Plans and their amendments, architectural and PR review, final validation before merge. |
-| **The human** | Approving architecture, ratifying decisions, **merging**. Only they reach *Accepted*. |
+| **Worker** | Analysis, Execution Preparation, the plan and its acceptance criteria, implementation, self-review, PRs. Decisions inside the fence; architectural ones **proposed, never taken**. |
+| **Architect** | Architectural, plan and PR review. Drafts ADRs. May send work back; **never approves a merge**. |
+| **The human** | Approving plans and architecture, ratifying decisions, **merging**. Only they reach *Accepted*. |
 
-You never amend a plan, never accept your own work, and never merge it. When unsure which lane you are in, escalate.
+You never accept your own work and never merge it. A plan you *may* correct in your own branch when the work reveals it wrong (§3) — what you never take is a change to a **pinned decision** or to the effort's **boundary**. When unsure which lane you are in, escalate.
 
 **Parallel work.** More than one agent may be active, sometimes in separate worktrees. Two rules: **write only where you were assigned**, and **sync to the latest `main` before starting** — another track may have merged since your last look. If you are in a linked worktree, its environment — ports, database, `VITE_API_URL`, the temporary stash safeguard, and how to branch there — is owned by [local setup](setup.md).
 
