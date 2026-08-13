@@ -11,8 +11,8 @@
 
 quick-tweets is a monorepo of three tiers communicating over HTTP/JSON:
 
-- **Frontend** — a React 19 single-page app with Redux Toolkit (`src/`). Holds UI state and a normalized server-cache; it never talks to the database.
-- **Backend** — an Express 5 HTTP API (`server/`) served under the `/api/v1` prefix. It owns all business rules and is the only tier that touches the database.
+- **Frontend** — a React 19 single-page app with Redux Toolkit (`apps/web/`). Holds UI state and a normalized server-cache; it never talks to the database.
+- **Backend** — an Express 5 HTTP API (`apps/api/`) served under the `/api/v1` prefix. It owns all business rules and is the only tier that touches the database.
 - **Database** — PostgreSQL, reached exclusively through Prisma; only the backend touches it.
 
 The dependency is one-directional: the frontend depends on the contract, the backend fulfils it, and the database sits behind the backend as an implementation detail. The contract between frontend and backend — endpoints, payloads, error shapes, pagination — is owned by the [API contract](../api/api-contract.md).

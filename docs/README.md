@@ -31,8 +31,8 @@ This is the **map** of the project's documentation — every document, what it o
 - [api-client.md](frontend/api-client.md) — the transport layer (Axios + RTK Query base), token attachment, and the refresh flow.
 - [error-handling.md](frontend/error-handling.md) — the `AppError` normalization pipeline.
 - [forms.md](frontend/forms.md) — the schema-driven form engine.
-- [design-system/](frontend/design-system/README.md) — the Design System: its boundary and ownership model, the [Foundation contract](frontend/design-system/foundation.md), and the [component-authoring contract](frontend/design-system/components.md). Its code-adjacent map at `src/shared/design-system/README.md` is the designated index for documentation living beside the layer's code (Strategy §11.6).
-- `state-and-data.md` — the RTK Query cache/data layer. **Deferred** until that layer is realized in code (its interim source is `src/docs/rtk-query-strategy.md`).
+- [design-system/](frontend/design-system/README.md) — the Design System: its boundary and ownership model, the [Foundation contract](frontend/design-system/foundation.md), and the [component-authoring contract](frontend/design-system/components.md). Its code-adjacent map at `apps/web/src/shared/design-system/README.md` is the designated index for documentation living beside the layer's code (Strategy §11.6).
+- `state-and-data.md` — the RTK Query cache/data layer. **Deferred** until that layer is realized in code (its interim source is `apps/web/src/docs/rtk-query-strategy.md`).
 
 ### `features/` — one document per capability
 - [authentication.md](features/authentication.md) — the authentication feature: its flows and how it composes the platform.

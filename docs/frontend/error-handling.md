@@ -2,7 +2,7 @@
 
 > **Status:** Active.
 > **Authority:** The authoritative source for the frontend **error-normalization pipeline** — how any caught error, from either transport stack or from native code, becomes one typed `AppError` before it reaches the UI. It owns the *mechanism* of convergence. It does **not** own the wire error taxonomy, status codes, or error-body shape (the [API contract](../api/api-contract.md)), the transport **call sites** that invoke it (the [frontend API client](api-client.md)), the backend error model that produces the errors ([backend conventions](../backend/conventions.md)), or the one-typed-error **principle** ([Engineering Principles §4](../development/engineering-principles.md)).
-> **Scope:** The shared error layer in `src/shared/errors/`. The end-to-end request lifecycle these errors travel lives in the [system overview](../architecture/system-overview.md).
+> **Scope:** The shared error layer in `apps/web/src/shared/errors/`. The end-to-end request lifecycle these errors travel lives in the [system overview](../architecture/system-overview.md).
 > **Maturity:** This document describes the **currently implemented** pipeline, which is mature. It extends only if a new error *source* or *type* is added; anything not covered here is not yet handled, not deliberately excluded.
 > **Version:** 1.0
 > **Last Updated:** 2026-06-30

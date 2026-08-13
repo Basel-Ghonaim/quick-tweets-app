@@ -1,7 +1,7 @@
 # Data Model
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the data model's **relationship, cascade, and indexing rationale** — the *why* behind the schema. The field-level truth (types, defaults, column maps) is owned by [`schema.prisma`](../../server/prisma/schema.prisma) and referenced here, never restated.
+> **Authority:** The authoritative source for the data model's **relationship, cascade, and indexing rationale** — the *why* behind the schema. The field-level truth (types, defaults, column maps) is owned by [`schema.prisma`](../../apps/api/prisma/schema.prisma) and referenced here, never restated.
 > **Scope:** Why the entities relate as they do, how deletes propagate, and which indexes exist and what they serve. It is not a field listing.
 > **Version:** 1.1
 > **Last Updated:** 2026-07-30
@@ -9,7 +9,7 @@
 
 ## Overview
 
-The domain is a small social graph: users author tweets, tweets gather comments and likes, and users follow one another. Every record ultimately descends from a user. The field-level schema is owned by [`schema.prisma`](../../server/prisma/schema.prisma); this document explains the reasoning behind the relationships, the delete behaviour, and the indexes.
+The domain is a small social graph: users author tweets, tweets gather comments and likes, and users follow one another. Every record ultimately descends from a user. The field-level schema is owned by [`schema.prisma`](../../apps/api/prisma/schema.prisma); this document explains the reasoning behind the relationships, the delete behaviour, and the indexes.
 
 ## Entities and relationships
 
@@ -31,7 +31,7 @@ Every relationship deletes with its parent (`onDelete: Cascade`):
 
 The rationale: the model has no meaningful orphan — a comment without its tweet, or a like without its user, is noise. Cascade enforces referential integrity in the database rather than in application code, so a missed cleanup path cannot leave dangling rows (defense in depth).
 
-**Media relationships are the deliberate exception.** A feature's link to a `MediaObject` is a *reference to an object another module owns*, not owned data, so those foreign keys use **`onDelete: Restrict`**, not Cascade: `tweet_media`, and a media-carrying `comment`, refuse to vanish silently, and Media's own `media_references` / `media_quarantine` refuse to drop an object that is still referenced or under review. **Media's own `MediaObject.uploader` foreign key (`uploader_id`, `NOT NULL`) is likewise `onDelete: Restrict`:** a user cannot be deleted while they own media objects. The account-deletion path is currently **dormant** (no route); whenever it is implemented it must explicitly reconcile a user's owned media — reassign or reclaim — before removing the user, since the database refuses a silent cascade. This records the current constraint only and implies no new deletion semantics. Deleting a **tweet** instead **ends** its media references (through the coordinated application use-case that removes the comments first), and **Media reclaims** any now-unreferenced object from its own registry state — an object is never deleted by a database cascade. The reclamation lifecycle (tombstone retention, quarantine-on-divergence, report-vs-destructive) is owned by [`backend/media.md`](../backend/media.md); field-level truth by [`schema.prisma`](../../server/prisma/schema.prisma).
+**Media relationships are the deliberate exception.** A feature's link to a `MediaObject` is a *reference to an object another module owns*, not owned data, so those foreign keys use **`onDelete: Restrict`**, not Cascade: `tweet_media`, and a media-carrying `comment`, refuse to vanish silently, and Media's own `media_references` / `media_quarantine` refuse to drop an object that is still referenced or under review. **Media's own `MediaObject.uploader` foreign key (`uploader_id`, `NOT NULL`) is likewise `onDelete: Restrict`:** a user cannot be deleted while they own media objects. The account-deletion path is currently **dormant** (no route); whenever it is implemented it must explicitly reconcile a user's owned media — reassign or reclaim — before removing the user, since the database refuses a silent cascade. This records the current constraint only and implies no new deletion semantics. Deleting a **tweet** instead **ends** its media references (through the coordinated application use-case that removes the comments first), and **Media reclaims** any now-unreferenced object from its own registry state — an object is never deleted by a database cascade. The reclamation lifecycle (tombstone retention, quarantine-on-divergence, report-vs-destructive) is owned by [`backend/media.md`](../backend/media.md); field-level truth by [`schema.prisma`](../../apps/api/prisma/schema.prisma).
 
 ## Indexing
 
@@ -52,7 +52,7 @@ A follow joins users to users through two named relations. A user's **followers*
 
 ## Where related facts live
 
-- **Field-level truth** (types, defaults, column maps): [`schema.prisma`](../../server/prisma/schema.prisma).
+- **Field-level truth** (types, defaults, column maps): [`schema.prisma`](../../apps/api/prisma/schema.prisma).
 - **Wire shapes and exposed counts** (what the client receives): the [API contract](../api/api-contract.md).
 - **How the data tier sits in the request lifecycle**: the [system overview](system-overview.md).
 - **The Media subsystem's mechanisms** (registry, storage adapter, reclamation lifecycle): [`backend/media.md`](../backend/media.md).
