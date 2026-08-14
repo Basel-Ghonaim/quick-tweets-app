@@ -5,7 +5,7 @@
 > **Scope:** The shared error layer in `apps/web/src/shared/errors/`. The end-to-end request lifecycle these errors travel lives in the [system overview](../architecture/system-overview.md).
 > **Maturity:** This document describes the **currently implemented** pipeline, which is mature. It extends only if a new error *source* or *type* is added; anything not covered here is not yet handled, not deliberately excluded.
 > **Version:** 1.0
-> **Last Updated:** 2026-06-30
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## One typed error, everywhere

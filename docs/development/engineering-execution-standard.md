@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for **how work is executed** in this repository — work items, the Git lifecycle, commits, scope control, review, and the authority to make decisions. Binding on all contributors, human and AI.
 > **Scope:** Owns *process and execution*. It does **not** own *code design* ([Engineering Principles](engineering-principles.md)) or *documentation governance* ([Documentation Strategy](../architecture/documentation-strategy.md)).
 > **Version:** 1.2
-> **Last Updated:** 2026-08-11
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## How to read this document

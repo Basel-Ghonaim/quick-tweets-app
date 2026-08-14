@@ -4,7 +4,7 @@
 > **Authority:** The canonical source for the project's **domain vocabulary** — the product terms used across the code and documentation. Mechanism, process, and governance terms are owned by their documents and linked here, never redefined.
 > **Scope:** What the project's core nouns mean. A vocabulary reference, not a specification.
 > **Version:** 1.0
-> **Last Updated:** 2026-06-28
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## Domain vocabulary

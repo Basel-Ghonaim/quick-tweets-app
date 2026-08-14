@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the backend's **cross-cutting conventions and mechanisms** — how a feature module is structured, how responses are shaped, how errors are modelled, how requests are validated, and how lists are paginated. It owns the *how*; it does not own the wire contract (see the [API contract](../api/api-contract.md)), security mechanisms (see [Backend Security](security.md)), or the design principles these mechanisms apply (see [Engineering Principles](../development/engineering-principles.md)).
 > **Scope:** Patterns shared across backend feature modules. Per-feature business logic lives in the feature documents; the end-to-end request lifecycle lives in the [system overview](../architecture/system-overview.md).
 > **Version:** 1.0
-> **Last Updated:** 2026-06-29
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## Module layering

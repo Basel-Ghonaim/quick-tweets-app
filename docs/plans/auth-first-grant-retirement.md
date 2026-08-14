@@ -3,7 +3,7 @@
 > **Status:** Historical
 > **Type:** Migration
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-11
+> **Last Updated:** 2026-08-14
 > **Parent Issue:** [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357)
 > **Supersedes:** —
 > **Archived:** 2026-08-11 — completed. Its durable facts now live in [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md), [`schema.prisma`](../../apps/api/prisma/schema.prisma), the [API contract](../api/api-contract.md), the [data model](../architecture/data-model.md), and [`backend/media.md`](../backend/media.md); this plan is retained as provenance.

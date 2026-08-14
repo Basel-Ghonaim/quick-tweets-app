@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for **how an agent joins this project and starts working** — the reading order, the judgment calls, and the habits that turn the constitution into behaviour. It owns the *on-ramp*, never the rules themselves: every rule referenced here is owned by the [Engineering Execution Standard](engineering-execution-standard.md), the [Engineering Principles](engineering-principles.md), or the [Documentation Strategy](../architecture/documentation-strategy.md), and is **linked, never restated**.
 > **Scope:** Any agent — or new contributor — picking up work in this repository. It covers orientation, decision authority in practice, and the mistakes newcomers actually make. It is not a summary of the project.
 > **Version:** 1.1
-> **Last Updated:** 2026-08-11
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## Why this document exists
