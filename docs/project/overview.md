@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the **product's scope and current implementation status**. It does not describe *how* the system is built (see the architecture and platform documents) or the API surface (see the [API contract](../api/api-contract.md)).
 > **Scope:** What quick-tweets is, and which capabilities exist today. Mechanisms, endpoints, and per-feature internals live in their owning documents and are linked, never restated.
 > **Version:** 1.0
-> **Last Updated:** 2026-06-28
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## What quick-tweets is

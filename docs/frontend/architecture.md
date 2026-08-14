@@ -5,7 +5,7 @@
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, and where features meet the platform.
 > **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the findings register and linked below** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure. Anything not described here is not yet stabilized, not architecturally rejected.
 > **Version:** 1.0
-> **Last Updated:** 2026-07-12
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all

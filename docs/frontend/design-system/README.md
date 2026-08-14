@@ -3,7 +3,7 @@
 > **Status:** Active.
 > **Authority:** The entry point for the Design System's documentation — its boundary, its ownership and stability model, its public surface, and where each kind of information lives. **It states no design rules of its own**; it names the document that owns each one.
 > **Version:** 1.0
-> **Last Updated:** 2026-08-10
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## What the Design System is

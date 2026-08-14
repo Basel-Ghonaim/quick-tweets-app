@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the [frontend error handling](error-handling.md) document), the **RTK Query cache/data layer** (the frontend state-and-data document, deferred), or the **server** side of the token model ([Backend Security](../backend/security.md)).
 > **Scope:** The shared transport mechanisms in `apps/web/src/shared/api/` and `apps/web/src/shared/rtk-query/`. Per-feature data access lives in the feature documents; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Version:** 1.0
-> **Last Updated:** 2026-06-30
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## Current transport architecture

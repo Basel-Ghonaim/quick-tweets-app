@@ -7,8 +7,8 @@ We are introducing RTK Query incrementally to avoid destabilizing the project.
 
 ## Folder Structure
 To prevent confusion between Axios interceptors and RTK Query configuration, they are strictly isolated:
-- `src/shared/api`: Legacy Axios configurations and interceptors.
-- `src/shared/rtk-query`: RTK Query configuration (`baseApi.ts` and `unifiedBaseQuery.ts`).
+- `apps/web/src/shared/api`: Legacy Axios configurations and interceptors.
+- `apps/web/src/shared/rtk-query`: RTK Query configuration (`baseApi.ts` and `unifiedBaseQuery.ts`).
 
 ## Error Normalization (The UI Contract)
 A core requirement of this architecture is that UI components must remain completely agnostic of the data-fetching layer. They must always receive an `AppError`.
@@ -17,7 +17,7 @@ To achieve this, `unifiedBaseQuery.ts` wraps `fetchBaseQuery`. It intercepts any
 
 ## Adding New Endpoints (Code Splitting)
 1. **DO NOT** modify `baseApi.ts` to add endpoints directly.
-2. In your feature module, create a dedicated API file (e.g., `src/modules/tweets/api.ts`).
+2. In your feature module, create a dedicated API file (e.g., `apps/web/src/modules/tweets/api.ts`).
 3. Inject the endpoints into the base API:
 
 ```typescript
@@ -35,7 +35,7 @@ export const { useGetTweetsQuery } = tweetsApi;
 ```
 
 ## Circular Dependency Prevention
-Never import `RootState` from `src/app/store/store.tsx` into any file inside `src/shared/rtk-query`. This creates a fatal circular dependency because the store imports `baseApi.ts`. 
+Never import `RootState` from `apps/web/src/app/store/store.tsx` into any file inside `apps/web/src/shared/rtk-query`. This creates a fatal circular dependency because the store imports `baseApi.ts`. 
 
 If you need to access state inside a base query (e.g., to retrieve the auth token), cast `getState()` inline safely:
 ```typescript

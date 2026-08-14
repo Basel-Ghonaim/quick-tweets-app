@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the project's **code-design principles** — the patterns and rules that define what good code looks like here. Binding on all contributors, human and AI.
 > **Scope:** Owns *principles* (the timeless "why" and "what good looks like"). It does **not** own *mechanisms* (the current "how"), which live in the relevant platform, security, and contract documents, nor *process* (Git, commits, reviews), which lives in the Engineering Execution Standard.
 > **Version:** 1.2
-> **Last Updated:** 2026-08-08
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## How to read this document

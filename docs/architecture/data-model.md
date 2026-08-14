@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the data model's **relationship, cascade, and indexing rationale** — the *why* behind the schema. The field-level truth (types, defaults, column maps) is owned by [`schema.prisma`](../../apps/api/prisma/schema.prisma) and referenced here, never restated.
 > **Scope:** Why the entities relate as they do, how deletes propagate, and which indexes exist and what they serve. It is not a field listing.
 > **Version:** 1.1
-> **Last Updated:** 2026-07-30
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## Overview

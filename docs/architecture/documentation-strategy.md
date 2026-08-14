@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.5
-> **Last Updated:** 2026-08-11
+> **Version:** 1.6
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 
@@ -259,7 +259,7 @@ Because most documents are thin and link-based, **most code changes require no d
 1. **Compliance is mandatory.** All documentation contributions — by humans or AI assistants — must conform to this strategy. Reviewers reject documentation that violates it.
 2. **The pull-request checklist enforces this strategy.** Before merge, a documentation change must confirm: it has a single authoritative home, it duplicates no other document, it links rather than copies, it documents only existing code, any triggered updates from §10 are included, and any current deviation from the intended architecture is recorded as a finding (§9) rather than written into the design documentation.
 3. **Changing this strategy.** This document is itself governed, and what governs it is §8's bar — not the fact that it is constitutional. A change that alters a **governance principle** — what a document class is for, who owns a fact, when an artifact is created — is an architectural decision and is recorded as an ADR. A change that **evolves a rule this document already owns** — extending a standard, sharpening a criterion, adding a required field — follows the standard documentation pull-request flow. **The question is whether the change alters the principle or applies it.**
-4. **Language and form.** Documentation is written in English, in clear and concise prose, as durable reference material — not as meeting notes, proposals, or revision logs.
+4. **Language and form.** Documentation is written in English, in clear and concise prose, as durable reference material — not as meeting notes, proposals, or revision logs. A document's header states its currency: **`Last Updated` changes with any change to the file, however small; `Version` changes when a decision is added or the document changes materially.**
 5. **Link integrity.** Cross-document links are part of the contract. A change that moves or renames a document must update the documents that link to it, and a verification pass confirms no broken links remain.
 6. **Single entry point.** `docs/README.md` is the canonical map of the documentation set. Every document is **reachable** and classified from it — directly, or through **one** designated index that is itself classified there. The principle is discoverability, not enumeration: a flat list that grows with the component count becomes the directory inventory §4 forbids ([ADR 0012](decisions/0012-foundation-contract-independent-of-consumer-adoption.md)).
 7. **Alignment with engineering principles.** This strategy applies the project's core engineering principles — single responsibility, one source of truth, and dependence on stable references over copies — to documentation. Documentation practice and engineering practice are held to the same standard.

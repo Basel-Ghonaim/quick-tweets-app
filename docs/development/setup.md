@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for **running the project locally** — prerequisites, installation, environment, database, and the run/build scripts. It owns *how to run it*, not *how it works*: the architecture is the [system overview](../architecture/system-overview.md)'s and the frontend/backend documents', and the HTTP surface is the [API contract](../api/api-contract.md)'s.
 > **Scope:** Developer environment and scripts for both halves of the monorepo. It documents the current configuration; it does not restate mechanisms owned elsewhere.
 > **Version:** 1.2
-> **Last Updated:** 2026-08-11
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## The monorepo

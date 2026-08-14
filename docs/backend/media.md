@@ -5,7 +5,7 @@
 > It does **not** own: the wire contract (endpoints, payloads, error shapes — the [API contract](../api/api-contract.md)'s), the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship/cascade/indexing rationale (the [data model](../architecture/data-model.md)'s), the shared HTTP-hardening and auth-guard mechanisms (the [Backend Security](security.md)'s), or the boundary **decision** itself — recorded in [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md), which this document now implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)).
 > **Scope:** The server-side Media platform module (`apps/api/src/modules/media/`) and its mechanisms. Feature-specific bindings (how tweets, comments, and the profile avatar attach media) belong to those features and link here.
 > **Version:** 1.0
-> **Last Updated:** 2026-07-28
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary

@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the system **topology** and the end-to-end **request lifecycle** across frontend, backend, and database. Per-subsystem mechanism detail and the wire contract are owned by their documents and linked here, never restated.
 > **Scope:** How the parts fit together and how a request flows through them. It does not specify endpoints (see the [API contract](../api/api-contract.md)) or per-subsystem internals (see the backend and frontend platform documents).
 > **Version:** 1.0
-> **Last Updated:** 2026-06-28
+> **Last Updated:** 2026-08-14
 > **Owner:** Basel Ghonaim
 
 ## Topology

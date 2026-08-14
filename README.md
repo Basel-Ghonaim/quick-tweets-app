@@ -3,7 +3,7 @@
 A Twitter/X-style social application, built as a **clean-architecture reference project** where engineering quality is a first-class deliverable. It is a monorepo:
 
 - **Frontend** (repository root) — React 19 + Redux Toolkit + React Router, built with Vite and TypeScript.
-- **Backend** (`server/`) — Express 5 + Prisma + PostgreSQL, with JWT authentication.
+- **Backend** (`apps/api/`) — Express 5 + Prisma + PostgreSQL, with JWT authentication.
 
 ## Getting started
 
