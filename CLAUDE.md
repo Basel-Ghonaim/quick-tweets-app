@@ -5,7 +5,7 @@
 
 ## Project mission
 
-**quick-tweets** is a Twitter/X-style social app built as a monorepo: a React 19 + Redux Toolkit frontend (`src/`) and an Express 5 + Prisma + PostgreSQL backend (`server/`). It is a clean-architecture reference project — SOLID, strict typing, single-responsibility modules — where engineering quality is considered a first-class deliverable alongside product functionality.
+**quick-tweets** is a Twitter/X-style social app built as a monorepo: a React 19 + Redux Toolkit frontend (`apps/web/`) and an Express 5 + Prisma + PostgreSQL backend (`apps/api/`). It is a clean-architecture reference project — SOLID, strict typing, single-responsibility modules — where engineering quality is considered a first-class deliverable alongside product functionality.
 
 ## AI mission
 
