@@ -102,14 +102,6 @@ export const DropzoneInput = ({
           className={zoneClasses}
           onClick={dropzone.handleZoneClick}
           {...dragProps}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              dropzone.handleZoneClick();
-            }
-          }}
         >
           {hiddenInput}
           <DropzoneEmpty mode="image" isDragOver={dropzone.isDragOver} />
@@ -147,14 +139,6 @@ export const DropzoneInput = ({
         className={zoneClasses}
         onClick={dropzone.handleZoneClick}
         {...dragProps}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            dropzone.handleZoneClick();
-          }
-        }}
       >
         {hiddenInput}
         <DropzoneEmpty mode="file" isDragOver={dropzone.isDragOver} />
