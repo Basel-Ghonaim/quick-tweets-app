@@ -1,10 +1,10 @@
 # Finding 0010: The avatar placeholder's text fails AA because a muting opacity is applied to an already-muted colour
 
-> **Status:** Open
+> **Status:** Resolved — 2026-08-15. `.avatarText` binds `--text-secondary` and composites no opacity, measuring 6.87:1 (light) and 7.09:1 (dark) on the surface it renders on. See [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477).
 > **Date:** 2026-08-09
 > **Affected areas:** `src/shared/design-system/components/fields/FileInput/FileInput.module.css` (`.avatarText`), `src/shared/design-system/components/fields/FileInput/FileInput.stories.tsx`
 > **Reported by:** Basel Ghonaim (surfaced by promoting the accessibility gate during WI-6)
-> **Owned by:** [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477) — the design decision and the gate promotion
+> **Owned by:** [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477) — the design decision
 
 ## Observation
 
@@ -33,7 +33,9 @@ WI-6 is a migration: it binds values to the vocabulary and does not change them.
 
 Choosing among those under migration momentum is what the effort's stop rule exists to prevent, and it is the same call [CA-1](../../plans/component-architecture-unification.md) made when the Pilot Field's gate failed on a legacy colour.
 
-**Consequence:** tracked as [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477), which owns the decision and the gate promotion. FileInput's accessibility gate stays at `todo` while every other migrated component's is `error`. It is the only component left reporting rather than failing, and it stays that way until this is decided.
+**Consequence:** tracked as [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477), which owns the decision. The decision taken there is that a demotion is carried by the colour and never by compositing an opacity over a token, because the composite leaves the contrast guarantee.
+
+**Gate promotion is not this finding's to complete.** Promoting FileInput's accessibility gate was expected to follow this fix, and running it proved otherwise: two unrelated defect classes also fail it — the native input nested inside a synthetic button in both interactive variants, and the root's disabled opacity muting token-bound text below AA. Neither is a colour binding, and neither is repaired here. FileInput remains the only component reporting rather than failing until they are resolved.
 
 ## Related
 
