@@ -123,7 +123,7 @@
 /* ─── Dropzone Variant ───────────────────────────────────────────────────── */
 
 .dropzoneWrapper {
-  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
+  composes: focusRingWithin from "../../../foundations/composition/focusRing.module.css";
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -142,10 +142,6 @@
 
 .dropzoneWrapper:hover:not(.isDisabled *) {
   background-color: var(--file-input-alpha);
-}
-
-.dropzoneWrapper:focus-visible {
-  border-color: var(--file-input-color);
 }
 
 /* Active drag-over state — file being dragged over the zone */
@@ -377,7 +373,7 @@
 /* ─── Avatar Variant ─────────────────────────────────────────────────────── */
 
 .avatarWrapper {
-  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
+  composes: focusRingWithin from "../../../foundations/composition/focusRing.module.css";
   position: relative;
   display: flex;
   flex-direction: column;

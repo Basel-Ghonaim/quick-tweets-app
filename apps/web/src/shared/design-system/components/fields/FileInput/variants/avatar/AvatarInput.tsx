@@ -141,14 +141,6 @@ export const AvatarInput = ({
       style={dynamicStyles}
       onClick={avatar.handleClick}
       {...dragProps}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          avatar.handleClick();
-        }
-      }}
     >
       {hiddenInput}
       <AvatarEmpty fill={avatarFill} />
