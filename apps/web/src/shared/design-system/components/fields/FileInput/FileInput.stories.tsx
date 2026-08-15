@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, fireEvent, userEvent, within } from "storybook/test";
 import { FileInput } from "./FileInput";
 import type { FileInputProps } from "./FileInput.types";
 
@@ -35,6 +36,46 @@ type Story = StoryObj<typeof meta>;
 type DropzoneStory = StoryObj<Extract<FileInputProps, { variant: "dropzone" }>>;
 type AvatarStory = StoryObj<Extract<FileInputProps, { variant: "avatar" }>>;
 
+// The surface a variant renders is picking-related markup around one native
+// control, and both variants make the same three promises about it. Asserted
+// against the element the control sits in, found through the control itself,
+// so the assertions do not depend on a generated class name.
+const surfaceHoldingOneControl =
+  (label: string) =>
+  async ({
+    canvasElement,
+    step,
+  }: {
+    canvasElement: HTMLElement;
+    step: (name: string, run: () => Promise<void>) => void | Promise<void>;
+  }) => {
+    const input = within(canvasElement).getByLabelText(label);
+    const surface = input.parentElement as HTMLElement;
+
+    await step("offers one tab stop, and it is the control", async () => {
+      await userEvent.tab();
+      await expect(input).toHaveFocus();
+      await userEvent.tab();
+      await expect(surface.contains(document.activeElement)).toBe(false);
+    });
+
+    await step("indicates the focus its control receives", async () => {
+      await expect(getComputedStyle(surface).outlineStyle).toBe("none");
+      await userEvent.tab();
+      await expect(input).toHaveFocus();
+      await expect(getComputedStyle(surface).outlineStyle).toBe("solid");
+    });
+
+    await step("still answers a drag", async () => {
+      const resting = surface.className;
+      fireEvent.dragEnter(surface);
+      fireEvent.dragOver(surface);
+      await expect(surface.className).not.toBe(resting);
+      fireEvent.dragLeave(surface);
+      await expect(surface.className).toBe(resting);
+    });
+  };
+
 export const Standard: Story = {
   args: {
     name: "file-input",
@@ -51,6 +92,7 @@ export const Dropzone: DropzoneStory = {
     variant: "dropzone",
     color: "primary",
   },
+  play: surfaceHoldingOneControl("Upload Files"),
 };
 
 export const Avatar: AvatarStory = {
@@ -60,6 +102,7 @@ export const Avatar: AvatarStory = {
     variant: "avatar",
     color: "primary",
   },
+  play: surfaceHoldingOneControl("Profile Image"),
 };
 
 // One per variant: the role reaches all three through the shell, and two of them
