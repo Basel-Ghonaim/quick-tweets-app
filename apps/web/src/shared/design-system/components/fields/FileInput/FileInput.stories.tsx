@@ -5,9 +5,8 @@ import type { FileInputProps } from "./FileInput.types";
 const meta = {
   title: "Design System/Fields/FileInput",
   parameters: {
-    // Not promoted: the avatar placeholder composites --text-tertiary through
-    // opacity 0.7 and lands at 2.59:1. Predates the migration, and every remedy
-    // is a design decision — recorded as Finding 0010.
+    // Not promoted: both interactive variants nest the native input inside a
+    // synthetic button, and the root's disabled opacity mutes text below AA.
     a11y: { test: "todo" },
   },
   component: FileInput,
