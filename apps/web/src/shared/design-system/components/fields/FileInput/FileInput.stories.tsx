@@ -5,8 +5,7 @@ import type { FileInputProps } from "./FileInput.types";
 const meta = {
   title: "Design System/Fields/FileInput",
   parameters: {
-    // Not promoted: both interactive variants nest the native input inside a
-    // synthetic button, and the root's disabled opacity mutes text below AA.
+    // Not promoted: the disabled state's opacity mutes text below AA.
     a11y: { test: "todo" },
   },
   component: FileInput,
