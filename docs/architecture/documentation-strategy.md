@@ -1,10 +1,11 @@
 # Documentation Strategy
 
 > **Status:** Active standard.
+> **Class:** Contract (§3).
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.6
-> **Last Updated:** 2026-08-14
+> **Version:** 1.7
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 
@@ -40,7 +41,13 @@ These principles are binding. They mirror the project's engineering principles (
 
 ## 3. Documentation Ownership Model
 
-To guarantee "one owner per fact," every document is one of two kinds, and the boundary between them is strict.
+Two independent questions decide how a document is written.
+
+**What does it own?** — the *subject* axis. For documents that own a mechanism or a capability the answer is platform or feature, below; the remaining categories (`project/`, `development/`, `decisions/`, `findings/`, `plans/`) own what §5 assigns them. This axis is what guarantees one owner per fact.
+
+**What does it claim?** — its *class*. Every document answers this one. A contract asserting a rule and a description asserting that something exists are different acts, and treating them alike is how a document stops being trustworthy. This is the axis Principle 5 governs.
+
+The two are orthogonal: the Design System's foundation is a platform document by subject and a Contract by class.
 
 ### Platform documents
 Located in `architecture/`, `api/`, `backend/`, and `frontend/`. They own **shared mechanisms that no single feature owns** — the request lifecycle, the response/error model, authentication mechanisms, the schema-driven form engine, the design system, the data-model rationale. A platform document is the authoritative home for its mechanism.
@@ -55,6 +62,43 @@ The dividing question is always: **"Is this a shared mechanism, or a feature-spe
 - A feature-specific application (e.g., "the tweets feature uses cache tag X", "authentication stores the access token in Redux memory") is owned by that feature document, and links to the platform document for the mechanism's details.
 
 This is a single-axis organization with a shared platform layer. There is no by-layer **and** by-feature duplication, because a fact is owned by its mechanism *or* by its feature — never both.
+
+### Document classes — what a document claims
+
+Five classes. Four of them name documents the project already had and had never given a vocabulary; **Commitment** is the one this model adds.
+
+| Class | What it asserts | Bounded by |
+|---|---|---|
+| **Description** | this exists, and behaves as stated | written only once the code exists (Principle 5) |
+| **Contract** | this is the rule, for whoever adopts it | [ADR 0012](decisions/0012-foundation-contract-independent-of-consumer-adoption.md) — states rules, never an account of a mechanism |
+| **Commitment** | this is part of the product — decided, built or not | the bullets below |
+| **Record** | this happened, or was decided | §8 (ADRs) and §9 (findings) |
+| **Plan** | this is how committed work is sequenced | [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md) |
+
+Note that *Contract* is a class, not a title: the **API contract** is named for its subject and is a Description — it states what the running system does.
+
+**Three rules make the class model load-bearing rather than decorative.**
+
+**A declared class must be true.** A document is the class its content asserts, not the class its header names. Relabelling does not change what prose claims: text that describes how something works is a Description whatever the header says, and declaring another class over it is a defect rather than a reclassification.
+
+**No class licenses a false claim of existence.** Principle 5's lead sentence binds every class. A Contract states rules and never doubles as an account of a mechanism that does not exist; a Commitment names and never specifies. The classes differ in what they may say — not in whether they may mislead.
+
+**Description is the default reading, so it needs no declaration; every other class declares itself in the document's header**, because a reader who assumes description and meets a commitment has been misled. Where one document carries two classes, each section says which it is. A document that predates this rule declares its class the next time it is materially changed — the rule is not retroactive cleanup.
+
+#### What a Commitment may and may not say
+
+A Commitment answers a real need: an agent deciding today needs the product's known shape, not only its built surface. It is bounded so that it can never become a design, a specification, or a second tracker.
+
+- **It states what the product is committed to, and why that is part of the product.** Nothing else.
+- **It makes no claim about what is built.** Existence is the Description's to state, and an item may be both committed and already built. A Commitment that starts reporting build state has become a second status table.
+- **It never states *how*.** No API, no props, no tokens, no values, no mechanism, no structure. A Commitment that describes implementation has become a Description, and is judged as one.
+- **Naming is not designing.** Committing to a component is admissible; specifying one is not.
+- **It does not replace the issue tracker.** No progress, no status, no sequencing, no dates.
+- **It is evidence, never authority.** A commitment settles that a concept is *named*, which is one of the ways a need is grounded ([ADR 0010](decisions/0010-design-system-platform-reestablishment.md) Decision 2). It never dictates how the thing is designed, nor which layer owns it.
+- **A commitment is made by a decision, not by being written down.** Recording one is reporting a decision already taken; an author cannot create the grounding they then rely on.
+- **Removal is free.** A commitment the product drops is deleted, not superseded. It asserted nothing about the system.
+
+**The product's committed scope has one owner** — the [project overview](../project/overview.md) — for the same reason any fact does. A second document holding committed scope is a one-owner violation, not a second Commitment.
 
 ### When a platform document is created — the Stable-Core rule
 A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This **complements Principles 4 and 5 by introducing a whole-document eligibility criterion** — the document-level counterpart to §4's section-level rule that *"sections appear only when the code exists."*
