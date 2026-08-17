@@ -6,7 +6,7 @@
 > **Revised:** 2026-08-05 — Decision 2's test for *speculative* replaced: a capability is disqualified by being **ungrounded**, not by being **unused**. Decision itself unchanged.
 > **Revised:** 2026-08-08 — Decision 2 gains one clause: consumer count is evidence, not a gate, and what is admitted is a shared concept rather than a shared value. Decision itself unchanged.
 > **Revised:** 2026-08-09 — Decision 2 adds that coincidence is not identity; Decision 3 states the binding rule's *domain* (the presentation language) rather than an absolute prohibition on literals. Decisions themselves unchanged.
-> **Revised:** 2026-08-17 — Decision 2's *named commitment* criterion points at the product's committed scope and requires the commitment to be checkable; it previously referred to a roadmap no active document held. Decision itself unchanged.
+> **Revised:** 2026-08-17 — Decision 2's *named commitment* criterion points at the product's committed scope and requires the commitment to be checkable; it previously referred to a roadmap no active document held. The **component set** deferral is redirected from the execution plan — now `Historical` — to the owners that received it. Decisions themselves unchanged.
 
 ## Context
 
@@ -67,7 +67,7 @@ These are **intentionally deferred** and are **execution/implementation concerns
 
 - **The execution/rollout sequence.** The architecture is **token-type agnostic** and set **once**; the **order** in which token types and components are rebuilt is an **Execution Plan** decision, **not** an architectural one. The plan validates the architecture **incrementally, beginning with the highest-risk foundation**; the specific order belongs to the plan.
 - **Concrete token names, ramps, scales, and values** — color, spacing, typography, elevation, motion.
-- **Component contracts and the component set** — the API/vocabulary of each primitive and which components exist.
+- **Component contracts** — the API and vocabulary of each primitive. *(The **component set** was deferred here too. It is no longer: which components the product is committed to is the [project overview](../../project/overview.md)'s, and whether a named one belongs to this layer is the [authoring contract](../../frontend/design-system/components.md)'s admission test — see [ADR 0014](0014-document-classes-and-committed-product-scope.md).)*
 - **The theming mechanism and the built theme set** — the transport (for example, CSS custom properties applied at a root boundary) and which themes are authored (and when).
 - **The localization implementation** — per-script font mappings, per-icon mirror flags, and the i18n integration.
 - **The responsive implementation** — breakpoint values, fluid formulas, and per-component adaptive behavior.

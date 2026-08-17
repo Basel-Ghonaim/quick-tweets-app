@@ -3,8 +3,8 @@
 > **Status:** Accepted
 > **Date:** 2026-07-14
 > **Deciders:** Basel Ghonaim
-> **Revised:** 2026-08-17 — Decision 4 no longer glosses Principles 5 and 6 as requiring permanent reference documentation to describe only what exists; that wording predates [ADR 0014](0014-document-classes-and-committed-product-scope.md), under which a Contract and a Commitment are permanent reference documentation and assert something other than existence. The decision — plans are a distinct, lifecycle-governed class — is unchanged.
 > **Revised:** 2026-08-05 — the `Draft` stage gains a location: a plan is drafted outside the tracked tree and enters `docs/plans/` on approval. Lifecycle and home otherwise unchanged.
+> **Revised:** 2026-08-17 — Decision 4 and its Consequences no longer gloss Principles 5 and 6 as requiring permanent reference documentation to describe only what exists; that wording predates [ADR 0014](0014-document-classes-and-committed-product-scope.md), under which a Contract and a Commitment are permanent reference documentation and assert something other than existence. The decision — plans are a distinct, lifecycle-governed class — is unchanged.
 
 ## Context
 
@@ -54,6 +54,6 @@ Introduce a formal home and lifecycle for execution plans, without a new governa
 
 - A new top-level category `docs/plans/` exists, governed lightly: a home README convention, a Documentation Strategy category entry with the artifact boundary, and this ADR. No new governance subsystem.
 - The Documentation Migration Plan is the category's first inhabitant; **relocating it into `docs/plans/` and marking it `Historical` is a separate follow-up Work Item** (it repoints links in ADR 0001, the Strategy, and the README — link-integrity maintenance per Strategy §11.5, not a decision change). This ADR does not move it.
-- Documentation Principles 5 and 6 are **clarified in scope** (permanent reference documentation), not weakened.
+- Documentation Principles 5 and 6 are **clarified**, not weakened: a plan is an artifact class with its own rules, which is the shape [ADR 0014](0014-document-classes-and-committed-product-scope.md) later generalised to every class.
 - The Execution Standard and the Documentation Strategy retain governance ownership; this ADR adds only the pointers that wire the category in.
 - Status moves from `Proposed` to `Accepted` **on merge**. Its lifecycle thereafter — revisable in place while the project is a `Foundation`, immutable once `Stable`, and superseded outright when the decision itself changes — is the [Documentation Strategy](../documentation-strategy.md)'s, not restated here.
