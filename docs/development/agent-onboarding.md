@@ -1,6 +1,7 @@
 # Agent Onboarding
 
 > **Status:** Active.
+> **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how an agent joins this project and starts working** — the reading order, the judgment calls, and the habits that turn the constitution into behaviour. It owns the *on-ramp*, never the rules themselves: every rule referenced here is owned by the [Engineering Execution Standard](engineering-execution-standard.md), the [Engineering Principles](engineering-principles.md), or the [Documentation Strategy](../architecture/documentation-strategy.md), and is **linked, never restated**.
 > **Scope:** Any agent — or new contributor — picking up work in this repository. It covers orientation, decision authority in practice, and the mistakes newcomers actually make. It is not a summary of the project.
 > **Version:** 1.2
@@ -20,14 +21,20 @@ This document is the on-ramp. **It points at rules; it never restates them.** If
 3. **[Documentation Strategy](../architecture/documentation-strategy.md)** — one owner per fact, and what distinguishes an ADR from a Finding from an Issue.
 4. **[Engineering Principles](engineering-principles.md)** — layering, platform-vs-feature, and **§12 (comments)**.
 5. **[docs/README.md](../README.md)** — the map. For **any** topic, find its owning document here before writing anything.
+6. **[The product overview](../project/overview.md)** — what exists, and what the product is committed to. You need both: work is judged against the product's shape, not only its built surface.
+7. **Every contract that governs your effort's domain — before you apply anything above to it.** Its **ADR**, its **Active Execution Plan**, and the platform contracts for the area you are touching. These are additive, not alternatives: Design System work reads [foundation.md](../frontend/design-system/foundation.md) and [components.md](../frontend/design-system/components.md) **and** [frontend/architecture.md](../frontend/architecture.md), because the frontend's rules still bind it.
 
-Then, for the effort you are assigned: its **ADR**, then its **Execution Plan**, then the tier convention document ([backend/conventions.md](../backend/conventions.md) or [frontend/architecture.md](../frontend/architecture.md)).
+**Step 7 is the one that gets skipped.** The documents above it hold across the whole repository; a platform contract is more specific about its own domain. Reading the general rules and stopping is how a rule with a narrow subject gets applied to a domain that has one of its own — which has already happened here, to more than one agent.
 
 ## 2. What is authoritative
 
-The five documents above, plus the **ADR** that owns your effort's boundary and the **Active Execution Plan** that owns its sequencing. For wire shapes, the [API contract](../api/api-contract.md); for field-level truth, `schema.prisma`.
+The documents above, plus the **ADR** that owns your effort's boundary and the **Active Execution Plan** that owns its sequencing. For wire shapes, the [API contract](../api/api-contract.md); for field-level truth, `schema.prisma`.
 
 Above all of them sits one rule from [CLAUDE.md](../../CLAUDE.md): **code is authoritative for what the system does; documentation is authoritative for intended design and the why.** When they disagree, the code wins — fix the document if it is in scope, otherwise record the divergence.
+
+**Where two documents both apply, the more specific one governs its own domain** — a platform contract over a general operating principle, and the principle where no contract speaks. Two exceptions, both stated by their owners: the [Documentation Strategy](../architecture/documentation-strategy.md) prevails on any question of documentation governance, whatever the domain; and [CLAUDE.md](../../CLAUDE.md) owns the precedence between an instruction, a document and a convention. A general rule does not become a domain rule by being read first. If following one would contradict the other, you have found a mis-scoped rule or a real conflict — **record it; do not pick a side silently.**
+
+**And the rules are revisable.** A document here is the current best statement of a decision, not a permanent fact; when one is found wrong, mis-scoped, or outgrown, it is revised or superseded through its lifecycle — ADRs by [§8](../architecture/documentation-strategy.md), every other document by [§10 and §11](../architecture/documentation-strategy.md). What is never acceptable is silent deviation, or knowingly building the wrong thing to keep a document intact.
 
 ## 3. How to treat an ADR and a Plan
 
