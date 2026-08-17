@@ -32,7 +32,7 @@ The documents above, plus the **ADR** that owns your effort's boundary and the *
 
 Above all of them sits one rule from [CLAUDE.md](../../CLAUDE.md): **code is authoritative for what the system does; documentation is authoritative for intended design and the why.** When they disagree, the code wins — fix the document if it is in scope, otherwise record the divergence.
 
-**Where two documents both apply, the more specific one governs its own domain** — a platform contract over a general operating principle, and the principle where no contract speaks. Two exceptions, both stated by their owners: the [Documentation Strategy](../architecture/documentation-strategy.md) prevails on any question of documentation governance, whatever the domain; and [CLAUDE.md](../../CLAUDE.md) owns the precedence between an instruction, a document and a convention. A general rule does not become a domain rule by being read first. If following one would contradict the other, you have found a mis-scoped rule or a real conflict — **record it; do not pick a side silently.**
+**Which document wins when two both apply** is owned by [CLAUDE.md’s decision precedence](../../CLAUDE.md), and it is the rule step 7 exists to serve: the more specific document governs its own domain, so a general rule does not become a domain rule by being read first.
 
 **And the rules are revisable.** A document here is the current best statement of a decision, not a permanent fact; when one is found wrong, mis-scoped, or outgrown, it is revised or superseded through its lifecycle — ADRs by [§8](../architecture/documentation-strategy.md), every other document by [§10 and §11](../architecture/documentation-strategy.md). What is never acceptable is silent deviation, or knowingly building the wrong thing to keep a document intact.
 
@@ -119,7 +119,7 @@ The ones worth having had from day one:
 3. **State what you did *not* do** as clearly as what you did.
 4. **Record the finding; don't fix it.**
 5. **Decide the boundary now; build the *generalization machinery* when a second instance earns it** ([Engineering Principles §3](engineering-principles.md)) — never read as a rule about whether a capability, a language concept or a committed component should exist. Those are grounded or not.
-6. **Name what is, not what might be.**
+6. **Name what is, and what the product has committed to — never what merely might be.**
 7. **Derive state; never store what you can compute** — every stored duplicate eventually drifts.
 8. **Make invariants mechanically checkable**, or expect them to erode.
 9. **Point at the owner; never copy it.**

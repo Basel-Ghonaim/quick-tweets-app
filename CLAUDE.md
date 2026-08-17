@@ -25,7 +25,7 @@ Documentation captures the **intended** architecture and the **why**; the **code
 - **One owner per fact.** In documentation, summarize-and-link; never duplicate authoritative content.
 - **Atomic commits.** Each commit is one logically complete change, in Conventional Commits format.
 - **Decisions are gated.** Architectural decisions and scope changes require human approval — *propose, don't decide.* Recording a **finding** is always allowed. Merging, closing issues, and deleting branches are **human-authorized**; the AI may *draft* changes to authoritative documents, but a change becomes canonical only on a human-authorized merge.
-- **Claim only what is true.** Never present something as existing when it does not. What a document *may* say beyond that is set by its **class** — description, contract, commitment, record, plan — which the [Documentation Strategy](docs/architecture/documentation-strategy.md) owns. Committed product scope has a home; inventing implementation does not.
+- **Claim only what is true.** Never present something as existing when it does not. What a document *may* say beyond that is set by its **class**, which the [Documentation Strategy](docs/architecture/documentation-strategy.md) owns. Committed product scope has a home; inventing implementation does not.
 - **Right-size the process.** Match the process weight to the task: lightweight work (conversation, analysis, planning) skips the full lifecycle; substantial implementation and refactoring follow the Engineering Execution Standard, which defines the task classes and their rules.
 - **When unsure whether something is architectural, escalate.**
 
@@ -49,7 +49,7 @@ This project has a **constitutional documentation architecture**: a small set of
 2. the authoritative documents (below) —
 3. project conventions and sensible defaults.
 
-Higher overrides lower. Any override must be **stated, never silent.** Silent drift from the standards is not allowed.
+Higher overrides lower. **Between two authoritative documents that both apply, the more specific one governs its own domain** — a platform contract over a general operating principle, and the principle where no contract speaks. A general rule does not become a domain rule by being read first. Two things override that: the Documentation Strategy prevails on any question of documentation governance, and this list settles the order above it. If following one document would contradict another, that is a mis-scoped rule or a real conflict — record it; never pick a side silently. Any override must be **stated, never silent.** Silent drift from the standards is not allowed.
 
 ## Authoritative Documents
 
