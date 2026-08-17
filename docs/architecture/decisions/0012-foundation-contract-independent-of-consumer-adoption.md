@@ -4,6 +4,7 @@
 > **Date:** 2026-08-10
 > **Deciders:** Basel Ghonaim
 > **Amends:** [Documentation Strategy](../documentation-strategy.md) §4 and §11.6
+> **Revised:** 2026-08-17 — Decision 5 is narrowed to the case it was written for: it governs where an ADR owns a rule, and states that a rule no ADR owns is owned, with its reason, by the document stating it. Decision itself unchanged.
 
 ## Context
 
@@ -29,7 +30,9 @@ The underlying error is a category one. **A description of current state and a c
 
 4. **One fact, one canonical owner, and executable sources outrank prose.** TypeScript owns props, types and variants; Storybook owns rendered visual and interactive behaviour; the checks own mechanical enforcement; ADRs own *why*; documentation owns the architectural contract and the authoring conventions. **Documentation links to an executable owner and never mirrors it** — a mirror has no enforcement and drifts silently, which is how the check list went stale.
 
-5. **The ADR boundary.** An ADR holds the decision, its rationale, the alternatives and the limits. The Foundation states the **operative rule** in concise form and cites the ADR. It must not reproduce the reasoning. This matters while ADRs remain revisable in place: several hold operative rules, and a paraphrase in two places is two places to drift.
+5. **The ADR boundary — where an ADR owns the decision.** Where a rule was decided by an ADR, that ADR holds the decision, its rationale, the alternatives and the limits; the document stating the rule gives it in concise operative form, cites the ADR, and must not reproduce the reasoning. This matters while ADRs remain revisable in place: several hold operative rules, and a paraphrase in two places is two places to drift.
+
+   **Where no ADR owns a rule, the document that states it owns its reason too, and no ADR is created for it.** That is the ADR threshold applied unchanged ([ADR 0002](0002-refined-adr-threshold.md)): a decision's natural authoritative owner owns its rationale. Read without this clause, the paragraph above mandates an ADR behind every rule in the Design System's documentation — the opposite of the threshold, and an ADR per token family.
 
 6. **Usage documentation lives with its owner.** Guidance for using one component belongs beside that component; guidance for how a feature or page composes the system belongs beside the module that owns it. Such a document is **earned by need**, never created by default: if types, Storybook, source comments and the shared conventions are sufficient, no document is warranted.
 

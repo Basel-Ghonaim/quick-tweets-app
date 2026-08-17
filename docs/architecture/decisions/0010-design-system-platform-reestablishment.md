@@ -6,6 +6,7 @@
 > **Revised:** 2026-08-05 — Decision 2's test for *speculative* replaced: a capability is disqualified by being **ungrounded**, not by being **unused**. Decision itself unchanged.
 > **Revised:** 2026-08-08 — Decision 2 gains one clause: consumer count is evidence, not a gate, and what is admitted is a shared concept rather than a shared value. Decision itself unchanged.
 > **Revised:** 2026-08-09 — Decision 2 adds that coincidence is not identity; Decision 3 states the binding rule's *domain* (the presentation language) rather than an absolute prohibition on literals. Decisions themselves unchanged.
+> **Revised:** 2026-08-17 — Decision 2's *named commitment* criterion points at the product's committed scope and requires the commitment to be checkable; it previously referred to a roadmap no active document held. Decision itself unchanged.
 
 ## Context
 
@@ -26,7 +27,7 @@ Re-establish the Design System as a **platform that owns the product's presentat
 2. **Foundation precedes adoption — and a missing consumer is not what makes something speculative.** The Design System is designed against the **product it will serve**, not against the surfaces that happen to exist today. A current consumer is **evidence that a capability is needed**; its absence is not evidence that the capability is not part of the language. **Speculative** means *ungrounded*, and a capability is grounded when **any one** of the following holds:
 
    - **(i) Platform basis** — the concept already exists in the element or medium being wrapped. `disabled`, `readOnly`, `required`, `checked` are HTML: they have defined semantics and accessibility contracts, so nothing is being invented.
-   - **(ii) Named commitment** — the concept is named in a decision or roadmap already taken.
+   - **(ii) Named commitment** — the concept is named in a decision already taken, or in the product's [committed scope](../../project/overview.md). The commitment must be **checkable**: a criterion whose evidence cannot be looked up is not a criterion.
    - **(iii) Set completion** — the concept is the missing member of an axis already opened. Given `isInvalid` and `isLoading`, `disabled` is not new vocabulary; it is a hole in a set already declared.
 
    A capability with **no platform basis, no named commitment, and completing no open set** is speculative and stays **reserved, not built**.
