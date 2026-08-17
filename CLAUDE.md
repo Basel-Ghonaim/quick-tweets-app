@@ -25,7 +25,7 @@ Documentation captures the **intended** architecture and the **why**; the **code
 - **One owner per fact.** In documentation, summarize-and-link; never duplicate authoritative content.
 - **Atomic commits.** Each commit is one logically complete change, in Conventional Commits format.
 - **Decisions are gated.** Architectural decisions and scope changes require human approval — *propose, don't decide.* Recording a **finding** is always allowed. Merging, closing issues, and deleting branches are **human-authorized**; the AI may *draft* changes to authoritative documents, but a change becomes canonical only on a human-authorized merge.
-- **Don't invent the future.** Document only what exists; speculative or planned work belongs in the issue tracker, not the docs.
+- **Claim only what is true.** Never present something as existing when it does not. What a document *may* say beyond that is set by its **class** — description, contract, commitment, record, plan — which the [Documentation Strategy](docs/architecture/documentation-strategy.md) owns. Committed product scope has a home; inventing implementation does not.
 - **Right-size the process.** Match the process weight to the task: lightweight work (conversation, analysis, planning) skips the full lifecycle; substantial implementation and refactoring follow the Engineering Execution Standard, which defines the task classes and their rules.
 - **When unsure whether something is architectural, escalate.**
 

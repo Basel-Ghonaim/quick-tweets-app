@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** The authoritative source for the project's **code-design principles** — the patterns and rules that define what good code looks like here. Binding on all contributors, human and AI.
 > **Scope:** Owns *principles* (the timeless "why" and "what good looks like"). It does **not** own *mechanisms* (the current "how"), which live in the relevant platform, security, and contract documents, nor *process* (Git, commits, reviews), which lives in the Engineering Execution Standard.
-> **Version:** 1.2
-> **Last Updated:** 2026-08-14
+> **Version:** 1.3
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 ## How to read this document
@@ -114,7 +114,7 @@ Comments preserve knowledge the code itself cannot express. Prefer clear naming,
 - **No development provenance.** Source comments — **and test descriptions/docstrings** — must not record where a change came from: no Issue/PR numbers, branch names, work-item labels (`WI-C`), development milestones (`M9`), or execution-plan steps. That history belongs in Git commits, PRs, Issues, and Execution Plans, which are its **correct home** — a commit message *should* cite the work item that a source comment must not.
 - **Durable pointers are permitted — and differ from provenance.** A comment may point to where a lasting constraint or decision lives: an ADR, a recorded architecture **Finding**, or the owning document (`see ADR 0005`, `Finding 0002`). The test is *purpose*: a stable pointer to a durable artifact is fine; "this came from WI-C / PR #392" is not. Prefer pointing to durable documentation over copying it into the source.
 - **Domain identifiers are not milestones.** A label that is part of the model's own vocabulary — e.g. a reclamation oracle's fixtures `O1`, `M1`, `M3` — is legitimate; the prohibition is on *development-milestone* references, not on identifiers that merely resemble one.
-- **No speculation or roadmaps.** Do not narrate planned or future work in source comments (`Future expansion:`, "later we will…", "TODO when M9 lands"). Document only what exists; planned work belongs in the issue tracker.
+- **No speculation or roadmaps in source.** Do not narrate planned or future work in comments (`Future expansion:`, "later we will…", "TODO when M9 lands"). A comment describes the code as it is. Where planned work legitimately belongs is the [Documentation Strategy](../architecture/documentation-strategy.md)'s to say, not this document's.
 - **File headers are optional and short.** One or two lines when a file's responsibility or boundary is not obvious from its name and structure — never a header that merely restates the filename.
 - **The time test.** If a developer two years from now, with no knowledge of the task that produced it, would not find the comment useful and correct, it does not belong in the source.
 
