@@ -7,7 +7,7 @@ This is the **map** of the project's documentation — every document, what it o
 ## The map
 
 ### `project/` — what the product is
-- [overview.md](project/overview.md) — product scope and current implementation status.
+- [overview.md](project/overview.md) — product scope: what exists today (**Description**), and what the product is committed to — built or not (**Commitment**).
 - [glossary.md](project/glossary.md) — the canonical project vocabulary.
 
 ### `architecture/` — how the system fits together, and how the docs are governed
