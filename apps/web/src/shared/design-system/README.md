@@ -12,7 +12,10 @@ because one would go stale the first time something moved.
 |---|---|
 | What does this token mean? Which tier do I bind, and when? | [Foundation contract](../../../../../docs/frontend/design-system/foundation.md) |
 | When does a value stay local, and when does it become shared? | [Foundation contract](../../../../../docs/frontend/design-system/foundation.md) |
-| Why does this rule exist? What was considered and rejected? | the [ADR](../../../../../docs/architecture/decisions/) the rule cites |
+| Why does this rule exist? What was considered and rejected? | the [ADR](../../../../../docs/architecture/decisions/) the rule cites, where one decided it; otherwise the document stating the rule |
+| Does this concept belong in the vocabulary? May I build it with nothing consuming it? | [Foundation contract](../../../../../docs/frontend/design-system/foundation.md) |
+| Does this component belong to this layer, or to a feature? | [Component-authoring contract](../../../../../docs/frontend/design-system/components.md) |
+| Which components has the product committed to? | [Project overview](../../../../../docs/project/overview.md) |
 | How do I build a component in this layer? | [Component-authoring contract](../../../../../docs/frontend/design-system/components.md) |
 | What does the Design System own, and what does it refuse? | [Design System README](../../../../../docs/frontend/design-system/README.md) |
 | How do I use a particular component? | that component's own README, where one is earned |

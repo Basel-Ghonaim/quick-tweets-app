@@ -1,11 +1,12 @@
 # Frontend Architecture
 
 > **Status:** Active.
+> **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)) — the outer architecture it states is a rule, not a report of the current tree.
 > **Authority:** The authoritative source for the frontend's **outer architecture** — the feature-sliced layout (`app/` · `modules/` · `shared/`), the dependency boundaries between those zones, the module contract, the composition root, and the thin platform utilities no other document owns. It owns the **structure between subsystems**, not the subsystems themselves: each platform subsystem's internals are owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, and where features meet the platform.
-> **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the findings register and linked below** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure. Anything not described here is not yet stabilized, not architecturally rejected.
-> **Version:** 1.0
-> **Last Updated:** 2026-08-14
+> **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the findings register and linked below** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
+> **Version:** 1.1
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -72,7 +73,15 @@ What a feature module promises the rest of the application:
 - It **composes the platform** — forms through the form engine, controls through the design system, requests through the transport layer — and never re-implements a platform concern.
 - It depends **only downward** (on `shared/`), never on another feature or on `app/`.
 
-**The internal structure of a feature is deliberately left undocumented.** The auth module is internally layered (its own store, hooks, services, repository, mappers, and DTOs), but with a single feature built, that layering is a *current implementation*, not yet a proven convention — documenting it now would canonize a template no second feature has validated. The canonical feature-internal template will be documented when the next feature confirms or reshapes it.
+**The internal structure of a feature is deliberately left undocumented.** The auth module is internally layered (its own store, hooks, services, repository, mappers, and DTOs), but with a single feature built, that layering is a *current implementation*, not yet a proven convention — documenting it now would canonize a template no second feature has validated — the generalization rule ([Engineering Principles §3](../development/engineering-principles.md)) applied to a convention. The canonical feature-internal template will be documented when the next feature confirms or reshapes it.
+
+### The auth module is a prototype, not a design reference
+
+The auth module's **visual design is a bootstrap**: it was built to make the product testable before the Design System was re-established, and its appearance is expected to be replaced rather than preserved. That makes it a **migration surface** — it binds the design language and is where legacy values are retired — and never a source of that language, which is [the Foundation's rule](design-system/foundation.md) about prototypes generally; this is the identification it cannot make, because a contract names no consumer.
+
+The local consequence: **nothing in the Design System is derived from what this module renders.** Not a type scale from its panel headings, not a component API from its forms, not a token value from its brand treatment. Where its values have no home in the vocabulary they stay local to the module, rather than being promoted into the shared language.
+
+This concerns the module's **design**, not its architecture: the layering described above is a real current implementation.
 
 ## The platform index
 

@@ -1,10 +1,11 @@
 # Documentation Strategy
 
 > **Status:** Active standard.
+> **Class:** Contract (§3).
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.6
-> **Last Updated:** 2026-08-14
+> **Version:** 1.7
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 
@@ -30,8 +31,8 @@ These principles are binding. They mirror the project's engineering principles (
 2. **One owner per fact.** Every piece of information has exactly one authoritative document. Every other document that needs it **links**, and never copies.
 3. **Single responsibility per document.** Each document has one clearly defined subject. If a document needs two unrelated subjects, it must be split.
 4. **Describe intent and conventions, not inventory.** No document enumerates the file tree or narrates code that is self-evident in the repository. Documentation explains *patterns and reasons*, not *file listings*.
-5. **Document only what exists.** A section is written only when the code it describes exists. Speculative or aspirational documentation is not permitted.
-6. **Future work lives in the issue tracker**, not in documentation — except that the *strategy and sequencing* of a multi-Work-Item effort may be captured in an **execution plan** (`plans/`, a distinct lifecycle-governed class — see [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md)), which links to the tracker's live status and never restates it.
+5. **A document never claims that something exists when it does not.** This binds every class. What a document may *additionally* say is then governed by its **class** (§3) rather than by its tense: a *Description* asserts existence and is written only once the code exists; a *Contract*, a *Commitment*, a *Record* and a *Plan* assert something other than existence and are bounded by the rules §3 gives each. Speculative or aspirational documentation is not permitted in any class — what changed is that naming a committed intention, declared as one, is not speculation.
+6. **Live status lives in the issue tracker**, never in documentation. *Which* work the product has committed to is a Commitment's (§3); *how* committed work is sequenced is an execution plan's (`plans/` — [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md)); what is in progress, done, blocked or scheduled is the tracker's alone, and documentation links to it rather than restating it.
 7. **Significant decisions are recorded as ADRs** (see §8), revisable in place while the project is in its `Foundation` phase and immutable once it is `Stable`.
 8. **Documentation is versioned with the code that obligates it** (see §10), in the same change, under the same review.
 9. **Documentation describes the *intended* architecture; the code is the source of truth for the *actual* state.** Where the two diverge, the deviation is recorded as an architecture finding (see §9) — it is never normalized into the design documentation as if it were intentional.
@@ -40,7 +41,13 @@ These principles are binding. They mirror the project's engineering principles (
 
 ## 3. Documentation Ownership Model
 
-To guarantee "one owner per fact," every document is one of two kinds, and the boundary between them is strict.
+Two independent questions decide how a document is written.
+
+**What does it own?** — the *subject* axis. For documents that own a mechanism or a capability the answer is platform or feature, below; the remaining categories (`project/`, `development/`, `decisions/`, `findings/`, `plans/`) own what §5 assigns them. This axis is what guarantees one owner per fact.
+
+**What does it claim?** — its *class* ([ADR 0014](decisions/0014-document-classes-and-committed-product-scope.md)). Every document answers this one. A contract asserting a rule and a description asserting that something exists are different acts, and treating them alike is how a document stops being trustworthy. This is the axis Principle 5 governs.
+
+The two are orthogonal: the Design System's foundation is a platform document by subject and a Contract by class.
 
 ### Platform documents
 Located in `architecture/`, `api/`, `backend/`, and `frontend/`. They own **shared mechanisms that no single feature owns** — the request lifecycle, the response/error model, authentication mechanisms, the schema-driven form engine, the design system, the data-model rationale. A platform document is the authoritative home for its mechanism.
@@ -56,8 +63,46 @@ The dividing question is always: **"Is this a shared mechanism, or a feature-spe
 
 This is a single-axis organization with a shared platform layer. There is no by-layer **and** by-feature duplication, because a fact is owned by its mechanism *or* by its feature — never both.
 
+### Document classes — what a document claims
+
+Five classes. Four of them name documents the project already had and had never given a vocabulary; **Commitment** is the one this model adds.
+
+| Class | What it asserts | Bounded by |
+|---|---|---|
+| **Description** | this exists, and behaves as stated | written only once the code exists (Principle 5) |
+| **Contract** | this is the rule, for whoever adopts it | [ADR 0012](decisions/0012-foundation-contract-independent-of-consumer-adoption.md) — states rules, never an account of a mechanism |
+| **Commitment** | this is part of the product — decided, built or not | the bullets below |
+| **Record** | this happened, or was decided | §8 (ADRs) and §9 (findings) |
+| **Plan** | this is how committed work is sequenced | [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md) |
+
+Note that *Contract* is a class, not a title: the **API contract** is named for its subject and is a Description — it states what the running system does.
+
+**Three rules make the class model load-bearing rather than decorative.**
+
+**A declared class must be true.** A document is the class its content asserts, not the class its header names. Relabelling does not change what prose claims: text that describes how something works is a Description whatever the header says, and declaring another class over it is a defect rather than a reclassification.
+
+**No class licenses a false claim of existence.** Principle 5's lead sentence binds every class. A Contract states rules and never doubles as an account of a mechanism that does not exist; a Commitment names and never specifies. The classes differ in what they may say — not in whether they may mislead.
+
+**Description is the default reading, so it needs no declaration; every other class declares itself in the document's header**, because a reader who assumes description and meets a commitment has been misled. Where one document carries two classes, each section says which it is. A document that predates this rule declares its class the next time it is materially changed — the rule is not retroactive cleanup.
+
+#### What a Commitment may and may not say
+
+A Commitment answers a real need: an agent deciding today needs the product's known shape, not only its built surface. It is bounded so that it can never become a design, a specification, or a second tracker.
+
+- **It states what the product is committed to, and why that is part of the product.** Nothing else.
+- **It makes no claim about what is built.** Existence is the Description's to state, and an item may be both committed and already built. A Commitment that starts reporting build state has become a second status table.
+- **It never states *how*.** No API, no props, no tokens, no values, no mechanism, no structure. A Commitment that describes implementation has become a Description, and is judged as one.
+- **Naming is not designing.** Committing to a component is admissible; specifying one is not.
+- **It does not replace the issue tracker.** No progress, no status, no sequencing, no dates.
+- **It is evidence, never authority.** A commitment settles that a concept is *named*, which is one of the ways a need is grounded ([ADR 0010](decisions/0010-design-system-platform-reestablishment.md) Decision 2). It never dictates how the thing is designed, nor which layer owns it.
+- **A commitment is made by a decision, not by being written down.** Recording one is reporting a decision already taken; an author cannot create the grounding they then rely on. **What makes that checkable is the ordinary gate:** an entry becomes canonical only on the human-authorized merge that introduces it, so that merge is the decision's record. An agent may propose an entry and may never approve its own.
+- **Absence is not refusal.** A Commitment is one of the ways a need is grounded, never the only one, so nothing may be refused on the ground that it is not listed. A Commitment that is read as a closed set has become a gate, which is the failure mode this class is most likely to develop.
+- **Removal is free.** A commitment the product drops is deleted, not superseded. It asserted nothing about the system.
+
+**The product's committed scope has one owner** — the [project overview](../project/overview.md) — for the same reason any fact does. A second document holding committed scope is a one-owner violation, not a second Commitment.
+
 ### When a platform document is created — the Stable-Core rule
-A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This **complements Principles 4 and 5 by introducing a whole-document eligibility criterion** — the document-level counterpart to §4's section-level rule that *"sections appear only when the code exists."*
+A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This **complements Principles 4 and 5 by introducing a whole-document eligibility criterion** for a platform document — the document-level counterpart to §4's section-level rule for a Description.
 
 Until a subsystem has a stable core, its document is **deferred**: its durable material is captured in an interim source and synthesized into the platform document later, and the deferral records a re-evaluation **trigger** as a *code-state condition* (the capability existing in the code), not a date. See [ADR 0004](decisions/0004-stable-core-platform-document-rule.md).
 
@@ -72,7 +117,7 @@ docs/
   README.md                      ← documentation map, navigation, ownership + update-trigger rules
 
   project/
-    overview.md                  ← product scope and current implementation status
+    overview.md                  ← product scope: what exists, and what the product is committed to
     glossary.md                  ← canonical project vocabulary
 
   architecture/
@@ -115,7 +160,7 @@ docs/
 ### Structure rules
 - **No directory-tree document.** The repository is the source of truth for structure. Documents explain conventions, not file inventories.
 - **Feature documents map to code modules.** A capability that is part of another module (for example, likes, which live in the tweets module) is documented inside that module's feature document, not as a separate one.
-- **Sections appear only when the code exists.** A feature document includes a frontend section only once that feature has frontend code; otherwise that section is absent (not a placeholder). The whole-document analog — when a subsystem earns its own platform document — is the Stable-Core rule (§3).
+- **A Description's sections appear only when the code exists.** A feature document includes a frontend section only once that feature has frontend code; otherwise that section is absent (not a placeholder). This is Principle 5 applied to the Description class; it does not reach the other classes, which assert something other than existence — and it never licenses any of them to claim existence. The whole-document analog — when a subsystem earns its own platform document — is the Stable-Core rule (§3).
 
 ---
 
@@ -125,7 +170,7 @@ Each category has a single responsibility. Material outside that responsibility 
 
 | Category | Owns (single responsibility) | Must not contain |
 |---|---|---|
-| `project/` | Product scope, current implementation status, shared vocabulary | Implementation detail, future plans |
+| `project/` | Product scope — what exists, and committed scope (§3) — and shared vocabulary | Implementation detail; live status; how anything is built |
 | `architecture/` | System topology, data-model rationale, governance, recorded decisions (ADRs), and architecture findings | Endpoint shapes, per-feature behavior |
 | `api/` | The complete HTTP contract: endpoints, payloads, error shapes | Business rationale, frontend usage |
 | `backend/` | Cross-cutting backend mechanisms (conventions, security) | Per-feature or per-module logic |
@@ -154,7 +199,8 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Schema-driven form engine (validation, state, inference, SchemaField seam) | `frontend/forms.md` | feature documents |
 | Design system (design language, authoring conventions) | `frontend/design-system/` | feature documents, `frontend/forms.md` |
 | Project history | Git history | `project/overview.md` (status only) |
-| Planned/future work | Issue tracker (issues, milestones) | `project/overview.md` (link only) |
+| What the product is committed to building | `project/overview.md` (a Commitment, §3) | any document needing to test whether a need is grounded |
+| Live status of work in progress | Issue tracker (issues, milestones) | `project/overview.md`, execution plans (link only) |
 
 **Enforcement rule:** if writing a document requires copying more than a sentence from another document, stop and link instead. Copying authoritative content is a defect, not a convenience.
 
@@ -257,7 +303,7 @@ Because most documents are thin and link-based, **most code changes require no d
 ## 11. Documentation Governance
 
 1. **Compliance is mandatory.** All documentation contributions — by humans or AI assistants — must conform to this strategy. Reviewers reject documentation that violates it.
-2. **The pull-request checklist enforces this strategy.** Before merge, a documentation change must confirm: it has a single authoritative home, it duplicates no other document, it links rather than copies, it documents only existing code, any triggered updates from §10 are included, and any current deviation from the intended architecture is recorded as a finding (§9) rather than written into the design documentation.
+2. **The pull-request checklist enforces this strategy.** Before merge, a documentation change must confirm: it has a single authoritative home, it duplicates no other document, it links rather than copies, it claims nothing that does not exist and stays within the rules of its class (§3), any triggered updates from §10 are included, and any current deviation from the intended architecture is recorded as a finding (§9) rather than written into the design documentation.
 3. **Changing this strategy.** This document is itself governed, and what governs it is §8's bar — not the fact that it is constitutional. A change that alters a **governance principle** — what a document class is for, who owns a fact, when an artifact is created — is an architectural decision and is recorded as an ADR. A change that **evolves a rule this document already owns** — extending a standard, sharpening a criterion, adding a required field — follows the standard documentation pull-request flow. **The question is whether the change alters the principle or applies it.**
 4. **Language and form.** Documentation is written in English, in clear and concise prose, as durable reference material — not as meeting notes, proposals, or revision logs. A document's header states its currency: **`Last Updated` changes with any change to the file, however small; `Version` changes when a decision is added or the document changes materially.**
 5. **Link integrity.** Cross-document links are part of the contract. A change that moves or renames a document must update the documents that link to it, and a verification pass confirms no broken links remain.

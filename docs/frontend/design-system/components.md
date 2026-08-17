@@ -1,11 +1,12 @@
 # Design System — Component Authoring Contract
 
 > **Status:** Active.
-> **Authority:** The authoritative source for **how a component in this layer is built** — its file layout, ref and styling patterns, prop vocabulary, variant model, accessibility baseline, and the ownership rule for values it does not share. It owns **conventions**, never a catalogue.
+> **Authority:** The authoritative source for **which components belong to this layer and how one is built** — the admission test, file layout, ref and styling patterns, prop vocabulary, variant model, accessibility baseline, and the ownership rule for values it does not share. It owns the **test and the conventions**, never a catalogue: which components the product has committed to is the [overview](../../project/overview.md)'s.
 > **Scope:** Components inside the Design System layer.
 > **Stability:** Adding a component must require **no change here**. This document changes when the way we build components changes.
-> **Version:** 1.0
-> **Last Updated:** 2026-08-10
+> **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
+> **Version:** 1.1
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 ## What this document does not own
@@ -13,6 +14,18 @@
 A component's props, types and variants are owned by **TypeScript**, which states them executably. Its rendered appearance and interactive states are owned by **Storybook**. Its implementation details are owned by the **source**. Mechanical rules are owned by the **checks**.
 
 **This document must not mirror any of them.** A prose copy of an executable fact has nothing enforcing it and drifts silently, which is the failure this whole documentation model exists to prevent.
+
+## Component admission
+
+Whether a component belongs to this layer is decided here. It is **not** the [Foundation's token-admission test](foundation.md), which admits a concept into the vocabulary and answers a different question on different evidence.
+
+Two conditions, both required.
+
+**It is grounded**, in the sense [ADR 0010](../../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2 defines — a platform basis, a named commitment, or a set already opened. For a component the commitment is the product's [committed scope](../../project/overview.md). A component that meets none of the three is speculative and is not built; **one that is grounded is built whether or not anything consumes it yet.**
+
+**It belongs to the language rather than to a product surface.** The dividing question is whether its meaning survives the product: a control, an affordance or a presentational primitive any surface could compose belongs here, while something whose meaning *is* a product concept — a tweet card, a comment, a navigation surface — is a feature's, composed *from* this layer. The committed scope names both kinds and sorts neither; this test does the sorting.
+
+Admission is not a design: deciding a component belongs here settles nothing about its API, variants or tokens.
 
 ## The authoring convention
 

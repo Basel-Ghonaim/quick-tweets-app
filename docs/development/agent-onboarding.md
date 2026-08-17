@@ -1,10 +1,11 @@
 # Agent Onboarding
 
 > **Status:** Active.
+> **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how an agent joins this project and starts working** — the reading order, the judgment calls, and the habits that turn the constitution into behaviour. It owns the *on-ramp*, never the rules themselves: every rule referenced here is owned by the [Engineering Execution Standard](engineering-execution-standard.md), the [Engineering Principles](engineering-principles.md), or the [Documentation Strategy](../architecture/documentation-strategy.md), and is **linked, never restated**.
 > **Scope:** Any agent — or new contributor — picking up work in this repository. It covers orientation, decision authority in practice, and the mistakes newcomers actually make. It is not a summary of the project.
-> **Version:** 1.1
-> **Last Updated:** 2026-08-14
+> **Version:** 1.2
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 ## Why this document exists
@@ -20,14 +21,20 @@ This document is the on-ramp. **It points at rules; it never restates them.** If
 3. **[Documentation Strategy](../architecture/documentation-strategy.md)** — one owner per fact, and what distinguishes an ADR from a Finding from an Issue.
 4. **[Engineering Principles](engineering-principles.md)** — layering, platform-vs-feature, and **§12 (comments)**.
 5. **[docs/README.md](../README.md)** — the map. For **any** topic, find its owning document here before writing anything.
+6. **[The product overview](../project/overview.md)** — what exists, and what the product is committed to. You need both: work is judged against the product's shape, not only its built surface.
+7. **Every contract that governs your effort's domain — before you apply anything above to it.** Its **ADR**, its **Active Execution Plan**, and the platform contracts for the area you are touching. These are additive, not alternatives: Design System work reads [foundation.md](../frontend/design-system/foundation.md) and [components.md](../frontend/design-system/components.md) **and** [frontend/architecture.md](../frontend/architecture.md), because the frontend's rules still bind it.
 
-Then, for the effort you are assigned: its **ADR**, then its **Execution Plan**, then the tier convention document ([backend/conventions.md](../backend/conventions.md) or [frontend/architecture.md](../frontend/architecture.md)).
+**Step 7 is the one that gets skipped.** The documents above it hold across the whole repository; a platform contract is more specific about its own domain. Reading the general rules and stopping is how a rule with a narrow subject gets applied to a domain that has one of its own — which has already happened here, to more than one agent.
 
 ## 2. What is authoritative
 
-The five documents above, plus the **ADR** that owns your effort's boundary and the **Active Execution Plan** that owns its sequencing. For wire shapes, the [API contract](../api/api-contract.md); for field-level truth, `schema.prisma`.
+The documents above, plus the **ADR** that owns your effort's boundary and the **Active Execution Plan** that owns its sequencing. For wire shapes, the [API contract](../api/api-contract.md); for field-level truth, `schema.prisma`.
 
 Above all of them sits one rule from [CLAUDE.md](../../CLAUDE.md): **code is authoritative for what the system does; documentation is authoritative for intended design and the why.** When they disagree, the code wins — fix the document if it is in scope, otherwise record the divergence.
+
+**Which document wins when two both apply** is owned by [CLAUDE.md’s decision precedence](../../CLAUDE.md), and it is the rule step 7 exists to serve: the more specific document governs its own domain, so a general rule does not become a domain rule by being read first.
+
+**And the rules are revisable.** A document here is the current best statement of a decision, not a permanent fact; when one is found wrong, mis-scoped, or outgrown, it is revised or superseded through its lifecycle — ADRs by [§8](../architecture/documentation-strategy.md), every other document by [§10 and §11](../architecture/documentation-strategy.md). What is never acceptable is silent deviation, or knowingly building the wrong thing to keep a document intact.
 
 ## 3. How to treat an ADR and a Plan
 
@@ -71,7 +78,8 @@ Observed on this project, in rough order of likelihood:
 8. **Provenance in comments or test names** — no Work Item labels, Issue numbers, or milestones in source (§12).
 9. **Splitting finished work into commits retrospectively** instead of committing as you go. Timestamps make this visible.
 10. **Claiming verification you did not perform.**
-11. **Building ahead of a consumer** when the plan reserved it.
+11. **Building a generalization from one instance** — a registry or strategy layer no second case has shaped ([Engineering Principles §3](engineering-principles.md)).
+12. **Refusing to build something grounded because nothing consumes it yet.** The inverse of 11, and observed at least as often. A platform precedes its adoption, a design language precedes what binds it, and a committed component precedes the page that renders it. [Committed product scope](../project/overview.md) is where grounding is checked.
 
 ## 7. Before you say "Ready"
 
@@ -110,14 +118,14 @@ The ones worth having had from day one:
 2. **Prove, don't assert.** A claim without evidence is a guess.
 3. **State what you did *not* do** as clearly as what you did.
 4. **Record the finding; don't fix it.**
-5. **Decide the boundary now; build the abstraction when a second instance earns it.**
-6. **Name what is, not what might be.**
+5. **Decide the boundary now; build the *generalization machinery* when a second instance earns it** ([Engineering Principles §3](engineering-principles.md)) — never read as a rule about whether a capability, a language concept or a committed component should exist. Those are grounded or not.
+6. **Name what is, and what the product has committed to — never what merely might be.**
 7. **Derive state; never store what you can compute** — every stored duplicate eventually drifts.
 8. **Make invariants mechanically checkable**, or expect them to erode.
 9. **Point at the owner; never copy it.**
 10. **Small, atomic, green** — every commit, every PR.
 11. **If you are wondering whether it is architectural, it is.**
-12. **No consumer is a reason to defer the specifics — never a reason to skip the boundary.**
+12. **No consumer is a reason to defer the specifics, to skip the boundary, or to refuse what the product has committed to.** Read with 5: 5 withholds *machinery* until a second instance shapes it; 12 says the absence of a consumer withholds nothing else.
 
 ## Keeping this document true
 

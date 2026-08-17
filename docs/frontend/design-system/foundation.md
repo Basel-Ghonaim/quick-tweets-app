@@ -1,11 +1,12 @@
 # Design System — Foundation Contract
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the Design System's **design language** — the token tiers, what admits a concept into the vocabulary, where a token is declared, how themes resolve, and where the boundary runs between shared language and values a consumer owns. It states the **operative contract**; the reasoning behind each rule belongs to the ADR it cites.
+> **Authority:** The authoritative source for the Design System's **design language** — the token tiers, what admits a concept into the vocabulary, where a token is declared, how themes resolve, and where the boundary runs between shared language and values a consumer owns. It states the **operative contract**. Where a rule was decided by an ADR, that ADR owns the reasoning and this document cites it; where no ADR owns a rule, this document owns both the rule and its reason, and none is created for it ([ADR 0012](../../architecture/decisions/0012-foundation-contract-independent-of-consumer-adoption.md) Decision 5).
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
-> **Version:** 1.0
-> **Last Updated:** 2026-08-10
+> **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
+> **Version:** 1.1
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 ## What the language is for
@@ -36,7 +37,9 @@ The binding rule governs the **presentation language**: colour, spacing, typogra
 
 The question is never *"is this a literal?"* but **"is this something consumers must agree on?"**
 
-## Admission
+## Token admission
+
+**This section admits a concept into the vocabulary. It does not decide whether a component exists** — that is the [authoring contract](components.md)'s, and it turns on different evidence. The tests are not interchangeable: *coincidence is not identity* and *roles are admissible, granularities are not* are claims about tokens, and applying them to a component set produces answers about nothing.
 
 **A token names a shared design concept, never a shared value.** Two consumers writing the same literal is not a token; the language is what they must *agree* on. Conversely, two roles that resolve to the same value stay two tokens — **coincidence is not identity**.
 
@@ -45,6 +48,19 @@ Several consumers make a concept obvious, but consumer count is **evidence, neve
 **Roles are admissible; granularities are not.** Naming a role is a claim the language can make. Naming how many steps a ramp has is a claim about the product, which only a design settles.
 
 **Values are provisional.** Authoring a role ahead of a design is safe precisely because a value is a swap; it must never harden into a commitment to the value.
+
+### Building and writing ahead of a consumer
+
+The language precedes its consumers, so *"nothing uses it yet"* is never the question. The question is whether the need is **grounded** — and what may be *written* about something unbuilt is a separate question from whether it may be *built*.
+
+| Act | Verdict |
+|---|---|
+| Building a concept the product has committed to, before any consumer exists | ✅ grounded — [committed product scope](../../project/overview.md) is the evidence |
+| Building something with no platform basis, no commitment, and completing no open set | ❌ ungrounded — reserved, not built ([ADR 0010](../../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2) |
+| Writing down committed scope, declared as a commitment | ✅ the Commitment class ([Documentation Strategy §3](../../architecture/documentation-strategy.md)) |
+| Writing something unbuilt as though it exists | ❌ Principle 5, unchanged |
+
+Consumer count belongs to none of these rows. Where it applies is narrower and elsewhere: **generalization machinery** waits for a second instance to shape it ([Engineering Principles §3](../../development/engineering-principles.md)).
 
 ## The local / shared boundary
 
@@ -58,7 +74,7 @@ A value stays with its owner until a shared design concept is actually establish
 
 **Promotion is by concept, not by repetition.** When two owners need the same *concept*, neither depends on the other: the concept moves to the layer that can own it and both become consumers. When two owners merely happen to use the same *value*, nothing moves.
 
-**A prototype is not a source of the language.** An implementation built before the design exists is evidence that a concept may be missing — never the definition of the concept, and never the source of its value.
+**A prototype is not a source of the language.** An implementation built before the design exists is evidence that a concept may be missing — never the definition of the concept, and never the source of its value. Which implementations are prototypes is not this document's to say, since it names no consumer; the [frontend architecture](../architecture.md) identifies them.
 
 ## Naming — the prefix carries the rule
 
@@ -112,4 +128,4 @@ What a check cannot decide stays a review judgement: a check can see that a refe
 
 ---
 
-> This document owns the **design language**. How a component in this layer is built is owned by [components.md](components.md); the boundary, ownership model and navigation by [README.md](README.md); the reasoning behind each rule by the ADR it cites; props and variants by TypeScript; rendered behaviour by Storybook.
+> This document owns the **design language**. How a component in this layer is built is owned by [components.md](components.md); the boundary, ownership model and navigation by [README.md](README.md); the reasoning behind a rule an ADR decided by that ADR; props and variants by TypeScript; rendered behaviour by Storybook.
