@@ -2,8 +2,8 @@
 
 > **Status:** Active.
 > **Authority:** The entry point for the Design System's documentation — its boundary, its ownership and stability model, its public surface, and where each kind of information lives. **It states no design rules of its own**; it names the document that owns each one.
-> **Version:** 1.0
-> **Last Updated:** 2026-08-14
+> **Version:** 1.1
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 ## What the Design System is
@@ -29,6 +29,7 @@ The two are independent, and conflating them is the error this structure exists 
 | **Foundation completeness** | every question in the language's domain has a decided answer |
 | **Consumer adoption** | how many components, features or pages bind it |
 | **Product completeness** | how much of the product is built |
+| **Product commitment** | what the product has decided is part of it — the [overview](../../project/overview.md)'s |
 
 **Only the first is the Design System's**, and a Foundation with settled rules is stable at zero adoption. The language **precedes its consumers** ([ADR 0010](../../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2), so consumer count is evidence about a concept — never a gate on it, and never a measure of whether the Foundation is sound.
 
@@ -48,7 +49,10 @@ One fact has one canonical owner. Every other document links to it and none rede
 |---|---|
 | What does this token mean? Which tier, and when do I bind it? | [foundation.md](foundation.md) |
 | When does a value stay local, and when is it shared? | [foundation.md](foundation.md) |
-| Why does this rule exist? What was rejected? | the [ADR](../../architecture/decisions/) it cites |
+| Why does this rule exist? What was rejected? | the [ADR](../../architecture/decisions/) it cites, where one decided it; otherwise the document stating the rule |
+| Does this concept belong in the vocabulary? May I build it with nothing consuming it? | [foundation.md](foundation.md) |
+| Does this component belong to this layer, or to a feature? | [components.md](components.md) |
+| Which components has the product committed to? | the [project overview](../../project/overview.md) |
 | How do I build a component in this layer? | [components.md](components.md) |
 | How do I use a particular component? | that component's own README, where one is earned |
 | How does a feature or page compose the system? | documentation beside the module that owns it |
