@@ -95,7 +95,8 @@ A Commitment answers a real need: an agent deciding today needs the product's kn
 - **Naming is not designing.** Committing to a component is admissible; specifying one is not.
 - **It does not replace the issue tracker.** No progress, no status, no sequencing, no dates.
 - **It is evidence, never authority.** A commitment settles that a concept is *named*, which is one of the ways a need is grounded ([ADR 0010](decisions/0010-design-system-platform-reestablishment.md) Decision 2). It never dictates how the thing is designed, nor which layer owns it.
-- **A commitment is made by a decision, not by being written down.** Recording one is reporting a decision already taken; an author cannot create the grounding they then rely on.
+- **A commitment is made by a decision, not by being written down.** Recording one is reporting a decision already taken; an author cannot create the grounding they then rely on. **What makes that checkable is the ordinary gate:** an entry becomes canonical only on the human-authorized merge that introduces it, so that merge is the decision's record. An agent may propose an entry and may never approve its own.
+- **Absence is not refusal.** A Commitment is one of the ways a need is grounded, never the only one, so nothing may be refused on the ground that it is not listed. A Commitment that is read as a closed set has become a gate, which is the failure mode this class is most likely to develop.
 - **Removal is free.** A commitment the product drops is deleted, not superseded. It asserted nothing about the system.
 
 **The product's committed scope has one owner** — the [project overview](../project/overview.md) — for the same reason any fact does. A second document holding committed scope is a one-owner violation, not a second Commitment.

@@ -40,11 +40,13 @@ The data model behind these capabilities — `User`, `RefreshToken`, `Tweet`, `C
 
 > **Class: Commitment** ([Documentation Strategy §3](../architecture/documentation-strategy.md), which owns what a Commitment may and may not say). This section states **what the product is committed to** and why. It makes **no claim about what is built** — the status table above is the only thing that says that, and an item here may be already built, partly built, or not started.
 
-A committed item is one the product's shape requires, settled by a decision rather than assumed by whoever wrote it down. Recording it here is reporting that decision, not making it.
+A committed item is one the product's shape requires, settled by a decision rather than assumed by whoever wrote it down. Recording it here **reports** that decision and does not make it: an entry becomes canonical only on the human-authorized merge that introduces it, which is the record of the ratification. An agent may propose an entry and may never approve its own.
 
-Its use is to answer *"is this part of the product?"* — the question that decides whether building something is grounded or speculative ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2). It answers nothing about **how** any of it works, and it never decides which layer owns a thing.
+Its use is to answer *"is this part of the product?"* — **one** of the three independent ways a need is grounded ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2; the others are a platform basis and completing a set already opened). It answers nothing about **how** any of it works, and it never decides which layer owns a thing.
 
-Terms are the [glossary](glossary.md)'s, so a commitment can be looked up by the name the product actually uses.
+**These lists are not closed, and absence from them is not refusal.** Something with a platform basis, or completing a set the language has already opened, is grounded whether or not it is named here. Only the *not committed* section below states refusals, and it says so explicitly.
+
+Where the [glossary](glossary.md) defines a term, this section uses it. Some committed names have no glossary entry yet — *repost* most consequentially, a word this domain uses for two different things — and for those the name records the commitment while the definition waits on the product decision that settles it.
 
 ### Surfaces
 
@@ -62,7 +64,9 @@ Composing, editing and deleting one's own tweets · commenting · liking · repo
 
 ### Interface vocabulary
 
-Named because a name is what makes a commitment checkable — not because any of it is designed here, and not as a statement of which layer owns it. **Whether a named element belongs to the Design System or to a feature is decided by the [component-admission test](../frontend/design-system/components.md), never by appearing on this list.**
+**Components and surfaces the product is committed to.** Each entry reports a decision already taken. Naming something here does not design it, does not decide which layer owns it, and — importantly — **does not by itself make it grounded**: grounding is tested against [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2, and this list supplies only one of its three limbs.
+
+**Whether a named element belongs to the Design System or to a feature is decided by the [component-admission test](../frontend/design-system/components.md), never by appearing on this list.**
 
 Alert · Avatar · Badge · Button · Checkbox · Comment · Dialog · FileInput · Header · Icon · IconButton · Input · Link · Menu · Navigation · Radio · Select · Skeleton · Spinner · Switch · Tabs · Textarea · Toast · Tooltip · Tweet action row · Tweet card · Typography
 
