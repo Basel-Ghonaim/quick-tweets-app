@@ -45,7 +45,7 @@ Two independent questions decide how a document is written.
 
 **What does it own?** — the *subject* axis. For documents that own a mechanism or a capability the answer is platform or feature, below; the remaining categories (`project/`, `development/`, `decisions/`, `findings/`, `plans/`) own what §5 assigns them. This axis is what guarantees one owner per fact.
 
-**What does it claim?** — its *class*. Every document answers this one. A contract asserting a rule and a description asserting that something exists are different acts, and treating them alike is how a document stops being trustworthy. This is the axis Principle 5 governs.
+**What does it claim?** — its *class* ([ADR 0014](decisions/0014-document-classes-and-committed-product-scope.md)). Every document answers this one. A contract asserting a rule and a description asserting that something exists are different acts, and treating them alike is how a document stops being trustworthy. This is the axis Principle 5 governs.
 
 The two are orthogonal: the Design System's foundation is a platform document by subject and a Contract by class.
 
