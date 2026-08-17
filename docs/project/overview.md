@@ -64,7 +64,9 @@ Composing, editing and deleting one's own tweets · commenting · liking · repo
 
 ### Interface vocabulary
 
-**Components and surfaces the product is committed to.** Each entry reports a decision already taken. Naming something here does not design it, does not decide which layer owns it, and — importantly — **does not by itself make it grounded**: grounding is tested against [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2, and this list supplies only one of its three limbs.
+**Components and surfaces the product is committed to.** Each entry **reports** a decision already taken; it does not create one. A genuine commitment **is grounding on its own** — [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2 admits a need on **any one** of its three conditions, and a named commitment is one of them. That is precisely why an entry must record a decision rather than an intention, and why an author may not approve their own.
+
+Naming something here does not design it, and does not decide which layer owns it.
 
 **Whether a named element belongs to the Design System or to a feature is decided by the [component-admission test](../frontend/design-system/components.md), never by appearing on this list.**
 
