@@ -1,6 +1,7 @@
 # Engineering Principles
 
 > **Status:** Active standard.
+> **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for the project's **code-design principles** — the patterns and rules that define what good code looks like here. Binding on all contributors, human and AI.
 > **Scope:** Owns *principles* (the timeless "why" and "what good looks like"). It does **not** own *mechanisms* (the current "how"), which live in the relevant platform, security, and contract documents, nor *process* (Git, commits, reviews), which lives in the Engineering Execution Standard.
 > **Version:** 1.3
@@ -38,6 +39,9 @@ The five SOLID principles are the foundation of every design decision, frontend 
 - **Layered modules, dependencies inward.** Each feature module is internally layered, and a layer talks only to the layer beneath it. A component never imports a repository; a controller never imports the database client.
 - **Acyclic dependencies.** Dependencies point one way: a consumer depends on its dependency, never the reverse, and never in a cycle. If two units import each other, a responsibility is misplaced — extract the shared piece or invert the dependency. Cycles are recorded as architecture findings, not tolerated silently.
 - **Platform vs. feature.** Shared, domain-agnostic mechanisms are *platform*; a feature *composes* platform mechanisms rather than reimplementing or absorbing them. A feature depends on the platform; the platform never depends on a feature. This is the code-architecture counterpart of the Documentation Strategy's platform-vs-feature ownership model.
+- **Design for the abstraction; build the generalization at the second instance.** *Generalization machinery* — a registry, a plug-in point, a per-case strategy layer, a configuration surface — is built when a second instance exists to shape it, never inferred from the first, because a mechanism designed around one case encodes that case's assumptions and the first real second case reshapes it anyway. This does not conflict with §1's *design for change*: put the **boundary** in place now, and leave the **machinery that varies across it** until something proves what must vary.
+
+  **It governs generalization machinery and nothing else.** It does not decide whether a platform capability should exist, whether a concept belongs in a design language, or whether a component belongs to the product. Those turn on whether the need is **grounded** — a platform basis, something the product has committed to, or a set already opened ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2 states the test) — and a grounded need is built before any consumer exists. Counting consumers answers a question about machinery; it has never been the test for whether something is part of the system.
 
 ## 4. Data & Error Handling
 

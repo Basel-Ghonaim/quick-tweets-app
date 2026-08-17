@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for **how an agent joins this project and starts working** — the reading order, the judgment calls, and the habits that turn the constitution into behaviour. It owns the *on-ramp*, never the rules themselves: every rule referenced here is owned by the [Engineering Execution Standard](engineering-execution-standard.md), the [Engineering Principles](engineering-principles.md), or the [Documentation Strategy](../architecture/documentation-strategy.md), and is **linked, never restated**.
 > **Scope:** Any agent — or new contributor — picking up work in this repository. It covers orientation, decision authority in practice, and the mistakes newcomers actually make. It is not a summary of the project.
-> **Version:** 1.1
-> **Last Updated:** 2026-08-14
+> **Version:** 1.2
+> **Last Updated:** 2026-08-17
 > **Owner:** Basel Ghonaim
 
 ## Why this document exists
@@ -71,7 +71,8 @@ Observed on this project, in rough order of likelihood:
 8. **Provenance in comments or test names** — no Work Item labels, Issue numbers, or milestones in source (§12).
 9. **Splitting finished work into commits retrospectively** instead of committing as you go. Timestamps make this visible.
 10. **Claiming verification you did not perform.**
-11. **Building ahead of a consumer** when the plan reserved it.
+11. **Building a generalization from one instance** — a registry or strategy layer no second case has shaped ([Engineering Principles §3](engineering-principles.md)).
+12. **Refusing to build something grounded because nothing consumes it yet.** The inverse of 11, and observed at least as often. A platform precedes its adoption, a design language precedes what binds it, and a committed component precedes the page that renders it. [Committed product scope](../project/overview.md) is where grounding is checked.
 
 ## 7. Before you say "Ready"
 
@@ -110,14 +111,14 @@ The ones worth having had from day one:
 2. **Prove, don't assert.** A claim without evidence is a guess.
 3. **State what you did *not* do** as clearly as what you did.
 4. **Record the finding; don't fix it.**
-5. **Decide the boundary now; build the abstraction when a second instance earns it.**
+5. **Decide the boundary now; build the *generalization machinery* when a second instance earns it** ([Engineering Principles §3](engineering-principles.md)) — never read as a rule about whether a capability, a language concept or a committed component should exist. Those are grounded or not.
 6. **Name what is, not what might be.**
 7. **Derive state; never store what you can compute** — every stored duplicate eventually drifts.
 8. **Make invariants mechanically checkable**, or expect them to erode.
 9. **Point at the owner; never copy it.**
 10. **Small, atomic, green** — every commit, every PR.
 11. **If you are wondering whether it is architectural, it is.**
-12. **No consumer is a reason to defer the specifics — never a reason to skip the boundary.**
+12. **No consumer is a reason to defer the specifics, to skip the boundary, or to refuse what the product has committed to.** Read with 5: 5 withholds *machinery* until a second instance shapes it; 12 says the absence of a consumer withholds nothing else.
 
 ## Keeping this document true
 
