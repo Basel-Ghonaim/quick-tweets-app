@@ -31,8 +31,8 @@ These principles are binding. They mirror the project's engineering principles (
 2. **One owner per fact.** Every piece of information has exactly one authoritative document. Every other document that needs it **links**, and never copies.
 3. **Single responsibility per document.** Each document has one clearly defined subject. If a document needs two unrelated subjects, it must be split.
 4. **Describe intent and conventions, not inventory.** No document enumerates the file tree or narrates code that is self-evident in the repository. Documentation explains *patterns and reasons*, not *file listings*.
-5. **Document only what exists.** A section is written only when the code it describes exists. Speculative or aspirational documentation is not permitted.
-6. **Future work lives in the issue tracker**, not in documentation — except that the *strategy and sequencing* of a multi-Work-Item effort may be captured in an **execution plan** (`plans/`, a distinct lifecycle-governed class — see [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md)), which links to the tracker's live status and never restates it.
+5. **A document never claims that something exists when it does not.** This binds every class. What a document may *additionally* say is then governed by its **class** (§3) rather than by its tense: a *Description* asserts existence and is written only once the code exists; a *Contract*, a *Commitment*, a *Record* and a *Plan* assert something other than existence and are bounded by the rules §3 gives each. Speculative or aspirational documentation is not permitted in any class — what changed is that naming a committed intention, declared as one, is not speculation.
+6. **Live status lives in the issue tracker**, never in documentation. *Which* work the product has committed to is a Commitment's (§3); *how* committed work is sequenced is an execution plan's (`plans/` — [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md)); what is in progress, done, blocked or scheduled is the tracker's alone, and documentation links to it rather than restating it.
 7. **Significant decisions are recorded as ADRs** (see §8), revisable in place while the project is in its `Foundation` phase and immutable once it is `Stable`.
 8. **Documentation is versioned with the code that obligates it** (see §10), in the same change, under the same review.
 9. **Documentation describes the *intended* architecture; the code is the source of truth for the *actual* state.** Where the two diverge, the deviation is recorded as an architecture finding (see §9) — it is never normalized into the design documentation as if it were intentional.
@@ -101,7 +101,7 @@ A Commitment answers a real need: an agent deciding today needs the product's kn
 **The product's committed scope has one owner** — the [project overview](../project/overview.md) — for the same reason any fact does. A second document holding committed scope is a one-owner violation, not a second Commitment.
 
 ### When a platform document is created — the Stable-Core rule
-A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This **complements Principles 4 and 5 by introducing a whole-document eligibility criterion** — the document-level counterpart to §4's section-level rule that *"sections appear only when the code exists."*
+A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This **complements Principles 4 and 5 by introducing a whole-document eligibility criterion** for a platform document — the document-level counterpart to §4's section-level rule for a Description.
 
 Until a subsystem has a stable core, its document is **deferred**: its durable material is captured in an interim source and synthesized into the platform document later, and the deferral records a re-evaluation **trigger** as a *code-state condition* (the capability existing in the code), not a date. See [ADR 0004](decisions/0004-stable-core-platform-document-rule.md).
 
@@ -116,7 +116,7 @@ docs/
   README.md                      ← documentation map, navigation, ownership + update-trigger rules
 
   project/
-    overview.md                  ← product scope and current implementation status
+    overview.md                  ← product scope: what exists, and what the product is committed to
     glossary.md                  ← canonical project vocabulary
 
   architecture/
@@ -159,7 +159,7 @@ docs/
 ### Structure rules
 - **No directory-tree document.** The repository is the source of truth for structure. Documents explain conventions, not file inventories.
 - **Feature documents map to code modules.** A capability that is part of another module (for example, likes, which live in the tweets module) is documented inside that module's feature document, not as a separate one.
-- **Sections appear only when the code exists.** A feature document includes a frontend section only once that feature has frontend code; otherwise that section is absent (not a placeholder). The whole-document analog — when a subsystem earns its own platform document — is the Stable-Core rule (§3).
+- **A Description's sections appear only when the code exists.** A feature document includes a frontend section only once that feature has frontend code; otherwise that section is absent (not a placeholder). This is Principle 5 applied to the Description class; it does not reach the other classes, which assert something other than existence — and it never licenses any of them to claim existence. The whole-document analog — when a subsystem earns its own platform document — is the Stable-Core rule (§3).
 
 ---
 
@@ -169,7 +169,7 @@ Each category has a single responsibility. Material outside that responsibility 
 
 | Category | Owns (single responsibility) | Must not contain |
 |---|---|---|
-| `project/` | Product scope, current implementation status, shared vocabulary | Implementation detail, future plans |
+| `project/` | Product scope — what exists, and committed scope (§3) — and shared vocabulary | Implementation detail; live status; how anything is built |
 | `architecture/` | System topology, data-model rationale, governance, recorded decisions (ADRs), and architecture findings | Endpoint shapes, per-feature behavior |
 | `api/` | The complete HTTP contract: endpoints, payloads, error shapes | Business rationale, frontend usage |
 | `backend/` | Cross-cutting backend mechanisms (conventions, security) | Per-feature or per-module logic |
@@ -198,7 +198,8 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Schema-driven form engine (validation, state, inference, SchemaField seam) | `frontend/forms.md` | feature documents |
 | Design system (design language, authoring conventions) | `frontend/design-system/` | feature documents, `frontend/forms.md` |
 | Project history | Git history | `project/overview.md` (status only) |
-| Planned/future work | Issue tracker (issues, milestones) | `project/overview.md` (link only) |
+| What the product is committed to building | `project/overview.md` (a Commitment, §3) | any document needing to test whether a need is grounded |
+| Live status of work in progress | Issue tracker (issues, milestones) | `project/overview.md`, execution plans (link only) |
 
 **Enforcement rule:** if writing a document requires copying more than a sentence from another document, stop and link instead. Copying authoritative content is a defect, not a convenience.
 
@@ -301,7 +302,7 @@ Because most documents are thin and link-based, **most code changes require no d
 ## 11. Documentation Governance
 
 1. **Compliance is mandatory.** All documentation contributions — by humans or AI assistants — must conform to this strategy. Reviewers reject documentation that violates it.
-2. **The pull-request checklist enforces this strategy.** Before merge, a documentation change must confirm: it has a single authoritative home, it duplicates no other document, it links rather than copies, it documents only existing code, any triggered updates from §10 are included, and any current deviation from the intended architecture is recorded as a finding (§9) rather than written into the design documentation.
+2. **The pull-request checklist enforces this strategy.** Before merge, a documentation change must confirm: it has a single authoritative home, it duplicates no other document, it links rather than copies, it claims nothing that does not exist and stays within the rules of its class (§3), any triggered updates from §10 are included, and any current deviation from the intended architecture is recorded as a finding (§9) rather than written into the design documentation.
 3. **Changing this strategy.** This document is itself governed, and what governs it is §8's bar — not the fact that it is constitutional. A change that alters a **governance principle** — what a document class is for, who owns a fact, when an artifact is created — is an architectural decision and is recorded as an ADR. A change that **evolves a rule this document already owns** — extending a standard, sharpening a criterion, adding a required field — follows the standard documentation pull-request flow. **The question is whether the change alters the principle or applies it.**
 4. **Language and form.** Documentation is written in English, in clear and concise prose, as durable reference material — not as meeting notes, proposals, or revision logs. A document's header states its currency: **`Last Updated` changes with any change to the file, however small; `Version` changes when a decision is added or the document changes materially.**
 5. **Link integrity.** Cross-document links are part of the contract. A change that moves or renames a document must update the documents that link to it, and a verification pass confirms no broken links remain.
