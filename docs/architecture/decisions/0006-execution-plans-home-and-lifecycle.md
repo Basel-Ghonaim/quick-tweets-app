@@ -3,6 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-07-14
 > **Deciders:** Basel Ghonaim
+> **Revised:** 2026-08-17 — Decision 4 no longer glosses Principles 5 and 6 as requiring permanent reference documentation to describe only what exists; that wording predates [ADR 0014](0014-document-classes-and-committed-product-scope.md), under which a Contract and a Commitment are permanent reference documentation and assert something other than existence. The decision — plans are a distinct, lifecycle-governed class — is unchanged.
 > **Revised:** 2026-08-05 — the `Draft` stage gains a location: a plan is drafted outside the tracked tree and enters `docs/plans/` on approval. Lifecycle and home otherwise unchanged.
 
 ## Context
@@ -37,7 +38,7 @@ Introduce a formal home and lifecycle for execution plans, without a new governa
 
 3. **Ownership boundary — no duplication.** An execution plan owns the **strategy, sequencing, rationale, risk management, and execution structure** of a multi-Work-Item effort. **Issues** (and the tracker) own the **implementation, status, progress, and acceptance criteria** of each Work Item. A plan **links** its Parent Issue and never mirrors Work-Item status.
 
-4. **Artifact boundary — plans are not permanent reference documentation.** Documentation Principles 5 and 6 govern the **permanent reference documentation** (which must describe only what exists). Execution plans are a **separate, lifecycle-governed class** that captures forward-looking strategy; they are governed by this ADR and the Documentation Strategy, and are kept out of `architecture/` and the other permanent categories. This **clarifies the scope** of Principles 5–6; it does not weaken them.
+4. **Artifact boundary — plans are not permanent reference documentation.** Execution plans are a **separate, lifecycle-governed class** that captures forward-looking strategy; they are governed by this ADR and the Documentation Strategy, and are kept out of `architecture/` and the other permanent categories. This **clarifies the scope** of Principles 5–6; it does not weaken them — the move [ADR 0014](0014-document-classes-and-committed-product-scope.md) later generalised, which is where the relationship between a class and those principles is now stated.
 
 5. **Governance placement — extend existing owners, add no new one.** Governance lives in this ADR and the [Documentation Strategy](../documentation-strategy.md): the Strategy records the **category** (location, responsibility, and the artifact boundary), and this ADR records the **decision, the lifecycle, and the rules**. `docs/plans/README.md` owns only the **template, layout, and authoring conventions** for a plan — not governance. The Execution Standard §12 **points** to the home. One fact, one owner.
 
