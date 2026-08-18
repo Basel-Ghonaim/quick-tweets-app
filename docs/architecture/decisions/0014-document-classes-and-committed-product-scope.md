@@ -1,6 +1,6 @@
 # ADR 0014: Documents Are Classified by What They Claim, and Committed Product Scope Has an Owner
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-08-17
 > **Deciders:** Basel Ghonaim
 > **Amends:** [Documentation Strategy](../documentation-strategy.md) §2 (Principles 5 and 6) and §3
