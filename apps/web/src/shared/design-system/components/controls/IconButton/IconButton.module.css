@@ -1,0 +1,108 @@
+.root {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: var(--border-width-thin) solid transparent;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all var(--motion-interactive);
+  /* The floor, not the size: a control never falls below the minimum hit target
+     whatever its box says. */
+  min-inline-size: var(--control-target-min);
+  min-block-size: var(--control-target-min);
+}
+
+/* The box is this component's own geometry. The control padding scale is
+   deliberately asymmetric between the axes, so a square cannot bind it as a
+   pair; only the floor above comes from the shared vocabulary. */
+.size-small {
+  inline-size: var(--control-target-min);
+  block-size: var(--control-target-min);
+  font: var(--type-label-small);
+}
+
+.size-medium {
+  inline-size: 2rem;
+  block-size: 2rem;
+  font: var(--type-label-medium);
+}
+
+.size-large {
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  font: var(--type-label-large);
+}
+
+.shape-circle {
+  border-radius: var(--border-radius-full);
+}
+
+.shape-rounded {
+  border-radius: var(--border-radius-md);
+}
+
+/* Every colour falls back to the surrounding text, because the role vocabulary
+   has no neutral member and an uncoloured action is the ordinary case. */
+.variant-ghost {
+  color: var(--icon-button-on-surface, currentColor);
+}
+
+.variant-ghost:hover:not(:disabled) {
+  background-color: var(--icon-button-subtle, var(--surface-hover));
+}
+
+.variant-outlined {
+  color: var(--icon-button-on-surface, currentColor);
+  border-color: var(--icon-button-fill, currentColor);
+}
+
+.variant-outlined:hover:not(:disabled) {
+  background-color: var(--icon-button-subtle, var(--surface-hover));
+}
+
+.variant-contained {
+  background-color: var(--icon-button-fill, var(--surface-subtle));
+  border-color: var(--icon-button-fill, var(--surface-subtle));
+  color: var(--icon-button-on-fill, currentColor);
+}
+
+.variant-contained:hover:not(:disabled) {
+  background-color: var(--icon-button-fill-hover, var(--surface-hover));
+  border-color: var(--icon-button-fill-hover, var(--surface-hover));
+}
+
+/* A pressed control reads through its foreground, and only where a role gives
+   it one to read: uncoloured this resolves to `inherit` and changes nothing, so
+   the caller expresses the state by swapping the icon instead. */
+.variant-ghost[aria-pressed="true"],
+.variant-outlined[aria-pressed="true"] {
+  color: var(--icon-button-fill, inherit);
+}
+
+.root:active:not(:disabled) {
+  transform: var(--motion-press);
+}
+
+.root:disabled {
+  opacity: var(--control-opacity-disabled);
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Loading is disabled at the element, so this only carries the distinct dimming
+   that tells the two apart. */
+.isLoading:disabled {
+  opacity: var(--control-opacity-loading);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.icon > svg {
+  width: 1.25em;
+  height: 1.25em;
+}
