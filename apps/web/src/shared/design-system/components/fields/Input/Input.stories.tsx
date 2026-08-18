@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { Input } from "./Input";
-import { CONTROL_SIZES, ROLES } from "../../../foundations";
+import {
+  CONTROL_SIZES,
+  ROLES,
+  THEMES,
+  THEME_ATTRIBUTE,
+} from "../../../foundations";
 
 const meta = {
   title: "Design System/Fields/Input",
@@ -85,4 +91,35 @@ export const Sizes: Story = {
       ))}
     </div>
   ),
+};
+
+/**
+ * The field's adornment is what colours the indicator, so the shared Spinner
+ * has to keep inheriting rather than carrying a colour of its own. Asserted in
+ * both themes, because the adornment's colour is theme-resolved.
+ */
+export const SpinnerInheritsFromAdornment: Story = {
+  args: { ...Default.args, isLoading: true },
+  play: async ({ canvasElement }) => {
+    const previous = document.documentElement.getAttribute(THEME_ATTRIBUTE);
+
+    for (const theme of THEMES) {
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
+
+      const spinner = canvasElement.querySelector<HTMLElement>(
+        "[aria-hidden='true']",
+      );
+      await expect(spinner).not.toBeNull();
+
+      const host = getComputedStyle(spinner!.parentElement!);
+      const arc = getComputedStyle(spinner!);
+      await expect(arc.borderBlockStartColor).toBe(host.color);
+      await expect(parseFloat(arc.width)).toBeCloseTo(
+        parseFloat(host.fontSize) * 1.25,
+        1,
+      );
+    }
+
+    if (previous) document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
+  },
 };

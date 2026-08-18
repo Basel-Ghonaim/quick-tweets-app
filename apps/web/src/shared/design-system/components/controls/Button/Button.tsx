@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import styles from "./Button.module.css";
 import type { ButtonProps } from "./Button.types";
 import { classNames, customProperties } from "../../shared";
+import { Spinner } from "../../feedback/Spinner";
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
@@ -56,7 +57,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-invalid={isInvalid || undefined}
         {...props}
       >
-        {isLoading && <span className={styles.spinner} aria-hidden="true" />}
+        {isLoading && <Spinner />}
         {!isLoading && leftIcon && (
           <span className={styles.icon}>{leftIcon}</span>
         )}

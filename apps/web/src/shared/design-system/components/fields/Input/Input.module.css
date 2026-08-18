@@ -135,21 +135,6 @@
   pointer-events: none;
 }
 
-.spinner {
-  width: 1.25em;
-  height: 1.25em;
-  border: var(--border-width-medium) solid var(--text-muted);
-  border-inline-end-color: transparent;
-  border-radius: var(--border-radius-full);
-  animation: input-spin var(--motion-spin) infinite;
-}
-
-@keyframes input-spin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 /* Inset, because the control clips its children to its own radius and would
    otherwise cut an outward ring. */
 .passwordToggle {

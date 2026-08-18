@@ -1,0 +1,29 @@
+.root {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  /* A faint complete ring holds still while a solid arc sweeps over it. The
+     stationary track is what makes the turning legible: an arc alone gives the
+     eye no fixed reference and reads as a shape rather than as motion. The
+     track's alpha is this component's own treatment, not shared language. */
+  border: var(--border-width-medium) solid
+    color-mix(in srgb, var(--spinner-color, currentColor) 20%, transparent);
+  border-block-start-color: var(--spinner-color, currentColor);
+  border-radius: var(--border-radius-full);
+  animation: spinner-rotate var(--motion-spin) infinite;
+}
+
+@keyframes spinner-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Slowed rather than stopped: a spinner reports that work is still running, so
+   removing its motion removes the information. The cadence is this component's
+   own choreography, so it binds no token. */
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    animation-duration: 2s;
+  }
+}
