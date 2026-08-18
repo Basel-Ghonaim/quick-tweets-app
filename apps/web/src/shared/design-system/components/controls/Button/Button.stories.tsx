@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { Button } from "./Button";
 import type { ButtonVariant } from "./Button.types";
-import { CONTROL_SIZES, ROLES } from "../../../foundations";
+import {
+  CONTROL_SIZES,
+  ROLES,
+  THEMES,
+  THEME_ATTRIBUTE,
+} from "../../../foundations";
 
 const meta = {
   title: "Design System/Controls/Button",
@@ -112,4 +118,55 @@ export const Roles: Story = {
       ))}
     </div>
   ),
+};
+
+/**
+ * The busy indicator is shared now, so what has to keep holding is that each
+ * host still governs it: the arc takes the host's own text colour and the box
+ * tracks the host's font size, both by inheritance rather than by a prop. That
+ * is the coupling a refactor breaks without anything else noticing.
+ */
+export const SpinnerInheritsFromHost: Story = {
+  render: () => (
+    <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+      {VARIANTS.flatMap((variant) =>
+        CONTROL_SIZES.map((size) => (
+          <Button
+            key={`${variant}-${size}`}
+            variant={variant}
+            size={size}
+            isLoading
+            loadingText="Loading"
+          >
+            Save
+          </Button>
+        )),
+      )}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const previous = document.documentElement.getAttribute(THEME_ATTRIBUTE);
+
+    for (const theme of THEMES) {
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
+
+      const buttons = [...canvasElement.querySelectorAll("button")];
+      await expect(buttons).toHaveLength(VARIANTS.length * CONTROL_SIZES.length);
+
+      for (const button of buttons) {
+        const spinner = button.querySelector<HTMLElement>("[aria-hidden='true']");
+        await expect(spinner).not.toBeNull();
+
+        const host = getComputedStyle(spinner!.parentElement!);
+        const arc = getComputedStyle(spinner!);
+        await expect(arc.borderBlockStartColor).toBe(host.color);
+        await expect(parseFloat(arc.width)).toBeCloseTo(
+          parseFloat(host.fontSize) * 1.25,
+          1,
+        );
+      }
+    }
+
+    if (previous) document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
+  },
 };

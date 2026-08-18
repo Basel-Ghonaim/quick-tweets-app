@@ -3,6 +3,7 @@ import styles from "./Input.module.css";
 import type { InputProps } from "./Input.types";
 import { PasswordToggle } from "./parts/PasswordToggle";
 import { classNames, customProperties, useFieldA11y } from "../../shared";
+import { Spinner } from "../../feedback/Spinner";
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
@@ -41,7 +42,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     // alongside them rather than replacing them, so supplying one can never
     // remove the means of revealing a password or the busy indicator.
     const ownedSuffix = isLoading ? (
-      <span className={styles.spinner} aria-hidden="true" />
+      <Spinner />
     ) : isPassword ? (
       <PasswordToggle
         controlId={controlId}
