@@ -5,8 +5,8 @@
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.1
-> **Last Updated:** 2026-08-17
+> **Version:** 1.2
+> **Last Updated:** 2026-08-19
 > **Owner:** Basel Ghonaim
 
 ## What the language is for
@@ -84,7 +84,7 @@ A family's prefix names the anatomy that owns the concept, and the prefix is par
 - **Control** — what only an interactive control has: its density, its disabled and loading emphasis, its minimum hit target, its selection geometry.
 - **Field** — what the Field anatomy owns: its label, its description, the space between its stacked parts.
 
-**Typography is the one family the anatomy prefix does not govern**, because a typographic role is not an anatomy. Text styles are composite — weight, size, line height and family bundled into one declaration, so a call site applies a whole style and cannot pick it apart. Two roles exist: **label**, text whose purpose is to name or identify, and **body**, text read as content. An alert's title is a label though an alert is not a control.
+**Typography is the one family the anatomy prefix does not govern**, because a typographic role is not an anatomy. Text styles are composite — weight, size, line height and family bundled into one declaration, so a call site applies a whole style and cannot pick it apart. Four roles exist: **label**, text whose purpose is to name or identify; **body**, text read as content; **heading**, text that titles the content beneath it; and **display**, the one piece of text a surface is built around. An alert's title is a label though an alert is not a control, and a heading is a heading whether or not it is carried by a heading element — a role says how text reads, never which element carries it.
 
 Typographic **sizes are typographic**, not a control's density. A component decides how its own size maps onto them, and that mapping is a component choice rather than a rule.
 
