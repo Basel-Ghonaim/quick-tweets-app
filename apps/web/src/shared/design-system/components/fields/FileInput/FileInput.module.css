@@ -215,32 +215,29 @@
   pointer-events: none;
 }
 
-.thumbnailRemoveBtn {
+/* Scoped through the thumbnail so each declaration outranks the shared rule it
+   replaces rather than depending on emission order. The wash dims the
+   photograph so the control reads against it — legibility over media, not the
+   modality a dialog's backdrop expresses. */
+.thumbnailWrapper .thumbnailRemoveBtn {
   position: absolute;
   inset-block-start: 4px;
   inset-inline-end: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  /* Dims the photograph so the overlay's controls read against it — legibility
-     over media, not the modality a dialog's backdrop expresses. */
   background-color: rgba(0, 0, 0, 0.6);
   color: white;
-  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
   opacity: 0;
   transition: opacity var(--motion-reveal);
 }
 
-.thumbnailWrapper:hover .thumbnailRemoveBtn {
+/* A control that can be reached has to be visible while it is reached, and
+   focus is one of the ways it is reached (Finding 0014). */
+.thumbnailWrapper:hover .thumbnailRemoveBtn,
+.thumbnailWrapper:focus-within .thumbnailRemoveBtn {
   opacity: 1;
 }
 
-.thumbnailRemoveBtn:hover {
+.thumbnailWrapper .thumbnailRemoveBtn:hover:not(:disabled) {
   background-color: var(--role-fill-error);
 }
 
@@ -409,7 +406,6 @@
   border-color: var(--file-input-color);
   background-color: var(--file-input-alpha);
   color: var(--file-input-color);
-  transform: scale(1.02);
 }
 
 .avatarOutline {
@@ -420,7 +416,6 @@
 .avatarOutline:hover {
   background-color: var(--file-input-alpha);
   color: var(--file-input-color);
-  transform: scale(1.02);
 }
 
 /* ── Avatar text ── */
@@ -455,7 +450,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: filter var(--motion-expand);
 }
 
 .avatarWrapper:hover .avatarPreviewImg {
@@ -486,7 +480,10 @@
   z-index: 2;
 }
 
-.avatarWrapper:hover .avatarOverlay {
+/* As above: the overlay holds the only controls for replacing or deleting the
+   file, so revealing it on hover alone put them out of reach of the keyboard. */
+.avatarWrapper:hover .avatarOverlay,
+.avatarWrapper:focus-within .avatarOverlay {
   opacity: 1;
 }
 
@@ -495,30 +492,38 @@
   gap: var(--space-3);
 }
 
+/* This control sits over an arbitrary photograph, so its wash and its shadow
+   are legibility against unknown content rather than the system's elevation:
+   nothing else has to agree with them, and no theme governs what is behind. */
 .avatarOverlayBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  /* This control sits over an arbitrary photograph, so its wash and its shadow
-     are legibility against unknown content rather than the system's elevation:
-     nothing else has to agree with them, and no theme governs what is behind. */
   background: rgba(255, 255, 255, 0.9);
   color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--motion-interactive);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  /* The mirror of the thumbnail's problem: a light wash loses its edge over
+     light media, so the hairline here is dark. The drop shadow beneath it is
+     depth, not a boundary, and cannot be relied on for one. */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
-.avatarOverlayBtn:hover {
+/* Larger than the shared medium box because it has to stay findable against
+   busy content. */
+.avatarOverlayActions .avatarOverlayBtn {
+  inline-size: 36px;
+  block-size: 36px;
+}
+
+/* Lifts by light rather than by growing: the control is pinned over a
+   photograph, and a scaling one shifts against the image under it. The second
+   shadow layer is a soft halo, not elevation. */
+.avatarOverlayActions .avatarOverlayBtn:hover:not(:disabled) {
   background: #fff;
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 0 0 4px rgba(255, 255, 255, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
-.avatarOverlayBtnDanger:hover {
+.avatarOverlayActions .avatarOverlayBtnDanger:hover:not(:disabled) {
   color: var(--role-on-surface-error);
 }

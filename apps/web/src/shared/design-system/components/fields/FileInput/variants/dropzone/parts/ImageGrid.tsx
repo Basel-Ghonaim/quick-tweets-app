@@ -1,4 +1,5 @@
 import { XIcon, PlusIcon } from "../../../../../../icons";
+import { IconButton } from "../../../../../controls/IconButton";
 import styles from "../../../FileInput.module.css";
 
 interface ImageGridProps {
@@ -29,14 +30,14 @@ export const ImageGrid = ({
           alt={file.name}
           className={styles.thumbnailImg}
         />
-        <button
-          type="button"
+        <IconButton
+          size="small"
+          shape="circle"
           className={styles.thumbnailRemoveBtn}
+          icon={<XIcon />}
           onClick={(e) => onRemove(index, e)}
           aria-label={`Remove ${file.name}`}
-        >
-          <XIcon size={12} />
-        </button>
+        />
       </div>
     ))}
 

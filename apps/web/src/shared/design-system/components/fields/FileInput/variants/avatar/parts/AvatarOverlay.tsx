@@ -1,4 +1,6 @@
 import { TrashIcon, RefreshIcon } from "../../../../../../icons";
+import { IconButton } from "../../../../../controls/IconButton";
+import { classNames } from "../../../../../shared";
 import styles from "../../../FileInput.module.css";
 
 interface AvatarOverlayProps {
@@ -19,24 +21,25 @@ interface AvatarOverlayProps {
 export const AvatarOverlay = ({ onDelete, onReplace }: AvatarOverlayProps) => (
   <div className={styles.avatarOverlay}>
     <div className={styles.avatarOverlayActions}>
-      <button
-        type="button"
-        className={`${styles.avatarOverlayBtn} ${styles.avatarOverlayBtnDanger}`}
+      <IconButton
+        shape="circle"
+        className={classNames(
+          styles.avatarOverlayBtn,
+          styles.avatarOverlayBtnDanger,
+        )}
+        icon={<TrashIcon />}
         onClick={onDelete}
         aria-label="Delete file"
         title="Delete"
-      >
-        <TrashIcon size={16} />
-      </button>
-      <button
-        type="button"
+      />
+      <IconButton
+        shape="circle"
         className={styles.avatarOverlayBtn}
+        icon={<RefreshIcon />}
         onClick={onReplace}
         aria-label="Replace file"
         title="Replace"
-      >
-        <RefreshIcon size={16} />
-      </button>
+      />
     </div>
   </div>
 );

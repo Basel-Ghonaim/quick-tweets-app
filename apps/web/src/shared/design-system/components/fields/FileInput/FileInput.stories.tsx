@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, within } from "storybook/test";
+import { THEMES, THEME_ATTRIBUTE } from "../../../foundations";
 import { FileInput } from "./FileInput";
 import type { FileInputProps } from "./FileInput.types";
 
@@ -430,5 +431,139 @@ export const FileListRemoveMeetsTheTarget: DropzoneStory = {
 
     // Composed, not declared — the defect this migration exists to close.
     await expect(remove.className).toMatch(/_focusRing_/);
+  },
+};
+
+/** Selects one file and returns the element, so a story can reach a surface that only exists after an upload. */
+const uploadOneFile = async (
+  canvasElement: HTMLElement,
+  file: File,
+): Promise<void> => {
+  const input = canvasElement.querySelector<HTMLInputElement>(
+    'input[type="file"]',
+  )!;
+  // Assigned rather than clicked: the native input is deliberately
+  // `pointer-events: none`, so a pointer-driven upload cannot reach it.
+  const transfer = new DataTransfer();
+  transfer.items.add(file);
+  input.files = transfer.files;
+  fireEvent.change(input);
+};
+
+const png = () =>
+  new File([new Uint8Array([137, 80, 78, 71])], "photo.png", {
+    type: "image/png",
+  });
+
+/**
+ * Guards the invariant Finding 0014 records: the overlay holds the only means
+ * of replacing or deleting the file, so its controls have to be visible
+ * whenever they can be reached.
+ */
+export const AvatarOverlayRevealsOnKeyboardFocus: AvatarStory = {
+  args: { ...Avatar.args },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+
+    const canvas = within(canvasElement);
+    const remove = await canvas.findByRole("button", { name: /Delete file/i });
+    // Anchored on the trailing underscore: without it this matches the inner
+    // `avatarOverlayActions` wrapper, which is never the transparent one.
+    const overlay = remove.closest<HTMLElement>("[class*='avatarOverlay_']")!;
+
+    await expect(getComputedStyle(overlay).opacity).toBe("0");
+
+    remove.focus();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(getComputedStyle(overlay).opacity).toBe("1");
+  },
+};
+
+/** The same defect on the image grid: the remove control is the transparent one. */
+export const ThumbnailRemoveRevealsOnKeyboardFocus: DropzoneStory = {
+  args: { ...DropzoneImageGrid.args },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+
+    const canvas = within(canvasElement);
+    const remove = await canvas.findByRole("button", { name: /^Remove/ });
+
+    await expect(getComputedStyle(remove).opacity).toBe("0");
+
+    remove.focus();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(getComputedStyle(remove).opacity).toBe("1");
+  },
+};
+
+/**
+ * Two things hold at once for these controls: the contract they take from the
+ * layer, and the wash that answers the photograph behind them, which is this
+ * field's and not the system's.
+ */
+export const AvatarOverlayControlsMeetTheContract: AvatarStory = {
+  args: { ...Avatar.args },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+
+    const canvas = within(canvasElement);
+    const previous = document.documentElement.getAttribute(THEME_ATTRIBUTE);
+
+    for (const theme of THEMES) {
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
+
+      for (const name of [/Delete file/i, /Replace file/i]) {
+        const control = await canvas.findByRole("button", { name });
+
+        const { width, height } = control.getBoundingClientRect();
+        await expect(width).toBeGreaterThanOrEqual(24);
+        await expect(height).toBeGreaterThanOrEqual(24);
+
+        await expect(control.className).toMatch(/_focusRing_/);
+
+        // Asserted in both themes because it answers the photograph behind it,
+        // which no theme governs.
+        const { backgroundColor, boxShadow } = getComputedStyle(control);
+        await expect(backgroundColor).toBe("rgba(255, 255, 255, 0.9)");
+        await expect(boxShadow).toContain("rgba(0, 0, 0, 0.18)");
+      }
+    }
+
+    if (previous)
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
+  },
+};
+
+/**
+ * The remove control was 20px against a 24px floor. The increase is an
+ * intentional visual change, not preservation — so the thing worth asserting is
+ * that it still sits inside the thumbnail it is pinned to, which is what a 20%
+ * larger box puts at risk.
+ */
+export const ThumbnailRemoveMeetsTheContract: DropzoneStory = {
+  args: { ...DropzoneImageGrid.args },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+
+    const canvas = within(canvasElement);
+    const remove = await canvas.findByRole("button", { name: /^Remove/ });
+    const thumbnail = remove.parentElement as HTMLElement;
+
+    const box = remove.getBoundingClientRect();
+    await expect(box.width).toBeGreaterThanOrEqual(24);
+    await expect(box.height).toBeGreaterThanOrEqual(24);
+
+    await expect(remove.className).toMatch(/_focusRing_/);
+
+    const { backgroundColor, boxShadow } = getComputedStyle(remove);
+    await expect(backgroundColor).toBe("rgba(0, 0, 0, 0.6)");
+    await expect(boxShadow).toContain("rgba(255, 255, 255, 0.9)");
+
+    // Layout: still wholly inside the thumbnail, which is what the increase
+    // could have broken — it is pinned 4px from a corner of an 80px box.
+    const frame = thumbnail.getBoundingClientRect();
+    await expect(box.right).toBeLessThanOrEqual(frame.right);
+    await expect(box.top).toBeGreaterThanOrEqual(frame.top);
+    await expect(box.bottom).toBeLessThanOrEqual(frame.bottom);
   },
 };
