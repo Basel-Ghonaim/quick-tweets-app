@@ -20,7 +20,7 @@
 import { describe, it, expect } from "vitest";
 import type { ReactElement } from "react";
 import { SchemaField } from "@shared/schema-form";
-import { Input, Checkbox, FileInput } from "@shared/design-system";
+import { Input, Checkbox, FileInput, Textarea } from "@shared/design-system";
 
 type Props = Parameters<typeof SchemaField>[0];
 type El = ReactElement<Record<string, unknown>>;
@@ -88,7 +88,19 @@ describe("SchemaField seam (#248, #249)", () => {
     expect(child?.props.fullWidth).toBe(true);
   });
 
-  it.each(["radio", "select", "textarea"] as const)(
+  it("renders a Textarea for the textarea field type", () => {
+    const { child } = invoke({ ...base, type: "textarea", value: "x" });
+
+    expect(child?.type).toBe(Textarea);
+    expect(child?.props.value).toBe("x");
+    expect(child?.props.placeholder).toBe(base.placeholder);
+    expect(child?.props.name).toBe(base.name);
+    expect(child?.props.label).toBe(base.label);
+    expect(child?.props.onChange).toBe(base.onChange);
+    expect(child?.props.fullWidth).toBe(true);
+  });
+
+  it.each(["radio", "select"] as const)(
     "fails fast for the declared-but-unimplemented field type %s",
     (type) => {
       expect(() => invoke({ ...base, type })).toThrow(/not implemented yet/);

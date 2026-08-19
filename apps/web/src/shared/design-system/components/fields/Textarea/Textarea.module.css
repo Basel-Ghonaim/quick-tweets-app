@@ -1,0 +1,89 @@
+.root {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--field-gap);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.label {
+  font: var(--type-label-medium);
+  color: var(--text-primary);
+}
+
+/* The indicator is on the control itself, not on a wrapper: a textarea is not
+   visually replaced and is not adorned, so the element that takes focus is the
+   one that should show it. `plain` depends on this — it has no other boundary. */
+.textarea {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
+  /* Pinned rather than inherited: growing the control means setting a height in
+     pixels, and whether that height includes the padding decides whether the
+     arithmetic is right. The application sets this document-wide, but the layer
+     does not own the document and cannot rely on it. */
+  box-sizing: border-box;
+  width: 100%;
+  color: var(--text-primary);
+  background-color: transparent;
+  border: var(--border-width-thin) solid transparent;
+  border-radius: var(--border-radius-md);
+  transition: border-color var(--motion-interactive);
+}
+
+.textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.size-small {
+  padding: var(--control-padding-block-small) var(--control-padding-inline-small);
+  font: var(--type-body-small);
+}
+
+.size-medium {
+  padding: var(--control-padding-block-medium)
+    var(--control-padding-inline-medium);
+  font: var(--type-body-medium);
+}
+
+.size-large {
+  padding: var(--control-padding-block-large) var(--control-padding-inline-large);
+  font: var(--type-body-large);
+}
+
+/* `plain` deliberately declares no border and no fill. The surface composing it
+   owns the boundary, which is why a composer can sit it flush against its own
+   chrome without a frame inside a frame. */
+.variant-outlined {
+  border-color: var(--border-default);
+  background-color: var(--surface-default);
+}
+
+/* An error is the one state that overrides that: an invalid control has to be
+   findable, and the message below it is not enough on a field with no edge. */
+.isInvalid {
+  border-color: var(--role-fill-error);
+}
+
+.resize-none {
+  resize: none;
+}
+
+.resize-vertical {
+  resize: vertical;
+}
+
+.isDisabled {
+  opacity: var(--control-opacity-disabled);
+  cursor: not-allowed;
+}
+
+.helperText {
+  font: var(--type-body-small);
+  color: var(--text-secondary);
+}
+
+.errorMessage {
+  font: var(--type-body-small);
+  color: var(--role-on-surface-error);
+}
