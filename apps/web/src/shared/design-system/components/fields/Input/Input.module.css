@@ -6,10 +6,6 @@
   position: relative;
 }
 
-.label {
-  font: var(--type-label-medium);
-  color: var(--text-primary);
-}
 
 .fullWidth {
   width: 100%;
@@ -144,12 +140,4 @@
   composes: focusRingInset from "../../../foundations/composition/focusRing.module.css";
 }
 
-.errorMessage {
-  font: var(--type-body-small);
-  color: var(--role-on-surface-error);
-}
 
-.helperText {
-  font: var(--type-body-small);
-  color: var(--text-secondary);
-}

@@ -8,10 +8,6 @@
   width: 100%;
 }
 
-.label {
-  font: var(--type-label-medium);
-  color: var(--text-primary);
-}
 
 /* The indicator is on the control itself, not on a wrapper: a textarea is not
    visually replaced and is not adorned, so the element that takes focus is the
@@ -78,12 +74,4 @@
   cursor: not-allowed;
 }
 
-.helperText {
-  font: var(--type-body-small);
-  color: var(--text-secondary);
-}
 
-.errorMessage {
-  font: var(--type-body-small);
-  color: var(--role-on-surface-error);
-}

@@ -9,6 +9,7 @@ import {
 import styles from "./Textarea.module.css";
 import type { TextareaProps } from "./Textarea.types";
 import { classNames, useFieldA11y } from "../../shared";
+import { FieldLabel, FieldMessages } from "../anatomy";
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   (
@@ -76,11 +77,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           className,
         )}
       >
-        {label && (
-          <label className={styles.label} htmlFor={controlId}>
-            {label}
-          </label>
-        )}
+        <FieldLabel htmlFor={controlId}>{label}</FieldLabel>
 
         <textarea
           ref={control}
@@ -101,17 +98,13 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
 
-        {helperText && (
-          <span id={helperId} className={styles.helperText}>
-            {helperText}
-          </span>
-        )}
-
-        {showError && (
-          <span id={errorId} className={styles.errorMessage} role="alert">
-            {errorMessage}
-          </span>
-        )}
+        <FieldMessages
+          helperId={helperId}
+          errorId={errorId}
+          helperText={helperText}
+          errorMessage={errorMessage}
+          showError={showError}
+        />
       </div>
     );
   },

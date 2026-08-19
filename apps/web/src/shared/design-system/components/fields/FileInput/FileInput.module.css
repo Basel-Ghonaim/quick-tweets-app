@@ -16,10 +16,6 @@
 
 /* ─── Label ──────────────────────────────────────────────────────────────── */
 
-.label {
-  font: var(--type-label-medium);
-  color: var(--text-primary);
-}
 
 /* ─── Hidden native file input ───────────────────────────────────────────── */
 
@@ -88,17 +84,9 @@
 
 /* ─── Helper text ────────────────────────────────────────────────────────── */
 
-.helperText {
-  font: var(--type-body-small);
-  color: var(--text-secondary);
-}
 
 /* ─── Error message ──────────────────────────────────────────────────────── */
 
-.errorMessage {
-  font: var(--type-body-small);
-  color: var(--role-on-surface-error);
-}
 
 /* ─── Invalid state ──────────────────────────────────────────────────────── */
 
