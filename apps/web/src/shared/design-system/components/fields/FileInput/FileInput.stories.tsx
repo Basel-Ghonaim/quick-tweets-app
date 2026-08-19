@@ -456,10 +456,9 @@ const png = () =>
   });
 
 /**
- * The overlay holds the only controls for replacing or deleting the file, and
- * it was revealed on hover alone — so a keyboard user could tab to a control
- * that never became visible. The owned focus indicator cannot cover for that:
- * a ring drawn on a transparent element is transparent too.
+ * Guards the invariant Finding 0014 records: the overlay holds the only means
+ * of replacing or deleting the file, so its controls have to be visible
+ * whenever they can be reached.
  */
 export const AvatarOverlayRevealsOnKeyboardFocus: AvatarStory = {
   args: { ...Avatar.args },
@@ -498,10 +497,9 @@ export const ThumbnailRemoveRevealsOnKeyboardFocus: DropzoneStory = {
 };
 
 /**
- * The overlay controls are the shared IconButton now. What they gained is the
- * owned focus indicator, which they had none of; what they keep is the wash and
- * shadow that make them legible over an arbitrary photograph — those are this
- * field's, not the system's, and the migration does not get to drop them.
+ * Two things hold at once for these controls: the contract they take from the
+ * layer, and the wash that answers the photograph behind them, which is this
+ * field's and not the system's.
  */
 export const AvatarOverlayControlsMeetTheContract: AvatarStory = {
   args: { ...Avatar.args },
@@ -523,10 +521,8 @@ export const AvatarOverlayControlsMeetTheContract: AvatarStory = {
 
         await expect(control.className).toMatch(/_focusRing_/);
 
-        // The wash survives the migration, in both themes: it answers the
-        // photograph behind it, which no theme governs.
-        // Wash plus an edge — dark here, because a light wash is the one that
-        // disappears against light media.
+        // Asserted in both themes because it answers the photograph behind it,
+        // which no theme governs.
         const { backgroundColor, boxShadow } = getComputedStyle(control);
         await expect(backgroundColor).toBe("rgba(255, 255, 255, 0.9)");
         await expect(boxShadow).toContain("rgba(0, 0, 0, 0.18)");
@@ -559,9 +555,6 @@ export const ThumbnailRemoveMeetsTheContract: DropzoneStory = {
 
     await expect(remove.className).toMatch(/_focusRing_/);
 
-    // The wash is still its own, and it carries an edge: a scrim separates the
-    // control from media lighter than itself and from nothing else, so over a
-    // dark photograph it would otherwise have no boundary at all.
     const { backgroundColor, boxShadow } = getComputedStyle(remove);
     await expect(backgroundColor).toBe("rgba(0, 0, 0, 0.6)");
     await expect(boxShadow).toContain("rgba(255, 255, 255, 0.9)");

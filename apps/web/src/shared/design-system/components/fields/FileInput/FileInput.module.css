@@ -218,8 +218,7 @@
 /* Scoped through the thumbnail so each declaration outranks the shared rule it
    replaces rather than depending on emission order. The wash dims the
    photograph so the control reads against it — legibility over media, not the
-   modality a dialog's backdrop expresses. The box is the shared control's,
-   which is what finally takes it to the minimum hit target it used to miss. */
+   modality a dialog's backdrop expresses. */
 .thumbnailWrapper .thumbnailRemoveBtn {
   position: absolute;
   inset-block-start: 4px;
@@ -231,10 +230,8 @@
   transition: opacity var(--motion-reveal);
 }
 
-/* Focus reveals it as hover does. Without the second condition the control is
-   reachable by tab and never becomes visible while being reached, and the owned
-   focus indicator cannot help — a ring drawn on a transparent element is
-   transparent too. */
+/* A control that can be reached has to be visible while it is reached, and
+   focus is one of the ways it is reached (Finding 0014). */
 .thumbnailWrapper:hover .thumbnailRemoveBtn,
 .thumbnailWrapper:focus-within .thumbnailRemoveBtn {
   opacity: 1;
@@ -497,9 +494,7 @@
 
 /* This control sits over an arbitrary photograph, so its wash and its shadow
    are legibility against unknown content rather than the system's elevation:
-   nothing else has to agree with them, and no theme governs what is behind.
-   Everything structural below it — the box, the ring, the cursor — is the
-   shared control's. */
+   nothing else has to agree with them, and no theme governs what is behind. */
 .avatarOverlayBtn {
   background: rgba(255, 255, 255, 0.9);
   color: var(--text-secondary);
@@ -511,10 +506,8 @@
     0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
-/* Scoped through the actions row throughout this block, so each rule outranks
-   the shared one it overrides instead of depending on the order the stylesheets
-   happen to be emitted in. Larger than the shared medium box because it has to
-   stay findable against busy content. */
+/* Larger than the shared medium box because it has to stay findable against
+   busy content. */
 .avatarOverlayActions .avatarOverlayBtn {
   inline-size: 36px;
   block-size: 36px;
