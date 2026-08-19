@@ -12,5 +12,7 @@
   --font-size-2xl: 1.875rem; /* 30px */
   --font-size-3xl: 2.25rem; /* 36px */
 
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.3;
   --line-height-base: 1.5;
 }

@@ -2,10 +2,12 @@
 /* Composite text styles (ADR 0011 Decision 6): the `font` shorthand keeps size and
    weight inseparable at the call site. No tracking — no consumer sets one. */
 :root {
-  /* Two typographic roles, not two namespaces. `label` names or identifies
+  /* Four typographic roles, not four namespaces. `label` names or identifies
      something — a button's caption, a field's label, an alert's title. `body` is
-     read as content — a typed value, an option, a message. Neither is tied to an
-     anatomy or to an ARIA meaning.
+     read as content — a typed value, an option, a message. `heading` titles the
+     content beneath it, and `display` is the one piece of text a surface is
+     built around. None is tied to an anatomy or to an ARIA meaning: a role says
+     how text reads, never which element carries it.
 
      small/medium/large are *typography* sizes, not ControlSize. A component that
      maps its own `size` prop onto them is making a component choice; the mapping
@@ -24,4 +26,19 @@
     var(--font-family-base);
   --type-body-large: 400 var(--font-size-base) / var(--line-height-base)
     var(--font-family-base);
+
+  /* Heading and display carry the heading family; label and body carry the base
+     one. The leading tightens as the size grows, because the same ratio that
+     reads as comfortable at 16px reads as a gap at 36px. */
+  --type-heading-small: 600 var(--font-size-md) / var(--line-height-snug)
+    var(--font-family-heading);
+  --type-heading-medium: 600 var(--font-size-lg) / var(--line-height-snug)
+    var(--font-family-heading);
+  --type-heading-large: 600 var(--font-size-xl) / var(--line-height-snug)
+    var(--font-family-heading);
+
+  --type-display-medium: 700 var(--font-size-2xl) / var(--line-height-tight)
+    var(--font-family-heading);
+  --type-display-large: 700 var(--font-size-3xl) / var(--line-height-tight)
+    var(--font-family-heading);
 }
