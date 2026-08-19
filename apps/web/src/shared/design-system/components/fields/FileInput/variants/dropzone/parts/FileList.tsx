@@ -3,6 +3,7 @@ import {
   PlusIcon,
   FileTypeIcon,
 } from "../../../../../../icons";
+import { IconButton } from "../../../../../controls/IconButton";
 import { formatSize } from "../../../formatSize";
 import styles from "../../../FileInput.module.css";
 
@@ -47,14 +48,13 @@ export const FileList = ({
           )}
           <span className={styles.fileListName}>{file.name}</span>
           <span className={styles.fileListSize}>{formatSize(file.size)}</span>
-          <button
-            type="button"
+          <IconButton
+            size="small"
             className={styles.fileListRemoveBtn}
+            icon={<TrashIcon />}
             onClick={(e) => onRemove(index, e)}
             aria-label={`Remove ${file.name}`}
-          >
-            <TrashIcon size={14} />
-          </button>
+          />
         </div>
       );
     })}
