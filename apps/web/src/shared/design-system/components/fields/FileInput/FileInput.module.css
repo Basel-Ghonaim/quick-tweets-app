@@ -236,7 +236,12 @@
   transition: opacity var(--motion-reveal);
 }
 
-.thumbnailWrapper:hover .thumbnailRemoveBtn {
+/* Focus reveals it as hover does. Without the second condition the control is
+   reachable by tab and never becomes visible while being reached, and the owned
+   focus indicator cannot help — a ring drawn on a transparent element is
+   transparent too. */
+.thumbnailWrapper:hover .thumbnailRemoveBtn,
+.thumbnailWrapper:focus-within .thumbnailRemoveBtn {
   opacity: 1;
 }
 
@@ -486,7 +491,10 @@
   z-index: 2;
 }
 
-.avatarWrapper:hover .avatarOverlay {
+/* As above: the overlay holds the only controls for replacing or deleting the
+   file, so revealing it on hover alone put them out of reach of the keyboard. */
+.avatarWrapper:hover .avatarOverlay,
+.avatarWrapper:focus-within .avatarOverlay {
   opacity: 1;
 }
 

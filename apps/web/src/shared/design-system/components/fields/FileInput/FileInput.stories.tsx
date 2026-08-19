@@ -432,3 +432,66 @@ export const FileListRemoveMeetsTheTarget: DropzoneStory = {
     await expect(remove.className).toMatch(/_focusRing_/);
   },
 };
+
+/** Selects one file and returns the element, so a story can reach a surface that only exists after an upload. */
+const uploadOneFile = async (
+  canvasElement: HTMLElement,
+  file: File,
+): Promise<void> => {
+  const input = canvasElement.querySelector<HTMLInputElement>(
+    'input[type="file"]',
+  )!;
+  // Assigned rather than clicked: the native input is deliberately
+  // `pointer-events: none`, so a pointer-driven upload cannot reach it.
+  const transfer = new DataTransfer();
+  transfer.items.add(file);
+  input.files = transfer.files;
+  fireEvent.change(input);
+};
+
+const png = () =>
+  new File([new Uint8Array([137, 80, 78, 71])], "photo.png", {
+    type: "image/png",
+  });
+
+/**
+ * The overlay holds the only controls for replacing or deleting the file, and
+ * it was revealed on hover alone — so a keyboard user could tab to a control
+ * that never became visible. The owned focus indicator cannot cover for that:
+ * a ring drawn on a transparent element is transparent too.
+ */
+export const AvatarOverlayRevealsOnKeyboardFocus: AvatarStory = {
+  args: { ...Avatar.args },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+
+    const canvas = within(canvasElement);
+    const remove = await canvas.findByRole("button", { name: /Delete file/i });
+    // Anchored on the trailing underscore: without it this matches the inner
+    // `avatarOverlayActions` wrapper, which is never the transparent one.
+    const overlay = remove.closest<HTMLElement>("[class*='avatarOverlay_']")!;
+
+    await expect(getComputedStyle(overlay).opacity).toBe("0");
+
+    remove.focus();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(getComputedStyle(overlay).opacity).toBe("1");
+  },
+};
+
+/** The same defect on the image grid: the remove control is the transparent one. */
+export const ThumbnailRemoveRevealsOnKeyboardFocus: DropzoneStory = {
+  args: { ...DropzoneImageGrid.args },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+
+    const canvas = within(canvasElement);
+    const remove = await canvas.findByRole("button", { name: /^Remove/ });
+
+    await expect(getComputedStyle(remove).opacity).toBe("0");
+
+    remove.focus();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(getComputedStyle(remove).opacity).toBe("1");
+  },
+};
