@@ -215,23 +215,17 @@
   pointer-events: none;
 }
 
-.thumbnailRemoveBtn {
+/* Scoped through the thumbnail so each declaration outranks the shared rule it
+   replaces rather than depending on emission order. The wash dims the
+   photograph so the control reads against it — legibility over media, not the
+   modality a dialog's backdrop expresses. The box is the shared control's,
+   which is what finally takes it to the minimum hit target it used to miss. */
+.thumbnailWrapper .thumbnailRemoveBtn {
   position: absolute;
   inset-block-start: 4px;
   inset-inline-end: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  /* Dims the photograph so the overlay's controls read against it — legibility
-     over media, not the modality a dialog's backdrop expresses. */
   background-color: rgba(0, 0, 0, 0.6);
   color: white;
-  cursor: pointer;
   opacity: 0;
   transition: opacity var(--motion-reveal);
 }
@@ -245,7 +239,7 @@
   opacity: 1;
 }
 
-.thumbnailRemoveBtn:hover {
+.thumbnailWrapper .thumbnailRemoveBtn:hover:not(:disabled) {
   background-color: var(--role-fill-error);
 }
 

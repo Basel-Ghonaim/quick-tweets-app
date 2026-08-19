@@ -535,3 +535,38 @@ export const AvatarOverlayControlsMeetTheContract: AvatarStory = {
       document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
   },
 };
+
+/**
+ * The remove control was 20px against a 24px floor. The increase is an
+ * intentional visual change, not preservation — so the thing worth asserting is
+ * that it still sits inside the thumbnail it is pinned to, which is what a 20%
+ * larger box puts at risk.
+ */
+export const ThumbnailRemoveMeetsTheContract: DropzoneStory = {
+  args: { ...DropzoneImageGrid.args },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+
+    const canvas = within(canvasElement);
+    const remove = await canvas.findByRole("button", { name: /^Remove/ });
+    const thumbnail = remove.parentElement as HTMLElement;
+
+    const box = remove.getBoundingClientRect();
+    await expect(box.width).toBeGreaterThanOrEqual(24);
+    await expect(box.height).toBeGreaterThanOrEqual(24);
+
+    await expect(remove.className).toMatch(/_focusRing_/);
+
+    // The wash that makes it readable over a photograph is still its own.
+    await expect(getComputedStyle(remove).backgroundColor).toBe(
+      "rgba(0, 0, 0, 0.6)",
+    );
+
+    // Layout: still wholly inside the thumbnail, which is what the increase
+    // could have broken — it is pinned 4px from a corner of an 80px box.
+    const frame = thumbnail.getBoundingClientRect();
+    await expect(box.right).toBeLessThanOrEqual(frame.right);
+    await expect(box.top).toBeGreaterThanOrEqual(frame.top);
+    await expect(box.bottom).toBeLessThanOrEqual(frame.bottom);
+  },
+};
