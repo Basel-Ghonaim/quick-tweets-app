@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-18
+> **Last Updated:** 2026-08-19
 > **Parent Issue:** [#522](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/522)
 > **Supersedes:** —
 
@@ -28,7 +28,7 @@ It is a **strategy document**: it owns the effort's goals, sequence, dependencie
 
 **Covers**
 
-- Five Work Items: **Spinner, IconButton, Typography, Textarea, Shared Field Layer.**
+- Five components — **Spinner, IconButton, Typography, Textarea, Shared Field Layer** — across seven Work Items, the two extra being the migration of IconButton's existing consumers onto it (§4).
 - The Typography Foundation members the roles require — composite text styles, and any primitive member they need — plus the text-emphasis contract, **and the [`foundation.md`](../frontend/design-system/foundation.md) update that follows**: adding heading and display roles changes the typography family's architectural meaning, which is the change the stability rule expects to require an edit.
 - Absorbing Button's and Input's private spinners into the unified Spinner, preserving their current appearance.
 - Wiring the `SchemaField` seam for `textarea` only, as the final step of its Work Item.
@@ -41,7 +41,7 @@ It is a **strategy document**: it owns the effort's goals, sequence, dependencie
 - Reopening anything settled in #520 / #521, in the ADRs above, or in §5's pinned decisions.
 - Any product surface, page or feature that would consume these components. None of the five waits on a consumer ([`components.md`](../frontend/design-system/components.md)).
 - Migrating the **auth module** off raw `--font-size-*`. Auth is a prototype and a migration surface only ([frontend architecture](../frontend/architecture.md)); its migration is a separate effort.
-- Migrating **AvatarOverlay's** ad-hoc icon buttons onto IconButton.
+- **`addMoreBtn`, `addMoreRow` and `triggerButton`** — each carries an icon *and* visible text, or is a drop affordance rather than an action, so none is an icon-only button. They are excluded from the migration permanently, not deferred.
 - **Radio and Select**, and the `options` contract [Finding 0005](../architecture/findings/0005-declared-unimplemented-field-types.md) also scopes — this plan resolves only its `textarea` third.
 - Every other member of the committed interface vocabulary, **Skeleton** included, whose boundary against Spinner is pinned but which is not built here.
 - A **reduced-motion resolution axis** in the Foundation. This effort resolves reduced motion at the component that needs it, and records the Foundation question rather than answering it.
@@ -60,12 +60,12 @@ Everything else is judgement, and the order below is chosen for risk, not for th
 
 **Why this order.** *Spinner first* because its contract is the smallest fully-settled one, it retires actual duplicated code, it unblocks a dependent, and its cross-component reach into Button and Input is bounded and understood — so the effort's verification discipline is established on its lowest-risk item rather than its hardest. *IconButton second* because WI-1 unblocks it and it needs no Foundation change. *Typography third* because it is the only item that changes the **language** and the only one that may cross into the application; placing it third lets two components ship while its value table is being settled, and costs nothing, because no earlier Work Item binds a heading or display role. *Textarea fourth* because it is independent but opens the fifth. *The Shared Field Layer last* because it has by far the highest blast radius — Input, Checkbox, FileInput and Textarea at once — and because it cannot begin until all four exist.
 
-**No two Work Items contend for the same files.** WI-1 reaches into Button and Input; WI-2 into its own folder and, at most, Button's type declaration; WI-3 into the token layer and possibly `index.html`; WI-4 into its own folder and the schema-form seam; WI-5 into every field component, after each has settled. The ordering is therefore also the conflict-free ordering, and no Work Item is blocked by another's open branch.
+**No two Work Items contend for the same files.** WI-1 reaches into Button and Input; WI-2 into its own folder and, at most, Button's type declaration; WI-3 into the token layer and possibly `index.html`; WI-4 into its own folder and the schema-form seam; WI-5 into every field component, after each has settled. The ordering is therefore also the conflict-free ordering, and no Work Item is blocked by another's open branch. The one exception is deliberate: **WI-2A and WI-2B both reach into `FileInput.module.css`**, which is why they are sequenced rather than parallel.
 
 | Phase | Goal | Work Item |
 |---|---|---|
 | **1 — Unify** | Retire the duplicated busy indicator; establish the effort's verification pattern on its lowest-risk item. | WI-1 |
-| **2 — Extend the control set** | The icon-only action, unblocked by WI-1. | WI-2 |
+| **2 — Extend the control set** | The icon-only action, unblocked by WI-1, then its consumers migrated onto it. | WI-2, WI-2A, WI-2B |
 | **3 — Extend the language** | Heading and display roles plus text emphasis — the effort's only *expected* Foundation change. | WI-3 |
 | **4 — Extend the field set** | The multiline field, and the waiting consumer it unblocks. | WI-4 |
 | **5 — Consolidate** | Extract the shared field structure once four instances exist to shape it. | WI-5 |
@@ -85,6 +85,10 @@ Everything else is judgement, and the order below is chosen for risk, not for th
 - **WI-1 · Spinner — the unified busy indicator.** *(deps: —)* Build Spinner as a standalone component and absorb the two private implementations inside Button and Input, preserving their current appearance and removing the duplicates once verified. Carries the effort's two governance commits first: the plan's entry into `docs/plans/` with the documentation that changes because of it, then the ADR 0014 status correction. *Why first:* the smallest fully-settled contract, it retires real duplication, it unblocks WI-2, and it establishes the verification discipline the rest of the effort inherits.
 
 - **WI-2 · IconButton — the icon-only action.** *(deps: WI-1)* An independent control, not a Button variant, composing the unified Spinner for its busy state. Self-contained: it introduces no Foundation change and touches no other component's behaviour. *Why here:* WI-1 unblocks it, and it is the last item that can be built without touching the language.
+
+- **WI-2A · Migrate the ordinary-surface icon buttons.** *(deps: WI-2)* `PasswordToggle` and the file-list remove control become `IconButton`, gaining the minimum hit target and the owned focus indicator. Consumer-specific treatment is preserved through `className`, never by widening the component. *Why separate from WI-2:* a migration is not a component contract, and folding it in would have smuggled a visual change into an authoring Work Item.
+
+- **WI-2B · Migrate the overlay icon buttons, and fix their visibility.** *(deps: WI-2A — both reach into `FileInput.module.css`, so they never run concurrently)* The avatar overlay and thumbnail remove controls become `IconButton`, their washes and positioning preserved. It carries an **accessibility behaviour change** rather than a migration alone: both are revealed on hover only, so a keyboard user can focus a control that never becomes visible, and the reveal is extended to `:focus-within`. The thumbnail control rises from 20px to the 24px floor, which is an intentional visual change and not preservation. *Why last in the phase:* it is the only part of the migration that changes layout and behaviour.
 
 - **WI-3 · Typography — heading and display roles, and text emphasis.** *(deps: —)* Extend the composite text-style family with heading and display roles bound to the heading typeface, add the closed text-emphasis contract, and build the polymorphic component that consumes them. The effort's only **expected** change to the design language, and its only possible crossing into the application. *Why here:* independent of WI-1 and WI-2, and third so its value table can be settled while they ship.
 
