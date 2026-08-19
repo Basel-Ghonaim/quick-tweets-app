@@ -326,21 +326,18 @@
   flex-shrink: 0;
 }
 
+/* Its resting colour and its place in the row; the control itself supplies the
+   rest. Uncoloured, the shared control inherits whatever colour it is given. */
 .fileListRemoveBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-1);
-  border: none;
-  background: transparent;
   color: var(--text-secondary);
-  cursor: pointer;
-  border-radius: var(--border-radius-sm);
   flex-shrink: 0;
-  transition: all var(--motion-reveal);
 }
 
-.fileListRemoveBtn:hover {
+/* Removing a file is destructive and the row says so, which the shared ghost
+   hover does not. Scoped through the row deliberately: that makes it more
+   specific than the rule it overrides, so which one wins does not depend on the
+   order the stylesheets happen to be emitted in. */
+.fileListRow .fileListRemoveBtn:hover:not(:disabled) {
   color: var(--role-on-surface-error);
   background-color: var(--role-fill-error-subtle);
 }

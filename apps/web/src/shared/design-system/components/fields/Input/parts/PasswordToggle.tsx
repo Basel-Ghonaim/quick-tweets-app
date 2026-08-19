@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "../../../../icons";
+import { IconButton } from "../../../controls/IconButton";
 
 interface PasswordToggleProps {
   /** The id of the control whose visibility this toggles, for `aria-controls`. */
@@ -32,16 +33,16 @@ export const PasswordToggle = ({
   };
 
   return (
-    <button
-      type="button"
+    <IconButton
       className={className}
+      color="primary"
+      size="small"
+      icon={isVisible ? <EyeOffIcon /> : <EyeIcon />}
       onClick={toggle}
       disabled={disabled}
       aria-controls={controlId}
       aria-pressed={isVisible}
       aria-label={isVisible ? "Hide password" : "Show password"}
-    >
-      {isVisible ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
-    </button>
+    />
   );
 };

@@ -396,3 +396,39 @@ export const AvatarSmall: AvatarStory = {
     avatarFill: "outline",
   },
 };
+
+/**
+ * The row's remove control is the shared IconButton now. It reaches the minimum
+ * hit target, which at 22px it did not, and it carries the owned focus
+ * indicator, which it did not carry at all.
+ *
+ * A file has to be selected for the row to exist, so the story drives that
+ * rather than asserting against a surface no story renders.
+ */
+export const FileListRemoveMeetsTheTarget: DropzoneStory = {
+  args: { ...DropzoneFileList.args },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvasElement.querySelector<HTMLInputElement>(
+      'input[type="file"]',
+    )!;
+
+    // Assigned rather than clicked: the native input is deliberately
+    // `pointer-events: none`, so a pointer-driven upload cannot reach it.
+    const transfer = new DataTransfer();
+    transfer.items.add(
+      new File(["report"], "report.pdf", { type: "application/pdf" }),
+    );
+    input.files = transfer.files;
+    fireEvent.change(input);
+
+    const remove = await canvas.findByRole("button", { name: /^Remove/ });
+
+    const { width, height } = remove.getBoundingClientRect();
+    await expect(width).toBeGreaterThanOrEqual(24);
+    await expect(height).toBeGreaterThanOrEqual(24);
+
+    // Composed, not declared — the defect this migration exists to close.
+    await expect(remove.className).toMatch(/_focusRing_/);
+  },
+};
