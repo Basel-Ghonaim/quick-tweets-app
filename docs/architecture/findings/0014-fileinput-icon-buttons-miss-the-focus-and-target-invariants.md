@@ -3,7 +3,7 @@
 > **Status:** Open
 > **Date:** 2026-08-18
 > **Affected areas:** `apps/web/src/shared/design-system/components/fields/FileInput/` — `FileInput.module.css` and the `avatar` / `dropzone` variant parts
-> **Reported by:** Basel Ghonaim (surfaced while preparing the IconButton, [#525](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/525))
+> **Reported by:** Basel Ghonaim (surfaced while preparing the IconButton, [#525](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/525); extended with the visibility defect while preparing the migration, [#529](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/529))
 
 ## Observation
 
@@ -20,6 +20,23 @@ FileInput renders six icon-only buttons. **One of them composes the owned focus 
 
 The two `composes: focusRingWithin` declarations elsewhere in the stylesheet belong to the *wrappers* — they ring the native input that WI-2 of the re-establishment effort made canonical, and they say nothing about these buttons.
 
+**The table above records the state when this was observed.** `fileListRemoveBtn` was corrected in [#527](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/527) — it is now the shared control, clears the target and composes the indicator. The finding stays `Open` because `addMoreBtn` and `addMoreRow` still declare no indicator, and both are permanently excluded from the migration that would have given them one: each carries an icon *and* visible text, or is a drop affordance rather than an action, so neither is an icon-only button.
+
+## A third defect, found while preparing the migration
+
+**Two of these controls are invisible to a keyboard user**, and the missing indicator is not why. Both overlay surfaces are `opacity: 0` and revealed on **hover alone**:
+
+```css
+.thumbnailWrapper:hover .thumbnailRemoveBtn { opacity: 1; }
+.avatarWrapper:hover  .avatarOverlay        { opacity: 1; }
+```
+
+Neither keys off focus. So the controls are reachable by tab and never become visible while being reached, which fails [WCAG 2.4.7 Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible) **independently** of the indicator defect above.
+
+The two compound rather than add: composing the owned indicator on these controls would change nothing on its own, because a ring drawn on a fully transparent element is itself transparent. Fixing the visibility is therefore a prerequisite for the indicator fix to mean anything, and it is a **behaviour change** rather than a migration — which is why the migration was split, with these two controls and this defect handled together.
+
+Recorded here rather than as a separate finding: it is the same cluster, the same stylesheet, and the same root cause — controls placed over media were styled for the pointer and never for the keyboard.
+
 ## The two invariants this crosses
 
 **A component never declares an indicator of its own; it composes the owned one** ([components.md](../../frontend/design-system/components.md)). Five of these declare none at all, so keyboard focus falls back to the user agent's default outline — which is not the owned indicator, is not guaranteed against the surfaces these sit on, and is exactly the per-component focus drift [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 5 exists to end. `avatarOverlayBtn` is the sharpest case: it sits over an arbitrary photograph, where a UA default has no contrast guarantee at all.
@@ -34,7 +51,7 @@ Both were discovered while scoping IconButton, and fixing them there would have 
 
 ## Affected
 
-Keyboard and assistive-technology users of the avatar overlay and both dropzone modes; pointer users on touch for the two undersized controls.
+Keyboard and assistive-technology users of the avatar overlay and both dropzone modes; pointer users on touch for the two undersized controls. The visibility defect reaches keyboard users of the avatar overlay and the image grid specifically, since those are the two surfaces revealed on hover.
 
 ## Not decided here
 
