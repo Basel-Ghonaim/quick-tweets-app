@@ -123,3 +123,37 @@ export const SpinnerInheritsFromAdornment: Story = {
     if (previous) document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
   },
 };
+
+/**
+ * The visibility toggle is the shared IconButton now, so what has to hold is
+ * what it gained: a hit target that clears the minimum, and the owned focus
+ * indicator drawn inward — the field clips its children to its own radius, so
+ * an outward ring would be cut off.
+ */
+export const PasswordToggleMeetsTheTarget: Story = {
+  args: { ...Default.args, label: "Password", type: "password" },
+  play: async ({ canvasElement }) => {
+    const previous = document.documentElement.getAttribute(THEME_ATTRIBUTE);
+
+    for (const theme of THEMES) {
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
+
+      const toggle = canvasElement.querySelector("button")!;
+      await expect(toggle).toHaveAttribute("aria-pressed", "false");
+
+      const { width, height } = toggle.getBoundingClientRect();
+      await expect(width).toBeGreaterThanOrEqual(24);
+      await expect(height).toBeGreaterThanOrEqual(24);
+
+      // Composed, not declared — and both halves, since the inset one is what
+      // keeps the ring inside a control that clips. Anchored on the generated
+      // prefix so the base class cannot be satisfied by the inset one, which
+      // contains its name.
+      await expect(toggle.className).toMatch(/_focusRing_/);
+      await expect(toggle.className).toMatch(/_focusRingInset_/);
+    }
+
+    if (previous)
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
+  },
+};

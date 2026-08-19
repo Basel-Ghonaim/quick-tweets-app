@@ -137,26 +137,11 @@
 
 /* Inset, because the control clips its children to its own radius and would
    otherwise cut an outward ring. */
+/* Only the inset half is added here; the control itself composes the indicator.
+   Drawn inward because the field clips its children to its own radius, which is
+   this field's geometry rather than something every icon button carries. */
 .passwordToggle {
-  composes: focusRing focusRingInset from "../../../foundations/composition/focusRing.module.css";
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  /* An interactive affordance carries its own hit target: the icon alone is
-     smaller than one (WCAG 2.5.8). */
-  min-inline-size: var(--control-target-min);
-  min-block-size: var(--control-target-min);
-  background: transparent;
-  border: none;
-  color: var(--role-on-surface-primary);
-  cursor: pointer;
-  padding-inline: var(--control-gap-inline);
-  user-select: none;
-  transition: opacity var(--motion-interactive);
-}
-
-.passwordToggle:hover {
-  opacity: 0.8;
+  composes: focusRingInset from "../../../foundations/composition/focusRing.module.css";
 }
 
 .errorMessage {
