@@ -1,4 +1,4 @@
-import { Input, Checkbox, FileInput } from "@shared/design-system";
+import { Input, Checkbox, FileInput, Textarea } from "@shared/design-system";
 import type { SchemaFieldProps } from "./SchemaField.types";
 
 // Compile-time exhaustiveness guard: if a new FieldType is added to the public
@@ -81,14 +81,28 @@ export const SchemaField = ({
           />
         );
 
-      // Declared in the public FieldType union but not yet renderable: no
-      // design-system control exists (and radio/select also need an options
-      // contract). Fail fast rather than silently render nothing, so misuse
-      // surfaces immediately in development. A future architectural review is
-      // tracked in Finding 0005.
+      case "textarea":
+        return (
+          <Textarea
+            name={name}
+            label={label}
+            placeholder={placeholder}
+            value={value as string}
+            onChange={onChange}
+            isInvalid={isInvalid}
+            errorMessage={error ?? undefined}
+            autoFocus={autoFocus}
+            fullWidth
+          />
+        );
+
+      // Declared in the public FieldType union but not yet renderable: neither
+      // has a design-system control, and both additionally need an options
+      // contract the schema does not carry. Fail fast rather than silently
+      // render nothing, so misuse surfaces immediately in development. The
+      // remaining concern is tracked in Finding 0005.
       case "radio":
       case "select":
-      case "textarea":
         throw new Error(
           `SchemaField: field type "${type}" is part of the schema-form public ` +
             `API but is not implemented yet — see Finding 0005. Do not use it in ` +
