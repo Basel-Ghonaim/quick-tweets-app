@@ -1,0 +1,66 @@
+.root {
+  margin: 0;
+}
+
+.variant-display-large {
+  font: var(--type-display-large);
+}
+
+.variant-display-medium {
+  font: var(--type-display-medium);
+}
+
+.variant-heading-large {
+  font: var(--type-heading-large);
+}
+
+.variant-heading-medium {
+  font: var(--type-heading-medium);
+}
+
+.variant-heading-small {
+  font: var(--type-heading-small);
+}
+
+.variant-body-large {
+  font: var(--type-body-large);
+}
+
+.variant-body-medium {
+  font: var(--type-body-medium);
+}
+
+.variant-body-small {
+  font: var(--type-body-small);
+}
+
+.variant-label-large {
+  font: var(--type-label-large);
+}
+
+.variant-label-medium {
+  font: var(--type-label-medium);
+}
+
+.variant-label-small {
+  font: var(--type-label-small);
+}
+
+/* No resting colour: without a tone the element inherits, which is how the
+   application's ground reaches it. Declaring one here would copy a fact the
+   application owns and break composition inside a surface that sets its own. */
+.tone-primary {
+  color: var(--text-primary);
+}
+
+.tone-secondary {
+  color: var(--text-secondary);
+}
+
+.tone-tertiary {
+  color: var(--text-tertiary);
+}
+
+.tone-muted {
+  color: var(--text-muted);
+}
