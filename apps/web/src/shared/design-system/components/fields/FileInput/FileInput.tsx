@@ -4,6 +4,7 @@ import type { FileInputProps } from "./FileInput.types";
 import type { VariantContext } from "./variants/variant.types";
 import { StandardInput, DropzoneInput, AvatarInput } from "./variants";
 import { classNames, customProperties, useFieldA11y } from "../../shared";
+import { FieldLabel, FieldMessages } from "../anatomy";
 
 export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
   (props, ref) => {
@@ -113,25 +114,20 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         )}
         style={roleColour}
       >
-        {label && (
-          <label htmlFor={controlId} className={styles.label}>
-            {label}
-          </label>
-        )}
+        <FieldLabel htmlFor={controlId}>{label}</FieldLabel>
 
         {renderVariant()}
 
-        {helperText && !showError && (
-          <span id={helperId} className={styles.helperText}>
-            {helperText}
-          </span>
-        )}
-
-        {showError && (
-          <span id={errorId} className={styles.errorMessage} role="alert">
-            {effectiveError}
-          </span>
-        )}
+        {/* This field drops its description while an error stands, which the
+            others do not. The policy stays here rather than becoming a branch
+            in the shared part for one consumer. */}
+        <FieldMessages
+          helperId={helperId}
+          errorId={errorId}
+          helperText={showError ? undefined : helperText}
+          errorMessage={effectiveError}
+          showError={showError}
+        />
       </div>
     );
   },

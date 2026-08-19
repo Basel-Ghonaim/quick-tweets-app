@@ -1,0 +1,18 @@
+/* The Field anatomy's own text — label, description, error. Written once here
+   because every field says the same thing about them, and four copies of one
+   rule is four chances for them to stop agreeing. */
+
+.label {
+  font: var(--type-label-medium);
+  color: var(--text-primary);
+}
+
+.helperText {
+  font: var(--type-body-small);
+  color: var(--text-secondary);
+}
+
+.errorMessage {
+  font: var(--type-body-small);
+  color: var(--role-on-surface-error);
+}

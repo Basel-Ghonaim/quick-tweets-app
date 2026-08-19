@@ -3,6 +3,7 @@ import styles from "./Input.module.css";
 import type { InputProps } from "./Input.types";
 import { PasswordToggle } from "./parts/PasswordToggle";
 import { classNames, customProperties, useFieldA11y } from "../../shared";
+import { FieldLabel, FieldMessages } from "../anatomy";
 import { Spinner } from "../../feedback/Spinner";
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
@@ -72,11 +73,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           style,
         )}
       >
-        {label && (
-          <label className={styles.label} htmlFor={controlId}>
-            {label}
-          </label>
-        )}
+        <FieldLabel htmlFor={controlId}>{label}</FieldLabel>
 
         <div className={styles.control}>
           {prefix && <span className={styles.adornment}>{prefix}</span>}
@@ -100,17 +97,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {helperText && (
-          <span id={helperId} className={styles.helperText}>
-            {helperText}
-          </span>
-        )}
-
-        {showError && (
-          <span id={errorId} className={styles.errorMessage} role="alert">
-            {errorMessage}
-          </span>
-        )}
+        <FieldMessages
+          helperId={helperId}
+          errorId={errorId}
+          helperText={helperText}
+          errorMessage={errorMessage}
+          showError={showError}
+        />
       </div>
     );
   },

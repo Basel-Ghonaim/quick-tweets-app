@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import styles from "./Checkbox.module.css";
 import type { CheckboxProps } from "./Checkbox.types";
 import { classNames, customProperties, useFieldA11y } from "../../shared";
+import { FieldMessages } from "../anatomy";
 import { CheckIcon } from "../../../icons";
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
@@ -69,17 +70,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           <span className={styles.label}>{label}</span>
         </label>
 
-        {helperText && (
-          <span id={helperId} className={styles.helperText}>
-            {helperText}
-          </span>
-        )}
-
-        {showError && (
-          <span id={errorId} className={styles.errorMessage} role="alert">
-            {errorMessage}
-          </span>
-        )}
+        <FieldMessages
+          helperId={helperId}
+          errorId={errorId}
+          helperText={helperText}
+          errorMessage={errorMessage}
+          showError={showError}
+        />
       </div>
     );
   },

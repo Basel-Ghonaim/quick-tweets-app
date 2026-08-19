@@ -114,12 +114,4 @@
   font: var(--type-body-large);
 }
 
-.errorMessage {
-  font: var(--type-body-small);
-  color: var(--role-on-surface-error);
-}
 
-.helperText {
-  font: var(--type-body-small);
-  color: var(--text-secondary);
-}
