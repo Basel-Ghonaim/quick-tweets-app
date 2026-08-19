@@ -525,9 +525,11 @@ export const AvatarOverlayControlsMeetTheContract: AvatarStory = {
 
         // The wash survives the migration, in both themes: it answers the
         // photograph behind it, which no theme governs.
+        // Wash plus an edge — dark here, because a light wash is the one that
+        // disappears against light media.
         const { backgroundColor, boxShadow } = getComputedStyle(control);
         await expect(backgroundColor).toBe("rgba(255, 255, 255, 0.9)");
-        await expect(boxShadow).not.toBe("none");
+        await expect(boxShadow).toContain("rgba(0, 0, 0, 0.18)");
       }
     }
 
@@ -557,10 +559,12 @@ export const ThumbnailRemoveMeetsTheContract: DropzoneStory = {
 
     await expect(remove.className).toMatch(/_focusRing_/);
 
-    // The wash that makes it readable over a photograph is still its own.
-    await expect(getComputedStyle(remove).backgroundColor).toBe(
-      "rgba(0, 0, 0, 0.6)",
-    );
+    // The wash is still its own, and it carries an edge: a scrim separates the
+    // control from media lighter than itself and from nothing else, so over a
+    // dark photograph it would otherwise have no boundary at all.
+    const { backgroundColor, boxShadow } = getComputedStyle(remove);
+    await expect(backgroundColor).toBe("rgba(0, 0, 0, 0.6)");
+    await expect(boxShadow).toContain("rgba(255, 255, 255, 0.9)");
 
     // Layout: still wholly inside the thumbnail, which is what the increase
     // could have broken — it is pinned 4px from a corner of an 80px box.

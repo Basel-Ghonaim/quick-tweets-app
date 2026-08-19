@@ -226,6 +226,7 @@
   inset-inline-end: 4px;
   background-color: rgba(0, 0, 0, 0.6);
   color: white;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
   opacity: 0;
   transition: opacity var(--motion-reveal);
 }
@@ -502,7 +503,12 @@
 .avatarOverlayBtn {
   background: rgba(255, 255, 255, 0.9);
   color: var(--text-secondary);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  /* The mirror of the thumbnail's problem: a light wash loses its edge over
+     light media, so the hairline here is dark. The drop shadow beneath it is
+     depth, not a boundary, and cannot be relied on for one. */
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
 /* Scoped through the actions row throughout this block, so each rule outranks
@@ -520,8 +526,9 @@
 .avatarOverlayActions .avatarOverlayBtn:hover:not(:disabled) {
   background: #fff;
   box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.18),
-    0 0 0 4px rgba(255, 255, 255, 0.45);
+    0 0 0 1px rgba(0, 0, 0, 0.18),
+    0 0 0 4px rgba(255, 255, 255, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
 .avatarOverlayActions .avatarOverlayBtnDanger:hover:not(:disabled) {
