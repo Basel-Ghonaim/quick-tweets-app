@@ -414,7 +414,6 @@
   border-color: var(--file-input-color);
   background-color: var(--file-input-alpha);
   color: var(--file-input-color);
-  transform: scale(1.02);
 }
 
 .avatarOutline {
@@ -425,7 +424,6 @@
 .avatarOutline:hover {
   background-color: var(--file-input-alpha);
   color: var(--file-input-color);
-  transform: scale(1.02);
 }
 
 /* ── Avatar text ── */
@@ -460,7 +458,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: filter var(--motion-expand);
 }
 
 .avatarWrapper:hover .avatarPreviewImg {
@@ -503,30 +500,36 @@
   gap: var(--space-3);
 }
 
+/* This control sits over an arbitrary photograph, so its wash and its shadow
+   are legibility against unknown content rather than the system's elevation:
+   nothing else has to agree with them, and no theme governs what is behind.
+   Everything structural below it — the box, the ring, the cursor — is the
+   shared control's. */
 .avatarOverlayBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 50%;
-  /* This control sits over an arbitrary photograph, so its wash and its shadow
-     are legibility against unknown content rather than the system's elevation:
-     nothing else has to agree with them, and no theme governs what is behind. */
   background: rgba(255, 255, 255, 0.9);
   color: var(--text-secondary);
-  cursor: pointer;
-  transition: all var(--motion-interactive);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
 }
 
-.avatarOverlayBtn:hover {
-  background: #fff;
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+/* Scoped through the actions row throughout this block, so each rule outranks
+   the shared one it overrides instead of depending on the order the stylesheets
+   happen to be emitted in. Larger than the shared medium box because it has to
+   stay findable against busy content. */
+.avatarOverlayActions .avatarOverlayBtn {
+  inline-size: 36px;
+  block-size: 36px;
 }
 
-.avatarOverlayBtnDanger:hover {
+/* Lifts by light rather than by growing: the control is pinned over a
+   photograph, and a scaling one shifts against the image under it. The second
+   shadow layer is a soft halo, not elevation. */
+.avatarOverlayActions .avatarOverlayBtn:hover:not(:disabled) {
+  background: #fff;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.18),
+    0 0 0 4px rgba(255, 255, 255, 0.45);
+}
+
+.avatarOverlayActions .avatarOverlayBtnDanger:hover:not(:disabled) {
   color: var(--role-on-surface-error);
 }

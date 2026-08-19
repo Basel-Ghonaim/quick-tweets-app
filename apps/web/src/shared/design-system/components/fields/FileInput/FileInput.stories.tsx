@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, within } from "storybook/test";
+import { THEMES, THEME_ATTRIBUTE } from "../../../foundations";
 import { FileInput } from "./FileInput";
 import type { FileInputProps } from "./FileInput.types";
 
@@ -493,5 +494,44 @@ export const ThumbnailRemoveRevealsOnKeyboardFocus: DropzoneStory = {
     remove.focus();
     await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(getComputedStyle(remove).opacity).toBe("1");
+  },
+};
+
+/**
+ * The overlay controls are the shared IconButton now. What they gained is the
+ * owned focus indicator, which they had none of; what they keep is the wash and
+ * shadow that make them legible over an arbitrary photograph — those are this
+ * field's, not the system's, and the migration does not get to drop them.
+ */
+export const AvatarOverlayControlsMeetTheContract: AvatarStory = {
+  args: { ...Avatar.args },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+
+    const canvas = within(canvasElement);
+    const previous = document.documentElement.getAttribute(THEME_ATTRIBUTE);
+
+    for (const theme of THEMES) {
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
+
+      for (const name of [/Delete file/i, /Replace file/i]) {
+        const control = await canvas.findByRole("button", { name });
+
+        const { width, height } = control.getBoundingClientRect();
+        await expect(width).toBeGreaterThanOrEqual(24);
+        await expect(height).toBeGreaterThanOrEqual(24);
+
+        await expect(control.className).toMatch(/_focusRing_/);
+
+        // The wash survives the migration, in both themes: it answers the
+        // photograph behind it, which no theme governs.
+        const { backgroundColor, boxShadow } = getComputedStyle(control);
+        await expect(backgroundColor).toBe("rgba(255, 255, 255, 0.9)");
+        await expect(boxShadow).not.toBe("none");
+      }
+    }
+
+    if (previous)
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
   },
 };
