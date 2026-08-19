@@ -73,13 +73,11 @@
   border-color: var(--icon-button-fill-hover, var(--surface-hover));
 }
 
-/* A pressed control reads through its foreground, and only where a role gives
-   it one to read: uncoloured this resolves to `inherit` and changes nothing, so
-   the caller expresses the state by swapping the icon instead. */
-.variant-ghost[aria-pressed="true"],
-.variant-outlined[aria-pressed="true"] {
-  color: var(--icon-button-fill, inherit);
-}
+/* No rule keys off `aria-pressed`. The state is the caller's to show, through
+   the icon it supplies and the role it passes — the only foreground strong
+   enough to read as a state is the fill, and a fill is not a text colour: it
+   matches the resting colour outright in the light theme, and drops under the
+   3:1 floor in the dark one. */
 
 .root:active:not(:disabled) {
   transform: var(--motion-press);

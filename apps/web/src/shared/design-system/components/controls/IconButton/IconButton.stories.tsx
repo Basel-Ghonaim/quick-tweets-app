@@ -1,22 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent } from "storybook/test";
-import { IconButton } from "./IconButton";
-import type { IconButtonVariant } from "./IconButton.types";
 import {
   CONTROL_SIZES,
   ROLES,
   THEMES,
   THEME_ATTRIBUTE,
 } from "../../../foundations";
-import {
-  EyeIcon,
-  EyeOffIcon,
-  SearchIcon,
-  TrashIcon,
-} from "../../../icons";
+import { EyeIcon, EyeOffIcon, SearchIcon, TrashIcon } from "../../../icons";
+import { IconButton } from "./IconButton";
+import type { IconButtonShape, IconButtonVariant } from "./IconButton.types";
 
 const VARIANTS: IconButtonVariant[] = ["contained", "outlined", "ghost"];
+const SHAPES: IconButtonShape[] = ["rounded", "circle"];
 
 /** A `render` story builds its own instances, but the type still requires these. */
 const baseArgs = { icon: <SearchIcon />, "aria-label": "Search" };
@@ -32,7 +28,7 @@ const meta = {
   },
   argTypes: {
     variant: { control: "select", options: VARIANTS },
-    shape: { control: "radio", options: ["circle", "rounded"] },
+    shape: { control: "radio", options: SHAPES },
     color: { control: "select", options: [...ROLES] },
     size: { control: "radio", options: CONTROL_SIZES },
     isLoading: { control: "boolean" },
@@ -64,12 +60,28 @@ export const Variants: Story = {
   ),
 };
 
+/** Both shapes across the whole role scale, since a shape has to hold for each. */
 export const Shapes: Story = {
   args: baseArgs,
   render: () => (
-    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-      <IconButton shape="rounded" variant="contained" color="primary" icon={<TrashIcon />} aria-label="Delete rounded" />
-      <IconButton shape="circle" variant="contained" color="primary" icon={<TrashIcon />} aria-label="Delete circle" />
+    <div style={{ display: "grid", gap: "0.75rem" }}>
+      {SHAPES.map((shape) => (
+        <div
+          key={shape}
+          style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}
+        >
+          {ROLES.map((color) => (
+            <IconButton
+              key={color}
+              shape={shape}
+              variant="contained"
+              color={color}
+              icon={<TrashIcon />}
+              aria-label={`Delete ${shape} ${color}`}
+            />
+          ))}
+        </div>
+      ))}
     </div>
   ),
 };
@@ -79,7 +91,10 @@ export const Roles: Story = {
   render: () => (
     <div style={{ display: "grid", gap: "0.75rem" }}>
       {VARIANTS.map((variant) => (
-        <div key={variant} style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+        <div
+          key={variant}
+          style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}
+        >
           {ROLES.map((color) => (
             <IconButton
               key={color}
@@ -105,7 +120,12 @@ export const Sizes: Story = {
   render: () => (
     <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
       {CONTROL_SIZES.map((size) => (
-        <IconButton key={size} size={size} icon={<SearchIcon />} aria-label={`Search ${size}`} />
+        <IconButton
+          key={size}
+          size={size}
+          icon={<SearchIcon />}
+          aria-label={`Search ${size}`}
+        />
       ))}
     </div>
   ),
@@ -125,7 +145,8 @@ export const Sizes: Story = {
       }
     }
 
-    if (previous) document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
+    if (previous)
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
   },
 };
 
@@ -142,7 +163,9 @@ export const FocusIndicator: Story = {
     // and this component's own stylesheet paints no ring of its own.
     await expect(button.className).toMatch(/focusRing/);
     await expect(button.matches(":focus-visible")).toBe(true);
-    await expect(parseFloat(getComputedStyle(button).outlineWidth)).toBeGreaterThan(0);
+    await expect(
+      parseFloat(getComputedStyle(button).outlineWidth),
+    ).toBeGreaterThan(0);
 
     // Two things are deliberately not asserted here, because a result either way
     // would say nothing about this component. That a pointer click leaves the
@@ -167,10 +190,14 @@ export const Loading: Story = {
 };
 
 /**
- * Uncoloured, the component imposes no pressed treatment: the caller swaps the
- * icon, as PasswordToggle already does. `aria-pressed` stays the caller's.
+ * The component imposes **no** pressed treatment, coloured or not: the caller
+ * shows the state through the icon it supplies, as PasswordToggle already does,
+ * and `aria-pressed` stays the caller's. The only foreground strong enough to
+ * read as a state is the role's fill, and a fill is not a text colour — it
+ * equals the resting colour outright in the light theme and falls under the 3:1
+ * floor in the dark one.
  */
-export const ToggleUncoloured: Story = {
+export const Toggle: Story = {
   args: baseArgs,
   render: function Render() {
     const [pressed, setPressed] = useState(false);
@@ -189,8 +216,37 @@ export const ToggleUncoloured: Story = {
 
     await userEvent.click(button);
     await expect(button).toHaveAttribute("aria-pressed", "true");
-    // No treatment is imposed, so the foreground is unchanged by the state.
+    // The contract, asserted: pressing changes the accessible state and nothing
+    // this component paints. The icon is what changed, and the caller swapped it.
     await expect(getComputedStyle(button).color).toBe(resting);
+  },
+};
+
+/** With a role, the state is still the caller's — the component adds nothing. */
+export const ToggleWithRole: Story = {
+  args: baseArgs,
+  render: () => (
+    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+      <IconButton
+        color="error"
+        icon={<TrashIcon />}
+        aria-label="Delete, resting"
+      />
+      <IconButton
+        color="error"
+        aria-pressed
+        icon={<TrashIcon />}
+        aria-label="Delete, pressed"
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const [resting, pressed] = [...canvasElement.querySelectorAll("button")];
+
+    await expect(pressed).toHaveAttribute("aria-pressed", "true");
+    await expect(getComputedStyle(pressed).color).toBe(
+      getComputedStyle(resting).color,
+    );
   },
 };
 
@@ -202,8 +258,19 @@ export const PressedWhileLoading: Story = {
   args: baseArgs,
   render: () => (
     <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-      <IconButton color="error" aria-pressed icon={<TrashIcon />} aria-label="Pressed" />
-      <IconButton color="error" aria-pressed isLoading icon={<TrashIcon />} aria-label="Pressed, loading" />
+      <IconButton
+        color="error"
+        aria-pressed
+        icon={<TrashIcon />}
+        aria-label="Pressed"
+      />
+      <IconButton
+        color="error"
+        aria-pressed
+        isLoading
+        icon={<TrashIcon />}
+        aria-label="Pressed, loading"
+      />
     </div>
   ),
   play: async ({ canvasElement }) => {
@@ -211,11 +278,17 @@ export const PressedWhileLoading: Story = {
       ...canvasElement.querySelectorAll("button"),
     ];
 
-    await expect(pressedLoading).toBeDisabled();
+    // Independence, asserted structurally rather than visually: the in-flight
+    // operation disables the control and swaps in the indicator, and the state
+    // the control is *in* survives both.
+    await expect(pressed).toHaveAttribute("aria-pressed", "true");
+    await expect(pressed).not.toBeDisabled();
+    await expect(pressed.querySelector("svg")).not.toBeNull();
+
     await expect(pressedLoading).toHaveAttribute("aria-pressed", "true");
-    // The pressed foreground survives the in-flight operation.
-    await expect(getComputedStyle(pressedLoading).color).toBe(
-      getComputedStyle(pressed).color,
-    );
+    await expect(pressedLoading).toBeDisabled();
+    await expect(
+      pressedLoading.querySelector("[aria-hidden='true']"),
+    ).not.toBeNull();
   },
 };
