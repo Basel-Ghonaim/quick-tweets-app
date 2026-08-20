@@ -192,7 +192,7 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Relationship, cascade, and indexing rationale | `architecture/data-model.md` | feature documents |
 | Why an architectural decision was made | the decision's **natural-owner document**; `architecture/decisions/` (ADRs) only when no document owns it (§8) | architecture, backend, frontend, feature documents |
 | Known architectural deviations / technical debt | `architecture/findings/` | the affected platform/feature documents (which link to the finding) |
-| Authentication mechanisms (JWT, hashing, cookies, rate limiting) | `backend/security.md` | `features/authentication.md` |
+| Authentication mechanisms (JWT, hashing, cookies, rate limiting) | `backend/security.md` | `features/authentication/authentication.md` |
 | Redux / RTK Query mechanics | `frontend/state-and-data.md` | feature documents |
 | Error normalization pipeline | `frontend/error-handling.md` | feature documents, `frontend/api-client.md` |
 | Axios API client (clients, interceptors, retry, 401-refresh) | `frontend/api-client.md` | feature documents |

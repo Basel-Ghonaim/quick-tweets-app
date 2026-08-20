@@ -18,7 +18,7 @@ recovery), which is merged.
 The **real, unmodified** reclaimer (`runReclamation`, `createReclamationRepository`)
 runs against a per-run **disposable PostgreSQL database** (`wib_verify_*`, schema
 built from the committed migrations) and an **isolated temp-dir** local-disk
-store. The harness lives in [`server/src/modules/media/verification/`](../../../server/src/modules/media/verification/).
+store. The harness lives in [`apps/api/src/modules/media/reclamation/verification/`](../../../apps/api/src/modules/media/reclamation/verification/).
 
 Independence from the implementation (the Oracle can *fail* M11, not ratify it):
 

@@ -3,7 +3,7 @@
 > **Status:** Active.
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for the **ratified product and UX decisions** governing the authentication experience — which flows exist, what states each must support, and the post-registration journey. It owns **decisions**, never their visual expression and never their component mapping.
-> **Scope:** The auth experience as a product: Login, Registration, Profile Completion, Email Verification, Forgot Password, Reset Password, and the unverified in-app state. Feature behaviour as currently implemented is the [authentication feature document](../../authentication.md)'s; the wire contract is the [API contract](../../../api/api-contract.md)'s.
+> **Scope:** The auth experience as a product: Login, Registration, Profile Completion, Email Verification, Forgot Password, Reset Password, and the unverified in-app state. Feature behaviour as currently implemented is the [authentication feature document](../authentication.md)'s; the wire contract is the [API contract](../../../api/api-contract.md)'s.
 > **Version:** 1.0
 > **Last Updated:** 2026-08-20
 > **Owner:** Basel Ghonaim
