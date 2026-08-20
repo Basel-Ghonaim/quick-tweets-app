@@ -10,6 +10,8 @@
 
 `D1`–`D5` and the post-registration journey (Phases 1–3) are **settled product direction and are not reopened downstream.** `D6`–`D8` are **deferred**, and no later phase may foreclose them.
 
+These decisions were subsequently tested against how real products behave; what that examination found is recorded in the [competitive UX research](ux-research.md), which reopens nothing here.
+
 ---
 
 ## 1 · Ground truth — three tiers, binding on every later phase
