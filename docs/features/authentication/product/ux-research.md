@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Class:** Record ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The record of **what competitive research observed** about auth flows in real products, and the design insights drawn from those observations. It owns **findings**, never applied decisions — what the product does with these insights is owned downstream.
-> **Scope:** Ten products examined against the seven auth flows the [product and UX brief](ux-brief.md) ratifies. Sources are listed at the end so any finding can be re-checked.
-> **Version:** 1.0
+> **Scope:** Ten products examined against the seven auth flows the [product and UX brief](ux-brief.md) ratifies (Parts 1–2), and a later, narrower pass over the auth **visual** surface (Part 3) whose weaker evidence is calibrated where it is stated. Sources are listed so any finding can be re-checked.
+> **Version:** 1.1
 > **Last Updated:** 2026-08-20
 > **Owner:** Basel Ghonaim
 
@@ -101,10 +101,40 @@ What the observations imply. **These are insights, not decisions** — the appli
 
 ---
 
+## Part 3 · The auth brand surface
+
+A later and **deliberately narrower** pass examined the auth *visual* surface rather than its flows.
+
+**Its evidence is weaker than Part 1's, and is labelled so rather than presented as equivalent.** Pattern-level findings are sourced; product-specific visual detail was largely unavailable, because searches returned brand-asset pages, community clone kits and tutorial rebuilds rather than design analysis. **Treat the archetypes as observed and any single product's current rendering as unconfirmed.**
+
+**Four archetypes carry a brand on an auth screen:**
+
+| Archetype | Observed on | How the brand is carried |
+|---|---|---|
+| **Split panel** | Canva · Headspace · Wise | Form on one side, brand or value proposition on the other; folds to one column at small viewports |
+| **Full-bleed ground** | Discord · Netflix · HBO Max | Brand sits *behind* the form — dark ground, gradient or illustration — with the form floating above it |
+| **Centred card** | Notion · Duolingo · Perplexity · Slack | A mark above the form, and nothing else |
+| **Product preview** | Instagram (desktop) | The product itself is the brand — screenshots or device mockups beside the form |
+
+**The finding that holds across all four:** *the form does not change.* It stays a single vertically stacked column with generous spacing whatever surrounds it, and **the brand surface never carries a field or an action.** Sources describe the form's job in identical terms regardless of the treatment around it.
+
+**Two conventions for the mark, and only two:** the top of a centred card, or the imagery side of a split. Guidance is consistent that it should reinforce identity without dominating the form, and that repetition should be avoided.
+
+**Mobile is subtraction.** The documented method is to keep the same layout logic and remove the image for space — not to rearrange the form around its absence.
+
+**Anti-patterns, each with its reason:**
+
+- **The collapse reorders the document.** Split layouts fold to a single column at small viewports, and breakpoint changes are documented to introduce overlapping elements, changed focus order and hidden content. This is the most-cited failure of the pattern, and it is a structural problem rather than a styling one.
+- **Social-login-first welcome screens** are described as *customary*. The pattern is the industry default, which means every reference exerts pressure toward it.
+- **A single-theme brand ground.** The full-bleed archetype is generally dark-only, which is not portable to a product resolving two themes.
+- **Imagery-dependent and preview-dependent directions** are simply unavailable to a product that owns no image assets and whose main surface is not yet built. Their absence is a constraint on what can be observed usefully, not a matter of preference.
+
+---
+
 ## Sources
 
 GitHub Community Discussion #154955 · GitHub `password_reset` documentation · Dropbox password-reset help and accessibility statement · Bluesky Zendesk password-reset article · `bluesky-social/social-app` issues #6169, #2688, #5328 · X (`help.x.com`) password-reset documentation · Discord password-reset and email-verification support articles · Pinterest Help Center ("Manage your email address") · Tumblr Help Center ("Email Verification") · Twitch blog ("Securing your Chat with Phone and Email Verification") · Mastodon developer documentation (`accounts` API methods) · `mastodon/mastodon` issues #20125, #36795 · web.dev ("SMS OTP form best practices") · Twilio ("Best Practices for OTP Input Forms in HTML") · MDN (`autocomplete` attribute; One-Time Passwords) · Chrome for Developers (WebOTP API) · W3C ARIA19 and ARIA21 techniques · WCAG 2.2 SC 2.5.8 (Target Size) · WCAG 4.1.2 (Name, Role, Value) · Cyberpress and BankInfoSecurity reporting on the password-reset identifier-leak incident.
 
----
+**Part 3 (brand surface), whose evidence is weaker and is calibrated in that part:** Eleken, "50+ login page examples" · Smashing Magazine, "2-Page Login Pattern, And How To Fix It" · Authgear, "Login & Signup UX Guide" · UX Collective, "Building better logins — a UX and accessibility guide for developers" · Discord design-system palette reference · Bluesky brand assets.
 
 > **This document owns observations and the insights drawn from them.** It ratifies nothing and applies nothing: the decisions it informs are owned downstream, so one finding never has two conclusions attached to it.

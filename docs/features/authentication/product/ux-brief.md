@@ -4,11 +4,11 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for the **ratified product and UX decisions** governing the authentication experience — which flows exist, what states each must support, and the post-registration journey. It owns **decisions**, never their visual expression and never their component mapping.
 > **Scope:** The auth experience as a product: Login, Registration, Profile Completion, Email Verification, Forgot Password, Reset Password, and the unverified in-app state. Feature behaviour as currently implemented is the [authentication feature document](../authentication.md)'s; the wire contract is the [API contract](../../../api/api-contract.md)'s.
-> **Version:** 1.0
+> **Version:** 1.1
 > **Last Updated:** 2026-08-20
 > **Owner:** Basel Ghonaim
 
-`D1`–`D5` and the post-registration journey (Phases 1–3) are **settled product direction and are not reopened downstream.** `D6`–`D8` are **deferred**, and no later phase may foreclose them.
+`D1`–`D5` and the post-registration journey (Phases 1–3) are **settled product direction and are not reopened downstream.** `D6` and `D7` are **deferred**, and no later phase may foreclose them. `D8` was deferred *to* visual design and has since been decided there.
 
 These decisions were subsequently tested against how real products behave; what that examination found is recorded in the [competitive UX research](ux-research.md), which reopens nothing here.
 
@@ -44,7 +44,7 @@ These decisions were subsequently tested against how real products behave; what 
 
 **`D6` · `D7` — deferred.** Session-expiry re-entry and remember-me are out of scope for this phase; no layout may assume an answer to either.
 
-**`D8` — deferred to visual design.** This brief takes no position on a brand/hero panel. The screen inventory below is **content requirements, not layout.**
+**`D8` — delegated to visual design, and decided there.** This brief still takes no position of its own on the brand surface: the [design direction](ux-direction.md) owns it and has ratified a **typographic brand panel**, additive beside the form column and absent on mobile. The screen inventory below remains **content requirements, not layout.**
 
 ---
 
@@ -180,7 +180,7 @@ These are genuinely unresolved and belong to the product, not to visual design:
 3. **Error-recovery voice** — one tone across the generic `401`, rate limits, and expired codes and links.
 4. **Returning to Phase 2 later** — offered as an in-app prompt (mirroring the verification banner), or left to account settings alone.
 
-**Deferred by decision — not open:** the restricted-action list (**not settled before the authenticated shell exists**) · session-expiry re-entry (`D6`) · remember-me (`D7`) · the hero panel and all visual and layout identity (`D8`).
+**Deferred by decision — not open:** the restricted-action list (**not settled before the authenticated shell exists**) · session-expiry re-entry (`D6`) · remember-me (`D7`). **`D8` is no longer among them** — the brand surface is decided by the [design direction](ux-direction.md), which owns its shape and its constraints.
 
 ---
 
