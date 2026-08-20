@@ -88,7 +88,7 @@ A documented incident on another product — **unmasked identifiers echoed back 
 
 ## Part 2 · Design insights
 
-What the observations imply. **These are insights, not decisions** — the applied direction they inform is owned elsewhere and is not restated here.
+What the observations imply. **These are insights, not decisions** — the applied direction they inform is owned by the [UX design direction](ux-direction.md) and is not restated here.
 
 - **One primary anchor per screen.** Every product studied treats the primary submit action as the single visual anchor, with secondary paths deliberately quieter. The pattern was uniform enough to be treated as settled.
 - **Registration decomposes; login does not.** The two are structurally different problems and should not inherit each other's shape.
