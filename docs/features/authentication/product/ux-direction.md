@@ -4,13 +4,15 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.0
+> **Version:** 1.1
 > **Last Updated:** 2026-08-20
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
 
-**What this document may not do:** reopen `D1`–`D5` or the three-phase journey · decide `D6`–`D8` (deferred: session-expiry re-entry, remember-me, hero panel) · invent a token or a component · state a pixel value the Design System does not already define.
+**What this document may not do:** reopen `D1`–`D5` or the three-phase journey · decide `D6`–`D7` (deferred: session-expiry re-entry, remember-me) · invent a token or a component · state a pixel value the Design System does not already define.
+
+**`D8` is the one it now decides.** The [brief](ux-brief.md) deferred the brand surface *to* visual design rather than away from it; §3 ratifies a **typographic brand panel**, and no later exploration reopens its shape.
 
 ---
 
@@ -34,12 +36,12 @@ The whole journey is built on optionality — the account is valid immediately, 
 
 | Level | Role | Use in auth |
 |---|---|---|
-| Brand moment | `display-large` / `display-medium` | **Only if** a brand surface exists — that is `D8`, deferred |
+| Brand moment | `display-large` / `display-medium` | The brand zone's single line of copy (§3) — the one surface in auth built around one piece of text |
 | Screen title | `heading-medium` or `heading-small` | "Log in", "Create your account", "Verify your email" |
 | Supporting copy | `body-medium`, `body-small` | Explanatory text, the neutral confirmation |
 | Field labels, buttons, stepper | `label-medium`, `label-small` | Inside components; the stepper is auth-composed |
 
-**Do not use `display-*` for a form title.** The Foundation defines display as *"the one piece of text a surface is built around"* — a login screen is built around its form. Using display for a screen title inflates the hierarchy and leaves nothing above it if `D8` later introduces a brand surface.
+**Do not use `display-*` for a form title.** The Foundation defines display as *"the one piece of text a surface is built around"* — a login screen is built around its form. Using display for a screen title inflates the hierarchy and leaves nothing above it. The brand zone (§3) is the surface that genuinely has such a piece of text, and it is the only place display belongs.
 
 Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secondary`) → quietest (`--text-muted`).
 
@@ -47,10 +49,27 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 
 ## 3 · Layout principles
 
-- **The form column is the invariant, and it is the deliverable.** Every auth screen is a single, centred, width-constrained column, designed to be **complete and correct standing alone** — not a half-layout awaiting a second half. Whatever `D8` later decides is *additive beside* this column and never restructures it. That is what makes `D8` genuinely deferrable, and it means the design is finished at the column level today.
+- **The form column is the invariant, and it is the deliverable.** Every auth screen is a single, centred, width-constrained column, designed to be **complete and correct standing alone** — not a half-layout awaiting a second half. The brand zone `D8` introduces is *additive beside* this column and never restructures it. That is what keeps `D8` independently reversible, and it means the design is complete at the column level with the zone or without it.
 - **One concern per screen.** Login is a single dense screen (`D4`). Registration, Profile and Verify are separate steps; do not merge them to save a screen.
 - **Vertical rhythm is composed from the spacing scale.** Layout spacing belongs to the consumer, not the Design System — auth composes its own from `--space-*` directly, which the Foundation explicitly permits.
 - **No layout reservations for OAuth.** `D1` removed it; leave no gap, divider or "or" separator where it used to sit.
+
+### The brand panel — `D8`, decided
+
+**Desktop carries a brand zone beside the form column; mobile does not.** The zone is *additive*: removing it leaves exactly the screen this section already describes, which is what keeps the decision independently reversible.
+
+- **The form column does not change.** Not its width, not its rhythm, not its content, not its order. Every rule in §4–§10 applies identically with the zone present or absent — the zone sits *beside* the column, never around it and never inside it.
+- **The zone is inert.** A wordmark and at most one line of copy. **No field, no button, no link, no interactive element of any kind.** This is not restraint for its own sake; see the order rule below.
+- **Typography and colour only.** No photography, no illustration, no product preview. These are ruled out on **availability, not taste**: the product owns no image assets and no illustration library, and the Feed does not exist to preview. A direction depending on them could not be built, and claiming one would claim something that does not exist.
+- **The zone's ground is feature-local, not vocabulary.** A page's brand treatment is not design language, because nothing else must agree with it ([Foundation](../../../frontend/design-system/foundation.md), the local / shared boundary). **This decision therefore introduces no token and no component.**
+- **The form keeps its own neutral surface.** The brand ground never becomes the background of a control, so §7's colour rules — the on-surface / fill rule included — hold unchanged and unqualified.
+- **Both themes resolve the zone** (§17.5). A brand ground that only works in dark is not portable and is not this decision.
+
+**Source order, and why the zone is inert.** The form comes **first in the document** and the brand zone second; the split is achieved by visual reordering. Reading order and focus order are therefore correct at every viewport **by construction rather than by correction** — there is no reordering to maintain and nothing to re-verify at the threshold. This is the documented failure mode of the pattern, recorded in the [research](ux-research.md): the panel folds above the form and takes the focus order with it. An inert zone is what makes the guarantee free — a region containing nothing focusable cannot misplace focus.
+
+**Mobile is subtraction, never rearrangement.** Below the threshold the zone is not rendered and the wordmark sits above the form. The form is not restructured, re-ordered or re-sized to accommodate its absence: this is the same layout with one region removed.
+
+**The threshold is auth's own.** §14 already assigns breakpoints and responsive behaviour to auth, so the single threshold at which the zone appears is feature-local composition — a literal in auth's own stylesheet. [Finding 0011](../../../architecture/findings/0011-breakpoint-tokens-unconsumable-mechanism.md) is unaffected: it records that breakpoint *tokens* cannot be consumed in a media query, which is precisely why this is not one.
 
 ---
 
@@ -179,7 +198,7 @@ There is no auth moment where something completes and the user stays put with no
 - **The CTA must stay reachable with the on-screen keyboard open** — the documented mobile failure case for auth forms. Avoid `100vh` with a fixed-bottom CTA; verify on a real device, not a resized desktop browser.
 - **The OTP field must trigger the numeric keyboard and accept a pasted code** — pasting is the primary path, since the code sits in the email the user is reading.
 - **Avatar upload on mobile** goes through the camera or gallery and needs a visible progress state; its lifecycle (idle → uploading → success → retryable failure) is the one genuinely new state machine in the journey.
-- **Auth needs no breakpoint.** There are no breakpoint tokens — they were removed as unconsumable ([Finding 0011](../../../architecture/findings/0011-breakpoint-tokens-unconsumable-mechanism.md)) — and a single centred column with a max width is correct at every viewport. The only responsive concern is the keyboard-safe CTA, which is not a breakpoint problem. If `D8` later introduces a brand surface, the breakpoint decision belongs to `D8`.
+- **Auth owns exactly one breakpoint, and it exists only for the brand zone** (§3): below the threshold the zone is not rendered, above it the zone appears beside the unchanged column. **The form column itself still needs none** — a single centred column with a max width is correct at every viewport, and the remaining responsive concern is the keyboard-safe CTA, which is not a breakpoint problem. There are no breakpoint tokens ([Finding 0011](../../../architecture/findings/0011-breakpoint-tokens-unconsumable-mechanism.md)), and this threshold is not one.
 
 ---
 
@@ -194,6 +213,7 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 - **Status messages must be announced**, not merely rendered: the neutral confirmation, the expired-link message and any form-level error need a live region. Field-level errors already have `role="alert"` for free.
 - **Focus moves to the first error on failed submit.**
 - **Icon-only controls need an accessible name.** `IconButton` enforces this at the type level; any new icon-only affordance inherits the obligation.
+- **The brand zone carries no focusable element** (§3). That is what makes reading and focus order correct across the split without anything to maintain — the invariant is structural, not a checklist item.
 
 ---
 
@@ -293,7 +313,7 @@ Each was observed in a real product and is rejected for a stated reason:
 3. **Icons: use the existing set, or a clearly marked placeholder** (§15). Never a new `Icon` component.
 4. **Never redesign a component's internals** — only its composition on a page.
 5. **Both themes, always.** A light-only review cannot catch §7's contrast class of defect.
-6. **Do not decide `D6`, `D7` or `D8`.**
+6. **Do not decide `D6` or `D7`.** `D8` is decided — the brand panel of §3 — and an exploration composes within it rather than reopening its shape.
 7. **Do not reopen `D1`–`D5`** or the three-phase journey.
 8. **No pixel values** except where the Design System already defines one.
 9. **§12's accessibility invariants are non-negotiable** — an exploration breaking one is wrong regardless of how it looks.
@@ -309,8 +329,9 @@ Visual detail, deliberately unresolved — and **none of it requires a component
 - Exact copy for the neutral confirmation, the expired-link dead end, and the optional-step labels — the *shape* is decided, the words are not.
 - Registration's internal step count within Phase 1.
 - The column's max width, and the vertical rhythm chosen from `--space-*`.
+- The brand zone's share of the viewport, the treatment of its ground, and the wording of its single line — the panel's *existence and behaviour* are settled (§3); its proportions and copy are not.
 
-**Resolved and no longer open:** card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · whether any new component is required (none, §15) · how a missing icon is handled (placeholder, §15) · breakpoints (none needed, §11).
+**Resolved and no longer open:** card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · whether any new component is required (none, §15) · how a missing icon is handled (placeholder, §15) · **whether auth has a brand surface, and of what kind** (`D8` — a typographic brand panel, §3) · breakpoints (one, auth's own, §3 and §11).
 
 ---
 
