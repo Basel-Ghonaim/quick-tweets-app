@@ -5,8 +5,8 @@
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.2
-> **Last Updated:** 2026-08-19
+> **Version:** 1.3
+> **Last Updated:** 2026-08-21
 > **Owner:** Basel Ghonaim
 
 ## What the language is for
@@ -30,6 +30,10 @@ Bind the **intent** tier wherever the family has one. That is the whole point of
 Bind a **curated scale directly** only where the family carries its tier on the scale itself — where a step *is* the vocabulary and no role could add meaning. Composing internal layout from a spacing scale is the ordinary case; reaching into the palette is not, because colour always has a role.
 
 **A missing token is a stop, not a licence to reach lower.** The first reach for a primitive is what reintroduced the drift this layer was rebuilt to remove. Extend the vocabulary deliberately, or keep the value local.
+
+**A stop is an escalation, not a refusal.** It halts *silent* invention — reaching into a primitive, or writing a literal, because the vocabulary was thin at the moment of need. It does not halt the vocabulary from growing: the sentence above already prescribes extending it deliberately, and that is the route a stop **opens** rather than closes. What a stop forbids is one author deciding it alone and in passing.
+
+**A design need the vocabulary cannot express is evidence the vocabulary is incomplete, never evidence the design is wrong.** Design leads the language and settles what it must be able to say; this contract settles where a value lives, what tier it sits at, and what it is called. The two are not in competition, and neither is subordinate: an extension is proposed, reviewed and merged like any other change to this layer, and it becomes canonical on the same human-authorized merge.
 
 ## What is language, and what is not
 
