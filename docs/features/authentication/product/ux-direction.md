@@ -4,13 +4,15 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.1
-> **Last Updated:** 2026-08-20
+> **Version:** 1.2
+> **Last Updated:** 2026-08-21
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
 
-**What this document may not do:** reopen `D1`–`D5` or the three-phase journey · decide `D6`–`D7` (deferred: session-expiry re-entry, remember-me) · invent a token or a component · state a pixel value the Design System does not already define.
+**What this document may not do:** reopen `D1`–`D5` or the three-phase journey · decide `D6`–`D7` (deferred: session-expiry re-entry, remember-me) · state a pixel value the Design System does not already define.
+
+**What it may now do, and could not before:** name a token or a component the design requires and the vocabulary does not yet carry. That is a proposal into the [Foundation](../../../frontend/design-system/foundation.md) and the [authoring contract](../../../frontend/design-system/components.md), never a value invented at a call site — the prohibition on hardcoded literals is untouched.
 
 **`D8` is the one it now decides.** The [brief](ux-brief.md) deferred the brand surface *to* visual design rather than away from it; §3 ratifies a **typographic brand panel**, and no later exploration reopens its shape.
 
@@ -137,9 +139,13 @@ This is not pedantry — it is a defect this project shipped and caught. In the 
 
 **Every colour decision must be reviewed in both themes. No exceptions.**
 
-### Auth is a flat surface — no elevation
+### Elevation — restrained, and now backed
 
-There is no semantic elevation tier; shadows exist only as primitives. Rather than make a shadow decision the system does not back, **auth uses no elevation at all.** Where a container is needed it is **`--surface-default` on `--surface-page`, separated by a `--border-width-thin` hairline in `--border-default`** — surface and border, never shadow. This resolves card-versus-page-ground outright and is the more honest expression of §1's *unceremonious* register: a login form is not a floating object.
+Shadows exist only as primitives, declared once rather than per theme, so a shadow tuned for the light ground is wrong on the dark one. **Auth previously used no elevation at all** — not because flatness was the design, but because the system could not back a shadow decision. That was a scarcity workaround, and it is retired here.
+
+**Surface and border remain the primary means of separation**: `--surface-default` on `--surface-page`, divided by a `--border-width-thin` hairline in `--border-default`. §1's *unceremonious* register still holds — a login form is not a floating object, and nothing in auth is dramatic.
+
+Where a container genuinely needs lifting off its ground, elevation is now available through a **semantic tier resolved per theme**, and never through a raw shadow primitive. A tier that does not exist yet is named as a gap (§17.1), not approximated.
 
 ---
 
@@ -170,7 +176,7 @@ Every flow needs somewhere to speak about the form as a whole: a failed login, a
 
 **Auth composes the region from vocabulary that already exists:** `Typography` for the text, a role's `-subtle` fill with `--role-on-surface-<role>` text for the treatment, `--border-radius-md` and a hairline border for the shape, `--space-*` for padding, and `role="alert"` on the container so it is announced rather than merely rendered.
 
-This is **feature-local composition**, which the Foundation explicitly permits — a page's composition belongs to the page until a shared concept is established. It is not a private reimplementation of `Alert`: it is the evidence that would later justify one. When a second surface needs the same region, that is promotion by concept, and the composition migrates.
+This is **feature-local composition**, which the Foundation explicitly permits — a page's composition belongs to the page until a shared concept is established. `Alert` is committed rather than speculative, so this region is **an interim standing in for it** — not the evidence that would justify it. What the region settles is the *shape* `Alert` should take, proven against six real screens before a line of it is written; auth's messages bind `Alert` once it exists.
 
 One region, one position — directly above the form's first field on every screen that has one — so an interruption always appears in the same place.
 
@@ -239,7 +245,7 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 | Component APIs — variants, sizes, states | Copy, tone, and any brand treatment (subject to `D8`) |
 | Both theme resolutions | Breakpoints and responsive behaviour |
 
-**If an exploration needs something in the left column that does not exist, that is a stop and an escalation — never an invention.**
+**If an exploration needs something in the left column that does not exist, that is a stop and an escalation — never a silent invention.** The stop routes into a vocabulary or component change, proposed and reviewed on its own terms; it is not a refusal, and the design is not rewritten around the gap. The [Foundation](../../../frontend/design-system/foundation.md) owns that route.
 
 ---
 
@@ -261,19 +267,21 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 
 **Mapping:** Login and Registration → `Input` + `Button`. Phase 2 → `Textarea` (Bio) + `Input` (Name) + `FileInput variant="avatar"` (Avatar) + `Button`. Reset → `Input` ×2 + `Button`. Every busy state → `Button isLoading` or `Spinner`.
 
-### Nothing unbuilt is required
+### What this design requires, and what it does not
 
-**This design adds no component.** Each apparent gap is closed with what exists:
+**This design requires components the layer does not yet carry, and says so.** An earlier revision recorded that it added none — true of the column-only screens it described, and false once `D8` and the journey stepper entered. The distinction that matters is *why* something is absent: a gap left by **scarcity** is closed by extending the vocabulary, while a gap closed by **analysis** stays closed.
+
+**Required, and committed** ([committed scope](../../../project/overview.md)): `Icon` · `Alert` · `Link` · `Stepper` · the one-time-code input. Each is interface vocabulary whose meaning survives this product; which layer builds each is the [admission test](../../../frontend/design-system/components.md)'s call, not this document's.
+
+**Closed by analysis, and still closed** — these were never scarcity workarounds, and adding them would not make the design stronger:
 
 | Apparent gap | Resolution |
 |---|---|
-| `Alert` — form-level messages | **Auth composes its own message region** (§9). Feature-local composition, and the future evidence for `Alert`. |
 | `Toast` — success confirmation | **Not needed.** Every confirmation lands on a destination screen that carries it (§9). |
-| `Link` — secondary navigation | **`Button variant="ghost" size="small"`** for every secondary action. It composes the owned focus ring and meets the hit-target floor. |
 | `Badge` — verified state | **Not needed.** Verification is expressed by the banner and restrictions *disappearing* — stronger than a badge appearing. |
-| OTP / code-entry field | **`Input`**, with the code as its value. Numeric keyboard, paste, labelled field and inline error are all `Input` behaviour. Only a segmented visual would require something new, which is why §17 keeps single-field the default. |
+| OTP / code-entry field | **A single `Input` remains the default**, because paste is the primary interaction and a single field does not fight it. The committed code input exists for the segmented treatment; choosing it is a design decision, not a requirement. |
 
-**The one trade this makes, recorded so it is not lost:** using `Button` for cross-screen navigation gives up anchor semantics — open-in-new-tab, middle-click. For six screens with no deep-linking expectation except the emailed reset link, which is a real URL, that cost is acceptable. When `Link` is built, auth's navigational secondaries migrate to it. A recorded intention, not a deferred defect.
+**A trade that no longer needs making:** using `Button` for cross-screen navigation gave up anchor semantics — open-in-new-tab, middle-click — and was accepted only while `Link` did not exist. `Link` is committed, so auth's navigational secondaries bind it rather than inheriting the workaround. Until it is built, the ghost `Button` stands in and the migration is owed.
 
 ### Icons — use what exists, prototype what does not
 
@@ -283,7 +291,7 @@ The existing set covers most of what these flows need: `CheckIcon` for a complet
 
 Two constraints on that:
 
-- **No `Icon` component is created and the Design System is not expanded now.** A placeholder is an exploration artifact, not a contribution to the layer.
+- **A placeholder is an exploration artifact, not a contribution to the layer.** `Icon` is committed and the set will grow, but an exploration does not grow it in passing: a needed icon is named and added deliberately, exactly as a token is.
 - **Every placeholder must be visibly marked as one** and listed with the exploration, so it can never be mistaken for an available asset or silently ship.
 
 An icon's absence is a reason to flag it, never a reason to weaken the design.
@@ -308,9 +316,9 @@ Each was observed in a real product and is rejected for a stated reason:
 
 ## 17 · Constraints any exploration must respect
 
-1. **Bind the vocabulary; never invent it.** Every colour, size, space, radius and duration comes from §6–§8's token names. A needed value that does not exist is a stop.
-2. **Use only the components in §15.** This design requires nothing unbuilt; reaching for `Alert`, `Toast`, `Link` or `Badge` departs from the direction rather than extending it — §15 shows what each is replaced by.
-3. **Icons: use the existing set, or a clearly marked placeholder** (§15). Never a new `Icon` component.
+1. **Bind the vocabulary; never write a literal.** Every colour, size, space, radius and duration comes from a token name. A needed value the vocabulary cannot express is a **stop into a proposed extension** — named, reviewed and merged — never a raw value at a call site and never a design bent around the gap.
+2. **Use the components §15 names — built or committed.** Reaching for `Toast` or `Badge` still departs from the direction: §15 closed those by analysis, and that reasoning has not changed. Reaching for a component in neither list is a stop.
+3. **Icons: use the existing set, or a clearly marked placeholder** (§15). An exploration never adds one in passing.
 4. **Never redesign a component's internals** — only its composition on a page.
 5. **Both themes, always.** A light-only review cannot catch §7's contrast class of defect.
 6. **Do not decide `D6` or `D7`.** `D8` is decided — the brand panel of §3 — and an exploration composes within it rather than reopening its shape.
@@ -331,7 +339,7 @@ Visual detail, deliberately unresolved — and **none of it requires a component
 - The column's max width, and the vertical rhythm chosen from `--space-*`.
 - The brand zone's share of the viewport, the treatment of its ground, and the wording of its single line — the panel's *existence and behaviour* are settled (§3); its proportions and copy are not.
 
-**Resolved and no longer open:** card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · whether any new component is required (none, §15) · how a missing icon is handled (placeholder, §15) · **whether auth has a brand surface, and of what kind** (`D8` — a typographic brand panel, §3) · breakpoints (one, auth's own, §3 and §11).
+**Resolved and no longer open:** card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · **which components this design requires, and which stay closed by analysis** (§15) · how a missing icon is handled during exploration (placeholder, §15) · **whether auth has a brand surface, and of what kind** (`D8` — a typographic brand panel, §3) · breakpoints (one, auth's own, §3 and §11).
 
 ---
 
