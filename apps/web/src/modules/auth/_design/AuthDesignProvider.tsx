@@ -11,6 +11,18 @@ import { AuthDesignToggle } from "./AuthDesignToggle";
 
 interface AuthDesignProviderProps {
   children: ReactNode;
+  /**
+   * Whether to render the toggle *within* a development build.
+   *
+   * The development check is applied at the render site rather than as this
+   * default, which is what lets a production build prove the control
+   * unreachable and drop it from the bundle entirely — as a default it stays
+   * a runtime value, the import survives, and the control ships as dead weight.
+   *
+   * This exists so a story can assert the hidden case without depending on how
+   * a harness happens to set `DEV`.
+   */
+  showToggle?: boolean;
 }
 
 /**
@@ -25,7 +37,10 @@ interface AuthDesignProviderProps {
  * component state. A second copy could disagree with the address bar, and the
  * address bar is what a second tab reads.
  */
-export const AuthDesignProvider = ({ children }: AuthDesignProviderProps) => {
+export const AuthDesignProvider = ({
+  children,
+  showToggle = true,
+}: AuthDesignProviderProps) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const mode = parseAuthDesignMode(searchParams.get(AUTH_DESIGN_PARAM));
 
@@ -65,7 +80,7 @@ export const AuthDesignProvider = ({ children }: AuthDesignProviderProps) => {
   return (
     <AuthDesignContext.Provider value={value}>
       {children}
-      <AuthDesignToggle />
+      {import.meta.env.DEV && showToggle && <AuthDesignToggle />}
     </AuthDesignContext.Provider>
   );
 };
