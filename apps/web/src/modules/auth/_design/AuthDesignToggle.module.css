@@ -1,0 +1,85 @@
+/*
+ * Deliberately self-contained: this control binds no colour token and composes
+ * no Design System component apart from the focus indicator.
+ *
+ * It is the escape hatch. If a proposed design breaks a shared component or a
+ * token resolution, a control built from that same vocabulary breaks with it —
+ * and the one thing needed to get back to the working design is the thing that
+ * stopped working. Independence is what keeps the way back open, so the
+ * literals below are correct rather than a shortcut, and this file is deleted
+ * with the rest of the directory once the auth UX is approved.
+ */
+
+.root {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483000; /* above anything a design under review may stack */
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px;
+  background: #f1f2f4;
+  border: 1px solid #e0e2e6;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgb(16 14 24 / 12%);
+  /* Recedes until wanted, so it never competes with the design being judged. */
+  opacity: 0.75;
+  transition: opacity 120ms ease;
+}
+
+.root:hover,
+.root:focus-within {
+  opacity: 1;
+}
+
+/* The segment a click would move to. */
+.segment {
+  composes: focusRing from "../../../shared/design-system/foundations/composition/focusRing.module.css";
+
+  min-width: 104px;
+  padding: 8px 14px;
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #5c5b68;
+  text-align: center;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.segment:hover {
+  color: #16131f;
+  background: rgb(255 255 255 / 55%);
+}
+
+/*
+ * The active segment reads as raised rather than merely darker: the difference
+ * between the two states must survive a glance, and weight alone is a weaker
+ * signal than a lifted surface.
+ */
+.segmentActive {
+  composes: segment;
+
+  font-weight: 600;
+  color: #16131f;
+  cursor: default;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(16 14 24 / 14%);
+}
+
+.segmentActive:hover {
+  background: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .segment {
+    transition: none;
+  }
+}
