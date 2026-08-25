@@ -10,21 +10,18 @@
   --text-secondary: var(--palette-mauve-200);
   --text-tertiary: var(--palette-mauve-400);
   --text-muted: var(--palette-mauve-400);
-  --text-accent: var(--palette-blue-400);
+  --text-accent: var(--palette-violet-400);
 
   --border-default: var(--palette-mauve-700);
   --border-strong: var(--palette-mauve-600);
 
-  --focus-ring: var(--palette-blue-500);
+  --focus-ring: var(--palette-violet-500);
 }
 
-/* Role tokens (ADR 0010 Decision 3). `role` is the semantic visual role — primary,
-   error, and the rest — never the ARIA `role` attribute. Any component that carries
-   one binds these, so they are not scoped to controls: an alert and a badge express
-   a role without being one. On-surface is the role as text on a neutral surface,
-   resolved per theme because no single value clears 4.5:1 against both. */
+/* The role as text on a neutral surface, resolved per theme because no single value
+   clears 4.5:1 against both. */
 [data-theme="dark"] {
-  --role-on-surface-primary: var(--palette-blue-400);
+  --role-on-surface-primary: var(--palette-violet-400);
   --role-on-surface-secondary: var(--palette-neutral-300);
   --role-on-surface-success: var(--palette-green-400);
   --role-on-surface-warning: var(--palette-amber-400);
@@ -33,10 +30,7 @@
 }
 
 /* The role as a filled background or border, kept distinct from on-surface text
-   because the two answer to different contrast criteria. Declared in every theme
-   even where the values coincide: `:root` matches the same element at equal
-   specificity and loads afterwards, so a token there would outrank every theme.
-   `text` is the contrast-paired on-fill text; `subtle` a translucent wash. */
+   because the two answer to different contrast criteria. */
 [data-theme="dark"] {
   --role-fill-primary: var(--palette-violet-600);
   --role-fill-primary-hover: var(--palette-violet-700);
@@ -69,8 +63,8 @@
   --role-fill-info-subtle: var(--palette-blue-a10);
 }
 
-/* Control state emphasis (ADR 0011 Decision 1a). On the theme axis because a
-   high-contrast theme is the likeliest to re-resolve a state dimmed by opacity. */
+/* On the theme axis: a high-contrast theme is the likeliest to re-resolve a state
+   dimmed by opacity. */
 [data-theme="dark"] {
   --control-opacity-disabled: 0.6;
   --control-opacity-loading: 0.8;
