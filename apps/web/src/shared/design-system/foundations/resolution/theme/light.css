@@ -40,10 +40,10 @@
    specificity and loads afterwards, so a token there would outrank every theme.
    `text` is the contrast-paired on-fill text; `subtle` a translucent wash. */
 [data-theme="light"] {
-  --role-fill-primary: var(--palette-blue-600);
-  --role-fill-primary-hover: var(--palette-blue-700);
+  --role-fill-primary: var(--palette-violet-600);
+  --role-fill-primary-hover: var(--palette-violet-700);
   --role-fill-primary-text: var(--palette-neutral-0);
-  --role-fill-primary-subtle: var(--palette-blue-a10);
+  --role-fill-primary-subtle: var(--palette-violet-a10);
 
   --role-fill-secondary: var(--palette-neutral-500);
   --role-fill-secondary-hover: var(--palette-neutral-600);
