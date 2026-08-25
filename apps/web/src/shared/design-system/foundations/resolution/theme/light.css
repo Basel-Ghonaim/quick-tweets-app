@@ -16,6 +16,11 @@
   --border-default: var(--palette-mauve-200);
   --border-strong: var(--palette-mauve-300);
 
+  /* What tells a reader an element is a control. A field's fill sits at 1.05:1
+     against the card behind it, so the border is the whole affordance and answers
+     to 3:1 (WCAG 1.4.11) where the two above stay decorative. */
+  --control-border: var(--palette-mauve-500);
+
   --focus-ring: var(--palette-violet-500);
 }
 
