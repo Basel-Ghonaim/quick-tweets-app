@@ -12,8 +12,8 @@ import { describe, expect, test } from "vitest";
  * own criterion, so the check covers, in both themes:
  *   - text on a surface, and on-surface role text, at 4.5:1 (WCAG 1.4.3);
  *   - on-fill text against its fill, default and hover, at 4.5:1;
- *   - a fill as a UI boundary against the page, and the focus ring against a
- *     surface, at 3:1 (WCAG 1.4.11).
+ *   - a fill as a UI boundary against the page, a control's own boundary against
+ *     a surface, and either focus ring against a surface, at 3:1 (WCAG 1.4.11).
  *
  * One pairing stays the consumer's: a fill placed on a *raised* surface rather
  * than the page contrasts less, and whether a component does that is composition
@@ -96,6 +96,11 @@ const PAIRS: Pair[] = [
   ...ROLES.flatMap((r) => SURFACES.map((bg) => ({ fg: `--role-on-surface-${r}`, bg, min: 4.5 }))),
   ...ROLES.map((r) => ({ fg: `--role-fill-${r}`, bg: "--surface-page", min: 3 })),
   ...SURFACES.map((bg) => ({ fg: "--focus-ring", bg, min: 3 })),
+  // A control's boundary is the whole affordance where its fill barely differs
+  // from the card behind it, so it answers to 1.4.11 rather than to whatever a
+  // decorative hairline happens to reach.
+  ...SURFACES.map((bg) => ({ fg: "--control-border", bg, min: 3 })),
+  ...SURFACES.map((bg) => ({ fg: "--focus-ring-error", bg, min: 3 })),
 ];
 
 // Every `:root` declaration under the token tree, not one named file: the tiers

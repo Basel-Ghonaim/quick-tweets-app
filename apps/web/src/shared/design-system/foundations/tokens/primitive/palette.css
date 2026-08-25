@@ -17,6 +17,26 @@
   --palette-slate-800: #1e293b;
   --palette-slate-900: #0f172a;
 
+  /* The violet-cast neutral both themes stand on — the brand's hue, desaturated to read as ground. */
+  --palette-mauve-0: #ffffff;
+  --palette-mauve-50: #fafafe;
+  --palette-mauve-100: #f5f3fd;
+  --palette-mauve-200: #e5e1f8;
+  --palette-mauve-300: #d0cddb;
+  --palette-mauve-400: #9e98b4;
+  --palette-mauve-500: #6d658c;
+  --palette-mauve-600: #57516f;
+  --palette-mauve-700: #423868;
+  --palette-mauve-800: #31294d;
+  --palette-mauve-900: #241e38;
+  --palette-mauve-950: #171424;
+
+  /* The brand. White on 500 is 4.35:1, so fills bind 600 and hovers 700; 500 stays a boundary and accent. */
+  --palette-violet-400: #9176ff;
+  --palette-violet-500: #7c5cff;
+  --palette-violet-600: #6a46fb;
+  --palette-violet-700: #4d24f1;
+
   --palette-blue-400: #60a5fa;
   --palette-blue-500: #3b82f6;
   --palette-blue-600: #2563eb;
@@ -39,6 +59,7 @@
   --palette-red-600: #dc2626;
   --palette-red-700: #b91c1c;
 
+  --palette-violet-a10: rgba(124, 92, 255, 0.1);
   --palette-blue-a10: rgba(59, 130, 246, 0.1);
   --palette-neutral-a10: rgba(107, 114, 128, 0.1);
   --palette-green-a10: rgba(16, 185, 129, 0.1);

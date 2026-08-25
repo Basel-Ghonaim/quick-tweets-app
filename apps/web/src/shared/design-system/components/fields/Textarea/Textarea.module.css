@@ -51,13 +51,14 @@
    owns the boundary, which is why a composer can sit it flush against its own
    chrome without a frame inside a frame. */
 .variant-outlined {
-  border-color: var(--border-default);
+  border-color: var(--control-border);
   background-color: var(--surface-default);
 }
 
 /* An error is the one state that overrides that: an invalid control has to be
    findable, and the message below it is not enough on a field with no edge. */
 .isInvalid {
+  composes: focusRingFault from "../../../foundations/composition/focusRing.module.css";
   border-color: var(--role-fill-error);
 }
 

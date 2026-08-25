@@ -1,32 +1,36 @@
 /* Semantic tier (ADR 0010 Decision 3) — values provisional. */
 [data-theme="light"] {
-  --surface-page: var(--palette-neutral-50);
-  --surface-default: var(--palette-neutral-0);
-  /* A resting fill that recedes from the surface it sits on — a filled input, not a
-     hovered one. */
-  --surface-subtle: var(--palette-neutral-100);
-  --surface-hover: var(--palette-neutral-100);
-  --surface-active: var(--palette-neutral-200);
+  --surface-page: var(--palette-mauve-50);
+  --surface-default: var(--palette-mauve-0);
+  /* A resting fill that recedes from its surface — a filled input, not a hovered one. */
+  --surface-subtle: var(--palette-mauve-100);
+  --surface-hover: var(--palette-mauve-100);
+  --surface-active: var(--palette-mauve-200);
 
-  --text-primary: var(--palette-neutral-900);
-  --text-secondary: var(--palette-neutral-600);
-  --text-tertiary: var(--palette-neutral-500);
-  --text-muted: var(--palette-neutral-500);
-  --text-accent: var(--palette-blue-600);
+  --text-primary: var(--palette-mauve-900);
+  --text-secondary: var(--palette-mauve-600);
+  --text-tertiary: var(--palette-mauve-500);
+  --text-muted: var(--palette-mauve-500);
+  --text-accent: var(--palette-violet-600);
 
-  --border-default: var(--palette-neutral-200);
-  --border-strong: var(--palette-neutral-300);
+  --border-default: var(--palette-mauve-200);
+  --border-strong: var(--palette-mauve-300);
 
-  --focus-ring: var(--palette-blue-500);
+  /* What tells a reader an element is a control. A field's fill sits at 1.05:1
+     against the card behind it, so the border is the whole affordance and answers
+     to 3:1 (WCAG 1.4.11) where the two above stay decorative. */
+  --control-border: var(--palette-mauve-500);
+
+  --focus-ring: var(--palette-violet-500);
+  /* A separate token from --role-fill-error, not a shortcut to it: this answers to
+     3:1 against the surface behind the ring, the fill to a boundary criterion. */
+  --focus-ring-error: var(--palette-red-600);
 }
 
-/* Role tokens (ADR 0010 Decision 3). `role` is the semantic visual role — primary,
-   error, and the rest — never the ARIA `role` attribute. Any component that carries
-   one binds these, so they are not scoped to controls: an alert and a badge express
-   a role without being one. On-surface is the role as text on a neutral surface,
-   resolved per theme because no single value clears 4.5:1 against both. */
+/* The role as text on a neutral surface, resolved per theme because no single value
+   clears 4.5:1 against both. */
 [data-theme="light"] {
-  --role-on-surface-primary: var(--palette-blue-700);
+  --role-on-surface-primary: var(--palette-violet-700);
   --role-on-surface-secondary: var(--palette-neutral-600);
   --role-on-surface-success: var(--palette-green-700);
   --role-on-surface-warning: var(--palette-amber-700);
@@ -35,15 +39,12 @@
 }
 
 /* The role as a filled background or border, kept distinct from on-surface text
-   because the two answer to different contrast criteria. Declared in every theme
-   even where the values coincide: `:root` matches the same element at equal
-   specificity and loads afterwards, so a token there would outrank every theme.
-   `text` is the contrast-paired on-fill text; `subtle` a translucent wash. */
+   because the two answer to different contrast criteria. */
 [data-theme="light"] {
-  --role-fill-primary: var(--palette-blue-600);
-  --role-fill-primary-hover: var(--palette-blue-700);
+  --role-fill-primary: var(--palette-violet-600);
+  --role-fill-primary-hover: var(--palette-violet-700);
   --role-fill-primary-text: var(--palette-neutral-0);
-  --role-fill-primary-subtle: var(--palette-blue-a10);
+  --role-fill-primary-subtle: var(--palette-violet-a10);
 
   --role-fill-secondary: var(--palette-neutral-500);
   --role-fill-secondary-hover: var(--palette-neutral-600);
@@ -71,8 +72,8 @@
   --role-fill-info-subtle: var(--palette-blue-a10);
 }
 
-/* Control state emphasis (ADR 0011 Decision 1a). On the theme axis because a
-   high-contrast theme is the likeliest to re-resolve a state dimmed by opacity. */
+/* On the theme axis: a high-contrast theme is the likeliest to re-resolve a state
+   dimmed by opacity. */
 [data-theme="light"] {
   --control-opacity-disabled: 0.6;
   --control-opacity-loading: 0.8;

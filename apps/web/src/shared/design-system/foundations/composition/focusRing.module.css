@@ -12,7 +12,7 @@
 .focusRing:focus-visible,
 .focusRingWithin:has(> :focus-visible),
 :focus-visible ~ .focusRingProxy {
-  outline: 2px solid var(--focus-ring);
+  outline: 2px solid var(--ring-color, var(--focus-ring));
   outline-offset: 2px;
 }
 
@@ -21,4 +21,11 @@
    parameterised, so the override cannot lose a cascade race with the component. */
 .focusRingInset:focus-visible {
   outline-offset: -2px;
+}
+
+/* The same indicator in the fault color, for a control already reporting one:
+   a violet ring around a red field reads as reassurance. Only the color is
+   swapped, through the seam above, so the geometry stays declared once. */
+.focusRingFault {
+  --ring-color: var(--focus-ring-error);
 }

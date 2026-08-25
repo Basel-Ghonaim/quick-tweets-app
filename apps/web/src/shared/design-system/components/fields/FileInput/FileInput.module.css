@@ -47,7 +47,7 @@
   font: var(--type-label-medium);
   color: var(--file-input-color);
   background-color: var(--surface-default);
-  border: var(--border-width-thin) solid var(--border-default);
+  border: var(--border-width-thin) solid var(--control-border);
   border-radius: var(--border-radius-md);
   cursor: pointer;
   white-space: nowrap;
@@ -89,6 +89,10 @@
 
 
 /* ─── Invalid state ──────────────────────────────────────────────────────── */
+
+.isInvalid {
+  composes: focusRingFault from "../../../foundations/composition/focusRing.module.css";
+}
 
 .isInvalid .triggerButton {
   border-color: var(--role-fill-error);
@@ -239,7 +243,7 @@
   gap: var(--space-1);
   width: 80px;
   height: 80px;
-  border: var(--border-width-medium) dashed var(--border-default);
+  border: var(--border-width-medium) dashed var(--control-border);
   border-radius: var(--border-radius-md);
   background-color: transparent;
   color: var(--text-secondary);
@@ -337,7 +341,7 @@
   width: calc(100% - var(--space-2) * 2);
   margin: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  border: var(--border-width-medium) dashed var(--border-default);
+  border: var(--border-width-medium) dashed var(--control-border);
   border-radius: var(--border-radius-md);
   background-color: transparent;
   color: var(--text-secondary);
@@ -386,7 +390,7 @@
 /* ── Fill modifiers ── */
 
 .avatarDefault {
-  border: var(--border-width-thick) var(--avatar-border-style, dashed) var(--border-default);
+  border: var(--border-width-thick) var(--avatar-border-style, dashed) var(--control-border);
   background-color: var(--surface-subtle);
 }
 
