@@ -78,7 +78,7 @@ A documented incident on another product — **unmasked identifiers echoed back 
 
 ### Reset password
 
-**Observed:** Link-based reset landing directly on a single new-password form is confirmed on two products — matching `D5`'s shape. Two others use a code rather than a link, useful as contrast only, since `D3` is explicit that OTP is not the reset path.
+**Observed:** Link-based reset landing directly on a single new-password form is confirmed on two products — matching `D5`'s shape. Two others use a code rather than a link — direct precedent for `D3`'s code path, which the emailed link now lands beside rather than replaces.
 
 **The strongest confirmed match to `D5` anywhere in this research:** one product's own documentation states that resetting the password logs the user out of **every** active session — full re-authentication, no exceptions.
 

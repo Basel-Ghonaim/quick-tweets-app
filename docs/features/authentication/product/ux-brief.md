@@ -4,11 +4,11 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for the **ratified product and UX decisions** governing the authentication experience — which flows exist, what states each must support, and the post-registration journey. It owns **decisions**, never their visual expression and never their component mapping.
 > **Scope:** The auth experience as a product: Login, Registration, Profile Completion, Email Verification, Forgot Password, Reset Password, and the unverified in-app state. Feature behaviour as currently implemented is the [authentication feature document](../authentication.md)'s; the wire contract is the [API contract](../../../api/api-contract.md)'s.
-> **Version:** 1.1
-> **Last Updated:** 2026-08-20
+> **Version:** 1.2
+> **Last Updated:** 2026-08-25
 > **Owner:** Basel Ghonaim
 
-`D1`–`D5` and the post-registration journey (Phases 1–3) are **settled product direction and are not reopened downstream.** `D6` and `D7` are **deferred**, and no later phase may foreclose them. `D8` was deferred *to* visual design and has since been decided there.
+`D1`–`D5`, `D9`, and the post-registration journey (Phases 1–3) are **settled product direction and are not reopened downstream.** `D6` and `D7` are **deferred**, and no later phase may foreclose them. `D8` was deferred *to* visual design and has since been decided there.
 
 These decisions were subsequently tested against how real products behave; what that examination found is recorded in the [competitive UX research](ux-research.md), which reopens nothing here.
 
@@ -34,9 +34,9 @@ These decisions were subsequently tested against how real products behave; what 
 
 **`D2` — Soft verification gate.** The user enters the app immediately on registration. Unverified users carry a persistent in-app reminder, and selected actions are restricted until verified.
 
-**`D3` — Hybrid delivery, asymmetric by flow.**
+**`D3` — Hybrid delivery, in both flows.**
 - **Email Verification:** an in-app one-time code (OTP) is the primary path; the same email also carries a **shortcut deep link**. Both paths end in **the same verification state** — the design must show them converging.
-- **Reset Password:** a **secure emailed link** is primary, carrying a single-use, time-limited credential, landing directly on the new-password screen. OTP is **not** the reset path.
+- **Reset Password:** **two independent paths, either of which completes the reset.** A **secure emailed link** carries a single-use, time-limited credential and lands directly on the new-password screen; an **in-app one-time code** reaches the same screen. Neither is a fallback for the other, and both end in the same state.
 
 **`D4` — Login is the primary screen.** No tabs. Registration is reached via a clear "Create new account" CTA below the login form, and registration links back to login symmetrically.
 
@@ -45,6 +45,8 @@ These decisions were subsequently tested against how real products behave; what 
 **`D6` · `D7` — deferred.** Session-expiry re-entry and remember-me are out of scope for this phase; no layout may assume an answer to either.
 
 **`D8` — delegated to visual design, and decided there.** This brief still takes no position of its own on the brand surface: the [design direction](ux-direction.md) owns it and has ratified a **typographic brand panel**, additive beside the form column and absent on mobile. The screen inventory below remains **content requirements, not layout.**
+
+**`D9` — The feed is readable without an account.** Login offers a third way on, beside signing in and registering: browsing as a guest. Reading is all a guest may do — posting, liking, following and uploading each require an account — so a write action met as a guest is a prompt to sign up, never a silent failure.
 
 ---
 
@@ -91,13 +93,13 @@ Three fields on a single combined screen, with one explicit skip action:
 
 | Flow | Screens | States that must exist |
 |---|---|---|
-| **Login (primary)** | 1 | idle · submitting · **generic credential error** (never field-specific) · rate-limited · → app. CTAs: "Create new account", "Forgot password?" |
+| **Login (primary)** | 1 | idle · submitting · **generic credential error** (never field-specific) · rate-limited · → app. CTAs: "Create new account", "Forgot password?", **"Browse without an account"** |
 | **Phase 1 · Registration** | 1 | idle · inline validation (lowercase-only username **rejected, not normalized** · email format · password + confirm) · `409` duplicate (field-specific is safe here) · rate-limited · submitting · success → Phase 2 |
 | **Phase 2 · Profile completion** | 1 | idle · per-field inline validation (50- and 160-character limits) · **avatar upload: idle → in progress → success → retryable failure** · image type/size rejection with an explicit message · saving · success → Phase 3 · **"Skip" → Phase 3 directly** |
 | **Phase 3 · Email verification** | prompt + outcome | OTP entry · resend with an **announced** cooldown · invalid/expired code · resend exhausted · verified ✓ · **"Later" → app** · deep-link path: success landing and expired-link landing |
 | **Unverified in-app state** | banner + restricted moment | persistent reminder · restricted-action response · both dissolve together on verification |
 | **Forgot password** | 1 | email entry · submitting · **one neutral confirmation** regardless of account existence — visually and programmatically identical |
-| **Reset password** (via link) | 1 + dead end | new password + confirm (registration's own strength rules) · submitting · **dead end for an expired/invalid link** with "request a new one" · success → Login with confirmation (`D5`) |
+| **Reset password** (via link or code) | 2 + dead end | code entry (for the code path) · new password + confirm (registration's own strength rules) · submitting · **dead end for an expired/invalid link or code** with "request a new one" · success → Login with confirmation (`D5`) |
 
 ---
 
@@ -161,7 +163,7 @@ The auth experience is **built from the Design System's existing vocabulary** �
                                                                                 │
    "Forgot password?" ──▶ FORGOT (email) ──▶ neutral confirmation (always same)  │
                                         │                                       │
-                                        ▼  emailed single-use, time-limited link│
+                                        ▼  emailed link ◀── or ──▶ in-app code  │
                               RESET (new password) ──success──▶ LOGIN (D5) ─────┘
                                         │
                                         └─ expired / invalid ─▶ dead end → request new

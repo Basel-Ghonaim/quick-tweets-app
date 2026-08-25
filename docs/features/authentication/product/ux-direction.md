@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.2
-> **Last Updated:** 2026-08-21
+> **Version:** 1.3
+> **Last Updated:** 2026-08-25
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
@@ -60,18 +60,17 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 
 **Desktop carries a brand zone beside the form column; mobile does not.** The zone is *additive*: removing it leaves exactly the screen this section already describes, which is what keeps the decision independently reversible.
 
-- **The form column does not change.** Not its width, not its rhythm, not its content, not its order. Every rule in §4–§10 applies identically with the zone present or absent — the zone sits *beside* the column, never around it and never inside it.
-- **The zone is inert.** A wordmark and at most one line of copy. **No field, no button, no link, no interactive element of any kind.** This is not restraint for its own sake; see the order rule below.
-- **Typography and colour only.** No photography, no illustration, no product preview. These are ruled out on **availability, not taste**: the product owns no image assets and no illustration library, and the Feed does not exist to preview. A direction depending on them could not be built, and claiming one would claim something that does not exist.
+- **The zone never restructures the form column.** Every rule in §4–§10 applies identically with the zone present or absent — the zone sits *beside* the column, never around it and never inside it.
+- **The zone carries the product's pitch.** A headline, one supporting line, and a small number of sample posts showing what the product is for. It says what the reader is signing in to, which a wordmark alone cannot.
+- **The zone is inert.** **No field, no button, no link, no interactive element of any kind.** This is not restraint for its own sake; reading and focus order depend on it.
+- **Typography and colour only.** No photography and no illustration — ruled out on **availability, not taste**: the product owns no image assets and no illustration library. Sample posts are composed from type and colour like everything else, so they depend on nothing that does not exist.
 - **The zone's ground is feature-local, not vocabulary.** A page's brand treatment is not design language, because nothing else must agree with it ([Foundation](../../../frontend/design-system/foundation.md), the local / shared boundary). **This decision therefore introduces no token and no component.**
 - **The form keeps its own neutral surface.** The brand ground never becomes the background of a control, so §7's colour rules — the on-surface / fill rule included — hold unchanged and unqualified.
 - **Both themes resolve the zone** (§17.5). A brand ground that only works in dark is not portable and is not this decision.
 
-**Source order, and why the zone is inert.** The form comes **first in the document** and the brand zone second; the split is achieved by visual reordering. Reading order and focus order are therefore correct at every viewport **by construction rather than by correction** — there is no reordering to maintain and nothing to re-verify at the threshold. This is the documented failure mode of the pattern, recorded in the [research](ux-research.md): the panel folds above the form and takes the focus order with it. An inert zone is what makes the guarantee free — a region containing nothing focusable cannot misplace focus.
+**Reading and focus order reach the form first, at every viewport.** This is the documented failure mode of the pattern, recorded in the [research](ux-research.md): the panel folds above the form and takes the focus order with it. An inert zone is most of the guarantee — a region containing nothing focusable cannot misplace focus — and how the order is achieved is composition's to decide.
 
-**Mobile is subtraction, never rearrangement.** Below the threshold the zone is not rendered and the wordmark sits above the form. The form is not restructured, re-ordered or re-sized to accommodate its absence: this is the same layout with one region removed.
-
-**The threshold is auth's own.** §14 already assigns breakpoints and responsive behaviour to auth, so the single threshold at which the zone appears is feature-local composition — a literal in auth's own stylesheet. [Finding 0011](../../../architecture/findings/0011-breakpoint-tokens-unconsumable-mechanism.md) is unaffected: it records that breakpoint *tokens* cannot be consumed in a media query, which is precisely why this is not one.
+**On mobile the form leads.** The zone gives up its place beside the column and stops competing for the first screen; what remains of it, and where, is composition's to decide.
 
 ---
 
@@ -90,11 +89,11 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 
 | Screen | Primary (filled) | Secondary (text weight) |
 |---|---|---|
-| Login | "Log in" | "Forgot password?" · "Create new account" |
+| Login | "Log in" | "Forgot password?" · "Create new account" · "Browse without an account" |
 | Registration | "Continue" | "Back to login" |
 | Phase 2 · Profile | "Save" / "Continue" | **"Skip"** |
 | Phase 3 · Verify | "Verify" | **"Later"** · "Resend" (visible cooldown) |
-| Forgot password | "Send instructions" | "Back to login" |
+| Forgot password | "Send code" | "Back to login" |
 | Reset password | "Reset password" | — |
 
 - **One filled button per screen.** Everything else is `Button variant="ghost" size="small"` — including cross-screen navigation, since no `Link` component exists and ghost already carries the right weight (§15).
@@ -192,7 +191,7 @@ There is no auth moment where something completes and the user stays put with no
 
 - **Login is the front door** (`D4`). No tabs, no switcher.
 - **Forward motion is always one primary action.** Back-navigation is a text link, never prominent.
-- **The journey stepper — `1 Account → 2 Profile → 3 Verify` — is required.** Step 1 always renders complete and non-interactive. Steps 2 and 3 **must be labelled optional in text, not by visual weight alone** — the same principle §12 applies everywhere else. The current step is the single emphasised element. A skipped step renders as *skipped*, never as complete. Whether the stepper reappears when a user returns to Phase 2 later is the brief's open question, untouched here.
+- **The journey stepper — `1 Account → 2 Profile → 3 Verify` — is required.** The stepper reports progress and never navigates. The step you are on reads as *in progress*; a finished step reads as *done*. Steps 2 and 3 **must be labelled optional in text, not by visual weight alone** — the same principle §12 applies everywhere else. The current step is the single emphasised element. A skipped step renders as *skipped*, never as complete. Whether the stepper reappears when a user returns to Phase 2 later is the brief's open question, untouched here.
 - **Screens own their state.** A prior screen's error must never bleed into the next — the research found a real product shipping exactly this bug.
 - **Never echo an unmasked identifier** on a recovery screen. If an email is shown back, it is masked at the source.
 
@@ -202,9 +201,8 @@ There is no auth moment where something completes and the user stays put with no
 
 - **Mobile is the constraint case; design it first.** The form column is the same on both; desktop adds breathing room, not structure.
 - **The CTA must stay reachable with the on-screen keyboard open** — the documented mobile failure case for auth forms. Avoid `100vh` with a fixed-bottom CTA; verify on a real device, not a resized desktop browser.
-- **The OTP field must trigger the numeric keyboard and accept a pasted code** — pasting is the primary path, since the code sits in the email the user is reading.
+- **The code field must accept a pasted code** — pasting is the primary path, since the code sits in the email the user is reading. **The code is alphanumeric, so the field must not request a numeric keyboard.** It forgives case, spacing and look-alike characters on the user's behalf rather than rejecting them.
 - **Avatar upload on mobile** goes through the camera or gallery and needs a visible progress state; its lifecycle (idle → uploading → success → retryable failure) is the one genuinely new state machine in the journey.
-- **Auth owns exactly one breakpoint, and it exists only for the brand zone** (§3): below the threshold the zone is not rendered, above it the zone appears beside the unchanged column. **The form column itself still needs none** — a single centred column with a max width is correct at every viewport, and the remaining responsive concern is the keyboard-safe CTA, which is not a breakpoint problem. There are no breakpoint tokens ([Finding 0011](../../../architecture/findings/0011-breakpoint-tokens-unconsumable-mechanism.md)), and this threshold is not one.
 
 ---
 
@@ -279,7 +277,7 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 |---|---|
 | `Toast` — success confirmation | **Not needed.** Every confirmation lands on a destination screen that carries it (§9). |
 | `Badge` — verified state | **Not needed.** Verification is expressed by the banner and restrictions *disappearing* — stronger than a badge appearing. |
-| OTP / code-entry field | **A single `Input` remains the default**, because paste is the primary interaction and a single field does not fight it. The committed code input exists for the segmented treatment; choosing it is a design decision, not a requirement. |
+| OTP / code-entry field | **A single `Input`** — decided. Paste is the primary interaction and a single field does not fight it; the code's length also rules out a segmented treatment at the column's width. |
 
 **A trade that no longer needs making:** using `Button` for cross-screen navigation gave up anchor semantics — open-in-new-tab, middle-click — and was accepted only while `Link` did not exist. `Link` is committed, so auth's navigational secondaries bind it rather than inheriting the workaround. Until it is built, the ghost `Button` stands in and the migration is owed.
 
@@ -332,14 +330,9 @@ Each was observed in a real product and is rejected for a stated reason:
 
 Visual detail, deliberately unresolved — and **none of it requires a component or token that does not exist**:
 
-- The stepper's visual form — dots, numbered pills, a labelled bar — and where the "(optional)" label sits.
-- The proportions of the message region (§9): padding, whether it spans the column's full width, how the role tint reads at that size.
-- Exact copy for the neutral confirmation, the expired-link dead end, and the optional-step labels — the *shape* is decided, the words are not.
-- Registration's internal step count within Phase 1.
-- The column's max width, and the vertical rhythm chosen from `--space-*`.
-- The brand zone's share of the viewport, the treatment of its ground, and the wording of its single line — the panel's *existence and behaviour* are settled (§3); its proportions and copy are not.
+- Exact copy for the neutral confirmation, the expired link-or-code dead end, and the optional-step labels — the *shape* is decided, the words are not.
 
-**Resolved and no longer open:** card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · **which components this design requires, and which stay closed by analysis** (§15) · how a missing icon is handled during exploration (placeholder, §15) · **whether auth has a brand surface, and of what kind** (`D8` — a typographic brand panel, §3) · breakpoints (one, auth's own, §3 and §11).
+**Resolved and no longer open:** the stepper's visual form and where its optional label sits · the message region's proportions · registration's step count within Phase 1 · the column's measure and its vertical rhythm · the brand zone's ground and copy · card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · **which components this design requires, and which stay closed by analysis** (§15) · how a missing icon is handled during exploration (placeholder, §15) · **whether auth has a brand surface, and of what kind** (`D8` — a typographic brand panel, §3).
 
 ---
 
