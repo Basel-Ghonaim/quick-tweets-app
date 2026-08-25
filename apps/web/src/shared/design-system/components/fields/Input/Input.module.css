@@ -86,6 +86,12 @@
   border-color: var(--control-border);
 }
 
+/* Carried on the root so every ring inside an errored field inherits it — the
+   control's own, and the reveal toggle's. */
+.isInvalid {
+  composes: focusRingFault from "../../../foundations/composition/focusRing.module.css";
+}
+
 .variant-outlined.isInvalid .control {
   border-color: var(--role-fill-error);
 }

@@ -86,6 +86,10 @@
   border-color: var(--checkbox-color);
 }
 
+.isInvalid {
+  composes: focusRingFault from "../../../foundations/composition/focusRing.module.css";
+}
+
 .isInvalid .box {
   border-color: var(--role-fill-error);
 }

@@ -90,6 +90,10 @@
 
 /* ─── Invalid state ──────────────────────────────────────────────────────── */
 
+.isInvalid {
+  composes: focusRingFault from "../../../foundations/composition/focusRing.module.css";
+}
+
 .isInvalid .triggerButton {
   border-color: var(--role-fill-error);
   color: var(--role-on-surface-error);
