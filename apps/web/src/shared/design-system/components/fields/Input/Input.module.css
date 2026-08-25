@@ -83,7 +83,7 @@
 
 .variant-outlined .control {
   background-color: transparent;
-  border-color: var(--border-default);
+  border-color: var(--control-border);
 }
 
 .variant-outlined.isInvalid .control {
@@ -110,7 +110,7 @@
 
 .variant-underlined .control {
   border-radius: 0;
-  border-block-end: var(--border-width-medium) solid var(--border-default);
+  border-block-end: var(--border-width-medium) solid var(--control-border);
 }
 
 .variant-underlined .control:has(> :focus-visible) {

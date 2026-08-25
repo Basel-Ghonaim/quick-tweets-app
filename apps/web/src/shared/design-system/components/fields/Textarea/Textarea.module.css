@@ -51,7 +51,7 @@
    owns the boundary, which is why a composer can sit it flush against its own
    chrome without a frame inside a frame. */
 .variant-outlined {
-  border-color: var(--border-default);
+  border-color: var(--control-border);
   background-color: var(--surface-default);
 }
 
