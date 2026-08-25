@@ -22,6 +22,9 @@
   --control-border: var(--palette-mauve-500);
 
   --focus-ring: var(--palette-violet-500);
+  /* A separate token from --role-fill-error, not a shortcut to it: this answers to
+     3:1 against the surface behind the ring, the fill to a boundary criterion. */
+  --focus-ring-error: var(--palette-red-600);
 }
 
 /* The role as text on a neutral surface, resolved per theme because no single value
