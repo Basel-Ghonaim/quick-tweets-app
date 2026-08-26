@@ -38,16 +38,22 @@ export const TurnsWithTheDirection: Story = {
     const mirrors = canvasElement.querySelectorAll("svg")[0];
     const stays = canvasElement.querySelectorAll("svg")[1];
 
-    // Left to right, nothing is flipped.
-    applyDirection("ltr");
-    await expect(scaleX(mirrors)).toBe(1);
-    await expect(scaleX(stays)).toBe(1);
+    // Direction is a property of the document, so every other story shares it.
+    // Restored in `finally`, or a failure here would leave the rest running
+    // right-to-left and reporting it as their own.
+    const previous = document.documentElement.getAttribute(DIRECTION_ATTRIBUTE);
+    try {
+      // Left to right, nothing is flipped.
+      applyDirection("ltr");
+      await expect(scaleX(mirrors)).toBe(1);
+      await expect(scaleX(stays)).toBe(1);
 
-    // Right to left, only the glyph that declared it turns.
-    applyDirection("rtl");
-    await expect(scaleX(mirrors)).toBe(-1);
-    await expect(scaleX(stays)).toBe(1);
-
-    document.documentElement.setAttribute(DIRECTION_ATTRIBUTE, DEFAULT_DIRECTION);
+      // Right to left, only the glyph that declared it turns.
+      applyDirection("rtl");
+      await expect(scaleX(mirrors)).toBe(-1);
+      await expect(scaleX(stays)).toBe(1);
+    } finally {
+      applyDirection((previous as "ltr" | "rtl") ?? DEFAULT_DIRECTION);
+    }
   },
 };
