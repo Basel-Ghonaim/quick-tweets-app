@@ -1,9 +1,10 @@
 # Finding 0017: Icon mirroring has no rendered proof
 
-> **Status:** Open
+> **Status:** Resolved
 > **Date:** 2026-08-26
 > **Affected areas:** `apps/web/src/shared/design-system/foundations/composition/iconMirror.module.css`; `apps/web/src/shared/design-system/icons/Icons.stories.tsx`
 > **Reported by:** Basel Ghonaim (surfaced while giving icons a way to declare mirroring, [#550](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/550))
+> **Resolved:** [#552](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/552) — a story renders a mirroring glyph beside a non-mirroring one and asserts the computed transform of each under both directions. It became writable once the direction signal existed to switch.
 
 ## Observation
 

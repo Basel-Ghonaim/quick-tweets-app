@@ -1,10 +1,37 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>quick-tweets</title>
+    <meta name="theme-color" content="#fafafe" />
+
+    <!-- Runs before the first paint, which nothing in the module graph can do:
+         a reader who prefers dark would otherwise see a white frame on every
+         load (Finding 0018). It resolves as the provider does, and a check
+         holds the two to that. -->
+    <script>
+      (function () {
+        var THEMES = { light: "#fafafe", dark: "#171424" };
+        var stored = null;
+        try {
+          stored = localStorage.getItem("quick-tweets:theme");
+        } catch (error) {
+          /* Unreadable storage is not a reason to fail to paint. */
+        }
+        var theme =
+          stored in THEMES
+            ? stored
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.setAttribute("data-theme", theme);
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute("content", THEMES[theme]);
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
