@@ -4,7 +4,7 @@
 > **Class:** **Description** for current implementation status; **Commitment** for committed product scope ([Documentation Strategy §3](../architecture/documentation-strategy.md)). Each section says which it is.
 > **Authority:** The authoritative source for the **product's scope** — both what exists today and what the product is committed to. It does not describe *how* the system is built (see the architecture and platform documents) or the API surface (see the [API contract](../api/api-contract.md)).
 > **Scope:** What quick-tweets is, which capabilities exist today, and which the product is committed to. Mechanisms, endpoints, and per-feature internals live in their owning documents and are linked, never restated.
-> **Version:** 1.3
+> **Version:** 1.4
 > **Last Updated:** 2026-08-26
 > **Owner:** Basel Ghonaim
 
@@ -70,7 +70,7 @@ Naming something here does not design it, and does not decide which layer owns i
 
 **Whether a named element belongs to the Design System or to a feature is decided by the [component-admission test](../frontend/design-system/components.md), never by appearing on this list.**
 
-Alert · Avatar · Badge · Button · Checkbox · Comment · Dialog · FileInput · Header · Icon · IconButton · Input · Link · Menu · Navigation · One-time-code input · Radio · Select · Skeleton · Spinner · Stepper · Switch · Tabs · Textarea · Toast · Tooltip · Tweet action row · Tweet card · Typography
+Alert · Avatar · Badge · Brand mark · Button · Checkbox · Comment · Dialog · FileInput · Header · Icon · IconButton · Input · Link · Menu · Navigation · One-time-code input · Radio · Select · Skeleton · Spinner · Stepper · Switch · Tabs · Textarea · Toast · Tooltip · Tweet action row · Tweet card · Typography
 
 ### Language and direction
 
