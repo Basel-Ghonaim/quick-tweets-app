@@ -12,7 +12,7 @@
 
 .root {
   position: fixed;
-  right: 16px;
+  inset-inline-end: 16px;
   bottom: 16px;
   z-index: 2147483000; /* above anything a design under review may stack */
   display: flex;
