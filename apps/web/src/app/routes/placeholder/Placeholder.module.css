@@ -1,0 +1,15 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-block-size: 100vh;
+  padding: var(--space-6);
+  text-align: center;
+}
+
+.mark {
+  color: var(--role-fill-primary);
+  margin-block-end: var(--space-2);
+}
