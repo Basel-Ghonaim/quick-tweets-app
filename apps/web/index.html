@@ -7,15 +7,10 @@
     <title>quick-tweets</title>
     <meta name="theme-color" content="#fafafe" />
 
-    <!--
-      Runs before the first paint, which is the whole point: anything in the
-      module graph runs after the browser has already painted, so a reader who
-      prefers dark would see a white frame on every load (Finding 0018).
-
-      It reads the same two sources the provider does, in the same order, and
-      validates against the same closed set - the stored value is a bare string
-      precisely so this can understand it without sharing any code.
-    -->
+    <!-- Runs before the first paint, which nothing in the module graph can do:
+         a reader who prefers dark would otherwise see a white frame on every
+         load (Finding 0018). It resolves as the provider does, and a check
+         holds the two to that. -->
     <script>
       (function () {
         var THEMES = { light: "#fafafe", dark: "#171424" };

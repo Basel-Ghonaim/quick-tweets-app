@@ -1,16 +1,7 @@
 /**
- * The document's reading direction.
- *
- * Nobody chooses a direction. It follows from language, and language selection
- * does not exist yet — stamping `lang="ar"` over English copy would be a claim
- * about the content rather than the layout, and assistive technology acts on
- * that claim. So this stamps direction alone, from one named default, and the
- * language that will eventually decide it arrives with translated content.
- *
- * It is stamped rather than assumed because the Design System resolves on it:
- * an icon that declares it mirrors is waiting for `dir` to exist, and a value
- * present in the document is what makes right-to-left something that can be
- * exercised rather than something taken on trust.
+ * Direction is stamped alone, without a language. `lang` is a claim about what
+ * the content *is*, which assistive technology acts on by choosing a voice, so
+ * it may only be set where the content matches it.
  */
 export const DIRECTIONS = ["ltr", "rtl"] as const;
 

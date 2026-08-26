@@ -7,17 +7,11 @@ import { systemTheme, watchSystemTheme } from "./systemTheme";
 
 /**
  * Theme selection (ADR 0010 Decision 4): the Design System resolves a theme,
- * the application decides which one is active.
+ * the application decides which is active.
  *
- * An explicit choice wins and is remembered. Until one is made the operating
- * system leads — and keeps leading, so a reader who switches their machine to
- * dark at dusk sees the page follow rather than hold the value it read at load.
- * Choosing is what ends that.
- *
- * The initial value is read rather than assumed, because the pre-paint script
- * has already stamped the document from the same two sources; starting from a
- * default would re-stamp a different theme on hydration and reintroduce the
- * flash the script exists to remove.
+ * The initial value is read rather than defaulted, because the pre-paint script
+ * has already stamped the document from the same two sources — starting from a
+ * default would re-stamp a different theme on hydration and put the flash back.
  */
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [stored, setStored] = useState<ThemeName | null>(readStoredTheme);
@@ -27,8 +21,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => applyTheme(theme), [theme]);
 
-  // Only while no choice has been made: a reader who has chosen has said the
-  // system no longer speaks for them.
+  // Only while no choice has been made: choosing says the system no longer
+  // speaks for this reader.
   useEffect(() => {
     if (stored) return;
     return watchSystemTheme(setSystem);

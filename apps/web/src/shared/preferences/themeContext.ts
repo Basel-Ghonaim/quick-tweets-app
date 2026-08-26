@@ -8,11 +8,7 @@ export interface ThemePreference {
   followsSystem: boolean;
 }
 
-/**
- * Undefined rather than a default value, so `useTheme` can tell "no provider"
- * from "a provider resolving to light" instead of silently returning a theme
- * nobody selected.
- */
+/** Undefined, so `useTheme` can tell "no provider" from "a provider resolving to light". */
 export const ThemeContext = createContext<ThemePreference | undefined>(
   undefined,
 );

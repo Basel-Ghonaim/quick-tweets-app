@@ -1,17 +1,13 @@
 import { THEMES, type ThemeName } from "@shared/design-system";
 
 /**
- * Where an explicit theme choice is kept, and the only place that knows how.
+ * A bare string, not a serialised value: the reader that matters most cannot
+ * import this module, because applying the theme before the first paint means
+ * running before the bundle exists (Finding 0018). It has to understand the
+ * stored value in one line, and a format the two read differently is the flash
+ * returning by another route.
  *
- * The value is a bare string rather than anything serialised, because the
- * reader that matters most cannot use this module: applying the theme before
- * the first paint means running before the bundle exists (Finding 0018), and
- * that reader has to understand the stored value in one line of inline script.
- * A wrapped format would make the two disagree, which is the flash returning by
- * a different route.
- *
- * Every access is guarded. Storage throws outright in some privacy modes, and a
- * theme that cannot be remembered must still work for the visit.
+ * Access is guarded because storage throws outright in some privacy modes.
  */
 export const THEME_STORAGE_KEY = "quick-tweets:theme";
 
@@ -35,9 +31,3 @@ export const storeTheme = (theme: ThemeName): void => {
     // A choice that cannot be remembered still holds for this visit.
   }
 };
-
-/**
- * The trigger for extracting a shared storage layer is a *second* preference
- * that persists. One consumer whose hardest read path bypasses the layer would
- * shape it around the case it cannot serve.
- */
