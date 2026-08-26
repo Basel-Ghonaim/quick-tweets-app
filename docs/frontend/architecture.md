@@ -5,7 +5,7 @@
 > **Authority:** The authoritative source for the frontend's **outer architecture** — the feature-sliced layout (`app/` · `modules/` · `shared/`), the dependency boundaries between those zones, the module contract, the composition root, and the thin platform utilities no other document owns. It owns the **structure between subsystems**, not the subsystems themselves: each platform subsystem's internals are owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, and where features meet the platform.
 > **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the findings register and linked below** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
-> **Version:** 1.2
+> **Version:** 1.3
 > **Last Updated:** 2026-08-26
 > **Owner:** Basel Ghonaim
 
@@ -106,6 +106,7 @@ What currently sits under the rule:
 
 - **`hooks/`** — generic React helpers (a latest-value ref for stable callbacks; a request-state reader that derives `isLoading`/`isError`-style flags from a status object).
 - **`types/`** — the handful of shapes shared across features (the user shape, the request-state type).
+- **`brand/`** — the product's mark, drawn inline so it takes the colour of the text around it. It is the one thing here that is not domain-*neutral*: it is the product's identity rather than a general capability. That sits inside the rule rather than against it — what the zone forbids is knowing about a **feature**, and a mark knows about none. It is not a Design System component for the same reason: the [admission test](design-system/components.md) asks whether a thing's meaning survives the product, and this one's does not.
 
 ## Known deviations
 

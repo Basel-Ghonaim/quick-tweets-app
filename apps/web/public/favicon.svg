@@ -1,0 +1,10 @@
+<!-- The product's mark. The same three paths are drawn inline by
+     src/shared/brand/BrandMark.tsx, which is where the app renders it; this
+     copy exists because a favicon is fetched as a file and cannot inherit a
+     colour from the page. Change one and change the other. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="279 219 460 460" fill="#7c5cff">
+  <path fill-rule="evenodd"
+        d="M298 455a215 215 0 1 0 430 0 215 215 0 1 0-430 0ZM381 455a132 132 0 1 0 264 0 132 132 0 1 0-264 0Z" />
+  <path d="M593.11 468.89 706.96 582.73a44 44 0 0 1-62.23 62.23L530.89 531.11Z" />
+  <path d="M518 355 457 472h43l-10 80 66-119h-44Z" />
+</svg>
