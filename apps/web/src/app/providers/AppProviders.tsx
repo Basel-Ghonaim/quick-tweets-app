@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Provider as ReduxProvider } from "react-redux";
-import { ThemeProvider } from "@shared/preferences";
+import { applyDirection, ThemeProvider } from "@shared/preferences";
 import { reduxStore } from "../store";
 
 /**
@@ -19,6 +19,10 @@ import { reduxStore } from "../store";
  * portals its content from its own level puts that content outside anything
  * nested inside it — so the question is settled per provider, here.
  */
+// Stamped once, at assembly. It has nothing to react to until language
+// selection exists, and a provider with no state to hold would be ceremony.
+applyDirection();
+
 export const AppProviders = ({ children }: { children: ReactNode }) => (
   <ReduxProvider store={reduxStore}>
     <ThemeProvider>{children}</ThemeProvider>
