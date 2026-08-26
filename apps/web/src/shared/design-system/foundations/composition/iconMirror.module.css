@@ -1,0 +1,12 @@
+/* How an icon declares that it mirrors (ADR 0010 Decision 6). The icon composes
+   it, because whether a glyph turns around is a property of the glyph and never
+   a choice the caller makes — and per-icon rather than a manifest, which would
+   be one file declaring on every icon's behalf and silently wrong the first time
+   an icon was added without touching it.
+
+   `:dir()` rather than an ancestor attribute selector: it matches the direction
+   actually in effect, so a glyph is correct under an inherited or automatic
+   direction and not only under the one attribute we happen to set. */
+.mirrors:dir(rtl) {
+  transform: scaleX(-1);
+}
