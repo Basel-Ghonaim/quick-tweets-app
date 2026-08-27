@@ -1,11 +1,19 @@
 # Historical Paths
 
 > **Status:** Active.
-> **Authority:** A **navigation aid, not a source of truth.** It maps paths that changed when the applications were relocated, so that a document written before the change stays readable without being edited. **It defines no structure and owns no rule** — the repository's structure is [ADR 0013](decisions/0013-applications-and-cross-tier-packages.md)'s, and each subsystem's layout belongs to the document that owns it.
+> **Authority:** A **navigation aid, not a source of truth.** It maps paths that a restructure changed, so that a document written before the change stays readable without being edited. **It defines no structure and owns no rule** — the repository's structure is [ADR 0013](decisions/0013-applications-and-cross-tier-packages.md)'s, and each subsystem's layout belongs to the document that owns it.
 > **Scope:** Path changes only, and only those a reader of an older document would otherwise fail to resolve.
-> **Version:** 1.0
-> **Last Updated:** 2026-08-13
+> **Version:** 1.1
+> **Last Updated:** 2026-08-27
 > **Owner:** Basel Ghonaim
+
+## 2026-08-05 — theme grouped under a resolution axis
+
+| Written as | Now reads |
+|---|---|
+| `…/design-system/foundations/theme/…` | `…/design-system/foundations/resolution/theme/…` |
+
+Theme became one resolution axis among the several the architecture anticipates, rather than the whole concept, so its files moved under a directory named for the axis instead of for the theme.
 
 ## 2026-08-13 — applications relocated under `apps/`
 
