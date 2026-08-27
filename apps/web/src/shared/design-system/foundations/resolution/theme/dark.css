@@ -41,32 +41,32 @@
    because the two answer to different contrast criteria. */
 [data-theme="dark"] {
   --role-fill-primary: var(--palette-violet-600);
-  --role-fill-primary-hover: var(--palette-violet-700);
+  --role-fill-primary-hover: var(--palette-violet-550);
   --role-fill-primary-text: var(--palette-neutral-0);
   --role-fill-primary-subtle: var(--palette-violet-a10);
 
   --role-fill-secondary: var(--palette-neutral-500);
-  --role-fill-secondary-hover: var(--palette-neutral-600);
+  --role-fill-secondary-hover: var(--palette-neutral-450);
   --role-fill-secondary-text: var(--palette-neutral-0);
   --role-fill-secondary-subtle: var(--palette-neutral-a10);
 
   --role-fill-success: var(--palette-green-700);
-  --role-fill-success-hover: var(--palette-green-800);
+  --role-fill-success-hover: var(--palette-green-650);
   --role-fill-success-text: var(--palette-neutral-0);
   --role-fill-success-subtle: var(--palette-green-a10);
 
   --role-fill-warning: var(--palette-amber-700);
-  --role-fill-warning-hover: var(--palette-amber-800);
+  --role-fill-warning-hover: var(--palette-amber-650);
   --role-fill-warning-text: var(--palette-neutral-0);
   --role-fill-warning-subtle: var(--palette-amber-a10);
 
   --role-fill-error: var(--palette-red-600);
-  --role-fill-error-hover: var(--palette-red-700);
+  --role-fill-error-hover: var(--palette-red-550);
   --role-fill-error-text: var(--palette-neutral-0);
   --role-fill-error-subtle: var(--palette-red-a10);
 
   --role-fill-info: var(--palette-blue-600);
-  --role-fill-info-hover: var(--palette-blue-700);
+  --role-fill-info-hover: var(--palette-blue-550);
   --role-fill-info-text: var(--palette-neutral-0);
   --role-fill-info-subtle: var(--palette-blue-a10);
 }

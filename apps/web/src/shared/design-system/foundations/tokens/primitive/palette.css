@@ -38,7 +38,9 @@
   --palette-mauve-900: #241e38;
   --palette-mauve-950: #171424;
 
-  /* The brand. White on 500 is 4.35:1, so fills bind 600 and hovers 700; 500 stays a boundary and accent. */
+  /* The brand. White on 500 is 4.35:1, so fills bind 600; hover binds 700 on a light
+   ground and 550 on a dark one, each the direction that raises the boundary against
+   the ground it sits on. 500 stays a boundary and accent. */
   --palette-violet-400: #9176ff;
   --palette-violet-500: #7c5cff;
   --palette-violet-550: #7756fe;
