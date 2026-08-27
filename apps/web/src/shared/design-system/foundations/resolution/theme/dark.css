@@ -61,7 +61,7 @@
   --role-fill-warning-subtle: var(--palette-amber-a10);
 
   --role-fill-error: var(--palette-red-600);
-  --role-fill-error-hover: var(--palette-red-550);
+  --role-fill-error-hover: var(--palette-red-600-vivid);
   --role-fill-error-text: var(--palette-neutral-0);
   --role-fill-error-subtle: var(--palette-red-a10);
 

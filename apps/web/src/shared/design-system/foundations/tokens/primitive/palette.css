@@ -1,10 +1,16 @@
 /* Disposition: active */
-/* Steps run in round hundreds; a `×50` is a half-step, minted only where a value
-   has an obligation no existing rung meets. The six below carry the dark theme's
-   hover fills, which must clear 3:1 against the page while white still clears
-   4.5:1 on them — a corridor that falls between rungs. `neutral-450` and `red-550`
-   have no lighter neighbour in this file: the canonical one sits far above the
-   corridor, which is why they take a half-step name rather than it. */
+/* Steps run in round hundreds; a `Ã—50` is a half-step, minted only where a value
+   has an obligation no existing rung meets. Five of the six below carry the dark
+   theme's hover fills, which must clear 3:1 against the page while white still
+   clears 4.5:1 on them â€” a corridor that falls between rungs. `neutral-450` has no
+   lighter neighbour in this file: the canonical one sits far above the corridor,
+   which is why it takes a half-step name rather than that one.
+
+   `red-600-vivid` is the sixth and it is not a rung. Red's corridor is too narrow
+   for lightness to carry a state change â€” the widest compliant step measured dE76
+   2.1 from its resting fill, which reads as no change at all. Chroma carries it
+   instead, at the same lightness, so it takes 600's number and a suffix rather
+   than a step of its own. */
 :root {
   --palette-neutral-0: #ffffff;
   --palette-neutral-50: #f9fafb;
@@ -69,8 +75,8 @@
   --palette-amber-800: #92400e;
 
   --palette-red-400: #f87171;
-  --palette-red-550: #e02c2c;
   --palette-red-600: #dc2626;
+  --palette-red-600-vivid: #e80000;
   --palette-red-700: #b91c1c;
 
   --palette-violet-a10: rgba(124, 92, 255, 0.1);
