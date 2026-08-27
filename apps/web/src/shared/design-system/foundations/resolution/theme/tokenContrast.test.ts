@@ -12,12 +12,14 @@ import { describe, expect, test } from "vitest";
  * own criterion, so the check covers, in both themes:
  *   - text on a surface, and on-surface role text, at 4.5:1 (WCAG 1.4.3);
  *   - on-fill text against its fill, default and hover, at 4.5:1;
- *   - a fill as a UI boundary against the page, a control's own boundary against
- *     a surface, and either focus ring against a surface, at 3:1 (WCAG 1.4.11).
+ *   - a fill as a UI boundary against the page, resting and hover, a control's own
+ *     boundary against a surface, and either focus ring against a surface, at
+ *     3:1 (WCAG 1.4.11).
  *
- * One pairing stays the consumer's: a fill placed on a *raised* surface rather
- * than the page contrasts less, and whether a component does that is composition
- * this tier cannot see.
+ * One pairing stays the consumer's, and only for the resting fills: a fill placed
+ * on a *raised* surface rather than the page contrasts less, and whether a
+ * component does that is composition this tier cannot see. The hover values clear
+ * 3:1 against both surfaces, so the question does not reach them.
  */
 
 const TOKENS_DIR = join(process.cwd(), "src/shared/design-system/foundations/tokens");
@@ -95,6 +97,10 @@ const PAIRS: Pair[] = [
   ]),
   ...ROLES.flatMap((r) => SURFACES.map((bg) => ({ fg: `--role-on-surface-${r}`, bg, min: 4.5 }))),
   ...ROLES.map((r) => ({ fg: `--role-fill-${r}`, bg: "--surface-page", min: 3 })),
+  // The state a pointer user is in at the moment they act is a boundary like any
+  // other. Against `--surface-page` alone: the resting fills' shortfall against a
+  // raised surface is a recorded deferral, and is not this pair's to fail on.
+  ...ROLES.map((r) => ({ fg: `--role-fill-${r}-hover`, bg: "--surface-page", min: 3 })),
   ...SURFACES.map((bg) => ({ fg: "--focus-ring", bg, min: 3 })),
   // A control's boundary is the whole affordance where its fill barely differs
   // from the card behind it, so it answers to 1.4.11 rather than to whatever a
