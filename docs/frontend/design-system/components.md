@@ -1,12 +1,12 @@
 # Design System — Component Authoring Contract
 
 > **Status:** Active.
-> **Authority:** The authoritative source for **which components belong to this layer and how one is built** — the admission test, file layout, ref and styling patterns, prop vocabulary, variant model, accessibility baseline, and the ownership rule for values it does not share. It owns the **test and the conventions**, never a catalogue: which components the product has committed to is the [overview](../../project/overview.md)'s.
-> **Scope:** Components inside the Design System layer.
+> **Authority:** The authoritative source for **which components belong to this layer and how one is built** — the admission test, what a shared part is, file layout, ref and styling patterns, prop vocabulary, variant model, accessibility baseline, when a story may be amended, and the ownership rule for values it does not share. It owns the **test and the conventions**, never a catalogue: which components the product has committed to is the [overview](../../project/overview.md)'s.
+> **Scope:** Components and shared parts under `components/`. The layer's peer subsystems sit outside it: the design language is [foundation.md](foundation.md)'s, and `icons/` has no authoring contract today — where an icon departs from a convention stated here, the reason is at the code.
 > **Stability:** Adding a component must require **no change here**. This document changes when the way we build components changes.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.1
-> **Last Updated:** 2026-08-17
+> **Version:** 1.2
+> **Last Updated:** 2026-08-27
 > **Owner:** Basel Ghonaim
 
 ## What this document does not own
@@ -27,13 +27,23 @@ Two conditions, both required.
 
 Admission is not a design: deciding a component belongs here settles nothing about its API, variants or tokens.
 
+## Shared parts
+
+**Not everything in this layer is a component.** A **shared part** is a fragment that components compose rather than a control a consumer reaches for. It is reached only from inside the layer, never through the public surface, and no consumer names it.
+
+**The admission test above does not apply to it.** That test asks whether a thing belongs to the language or to a product surface, and a part answers to neither: it exists because more than one component here would otherwise write the same rule, and that is the whole of its justification. A part with a single component composing it is that component's own internals under another name.
+
+**Every other convention binds it** — file layout, styling, the shared helpers, the prop vocabulary where it takes props, the focus indicator, and the accessibility baseline. A part exists so that one rule is not written several times; one that drifts from the conventions defeats the reason it was extracted.
+
+**A part is not a shell.** A shell selects between variants and is a component ([the variant model](#the-variant-model)); a part is composed by components that stay responsible for it.
+
 ## The authoring convention
 
 Every component follows the same shape, so a new one is predictable to build and to consume.
 
 **File layout** — one folder per component holding its implementation, types, stylesheet, stories and barrel. Beyond those, a responsibility earns a directory at its **second** member and stays a flat, self-describing file below it. A folder is never created empty in anticipation.
 
-**Grouping** — components sit under the anatomy they belong to, and the catalogue's taxonomy follows the same one so that code and catalogue cannot disagree. A category is created when something populates it.
+**Grouping** — components sit under the **category** they belong to, and the catalogue's taxonomy follows the same one so that code and catalogue cannot disagree. A category is created when something populates it. **A category is not an anatomy**: an [anatomy](foundation.md) is shared structural vocabulary a component may implement, a category is where its files sit, and most categories name no anatomy at all.
 
 **Ref and identity** — forward a ref to the underlying native element, with an explicit display name. Where a component owns the element and its internals need it, the ref is **published** rather than cast: a forwarded ref may be a callback, and casting one fails silently.
 
@@ -70,6 +80,14 @@ Where a component-owned value would surprise a reader — because the surroundin
 A component that **cannot keep a shared contract does not claim it.** Where a component's behaviour genuinely differs from the interface it would otherwise implement, it is typed separately rather than implementing an interface it violates — an interface whose promise is substitutability is worthless once one implementation cannot be substituted.
 
 The reason for such an exception belongs **at the code**, beside the thing it explains, not in a document that cannot see it.
+
+## Amending a story
+
+**Storybook owns what a story asserts; this owns when an author may change it.** The two separate cleanly — a story's content is not this document's, but the authority to rewrite an assertion is a question about the work rather than about the story.
+
+A story asserts a guarantee. It is amended when **the guarantee itself changed and the Work Item authorises that change** — in its own commit, with the reason, and with the **new** assertion proved to bite.
+
+**A story that fails because the Work Item did not authorise the change is a stop, not an obstacle.** Relaxing an assertion so a diff passes removes the guarantee the assertion existed to hold, and does it in the one place nothing else is watching: no check reads a story, and a weakened assertion still runs green.
 
 ## Component usage documentation
 

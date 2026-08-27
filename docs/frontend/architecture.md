@@ -4,9 +4,9 @@
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)) — the outer architecture it states is a rule, not a report of the current tree.
 > **Authority:** The authoritative source for the frontend's **outer architecture** — the feature-sliced layout (`app/` · `modules/` · `shared/`), the dependency boundaries between those zones, the module contract, the composition root, and the thin platform utilities no other document owns. It owns the **structure between subsystems**, not the subsystems themselves: each platform subsystem's internals are owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, and where features meet the platform.
-> **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the findings register and linked below** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
-> **Version:** 1.3
-> **Last Updated:** 2026-08-26
+> **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
+> **Version:** 1.4
+> **Last Updated:** 2026-08-27
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -48,7 +48,7 @@ Two mechanisms carry the boundaries:
 
 Where shared infrastructure genuinely needs app-layer knowledge (the auth client needs the store's token), the dependency is **inverted** rather than allowed to point backwards: the platform exposes a setup seam and the composition root injects the dependency (the mechanism is the [frontend API client](api-client.md)'s). This layout is the frontend application of the layering, acyclicity, and platform-vs-feature principles ([Engineering Principles §3](../development/engineering-principles.md)).
 
-These rules are the **intended architecture**. An import that violates them is an **implementation deviation** — recorded in the findings register and linked under *Known deviations* below, never treated as part of the design. One direction violation currently exists: feature hooks reaching up to the app zone's typed store hooks ([Finding 0002](../architecture/findings/0002-modules-app-store-dependency.md)).
+These rules are the **intended architecture**. An import that violates them is an **implementation deviation** — recorded in the [findings register](../architecture/findings/), never treated as part of the design.
 
 ## The composition root
 
@@ -110,11 +110,10 @@ What currently sits under the rule:
 
 ## Known deviations
 
-This document describes the **intended** structure; the code remains the source of truth for the current state, and any divergence is an **implementation deviation recorded in the findings register** — never part of the intended design. Findings document implementation deviations only: **resolving a finding changes the implementation, not the intended architecture** — unless an ADR explicitly changes the architecture itself. Two are currently recorded:
+This document describes the **intended** structure; the code remains the source of truth for the current state, and any divergence is an **implementation deviation recorded in the [findings register](../architecture/findings/)** — never part of the intended design. Findings document implementation deviations only: **resolving a finding changes the implementation, not the intended architecture** — unless an ADR explicitly changes the architecture itself.
 
-- [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md) — the schema-form ↔ design-system coupling (a platform-internal cycle).
-- [Finding 0002](../architecture/findings/0002-modules-app-store-dependency.md) — feature hooks importing the app zone's typed store hooks (a zone-level `app ↔ modules` cycle).
+**Which deviations stand is the register's to say, not this document's.** A list here describes adoption rather than defining a rule, and it goes stale the moment a finding is opened or resolved — which is what happened to the two it used to name.
 
 ---
 
-> This document owns the frontend's outer architecture — the zones, their boundaries, the module contract, the composition root, and the thin utilities. Each platform subsystem's internals are owned by its document (see the platform index), per-feature behavior by the feature documents, the topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the principles by [Engineering Principles §3](../development/engineering-principles.md) — linked here, never duplicated. Current deviations from the intended structure are recorded in the findings register: [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md) and [Finding 0002](../architecture/findings/0002-modules-app-store-dependency.md).
+> This document owns the frontend's outer architecture — the zones, their boundaries, the module contract, the composition root, and the thin utilities. Each platform subsystem's internals are owned by its document (see the platform index), per-feature behavior by the feature documents, the topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the principles by [Engineering Principles §3](../development/engineering-principles.md) — linked here, never duplicated. Current deviations from the intended structure are recorded in the [findings register](../architecture/findings/).

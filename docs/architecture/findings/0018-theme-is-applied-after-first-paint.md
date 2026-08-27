@@ -1,9 +1,10 @@
 # Finding 0018: The theme is applied after the first paint
 
-> **Status:** Open
+> **Status:** Resolved
 > **Date:** 2026-08-26
 > **Affected areas:** `apps/web/src/main.tsx`; `apps/web/src/app/theme.ts`; `apps/web/index.html`
 > **Reported by:** Basel Ghonaim (surfaced while giving theme selection an owner, [#552](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/552))
+> **Resolved:** [#552](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/552) — the selection policy moved to `apps/web/src/shared/preferences/theme/`, and the theme is now read and stamped by an inline script in `apps/web/index.html` before the first paint. `apps/web/src/app/theme.ts` no longer exists, and the markup declares no theme of its own. A check reads the script out of the markup and holds it to what the provider resolves.
 
 ## Observation
 

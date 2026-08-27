@@ -37,6 +37,10 @@ The two compound rather than add: composing the owned indicator on these control
 
 Recorded here rather than as a separate finding: it is the same cluster, the same stylesheet, and the same root cause — controls placed over media were styled for the pointer and never for the keyboard.
 
+**This section records the state when it was observed, and the visibility defect it describes is closed.** Both surfaces now reveal on focus as well as hover — `.thumbnailWrapper:focus-within` and `.avatarWrapper:focus-within` — so a control reached by tab becomes visible while it is being reached. Three more of the table's controls have since become the shared one and now compose the indicator and clear the target: `thumbnailRemoveBtn` and both `avatarOverlayBtn`.
+
+**The finding stays `Open`.** `addMoreBtn` and `addMoreRow` still declare no indicator, and the reason they were excluded from the migration is unchanged.
+
 ## The two invariants this crosses
 
 **A component never declares an indicator of its own; it composes the owned one** ([components.md](../../frontend/design-system/components.md)). Five of these declare none at all, so keyboard focus falls back to the user agent's default outline — which is not the owned indicator, is not guaranteed against the surfaces these sit on, and is exactly the per-component focus drift [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 5 exists to end. `avatarOverlayBtn` is the sharpest case: it sits over an arbitrary photograph, where a UA default has no contrast guarantee at all.

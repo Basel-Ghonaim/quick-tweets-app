@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.3
-> **Last Updated:** 2026-08-25
+> **Version:** 1.4
+> **Last Updated:** 2026-08-27
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
@@ -20,7 +20,7 @@
 
 ## 1 · Visual personality
 
-The Foundation already fixes most of it: Montserrat for body text, Inter for headings and display, a blue-anchored role palette, modest radii, hairline-to-2px borders, and a fast interactive curve. That is a **calm, restrained, utilitarian-modern** register — not playful, not brutalist, not luxury.
+The Foundation already fixes most of it: Montserrat for body text, Inter for headings and display, a violet-anchored role palette, modest radii, hairline-to-2px borders, and a fast interactive curve. That is a **calm, restrained, utilitarian-modern** register — not playful, not brutalist, not luxury.
 
 The direction adds one throughline, and it comes from the ratified decisions rather than from taste:
 
@@ -269,7 +269,9 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 
 **This design requires components the layer does not yet carry, and says so.** An earlier revision recorded that it added none — true of the column-only screens it described, and false once `D8` and the journey stepper entered. The distinction that matters is *why* something is absent: a gap left by **scarcity** is closed by extending the vocabulary, while a gap closed by **analysis** stays closed.
 
-**Required, and committed** ([committed scope](../../../project/overview.md)): `Icon` · `Alert` · `Link` · `Stepper` · the one-time-code input. Each is interface vocabulary whose meaning survives this product; which layer builds each is the [admission test](../../../frontend/design-system/components.md)'s call, not this document's.
+**Required, and committed** ([committed scope](../../../project/overview.md)): `Icon` · `Alert` · `Link` · `Stepper`. Each is interface vocabulary whose meaning survives this product; which layer builds each is the [admission test](../../../frontend/design-system/components.md)'s call, not this document's.
+
+**The one-time-code input is committed too, and this design needs no component for it** — the table below settles what serves it. A commitment names a need; it never obliges a component to be built for that need, and here an existing control already carries it.
 
 **Closed by analysis, and still closed** — these were never scarcity workarounds, and adding them would not make the design stronger:
 
