@@ -1,10 +1,17 @@
 /* Disposition: active */
+/* Steps run in round hundreds; a `×50` is a half-step, minted only where a value
+   has an obligation no existing rung meets. The six below carry the dark theme's
+   hover fills, which must clear 3:1 against the page while white still clears
+   4.5:1 on them — a corridor that falls between rungs. `neutral-450` and `red-550`
+   have no lighter neighbour in this file: the canonical one sits far above the
+   corridor, which is why they take a half-step name rather than it. */
 :root {
   --palette-neutral-0: #ffffff;
   --palette-neutral-50: #f9fafb;
   --palette-neutral-100: #f3f4f6;
   --palette-neutral-200: #e5e7eb;
   --palette-neutral-300: #d1d5db;
+  --palette-neutral-450: #6e7583;
   --palette-neutral-500: #6b7280;
   --palette-neutral-600: #4b5563;
   --palette-neutral-700: #374151;
@@ -34,11 +41,13 @@
   /* The brand. White on 500 is 4.35:1, so fills bind 600 and hovers 700; 500 stays a boundary and accent. */
   --palette-violet-400: #9176ff;
   --palette-violet-500: #7c5cff;
+  --palette-violet-550: #7756fe;
   --palette-violet-600: #6a46fb;
   --palette-violet-700: #4d24f1;
 
   --palette-blue-400: #60a5fa;
   --palette-blue-500: #3b82f6;
+  --palette-blue-550: #2d6eef;
   --palette-blue-600: #2563eb;
   --palette-blue-700: #1d4ed8;
   --palette-blue-900: #1e3a8a;
@@ -46,16 +55,19 @@
   --palette-green-400: #4ade80;
   --palette-green-500: #10b981;
   --palette-green-600: #059669;
+  --palette-green-650: #04865f;
   --palette-green-700: #047857;
   --palette-green-800: #065f46;
 
   --palette-amber-400: #fbbf24;
   --palette-amber-500: #f59e0b;
   --palette-amber-600: #d97706;
+  --palette-amber-650: #bb5a08;
   --palette-amber-700: #b45309;
   --palette-amber-800: #92400e;
 
   --palette-red-400: #f87171;
+  --palette-red-550: #e02c2c;
   --palette-red-600: #dc2626;
   --palette-red-700: #b91c1c;
 
