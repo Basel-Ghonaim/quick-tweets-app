@@ -13,7 +13,6 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       shape = "rounded",
       size = "medium",
       isLoading = false,
-      isInvalid,
       className,
       style,
       disabled,
@@ -57,7 +56,6 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         // text, so its name cannot change to report the state.
         disabled={disabled || isLoading}
         aria-busy={isLoading || undefined}
-        aria-invalid={isInvalid || undefined}
         {...props}
       >
         {isLoading ? <Spinner /> : <span className={styles.icon}>{icon}</span>}

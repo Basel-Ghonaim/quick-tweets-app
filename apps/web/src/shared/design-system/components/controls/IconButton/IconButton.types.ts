@@ -14,7 +14,7 @@ export type IconButtonShape = "circle" | "rounded";
  */
 export interface IconButtonProps
   extends Omit<NativeProps<"button">, "aria-label">,
-    ControlProps {
+    Omit<ControlProps, "isInvalid"> {
   /** The icon element. Sized by this component, coloured by inheritance. */
   icon: ReactNode;
   variant?: IconButtonVariant;

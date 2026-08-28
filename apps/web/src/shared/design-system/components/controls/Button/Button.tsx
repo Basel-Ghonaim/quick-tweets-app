@@ -12,7 +12,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       color = "primary",
       size = "medium",
       isLoading = false,
-      isInvalid,
       fullWidth = false,
       leftIcon,
       rightIcon,
@@ -41,6 +40,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        // Defaulted because a button in a form submits it otherwise, and a
+        // submit is a decision the caller makes rather than one it inherits.
+        // Its sibling has defaulted this since it was built.
+        type="button"
         className={classNames(
           styles.root,
           styles[`variant-${variant}`],
@@ -56,7 +59,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         // `disabled` alone cannot.
         disabled={disabled || isLoading}
         aria-busy={isLoading || undefined}
-        aria-invalid={isInvalid || undefined}
         {...props}
       >
         {isLoading && <Spinner />}
