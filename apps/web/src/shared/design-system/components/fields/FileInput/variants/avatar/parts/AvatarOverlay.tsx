@@ -8,6 +8,8 @@ interface AvatarOverlayProps {
   onDelete: (e: React.MouseEvent) => void;
   /** Callback to replace the current file */
   onReplace: (e: React.MouseEvent) => void;
+  /** The field's availability, so a control the field disables is disabled. */
+  disabled?: boolean;
 }
 
 /**
@@ -18,7 +20,11 @@ interface AvatarOverlayProps {
  *
  * Inherits `border-radius` from `.avatarWrapper` via `overflow: hidden`.
  */
-export const AvatarOverlay = ({ onDelete, onReplace }: AvatarOverlayProps) => (
+export const AvatarOverlay = ({
+  onDelete,
+  onReplace,
+  disabled,
+}: AvatarOverlayProps) => (
   <div className={styles.avatarOverlay}>
     <div className={styles.avatarOverlayActions}>
       <IconButton
@@ -29,6 +35,7 @@ export const AvatarOverlay = ({ onDelete, onReplace }: AvatarOverlayProps) => (
         )}
         icon={<TrashIcon />}
         onClick={onDelete}
+        disabled={disabled}
         aria-label="Delete file"
         title="Delete"
       />
@@ -37,6 +44,7 @@ export const AvatarOverlay = ({ onDelete, onReplace }: AvatarOverlayProps) => (
         className={styles.avatarOverlayBtn}
         icon={<RefreshIcon />}
         onClick={onReplace}
+        disabled={disabled}
         aria-label="Replace file"
         title="Replace"
       />

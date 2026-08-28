@@ -208,6 +208,7 @@ export function useDropzoneFiles({
 
   const removeFile = useCallback(
     (index: number, e: React.MouseEvent) => {
+      if (disabled) return;
       e.stopPropagation();
       const updated = fileList.filter((_, i) => i !== index);
 
@@ -220,7 +221,7 @@ export function useDropzoneFiles({
       onValidationError("");
       forwardFiles(updated);
     },
-    [fileList, minFiles, onValidationError, forwardFiles],
+    [disabled, fileList, minFiles, onValidationError, forwardFiles],
   );
 
   return {

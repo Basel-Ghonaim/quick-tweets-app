@@ -121,6 +121,7 @@ export const DropzoneInput = ({
           files={dropzone.fileList}
           previews={dropzone.previews}
           isAtCapacity={dropzone.isAtCapacity}
+          disabled={disabled}
           onRemove={dropzone.removeFile}
           onAddMore={dropzone.handleZoneClick}
         />
@@ -159,6 +160,7 @@ export const DropzoneInput = ({
         previews={dropzone.previews}
         multiple={multiple}
         isAtCapacity={dropzone.isAtCapacity}
+        disabled={disabled}
         onRemove={dropzone.removeFile}
         onAddMore={dropzone.handleZoneClick}
       />

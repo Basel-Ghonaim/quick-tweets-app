@@ -567,3 +567,46 @@ export const ThumbnailRemoveMeetsTheContract: DropzoneStory = {
     await expect(box.bottom).toBeLessThanOrEqual(frame.bottom);
   },
 };
+
+/**
+ * A disabled field offers nothing operable.
+ *
+ * The root's `pointer-events: none` blocks a pointer today, which is exactly
+ * why this is asserted on the controls themselves: a stylesheet was the only
+ * thing holding the invariant, and a stylesheet is not where availability
+ * lives. Each variant renders its own controls, so each is driven separately
+ * rather than through a surface no story shows.
+ */
+const everyControlIsDisabled = async (canvasElement: HTMLElement) => {
+  const controls = [...canvasElement.querySelectorAll("button")];
+  // A clean result is only trustworthy if the scan saw the controls.
+  await expect(controls.length).toBeGreaterThan(0);
+  for (const control of controls) await expect(control).toBeDisabled();
+};
+
+export const DisabledAvatarOffersNoControl: AvatarStory = {
+  args: { ...Avatar.args, disabled: true },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+    await everyControlIsDisabled(canvasElement);
+  },
+};
+
+export const DisabledImageGridOffersNoControl: DropzoneStory = {
+  args: { ...DropzoneImageGrid.args, disabled: true },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+    await everyControlIsDisabled(canvasElement);
+  },
+};
+
+export const DisabledFileListOffersNoControl: DropzoneStory = {
+  args: { ...DropzoneFileList.args, disabled: true },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(
+      canvasElement,
+      new File(["report"], "report.pdf", { type: "application/pdf" }),
+    );
+    await everyControlIsDisabled(canvasElement);
+  },
+};

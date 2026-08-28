@@ -12,6 +12,8 @@ interface FileListProps {
   previews: string[];
   multiple: boolean;
   isAtCapacity: boolean;
+  /** The field's availability, so a control the field disables is disabled. */
+  disabled?: boolean;
   onRemove: (index: number, e: React.MouseEvent) => void;
   onAddMore: () => void;
 }
@@ -27,6 +29,7 @@ export const FileList = ({
   previews,
   multiple,
   isAtCapacity,
+  disabled,
   onRemove,
   onAddMore,
 }: FileListProps) => (
@@ -53,6 +56,7 @@ export const FileList = ({
             className={styles.fileListRemoveBtn}
             icon={<TrashIcon />}
             onClick={(e) => onRemove(index, e)}
+            disabled={disabled}
             aria-label={`Remove ${file.name}`}
           />
         </div>
@@ -65,6 +69,7 @@ export const FileList = ({
         type="button"
         className={styles.addMoreRow}
         onClick={onAddMore}
+        disabled={disabled}
         aria-label="Add more files"
       >
         <PlusIcon size={16} />

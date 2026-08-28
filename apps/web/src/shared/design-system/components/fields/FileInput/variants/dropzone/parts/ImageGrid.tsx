@@ -6,6 +6,8 @@ interface ImageGridProps {
   files: File[];
   previews: string[];
   isAtCapacity: boolean;
+  /** The field's availability, so a control the field disables is disabled. */
+  disabled?: boolean;
   onRemove: (index: number, e: React.MouseEvent) => void;
   onAddMore: () => void;
 }
@@ -19,6 +21,7 @@ export const ImageGrid = ({
   files,
   previews,
   isAtCapacity,
+  disabled,
   onRemove,
   onAddMore,
 }: ImageGridProps) => (
@@ -36,6 +39,7 @@ export const ImageGrid = ({
           className={styles.thumbnailRemoveBtn}
           icon={<XIcon />}
           onClick={(e) => onRemove(index, e)}
+          disabled={disabled}
           aria-label={`Remove ${file.name}`}
         />
       </div>
@@ -47,6 +51,7 @@ export const ImageGrid = ({
         type="button"
         className={styles.addMoreBtn}
         onClick={onAddMore}
+        disabled={disabled}
         aria-label="Add more images"
       >
         <PlusIcon size={20} />
