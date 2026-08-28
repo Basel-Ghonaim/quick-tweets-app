@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect } from "storybook/test";
+import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
 import { Input } from "./Input";
 import {
   CONTROL_SIZES,
@@ -155,5 +156,70 @@ export const PasswordToggleMeetsTheTarget: Story = {
 
     if (previous)
       document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
+  },
+};
+
+/**
+ * A loading password field keeps the means of revealing its value.
+ *
+ * The indicator is found by class rather than by `aria-hidden`: the eye glyph
+ * sets that attribute too, so the selector the other loading story uses would
+ * match whichever comes first here.
+ */
+export const LoadingPasswordKeepsItsToggle: Story = {
+  args: { ...Default.args, label: "Password", type: "password", isLoading: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    const toggle = await canvas.findByRole("button", { name: /Show password/i });
+    const spinner = canvasElement.querySelector('[class*="_root_"][aria-hidden="true"]');
+    await expect(spinner).not.toBeNull();
+
+    // Ordered so the toggle does not move when the indicator arrives.
+    await expect(
+      toggle.compareDocumentPosition(spinner!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+
+    // The field is busy, and unlike a Control it stays usable.
+    const input = canvasElement.querySelector("input")!;
+    await expect(input).toHaveAttribute("aria-busy", "true");
+    await expect(input).not.toBeDisabled();
+  },
+};
+
+/**
+ * Visibility is held twice -- by this field, which derives the input's `type`,
+ * and by the toggle, which reports it. They can only disagree if the toggle
+ * unmounts, so this drives a whole load cycle and asks them afterwards.
+ */
+export const RevealSurvivesALoadCycle: Story = {
+  render: function Render(args) {
+    const [busy, setBusy] = useState(false);
+    return (
+      <>
+        <Input {...args} isLoading={busy} />
+        <button type="button" onClick={() => setBusy((v) => !v)}>
+          toggle busy
+        </button>
+      </>
+    );
+  },
+  args: { ...Default.args, label: "Password", type: "password" },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvasElement.querySelector("input")!;
+    const busy = canvas.getByRole("button", { name: /toggle busy/i });
+
+    await userEvent.click(await canvas.findByRole("button", { name: /Show password/i }));
+    await expect(input).toHaveAttribute("type", "text");
+
+    await userEvent.click(busy);
+    await userEvent.click(busy);
+
+    // The value is still revealed, and the control still says so.
+    await expect(input).toHaveAttribute("type", "text");
+    const after = await canvas.findByRole("button", { name: /Hide password/i });
+    await expect(after).toHaveAttribute("aria-pressed", "true");
   },
 };

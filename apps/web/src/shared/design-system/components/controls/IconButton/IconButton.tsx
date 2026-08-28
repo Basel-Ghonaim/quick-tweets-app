@@ -52,8 +52,11 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         )}
         style={dynamicStyles}
         // A loading control is unavailable for the same reason a disabled one
-        // is, so the state is expressed once on the element.
+        // is, so it takes the native attribute -- and `aria-busy` says which of
+        // the two it is. This control needs that more than most: it carries no
+        // text, so its name cannot change to report the state.
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         aria-invalid={isInvalid || undefined}
         {...props}
       >

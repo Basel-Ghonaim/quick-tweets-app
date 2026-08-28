@@ -170,3 +170,13 @@ export const SpinnerInheritsFromHost: Story = {
     if (previous) document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
   },
 };
+
+/** Loading is two facts, and `disabled` can only carry one of them. */
+export const LoadingIsAnnounced: Story = {
+  args: { ...Default.args, isLoading: true, loadingText: "Submitting..." },
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector("button")!;
+    await expect(button).toHaveAttribute("aria-busy", "true");
+    await expect(button).toBeDisabled();
+  },
+};

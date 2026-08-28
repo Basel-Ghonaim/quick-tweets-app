@@ -39,21 +39,27 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const isPassword = type === "password";
 
-    // The affordances the field composes itself. A caller's `suffix` sits
-    // alongside them rather than replacing them, so supplying one can never
-    // remove the means of revealing a password or the busy indicator.
-    const ownedSuffix = isLoading ? (
-      <Spinner />
-    ) : isPassword ? (
-      <PasswordToggle
-        controlId={controlId}
-        disabled={disabled}
-        className={styles.passwordToggle}
-        onToggle={setIsPasswordVisible}
-      />
-    ) : null;
+    // The affordances the field composes itself. Nothing displaces anything:
+    // not a caller's `suffix`, and not each other — a loading password field
+    // keeps the means of revealing its value. The toggle is ordered first so
+    // that it does not move when the indicator arrives, and it stays mounted so
+    // that the visibility it owns cannot reset underneath the type this field
+    // derives from it.
+    const ownedSuffix = (
+      <>
+        {isPassword && (
+          <PasswordToggle
+            controlId={controlId}
+            disabled={disabled}
+            className={styles.passwordToggle}
+            onToggle={setIsPasswordVisible}
+          />
+        )}
+        {isLoading && <Spinner />}
+      </>
+    );
 
-    const hasSuffix = Boolean(suffix) || ownedSuffix !== null;
+    const hasSuffix = Boolean(suffix) || isPassword || isLoading;
 
     return (
       <div
@@ -84,6 +90,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             type={isPassword && isPasswordVisible ? "text" : type}
             className={styles.input}
             disabled={disabled}
+            aria-busy={isLoading || undefined}
             aria-invalid={isInvalid || undefined}
             aria-describedby={describedBy}
             {...props}
