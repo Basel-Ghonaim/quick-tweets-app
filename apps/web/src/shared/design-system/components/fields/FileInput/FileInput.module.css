@@ -243,6 +243,7 @@
 /* ─── "Add more" Button ──────────────────────────────────────────────────── */
 
 .addMoreBtn {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -344,6 +345,7 @@
 /* ─── "Add more" Row (file list mode) ────────────────────────────────────── */
 
 .addMoreRow {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
   display: flex;
   align-items: center;
   justify-content: center;
