@@ -17,7 +17,6 @@
   border: none;
   background: var(--surface-default);
   color: var(--text-primary);
-  transition: all var(--motion-interactive);
 }
 
 .input::placeholder {
