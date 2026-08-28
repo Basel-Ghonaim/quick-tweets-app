@@ -293,7 +293,7 @@
   border-radius: var(--border-radius-sm);
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid var(--border-default);
+  border: var(--border-width-thin) solid var(--border-default);
 }
 
 .fileListName {
