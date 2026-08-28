@@ -292,3 +292,19 @@ export const PressedWhileLoading: Story = {
     ).not.toBeNull();
   },
 };
+
+/**
+ * This control carries no text, so its name cannot change to report the state.
+ * Without `aria-busy` its loading state was not under-announced -- it was
+ * unannounced.
+ */
+export const LoadingIsAnnounced: Story = {
+  args: { icon: <SearchIcon />, "aria-label": "Search", isLoading: true },
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector("button")!;
+    await expect(button).toHaveAttribute("aria-busy", "true");
+    await expect(button).toBeDisabled();
+    // The name is unchanged by the state, which is why the attribute carries it.
+    await expect(button).toHaveAttribute("aria-label", "Search");
+  },
+};
