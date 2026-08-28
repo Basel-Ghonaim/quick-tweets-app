@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect } from "storybook/test";
+import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
+import { PlusIcon } from "../../../icons";
 import { Button } from "./Button";
 import type { ButtonVariant } from "./Button.types";
 import {
@@ -178,5 +180,56 @@ export const LoadingIsAnnounced: Story = {
     const button = canvasElement.querySelector("button")!;
     await expect(button).toHaveAttribute("aria-busy", "true");
     await expect(button).toBeDisabled();
+  },
+};
+
+/**
+ * A button inside a form submits it unless it says otherwise, and a submit is a
+ * decision a caller makes rather than one it inherits.
+ */
+export const ADefaultButtonDoesNotSubmit: Story = {
+  render: function Render() {
+    const [submits, setSubmits] = useState(0);
+    return (
+      <form onSubmit={(e) => { e.preventDefault(); setSubmits((n) => n + 1); }}>
+        <Button>Default</Button>
+        <Button type="submit">Submit</Button>
+        <output data-testid="count">{submits}</output>
+      </form>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const count = canvas.getByTestId("count");
+
+    await userEvent.click(canvas.getByRole("button", { name: "Default" }));
+    await expect(count).toHaveTextContent("0");
+
+    // The caller's own choice still reaches the element.
+    await userEvent.click(canvas.getByRole("button", { name: "Submit" }));
+    await expect(count).toHaveTextContent("1");
+  },
+};
+
+/**
+ * A slot takes a node the caller owns, and the caller owns what it announces.
+ * The layer's own icons all hide themselves, so a button's name is its text --
+ * this renders the slot no other story does, and asks.
+ */
+export const AButtonsNameIsItsTextAlone: Story = {
+  args: { ...Default.args, children: "Publish", leftIcon: <PlusIcon /> },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Found by the text alone: the glyph contributes nothing to the name.
+    const button = canvas.getByRole("button", { name: "Publish" });
+
+    const glyph = button.querySelector("svg")!;
+    await expect(glyph).toHaveAttribute("aria-hidden", "true");
+
+    // The slot itself is not hidden -- a caller who supplies a meaningful node
+    // can still have it announced, which an ancestor `aria-hidden` would
+    // remove irrecoverably.
+    await expect(glyph.parentElement).not.toHaveAttribute("aria-hidden");
   },
 };
