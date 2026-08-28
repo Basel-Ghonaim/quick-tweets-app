@@ -1,9 +1,10 @@
 # Finding 0014: FileInput's icon buttons miss the owned focus indicator and the minimum hit target
 
-> **Status:** Open
+> **Status:** Resolved
 > **Date:** 2026-08-18
 > **Affected areas:** `apps/web/src/shared/design-system/components/fields/FileInput/` — `FileInput.module.css` and the `avatar` / `dropzone` variant parts
 > **Reported by:** Basel Ghonaim (surfaced while preparing the IconButton, [#525](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/525); extended with the visibility defect while preparing the migration, [#529](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/529))
+> **Resolved:** [#568](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/568) — `addMoreBtn` and `addMoreRow` compose the owned indicator. Neither could take the shared control, so each composes it directly, in the plain attachment: neither wraps a focusable child and neither is clipped.
 
 ## Observation
 
@@ -39,7 +40,9 @@ Recorded here rather than as a separate finding: it is the same cluster, the sam
 
 **This section records the state when it was observed, and the visibility defect it describes is closed.** Both surfaces now reveal on focus as well as hover — `.thumbnailWrapper:focus-within` and `.avatarWrapper:focus-within` — so a control reached by tab becomes visible while it is being reached. Three more of the table's controls have since become the shared one and now compose the indicator and clear the target: `thumbnailRemoveBtn` and both `avatarOverlayBtn`.
 
-**The finding stays `Open`.** `addMoreBtn` and `addMoreRow` still declare no indicator, and the reason they were excluded from the migration is unchanged.
+**Closed.** `addMoreBtn` and `addMoreRow` now compose the indicator directly. The reason they were excluded from the IconButton migration is unchanged and still correct — each carries an icon *and* visible text, or is a drop affordance rather than an action — so the migration was never the route. Composing the indicator without migrating the control was.
+
+**Neither ever violated the hit-target half of this finding's title.** That applied to the four controls since corrected; the grid affordance is 80×80 and the row is a text-sized row, both well clear of the floor.
 
 ## The two invariants this crosses
 
