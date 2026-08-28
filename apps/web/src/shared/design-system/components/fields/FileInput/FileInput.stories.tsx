@@ -610,3 +610,51 @@ export const DisabledFileListOffersNoControl: DropzoneStory = {
     await everyControlIsDisabled(canvasElement);
   },
 };
+
+/**
+ * The last two controls Finding 0014 kept open. Neither could take the shared
+ * IconButton -- one carries an icon and text, the other is a drop affordance --
+ * so each composes the indicator directly.
+ *
+ * The ring is asserted to appear *instantly*. It is composed onto a root that
+ * declared `transition: all` until this branch, so `outline` was in scope and
+ * the indicator faded in; a list that names it again would restore that
+ * silently.
+ */
+const indicatorIsComposedAndInstant = async (control: HTMLElement) => {
+  await expect(control.className).toMatch(/_focusRing_/);
+
+  const { transitionProperty } = getComputedStyle(control);
+  await expect(transitionProperty).not.toBe("all");
+  await expect(transitionProperty).not.toContain("outline");
+};
+
+export const AddMoreGridControlComposesTheIndicator: DropzoneStory = {
+  args: { ...DropzoneImageGrid.args, disabled: false },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(canvasElement, png());
+    const canvas = within(canvasElement);
+    const add = await canvas.findByRole("button", { name: /Add more images/i });
+    await indicatorIsComposedAndInstant(add);
+  },
+};
+
+export const AddMoreRowComposesTheIndicator: DropzoneStory = {
+  args: { ...DropzoneFileList.args, disabled: false },
+  play: async ({ canvasElement }) => {
+    await uploadOneFile(
+      canvasElement,
+      new File(["report"], "report.pdf", { type: "application/pdf" }),
+    );
+    const canvas = within(canvasElement);
+    const add = await canvas.findByRole("button", { name: /Add more files/i });
+    await indicatorIsComposedAndInstant(add);
+
+    // The ring reaches past a clipping ancestor only because the row's margin
+    // exceeds its outward reach. Finding 0015 records that it holds by
+    // arithmetic; this measures that the arithmetic is still true.
+    const wrapper = add.parentElement!;
+    await expect(getComputedStyle(wrapper).overflow).toBe("hidden");
+    await expect(parseFloat(getComputedStyle(add).marginTop)).toBeGreaterThan(4);
+  },
+};
