@@ -12,7 +12,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       color = "primary",
       size = "medium",
       isLoading = false,
-      isInvalid,
       fullWidth = false,
       leftIcon,
       rightIcon,
@@ -56,7 +55,6 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         // `disabled` alone cannot.
         disabled={disabled || isLoading}
         aria-busy={isLoading || undefined}
-        aria-invalid={isInvalid || undefined}
         {...props}
       >
         {isLoading && <Spinner />}
