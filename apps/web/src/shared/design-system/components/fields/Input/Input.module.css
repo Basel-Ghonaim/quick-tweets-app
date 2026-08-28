@@ -136,8 +136,6 @@
   pointer-events: none;
 }
 
-/* Inset, because the control clips its children to its own radius and would
-   otherwise cut an outward ring. */
 /* Only the inset half is added here; the control itself composes the indicator.
    Drawn inward because the field clips its children to its own radius, which is
    this field's geometry rather than something every icon button carries. */
