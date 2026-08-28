@@ -31,7 +31,9 @@
   border-radius: var(--border-radius-sm);
   border: var(--border-width-thin) solid var(--control-border);
   background-color: var(--surface-default);
-  transition: all var(--motion-interactive);
+  transition:
+    background-color var(--motion-interactive),
+    border-color var(--motion-interactive);
 }
 
 .size-small .box {

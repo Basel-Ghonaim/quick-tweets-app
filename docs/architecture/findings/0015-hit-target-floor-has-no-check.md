@@ -37,3 +37,9 @@ This is the shape [Finding 0009](0009-checker-blind-to-hardcoded-literals.md) re
 ## Relationship to [Finding 0014](0014-fileinput-icon-buttons-miss-the-focus-and-target-invariants.md)
 
 That finding records *specific controls that are too small* — a defect in FileInput's icon buttons, largely resolved and still open for two of them. This one records that *nothing prevents the next one*. They are the instance and the class, and neither replaces the other.
+
+## A second invariant holding by arithmetic
+
+The owned focus indicator draws **outward**, and `.addMoreRow` sits inside a wrapper that clips its children. The ring is visible there only because the row's margin is wider than the ring's outward reach. Nothing declares that relationship, and either value can be changed by work with no reason to think about the other.
+
+It is the shape this finding already describes: an invariant that holds, that nothing connects to the values it rests on, and that would fail quietly. Recorded here rather than as its own finding because the class is what matters and this finding owns it. A story now measures both halves of the arithmetic, which narrows the gap without closing it — a check would still have to know which controls carry an indicator, and that is the registry this finding already explains the layer does not keep.

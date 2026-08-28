@@ -6,7 +6,12 @@
   gap: var(--control-gap-inline);
   border-radius: var(--border-radius-md);
   cursor: pointer;
-  transition: all var(--motion-interactive);
+  transition:
+    background-color var(--motion-interactive),
+    border-color var(--motion-interactive),
+    color var(--motion-interactive),
+    opacity var(--motion-interactive),
+    transform var(--motion-interactive);
   border: var(--border-width-thin) solid transparent;
   /* The floor, not the size. The smallest button already clears it through its
      padding and line box; declaring it means a later change to either cannot
