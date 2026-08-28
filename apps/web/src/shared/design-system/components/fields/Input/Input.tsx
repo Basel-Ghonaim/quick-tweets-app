@@ -90,6 +90,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             type={isPassword && isPasswordVisible ? "text" : type}
             className={styles.input}
             disabled={disabled}
+            aria-busy={isLoading || undefined}
             aria-invalid={isInvalid || undefined}
             aria-describedby={describedBy}
             {...props}

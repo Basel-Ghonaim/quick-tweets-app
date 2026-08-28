@@ -51,9 +51,11 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         style={dynamicStyles}
         // A loading button is unavailable for the same reason a disabled one is,
-        // so the state is expressed once on the element rather than mirrored
-        // into a prop the caller also controls.
+        // so it takes the native attribute rather than a prop the caller also
+        // controls -- and `aria-busy` says which of the two it is, which
+        // `disabled` alone cannot.
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         aria-invalid={isInvalid || undefined}
         {...props}
       >
