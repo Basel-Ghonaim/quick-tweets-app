@@ -5,8 +5,8 @@
 > **Scope:** Components and shared parts under `components/`. The layer's peer subsystems sit outside it: the design language is [foundation.md](foundation.md)'s, and `icons/` has no authoring contract today — where an icon departs from a convention stated here, the reason is at the code.
 > **Stability:** Adding a component must require **no change here**. This document changes when the way we build components changes.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.2
-> **Last Updated:** 2026-08-27
+> **Version:** 1.3
+> **Last Updated:** 2026-08-28
 > **Owner:** Basel Ghonaim
 
 ## What this document does not own
@@ -54,6 +54,8 @@ Every component follows the same shape, so a new one is predictable to build and
 **Variant props** — a component whose variants take different props is a **discriminated union** on the variant, so a prop belonging to one variant cannot be passed with another.
 
 **Accessibility** — a field's identifiers and its description wiring are **derived**, not remembered, so a component cannot render a message without associating it. Validity is exposed on the element; error text is announced. Where a native control is visually replaced, the real control stays present and accessible.
+
+**A slotted node's exposure is the caller's.** Where a component takes a node rather than a value — an icon, an adornment, a replacement trigger — what that node announces belongs to whoever supplied it. The layer's own icons hide themselves, so a control's accessible name is its text; a caller supplying anything else owns the same decision. **The component does not decide it on the caller's behalf**, because hiding a slot is not reversible: `aria-hidden` on an ancestor cannot be undone by a descendant, so a node that carries meaning could never be announced again. Validity is the mirror of this and settles differently: it belongs to a Field, which has a message to announce it through, and is omitted from a Control, which has none.
 
 **Focus** — a component **never declares an indicator of its own**; it composes the owned one. Because the element that receives focus is not always the element that should show it, the indicator provides attachment forms sharing a single definition — on the focused element, on a wrapper that owns the visible boundary, on a sibling when the control is visually replaced, and inset where a clipping ancestor would cut an outward ring.
 
