@@ -214,6 +214,7 @@ export function useAvatarFile({
 
   const removeFile = useCallback(
     (e: React.MouseEvent) => {
+      if (disabled) return;
       e.stopPropagation();
       setFile(null);
       onValidationError("");
@@ -222,17 +223,18 @@ export function useAvatarFile({
       // Reset native input so re-selecting the same file works
       if (inputRef.current) inputRef.current.value = "";
     },
-    [onFilesChange, onValidationError, inputRef],
+    [disabled, onFilesChange, onValidationError, inputRef],
   );
 
   // ── Replace file (triggers file picker) ──
 
   const replaceFile = useCallback(
     (e: React.MouseEvent) => {
+      if (disabled) return;
       e.stopPropagation();
       inputRef.current?.click();
     },
-    [inputRef],
+    [disabled, inputRef],
   );
 
   return {
