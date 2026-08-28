@@ -17,7 +17,6 @@
 .root:disabled {
   opacity: var(--control-opacity-disabled);
   pointer-events: none;
-  cursor: not-allowed;
 }
 
 .root:active:not(:disabled) {

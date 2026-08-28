@@ -69,7 +69,6 @@
 
 .triggerButton:disabled {
   opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* File name text */
@@ -423,7 +422,6 @@
 .avatarWrapper.isDisabled {
   opacity: 0.4;
   pointer-events: none;
-  cursor: not-allowed;
 }
 
 /* ── Filled state (file selected) ── */

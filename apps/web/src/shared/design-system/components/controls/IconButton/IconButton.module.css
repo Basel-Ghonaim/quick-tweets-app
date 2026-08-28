@@ -86,7 +86,6 @@
 .root:disabled {
   opacity: var(--control-opacity-disabled);
   pointer-events: none;
-  cursor: not-allowed;
 }
 
 /* Loading is disabled at the element, so this only carries the distinct dimming

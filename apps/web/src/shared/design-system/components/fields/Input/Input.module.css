@@ -133,7 +133,6 @@
 }
 
 .isDisabled .input {
-  cursor: not-allowed;
   pointer-events: none;
 }
 
