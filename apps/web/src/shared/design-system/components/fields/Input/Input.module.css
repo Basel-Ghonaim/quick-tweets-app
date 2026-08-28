@@ -78,7 +78,9 @@
   border: var(--border-width-thin) solid transparent;
   background-color: transparent;
   overflow: hidden;
-  transition: all var(--motion-interactive);
+  transition:
+    background-color var(--motion-interactive),
+    border-color var(--motion-interactive);
 }
 
 .variant-outlined .control {

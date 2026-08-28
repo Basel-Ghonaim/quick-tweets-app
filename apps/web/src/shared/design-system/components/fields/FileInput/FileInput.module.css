@@ -51,7 +51,12 @@
   border-radius: var(--border-radius-md);
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--motion-interactive);
+  transition:
+    background-color var(--motion-interactive),
+    border-color var(--motion-interactive),
+    color var(--motion-interactive),
+    opacity var(--motion-interactive),
+    transform var(--motion-interactive);
 }
 
 .triggerButton:hover:not(:disabled) {
@@ -128,7 +133,10 @@
   background-color: transparent;
   cursor: pointer;
   color: var(--file-input-color);
-  transition: all var(--motion-interactive);
+  transition:
+    background-color var(--motion-interactive),
+    border-color var(--motion-interactive),
+    color var(--motion-interactive);
 }
 
 .dropzoneWrapper:hover:not(.isDisabled *) {
@@ -249,7 +257,10 @@
   cursor: pointer;
   font-size: 10px;
   font-weight: 500;
-  transition: all var(--motion-reveal);
+  transition:
+    background-color var(--motion-reveal),
+    border-color var(--motion-reveal),
+    color var(--motion-reveal);
 }
 
 .addMoreBtn:hover {
@@ -346,7 +357,10 @@
   color: var(--text-secondary);
   cursor: pointer;
   font: var(--type-label-small);
-  transition: all var(--motion-reveal);
+  transition:
+    background-color var(--motion-reveal),
+    border-color var(--motion-reveal),
+    color var(--motion-reveal);
 }
 
 .addMoreRow:hover {
