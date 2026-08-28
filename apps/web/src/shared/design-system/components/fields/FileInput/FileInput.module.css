@@ -69,7 +69,6 @@
 
 .triggerButton:disabled {
   opacity: 0.6;
-  cursor: not-allowed;
 }
 
 /* File name text */
@@ -294,7 +293,7 @@
   border-radius: var(--border-radius-sm);
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid var(--border-default);
+  border: var(--border-width-thin) solid var(--border-default);
 }
 
 .fileListName {
@@ -423,7 +422,6 @@
 .avatarWrapper.isDisabled {
   opacity: 0.4;
   pointer-events: none;
-  cursor: not-allowed;
 }
 
 /* ── Filled state (file selected) ── */

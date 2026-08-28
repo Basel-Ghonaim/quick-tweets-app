@@ -100,7 +100,6 @@
 }
 
 .isDisabled .row {
-  cursor: not-allowed;
   pointer-events: none;
 }
 
