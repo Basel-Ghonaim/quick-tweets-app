@@ -5,8 +5,8 @@
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.3
-> **Last Updated:** 2026-08-21
+> **Version:** 1.4
+> **Last Updated:** 2026-08-28
 > **Owner:** Basel Ghonaim
 
 ## What the language is for
@@ -77,6 +77,8 @@ A value stays with its owner until a shared design concept is actually establish
 - **Shared** — a concept more than one consumer must agree on, whether or not more than one exists yet.
 
 **Promotion is by concept, not by repetition.** When two owners need the same *concept*, neither depends on the other: the concept moves to the layer that can own it and both become consumers. When two owners merely happen to use the same *value*, nothing moves.
+
+**A treatment only one anatomy can carry is not a disagreement.** A disabled *field* keeps its surface reachable and shows `not-allowed` across it; a disabled *control* makes itself untargetable, so no cursor of its own can reach a pointer and it shows the ordinary one. That is one decision meeting two anatomies, not two answers to one question — but it is invisible in the code unless it is said, and a declaration on an element nothing can reach reads as agreement where there is none.
 
 **A prototype is not a source of the language.** An implementation built before the design exists is evidence that a concept may be missing — never the definition of the concept, and never the source of its value. Which implementations are prototypes is not this document's to say, since it names no consumer; the [frontend architecture](../architecture.md) identifies them.
 
