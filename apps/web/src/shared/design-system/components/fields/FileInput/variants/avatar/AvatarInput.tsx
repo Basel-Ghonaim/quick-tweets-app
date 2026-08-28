@@ -128,6 +128,7 @@ export const AvatarInput = ({
         <AvatarOverlay
           onDelete={avatar.removeFile}
           onReplace={avatar.replaceFile}
+          disabled={disabled}
         />
       </div>
     );
