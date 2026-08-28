@@ -381,7 +381,12 @@
   gap: var(--space-1);
   cursor: pointer;
   overflow: hidden;
-  transition: all var(--motion-expand);
+  transition:
+    background-color var(--motion-expand),
+    border-color var(--motion-expand),
+    box-shadow var(--motion-expand),
+    color var(--motion-expand),
+    opacity var(--motion-expand);
   color: var(--text-tertiary);
 }
 
