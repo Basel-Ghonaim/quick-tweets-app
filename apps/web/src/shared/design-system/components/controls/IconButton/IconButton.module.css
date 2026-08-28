@@ -7,7 +7,12 @@
   border: var(--border-width-thin) solid transparent;
   background-color: transparent;
   cursor: pointer;
-  transition: all var(--motion-interactive);
+  transition:
+    background-color var(--motion-interactive),
+    border-color var(--motion-interactive),
+    color var(--motion-interactive),
+    opacity var(--motion-interactive),
+    transform var(--motion-interactive);
   /* The floor, not the size: a control never falls below the minimum hit target
      whatever its box says. */
   min-inline-size: var(--control-target-min);
