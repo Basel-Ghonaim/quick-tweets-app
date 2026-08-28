@@ -28,6 +28,20 @@ export interface ControlProps {
   color?: Role;
   size?: ControlSize;
   isInvalid?: boolean;
+  /**
+   * An operation is in flight, and what that costs depends on the anatomy.
+   *
+   * A **Control** is also unavailable: it takes the native `disabled`, and
+   * recovering focus afterwards belongs to the surface that started the
+   * operation, since only that surface knows where focus should land next.
+   *
+   * A **Field** stays usable — `Input` shows the indicator and keeps accepting
+   * input, because a field disabled mid-validation drops its value from the
+   * form it is part of. It is the deliberate exception, not an oversight.
+   *
+   * Both say so with `aria-busy`, which is the only part `disabled` cannot
+   * express.
+   */
   isLoading?: boolean;
 }
 
