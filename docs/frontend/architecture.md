@@ -5,8 +5,8 @@
 > **Authority:** The authoritative source for the frontend's **outer architecture** — the feature-sliced layout (`app/` · `modules/` · `shared/`), the dependency boundaries between those zones, the module contract, the composition root, and the thin platform utilities no other document owns. It owns the **structure between subsystems**, not the subsystems themselves: each platform subsystem's internals are owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, and where features meet the platform.
 > **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
-> **Version:** 1.4
-> **Last Updated:** 2026-08-27
+> **Version:** 1.5
+> **Last Updated:** 2026-08-29
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -47,6 +47,8 @@ Two mechanisms carry the boundaries:
 - **Designated public barrels** — a module or platform subsystem is consumed only through its **designated public barrels**: its root `index.ts`, plus any sub-barrel it deliberately exposes (e.g. a module's `hooks/`). Anything not exported through a designated barrel is private.
 
 Where shared infrastructure genuinely needs app-layer knowledge (the auth client needs the store's token), the dependency is **inverted** rather than allowed to point backwards: the platform exposes a setup seam and the composition root injects the dependency (the mechanism is the [frontend API client](api-client.md)'s). This layout is the frontend application of the layering, acyclicity, and platform-vs-feature principles ([Engineering Principles §3](../development/engineering-principles.md)).
+
+Where a platform component must *render* something the application owns, the element is taken rather than the dependency. Navigation is the case: the router is mounted by the composition root and a router's link throws outside it, so a presentation component that imported one could not render on its own. The Design System's `Link` accepts the navigating element from its caller instead, restricted by the props that element must accept rather than by a list of tags — which is why the layer holds no router and needs none. **A seam is the answer when the platform must call the application; taking the element is the answer when it only has to render one.** When a second component needs to navigate, that repetition earns the seam and this converts to the inversion above.
 
 These rules are the **intended architecture**. An import that violates them is an **implementation deviation** — recorded in the [findings register](../architecture/findings/), never treated as part of the design.
 
