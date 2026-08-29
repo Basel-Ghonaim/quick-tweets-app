@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-04
+> **Last Updated:** 2026-08-29
 > **Parent Issue:** [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403)
 > **Supersedes:** —
 
@@ -204,8 +204,8 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ### WI-Docs — The platform document
 - **Goal & rationale:** give the capability an **owner in the documentation**. [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) owns why it exists and what it decided; the [API contract](../api/api-contract.md) owns the wire shapes; the harness owns hand-verification. Nothing owns **the subsystem** — its module layout, its published surface, the derived-status resolution order, custody, the delivery port and its two backends, the sweep job's hygiene-not-correctness property, hashing at rest, and the opaque-failure discipline. Those are precisely the facts [`media.md`](../backend/media.md) owns for Media, and **ADR 0004**'s Stable-Core rule says a subsystem earns that document once it exists in code — which, as of WI-7A, it does. **It comes last** because a subsystem document describes what is true, and WI-8 is where any remaining gap between what is believed and what behaves surfaces.
-- **Scope:** `docs/backend/channel-verification.md`, following the shape `media.md` established, and its entry in the backend section of [`docs/README.md`](../README.md). §7 and §8 already name it — this Work Item creates what they point to.
-- **Non-goals:** no code and no behaviour change; **no new decisions** — one discovered while writing is *recorded, not taken*, which is what "descriptive" means; **no duplication** of ADR 0009, the API contract, or the harness, each of which is linked and never restated; no repair of the harness documents' pre-existing hygiene issues.
+- **Scope:** `docs/backend/channel-verification.md`, following the shape `media.md` established, and its entry in the backend section of [`docs/README.md`](../README.md). §7 and §8 already name it — this Work Item creates what they point to. It also carries the forward link from [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md), whose consequence anticipates this document, and the correction below.
+- **Non-goals:** no code and no behaviour change; **no new decisions** — one discovered while writing is *recorded, not taken*, which is what "descriptive" means; **no duplication** of ADR 0009, the API contract, or the harness, each of which is linked and never restated; no repair of the harness documents' **pre-existing** hygiene issues — the hardcoded paths, database and port stay out, and are tracked separately. A **factual error in what folder 10's own checkpoint asserts** is not one of those: it was introduced with folder 10, and a document written against a checkpoint that expects an unproducible state would describe belief rather than behaviour, which is the failure this Work Item exists to prevent. It is corrected here, as a commit of its own, before the document is written.
 - **Dependencies:** **WI-8** (hard).
 - **Boundary validated:** **single ownership** — that the capability has one authoritative home for what it is and how it works, distinct from the ADR that decided it and the contract that exposes it.
 - **Invariants protected:** none directly — it is the **record** of all eight.
