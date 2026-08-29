@@ -25,6 +25,7 @@ This is the **map** of the project's documentation — every document, what it o
 - [conventions.md](backend/conventions.md) — module layering, the response envelope, the error model, validation, and pagination.
 - [security.md](backend/security.md) — the token model, password hashing, the auth cookie, rate limiting, and HTTP hardening.
 - [media.md](backend/media.md) — the Media subsystem: the storage-adapter port, the registry/reference model, ingest and content-authoritative validation, read/resolution, ownership/attach/reference coordination, and the reclamation lifecycle.
+- [channel-verification.md](backend/channel-verification.md) — the Channel Verification subsystem: the published query surface, the subject boundary, custody of the fact, derived status, the challenge lifecycle and its digest, the composed delivery port and its backends, the sweep, and the concurrency invariants.
 
 ### `frontend/` — client platform subsystems
 - [architecture.md](frontend/architecture.md) — the feature-sliced zones, the dependency rule, the composition root, and the thin utilities.
