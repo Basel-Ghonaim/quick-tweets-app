@@ -4,6 +4,7 @@
 > **Date:** 2026-07-31
 > **Deciders:** Basel Ghonaim
 > **Revised:** 2026-08-17 — the generalization rule is cited at its owner rather than named "the second-feature rule" and linked to a document that defines no such rule. Decision unchanged.
+> **Revised:** 2026-08-29 — the deferred platform document now exists and is linked from Consequences; this ADR keeps only the boundary and rationale. Decision unchanged.
 
 ## Context
 
@@ -66,7 +67,7 @@ These are **intentionally deferred** and are **implementation/modeling concerns,
 - The project gains **one authority for channel-proof-of-control**: a single owner that creates, maintains, and invalidates the fact, while User owns only the endpoint value and consumers read a boundary-resolved projection. No feature re-implements proof-of-control, and future consumers (password reset, change-email) become straightforward — but they remain **out of scope here**, and their gating policy is **theirs**.
 - **This capability introduces the codebase's first outbound-delivery need.** A **mailer/notification platform mechanism** must be decided when the capability is implemented (its own Work Item, and — if it meets the bar — its own ADR); it is designed as a **shared** mechanism so this capability and later consumers compose it rather than re-implementing it.
 - **Nothing is implemented by this ADR** (see "What this ADR does not decide"). The smallest proven consumer — the account holder proving their own email — comes first, via an implementation Work Item.
-- The **Channel Verification platform document** is **deferred until the subsystem exists in code**, per the Stable-Core rule ([ADR 0004](0004-stable-core-platform-document-rule.md)); this ADR is its interim decision record. **On that document's creation, this ADR retains only the boundary and rationale, and the document owns the operative mechanisms** — preserving one-owner-per-fact.
+- The **Channel Verification platform document** now exists — [`backend/channel-verification.md`](../../backend/channel-verification.md) — created once the subsystem existed in code, per the Stable-Core rule ([ADR 0004](0004-stable-core-platform-document-rule.md)). It owns the operative mechanisms; **this ADR retains only the boundary and rationale**, preserving one-owner-per-fact.
 - **Contract impact (future):** challenge/confirm endpoints appear, and the user surface may expose a verified-state **projection**; recorded here as **direction only** — the [API contract](../../api/api-contract.md) and the [data model](../data-model.md) are co-versioned when the capability is implemented ([Documentation Strategy §10](../documentation-strategy.md)). The schema and migration are implementation.
 - **Platform-vs-feature classification** — that Channel Verification is a *platform capability* — is ratified by accepting this ADR.
 - Status moves from `Proposed` to `Accepted` **on merge**. Its lifecycle thereafter — revisable in place while the project is a `Foundation`, immutable once `Stable`, and superseded outright when the decision itself changes — is the [Documentation Strategy](../documentation-strategy.md)'s, not restated here.

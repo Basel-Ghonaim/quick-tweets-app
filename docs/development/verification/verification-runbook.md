@@ -247,8 +247,13 @@ WHERE v.user_id = :cvUserId
 ORDER BY ch.id;
 -- After CHV-01: proven_at NULL; one challenge with closed_at NULL.
 -- After CHV-06: proven_at SET; that challenge closed, reason 'verified'.
--- After CHV-10: the prior challenge reads 'superseded'. Success closes a
---               challenge, it never deletes it.
+-- After CHV-10: the verified challenge is STILL PRESENT — success closes a
+--               challenge, it never deletes it — and the resend's own open
+--               challenge joins it. Nothing reads 'superseded': CHV-06 had
+--               already closed the only open challenge, so the resend found
+--               none to supersede. A row reads 'superseded' when a resend
+--               rotates a challenge that was never confirmed — which this
+--               order never produces.
 
 -- 3. THE SECRET IS NEVER STORED IN THE CLEAR. secret_hash_length above is 64 —
 --    a SHA-256 hex digest. Compare it with the code visible in the capture file:
