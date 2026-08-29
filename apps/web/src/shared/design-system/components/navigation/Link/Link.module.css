@@ -1,0 +1,22 @@
+.root {
+  composes: focusRing from "../../../foundations/composition/focusRing.module.css";
+  color: var(--text-accent);
+}
+
+.variantInText {
+  text-decoration-line: underline;
+}
+
+.variantStandalone {
+  display: inline-flex;
+  align-items: center;
+  text-decoration-line: none;
+  /* The floor belongs to a target, not to a control: this is the token's first
+     non-Control consumer, and its name is now narrower than the concept. */
+  min-block-size: var(--control-target-min);
+}
+
+.variantStandalone:hover,
+.variantStandalone:focus-visible {
+  text-decoration-line: underline;
+}
