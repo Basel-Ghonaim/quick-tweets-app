@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { forwardRef, type ComponentProps } from "react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Link } from "./Link";
 
 const meta = {
@@ -43,8 +43,18 @@ export const Standalone: Story = {
 export const ADefaultLinkIsUnderlined: Story = {
   play: async ({ canvasElement }) => {
     const link = within(canvasElement).getByRole("link", { name: "the feed" });
+    const atRest = getComputedStyle(link);
 
-    await expect(getComputedStyle(link).textDecorationLine).toContain("underline");
+    await expect(atRest.textDecorationLine).toContain("underline");
+
+    // Lighter than the text it sits under, so the reveal has somewhere to go.
+    await expect(atRest.textDecorationColor).not.toBe(atRest.color);
+
+    await userEvent.tab();
+    await waitFor(() => {
+      const revealed = getComputedStyle(link);
+      expect(revealed.textDecorationColor).toBe(revealed.color);
+    });
   },
 };
 
@@ -126,3 +136,33 @@ export const ACallerSuppliesTheNavigatingElement: Story = {
     await expect(link).toHaveAttribute("href", "/feed");
   },
 };
+
+/**
+ * The underline arrives rather than appears. `userEvent.hover` does not set the
+ * browser's own `:hover`, so focus stands in: it carries the same reveal rule.
+ */
+export const AStandaloneLinkRevealsItsUnderline: Story = {
+  args: { variant: "standalone", children: "Go to the feed" },
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole("link", {
+      name: "Go to the feed",
+    });
+    const atRest = getComputedStyle(link);
+
+    await expect(atRest.textDecorationColor).toBe("rgba(0, 0, 0, 0)");
+
+    // Reserved, not absent -- so what follows is a transition and not a jump.
+    await expect(atRest.transitionProperty).toContain("text-decoration-color");
+
+    await userEvent.tab();
+    await expect(link).toHaveFocus();
+
+    // Awaited, because the value is still transparent on the first frame -- which
+    // is the transition doing its work rather than the rule failing to apply.
+    await waitFor(() => {
+      const revealed = getComputedStyle(link);
+      expect(revealed.textDecorationColor).toBe(revealed.color);
+    });
+  },
+};
+
