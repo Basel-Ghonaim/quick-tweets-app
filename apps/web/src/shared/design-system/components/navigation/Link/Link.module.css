@@ -7,14 +7,14 @@
   transition: text-decoration-color var(--motion-interactive);
 }
 
-/* Both variants reveal the same way and differ only in what they rest at: a line
+/* Both placements reveal the same way and differ only in what they rest at: a line
    inside a sentence has to be visible there, one standing alone does not. */
-.variantInText {
+.placementInText {
   text-decoration-line: underline;
   text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
 }
 
-.variantStandalone {
+.placementStandalone {
   display: inline-flex;
   align-items: center;
   /* Declared rather than absent: `text-decoration-line` cannot animate, so the
@@ -26,9 +26,9 @@
   min-block-size: var(--control-target-min);
 }
 
-.variantInText:hover,
-.variantInText:focus-visible,
-.variantStandalone:hover,
-.variantStandalone:focus-visible {
+.placementInText:hover,
+.placementInText:focus-visible,
+.placementStandalone:hover,
+.placementStandalone:focus-visible {
   text-decoration-color: currentColor;
 }

@@ -7,7 +7,10 @@ import { classNames } from "../../shared";
 const KEEPS_CONTEXT = new Set(["_self", "_parent", "_top"]);
 
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ as, variant = "in-text", href, target, rel, className, ...props }, ref) => {
+  (
+    { as, placement = "in-text", href, target, rel, className, ...props },
+    ref,
+  ) => {
     const Element = (as ?? "a") as ElementType;
 
     // `noopener` is the layer's guarantee; `noreferrer` stays the caller's,
@@ -26,9 +29,11 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
         rel={safeRel}
         className={classNames(
           styles.root,
-          // Named rather than interpolated: two members, and `classReferences`
-          // reads a dot access where it cannot read a built name.
-          variant === "in-text" ? styles.variantInText : styles.variantStandalone,
+          // Named rather than interpolated: `classReferences` reads a dot access
+          // where it cannot read a built name.
+          placement === "in-text"
+            ? styles.placementInText
+            : styles.placementStandalone,
           className,
         )}
         {...props}

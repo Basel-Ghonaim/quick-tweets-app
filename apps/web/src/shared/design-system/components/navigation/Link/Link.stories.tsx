@@ -11,7 +11,7 @@ const meta = {
     a11y: { test: "error" },
   },
   argTypes: {
-    variant: { control: "radio", options: ["in-text", "standalone"] },
+    placement: { control: "radio", options: ["in-text", "standalone"] },
     href: { control: "text" },
   },
   args: { href: "/feed", children: "the feed" },
@@ -33,7 +33,7 @@ export const Default: Story = {};
 
 // --- Variants
 export const Standalone: Story = {
-  args: { variant: "standalone", children: "Go to the feed" },
+  args: { placement: "standalone", children: "Go to the feed" },
 };
 
 /**
@@ -93,7 +93,7 @@ export const ANewTabCannotReachItsOpener: Story = {
 
 /** Only a link inside a sentence is exempt from the target floor. */
 export const AStandaloneLinkMeetsTheTargetFloor: Story = {
-  args: { variant: "standalone", children: "Go" },
+  args: { placement: "standalone", children: "Go" },
   play: async ({ canvasElement }) => {
     const link = within(canvasElement).getByRole("link", { name: "Go" });
 
@@ -142,7 +142,7 @@ export const ACallerSuppliesTheNavigatingElement: Story = {
  * browser's own `:hover`, so focus stands in: it carries the same reveal rule.
  */
 export const AStandaloneLinkRevealsItsUnderline: Story = {
-  args: { variant: "standalone", children: "Go to the feed" },
+  args: { placement: "standalone", children: "Go to the feed" },
   play: async ({ canvasElement }) => {
     const link = within(canvasElement).getByRole("link", {
       name: "Go to the feed",
