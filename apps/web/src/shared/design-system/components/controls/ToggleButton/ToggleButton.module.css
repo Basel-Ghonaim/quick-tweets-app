@@ -1,0 +1,6 @@
+/* `currentColor` rather than a token: when pressed the text is already the
+   on-fill colour, so the boundary picks it up without naming which of the two
+   delegates supplied it, or assuming a role when none was passed. */
+.pressed {
+  box-shadow: inset 0 0 0 var(--border-width-thin) currentColor;
+}
