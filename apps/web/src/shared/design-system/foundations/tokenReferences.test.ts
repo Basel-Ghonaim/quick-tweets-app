@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, test } from "vitest";
 
-import { ROLES } from "./vocabulary";
+import { ROLES, TONES } from "./vocabulary";
 
 /**
  * Mechanical enforcement of the binding rule (ADR 0010 Decision 3): every
@@ -41,6 +41,8 @@ type Inventory = {
   designTokens: Set<string>;
   componentTokens: Set<string>;
   references: Reference[];
+  /** Interpolations naming no known vocabulary — unexpandable, so unchecked. */
+  unreadable: Reference[];
 };
 
 const toPosix = (path: string) => relative(process.cwd(), path).split(sep).join("/");
@@ -84,16 +86,24 @@ const lineOf = (text: string, index: number) => text.slice(0, index).split("\n")
 const DECLARATION = /(--[\w-]+)\s*:/g; // `--x:` — a custom-property declaration
 const INLINE_KEY = /["'`](--[\w-]+)["'`]\s*:/g; // `"--x":` — a TSX inline-style key
 const LITERAL_REF = /var\(\s*(--[\w-]+)\s*[,)]/g; // `var(--x)` / `var(--x, …)`
-// `var(--prefix${color}suffix)` — pinned to the `color` identifier, because what
-// follows expands the match over the role union. An interpolation of any other
-// prop would be expanded into role names that were never meant to exist and
-// reported as undefined.
-const INTERPOLATED_REF = /var\(\s*(--[\w-]*?)\$\{color\}([\w-]*)\)/g;
+// `var(--prefix${expression}suffix)` — any expression, not one identifier. Which
+// vocabulary it expands over is decided below, and an expression naming none is a
+// failure rather than a reference the check quietly cannot see.
+const INTERPOLATED_REF = /var\(\s*(--[\w-]*?)\$\{([^}]+)\}([\w-]*)\)/g;
+
+/**
+ * The vocabulary an interpolated name expands over, by the expression that builds
+ * it. Registered on demand rather than in advance: an unknown expression fails,
+ * so a component reaching for a vocabulary that is missing here is told, which is
+ * the opposite of what a pre-filled table would do.
+ */
+const DOMAINS: Record<string, readonly string[]> = { color: ROLES, tone: TONES };
 
 function inventory(): Inventory {
   const designTokens = new Set<string>();
   const componentTokens = new Set<string>();
   const references: Reference[] = [];
+  const unreadable: Reference[] = [];
 
   const files = [...walk(SRC, ".css"), ...walk(SRC, ".tsx")];
   for (const file of files) {
@@ -115,13 +125,20 @@ function inventory(): Inventory {
     }
     if (!isCss) {
       for (const match of text.matchAll(INTERPOLATED_REF)) {
+        const [, prefix, expression, suffix] = match;
         const line = lineOf(text, match.index ?? 0);
-        for (const role of ROLES)
-          references.push({ name: `${match[1]}${role}${match[2]}`, file: posix, line, scope: scopeOf(posix) });
+        const domain = DOMAINS[expression.trim()];
+
+        if (!domain) {
+          unreadable.push({ name: `\${${expression}}`, file: posix, line, scope: scopeOf(posix) });
+          continue;
+        }
+        for (const member of domain)
+          references.push({ name: `${prefix}${member}${suffix}`, file: posix, line, scope: scopeOf(posix) });
       }
     }
   }
-  return { designTokens, componentTokens, references };
+  return { designTokens, componentTokens, references, unreadable };
 }
 
 /**
@@ -131,7 +148,11 @@ function inventory(): Inventory {
  * component's private knob). An unresolved reference confined to one unit and
  * outside every foundation family is a component token relying on its default.
  */
-function findViolations({ designTokens, componentTokens, references }: Inventory): Reference[] {
+function findViolations({
+  designTokens,
+  componentTokens,
+  references,
+}: Omit<Inventory, "unreadable">): Reference[] {
   const defined = new Set([...designTokens, ...componentTokens]);
   const designFamilies = new Set([...designTokens].map(familyOf));
 
@@ -164,6 +185,23 @@ describe("design-system token references", () => {
     expect(found.designTokens.size).toBeGreaterThan(20);
     expect(found.componentTokens.size).toBeGreaterThan(0);
     expect(format(findViolations(found))).toEqual([]);
+  });
+
+  test("every interpolated reference names a vocabulary the check knows", () => {
+    const found = inventory();
+    // The interpolations that exist are the proof this can see any at all: were
+    // the pattern to stop matching, an empty list would read as compliance.
+    expect(found.references.length).toBeGreaterThan(50);
+
+    expect(format(found.unreadable)).toEqual([]);
+  });
+
+  test("an interpolation naming no vocabulary is reported rather than skipped", () => {
+    const text = 'const a = `var(--text-${whatever})`;';
+    const matches = [...text.matchAll(INTERPOLATED_REF)];
+
+    expect(matches).toHaveLength(1);
+    expect(DOMAINS[matches[0][2]]).toBeUndefined();
   });
 
   test("an undefined Design Token is flagged even behind a fallback", () => {

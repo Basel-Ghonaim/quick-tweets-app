@@ -1,6 +1,6 @@
 # Finding 0021: The token-reference check sees interpolation only where it is spelled `color`
 
-> **Status:** Open
+> **Status:** Resolved — 2026-08-30, [#585](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/585)
 > **Date:** 2026-08-30
 > **Affected areas:** `apps/web/src/shared/design-system/foundations/tokenReferences.test.ts`
 > **Reported by:** Basel Ghonaim (surfaced while giving `Link` a tone, [#581](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/581))
@@ -15,7 +15,11 @@ It matches interpolated references with one pattern:
 const INTERPOLATED_REF = /var\(\s*(--[\w-]*?)\$\{color\}([\w-]*)\)/g;
 ```
 
-The interpolated expression is matched **literally, as the identifier `color`**. Every component that builds a token name today happens to name that variable `color`, so the check has always appeared to work. Any other name is not expanded with the wrong domain — it is **not seen at all**.
+The interpolated expression is matched **literally, as the identifier `color`**. Any other name is not expanded with the wrong domain — it is **not seen at all**.
+
+**This was deliberate, and the code said so:** *"pinned to the `color` identifier, because … an interpolation of any other prop would be expanded into role names that were never meant to exist and reported as undefined."* With one vocabulary in the language, a silent miss was the lesser evil against guaranteed false failures on every other prop. The trade was sound when it was made.
+
+What invalidated it was a second vocabulary. `TONES` arrived, and a check that can follow only one of two is no longer choosing between a false positive and a false negative — it is blind to half the language.
 
 ## Evidence
 
@@ -32,10 +36,12 @@ The gap is invisible from both ends. A component author writing `${tone}`, `${si
 
 It is also self-concealing: the more the layer's vocabulary grows beyond role — tone is the first, and it will not be the last — the more references quietly leave the check's view, while the check's pass rate stays at 100%.
 
-## What was done instead, and what was not
+## Resolution
 
-`Link` resolves its tone through written-out references rather than a built name, so every one of them is checked. The reason sits at the code, pointing here.
+The pattern now matches any expression, and a small table says which vocabulary each one expands over. Every member of the named vocabulary must still resolve, so the strictness the original pinning protected is unchanged rather than traded away.
 
-That is a workaround at one call site, not a fix. It also does not scale: the layer chose interpolation for roles precisely because writing six literals per property is worse, and a vocabulary large enough to want interpolation is exactly the case this check cannot follow.
+The part that closes the finding is the case that used to be silent: **an expression naming no known vocabulary is reported**, with its file and line. That inversion is what lets the table be registered on demand rather than in advance — an author reaching for a vocabulary missing from it is told, where a pre-filled table would have guessed.
 
-The fix is the check's, and it is not obvious. Matching any `${…}` would require knowing which domain to expand with — the pattern currently hardcodes both the variable name *and*, through `ROLES`, the value set. Making it general means letting a reference declare its domain, or expanding with the union and accepting that a reference passes when any domain resolves, which is **weaker** than what is enforced today. Neither is a change to make while implementing a component.
+Expanding with the union of every vocabulary and passing when *any* resolves was considered and rejected: it would have been weaker than what was already enforced.
+
+`Link`'s written-out map — the workaround this finding named — is retired, and its tone is built like every other reference in the layer. That conversion is also the proof: the same mutation that passed silently before now names all five tone members, with the file and line they came from.
