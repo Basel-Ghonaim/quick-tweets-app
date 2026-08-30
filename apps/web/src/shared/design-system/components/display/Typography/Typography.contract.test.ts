@@ -23,3 +23,19 @@ describe("Typography's element requirement", () => {
     expect(bare.variant).toBeUndefined();
   });
 });
+
+describe("Typography's tone", () => {
+  test("cannot be the colour a link announces itself in", () => {
+    // @ts-expect-error `accent` belongs to the vocabulary but not to this
+    // component. If this directive ever reports as unused, text can wear the
+    // colour that means "link" again.
+    const accented: TypographyProps = { tone: "accent" };
+
+    expect(accented.tone).toBe("accent");
+  });
+
+  test("takes every other tone the language names", () => {
+    const muted: TypographyProps = { tone: "muted" };
+    expect(muted.tone).toBe("muted");
+  });
+});
