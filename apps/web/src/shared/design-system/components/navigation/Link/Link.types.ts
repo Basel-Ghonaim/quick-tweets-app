@@ -1,4 +1,5 @@
 import type { ComponentProps, ComponentType } from "react";
+import type { Tone } from "../../../foundations";
 import type { NativeProps } from "../../shared";
 
 /** Where the link sits, which decides its target floor. Nothing can check that a
@@ -18,6 +19,8 @@ export type LinkAs = "a" | ComponentType<ComponentProps<"a"> & { href: string }>
 export interface LinkProps extends Omit<NativeProps<"a">, "href"> {
   href: string;
   as?: LinkAs;
+  /** A link announces itself, so unlike text it cannot default to inheriting. */
+  tone?: Tone;
   placement?: LinkPlacement;
   underline?: LinkUnderline;
 }

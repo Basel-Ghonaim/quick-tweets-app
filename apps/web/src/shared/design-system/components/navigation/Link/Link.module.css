@@ -1,6 +1,6 @@
 .root {
   composes: focusRing from "../../../foundations/composition/focusRing.module.css";
-  color: var(--text-accent);
+  color: var(--link-color);
   /* Underline geometry is the component's: one consumer names no shared concept. */
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.15em;
