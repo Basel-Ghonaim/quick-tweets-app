@@ -11,7 +11,7 @@
   --text-secondary: var(--palette-mauve-600);
   --text-tertiary: var(--palette-mauve-500);
   --text-muted: var(--palette-mauve-500);
-  --text-accent: var(--palette-violet-600);
+  --text-accent: var(--palette-violet-575);
 
   --border-default: var(--palette-mauve-200);
   --border-strong: var(--palette-mauve-300);
