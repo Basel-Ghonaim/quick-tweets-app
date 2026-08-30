@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { forwardRef, type ComponentProps } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Link } from "./Link";
+import { Typography } from "../../display/Typography";
 import type { LinkUnderline } from "./Link.types";
 
 const meta = {
@@ -297,5 +298,72 @@ export const AnAlwaysStyleLiftsRatherThanThickens: Story = {
       // The lift is the whole change: thin-to-thick was ruled out.
       expect(lifted.textDecorationThickness).toBe(thickness);
     });
+  },
+};
+
+/**
+ * The point of a shared vocabulary: both components resolve a tone to the same
+ * token, checked against each other rather than against a copy of the mapping.
+ */
+export const AToneMeansTheSameThingInBothComponents: Story = {
+  render: (args) => (
+    <div>
+      {(["primary", "secondary", "tertiary", "muted"] as const).map((tone) => (
+        <p key={tone}>
+          <Typography as="span" tone={tone} data-text={tone}>
+            text
+          </Typography>
+          <Link {...args} tone={tone} data-link={tone}>
+            {tone}
+          </Link>
+        </p>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const tone of ["primary", "secondary", "tertiary", "muted"]) {
+      const text = canvasElement.querySelector(`[data-text="${tone}"]`)!;
+      const link = canvasElement.querySelector(`[data-link="${tone}"]`)!;
+
+      await expect(getComputedStyle(link).color).toBe(
+        getComputedStyle(text).color,
+      );
+    }
+  },
+};
+
+/** A link cannot default to inheriting: inheriting is how it would say nothing. */
+export const ALinkAnnouncesItselfByDefault: Story = {
+  render: (args) => (
+    <p>
+      <Typography as="span" tone="primary" data-text="body">
+        Body text with
+      </Typography>{" "}
+      <Link {...args} data-link="default">
+        the feed
+      </Link>{" "}
+      <Link {...args} tone="accent" data-link="accent">
+        and the feed again
+      </Link>
+    </p>
+  ),
+  play: async ({ canvasElement }) => {
+    const q = (k: string, v: string) =>
+      getComputedStyle(canvasElement.querySelector(`[data-${k}="${v}"]`)!).color;
+
+    await expect(q("link", "default")).toBe(q("link", "accent"));
+    await expect(q("link", "default")).not.toBe(q("text", "body"));
+  },
+};
+
+/** Tone and underline compose: the line takes the colour the tone chose. */
+export const ATonedLinkKeepsItsUnderlineContract: Story = {
+  args: { tone: "muted", underline: "always" },
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole("link", { name: "the feed" });
+    const painted = getComputedStyle(link);
+
+    await expect(painted.textDecorationLine).toContain("underline");
+    await expect(painted.textDecorationColor).toBe(painted.color);
   },
 };

@@ -2,6 +2,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 
+import { ROLES, TONES } from "../../vocabulary";
+
 /**
  * Accessibility is an owned invariant (ADR 0010 Decision 5): the semantic tier
  * must clear WCAG AA for the relationships it guarantees, in every theme. A
@@ -83,9 +85,10 @@ function contrast(a: Rgb, b: Rgb): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-const ROLES = ["primary", "secondary", "success", "warning", "error", "info"] as const;
+// Derived, not mirrored: a copy would make this check agree with itself instead
+// of with the vocabulary the tokens are actually named by.
 const SURFACES = ["--surface-page", "--surface-default"] as const;
-const TEXT = ["--text-primary", "--text-secondary", "--text-tertiary", "--text-muted", "--text-accent"] as const;
+const TEXT = TONES.map((tone) => `--text-${tone}`);
 
 type Pair = { fg: string; bg: string; min: number };
 

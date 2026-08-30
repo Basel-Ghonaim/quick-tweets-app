@@ -1,11 +1,5 @@
+import type { Tone } from "../../../foundations";
 import type { NativeProps } from "../../shared";
-
-/**
- * Emphasis within the reading order, never status. `error` and `success` are
- * absent deliberately: a role belongs to whichever component carries it, and a
- * second way to render red text would compete with the one that owns it.
- */
-export type TypographyTone = "primary" | "secondary" | "tertiary" | "muted";
 
 /** Styles whose size and weight assert a heading, whatever element carries them. */
 export type TypographyTitleVariant =
@@ -42,7 +36,11 @@ export type TypographyTextElement = "p" | "span" | "div" | "strong" | "em" | "li
 export type TypographyElement = TypographyTitleElement | TypographyTextElement;
 
 interface TypographyBase extends Omit<NativeProps<"p">, "ref"> {
-  tone?: TypographyTone;
+  /**
+   * `accent` is excluded: it is the colour a link announces itself in, and text
+   * wearing it without being one teaches a reader the wrong thing about violet.
+   */
+  tone?: Exclude<Tone, "accent">;
 }
 
 /**
