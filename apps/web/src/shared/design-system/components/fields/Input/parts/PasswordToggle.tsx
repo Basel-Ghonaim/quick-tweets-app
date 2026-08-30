@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "../../../../icons";
-import { IconButton } from "../../../controls/IconButton";
+import { ToggleButton } from "../../../controls/ToggleButton";
 
 interface PasswordToggleProps {
   /** The id of the control whose visibility this toggles, for `aria-controls`. */
@@ -26,23 +26,24 @@ export const PasswordToggle = ({
 }: PasswordToggleProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
-  const toggle = () => {
-    const next = !isVisible;
+  const toggle = (next: boolean) => {
     setIsVisible(next);
     onToggle(next);
   };
 
   return (
-    <IconButton
+    <ToggleButton
       className={className}
       color="primary"
       size="small"
       icon={isVisible ? <EyeOffIcon /> : <EyeIcon />}
-      onClick={toggle}
+      pressed={isVisible}
+      onPressedChange={toggle}
       disabled={disabled}
       aria-controls={controlId}
-      aria-pressed={isVisible}
-      aria-label={isVisible ? "Hide password" : "Show password"}
+      /* Fixed, because the pressed state already reports which way it is: a name
+         that changed too would announce the same fact twice, in two vocabularies. */
+      aria-label="Show password"
     />
   );
 };

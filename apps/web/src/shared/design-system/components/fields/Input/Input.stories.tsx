@@ -217,9 +217,10 @@ export const RevealSurvivesALoadCycle: Story = {
     await userEvent.click(busy);
     await userEvent.click(busy);
 
-    // The value is still revealed, and the control still says so.
+    // The value is still revealed, and the control still says so — through the
+    // pressed state alone, which is now the only channel that carries it.
     await expect(input).toHaveAttribute("type", "text");
-    const after = await canvas.findByRole("button", { name: /Hide password/i });
+    const after = await canvas.findByRole("button", { name: /Show password/i });
     await expect(after).toHaveAttribute("aria-pressed", "true");
   },
 };
