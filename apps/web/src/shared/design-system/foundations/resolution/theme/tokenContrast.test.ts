@@ -101,6 +101,9 @@ const PAIRS: Pair[] = [
   // other. Against `--surface-page` alone: the resting fills' shortfall against a
   // raised surface is a recorded deferral, and is not this pair's to fail on.
   ...ROLES.map((r) => ({ fg: `--role-fill-${r}-hover`, bg: "--surface-page", min: 3 })),
+  // Not a background: an accent link inside a sentence is told apart from the
+  // text beside it, and colour alone has to carry that where no underline does.
+  { fg: "--text-accent", bg: "--text-primary", min: 3 },
   ...SURFACES.map((bg) => ({ fg: "--focus-ring", bg, min: 3 })),
   // A control's boundary is the whole affordance where its fill barely differs
   // from the card behind it, so it answers to 1.4.11 rather than to whatever a

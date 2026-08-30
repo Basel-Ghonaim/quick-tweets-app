@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { forwardRef, type ComponentProps } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Link } from "./Link";
+import type { LinkUnderline } from "./Link.types";
 
 const meta = {
   title: "Design System/Navigation/Link",
@@ -11,7 +12,7 @@ const meta = {
     a11y: { test: "error" },
   },
   argTypes: {
-    variant: { control: "radio", options: ["in-text", "standalone"] },
+    placement: { control: "radio", options: ["in-text", "standalone"] },
     href: { control: "text" },
   },
   args: { href: "/feed", children: "the feed" },
@@ -28,12 +29,30 @@ const Adapter = forwardRef<
 
 Adapter.displayName = "Adapter";
 
+const UNDERLINES: LinkUnderline[] = ["none", "always", "hover", "subtle"];
+
+/** Contrast from *rendered* colour. `tokenContrast` reads the stylesheets; this
+ *  reads what the cascade actually produced, which is a different instrument. */
+const luminance = (rgb: string) => {
+  const [r, g, b] = rgb.match(/\d+/g)!.slice(0, 3).map(Number);
+  const lin = (c: number) => {
+    const v = c / 255;
+    return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+};
+
+const contrast = (a: string, b: string) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+};
+
 // --- Base Default Story
 export const Default: Story = {};
 
 // --- Variants
 export const Standalone: Story = {
-  args: { variant: "standalone", children: "Go to the feed" },
+  args: { placement: "standalone", children: "Go to the feed" },
 };
 
 /**
@@ -93,7 +112,7 @@ export const ANewTabCannotReachItsOpener: Story = {
 
 /** Only a link inside a sentence is exempt from the target floor. */
 export const AStandaloneLinkMeetsTheTargetFloor: Story = {
-  args: { variant: "standalone", children: "Go" },
+  args: { placement: "standalone", children: "Go" },
   play: async ({ canvasElement }) => {
     const link = within(canvasElement).getByRole("link", { name: "Go" });
 
@@ -142,7 +161,7 @@ export const ACallerSuppliesTheNavigatingElement: Story = {
  * browser's own `:hover`, so focus stands in: it carries the same reveal rule.
  */
 export const AStandaloneLinkRevealsItsUnderline: Story = {
-  args: { variant: "standalone", children: "Go to the feed" },
+  args: { placement: "standalone", children: "Go to the feed" },
   play: async ({ canvasElement }) => {
     const link = within(canvasElement).getByRole("link", {
       name: "Go to the feed",
@@ -166,3 +185,117 @@ export const AStandaloneLinkRevealsItsUnderline: Story = {
   },
 };
 
+/** Every style, in the placement where the choice is hardest to get right. */
+export const UnderlineStyles: Story = {
+  render: (args) => (
+    <div style={{ display: "grid", gap: "0.5rem" }}>
+      {UNDERLINES.map((underline) => (
+        <p key={underline}>
+          Body text with <Link {...args} underline={underline} /> inside it.
+        </p>
+      ))}
+    </div>
+  ),
+};
+
+/**
+ * Storybook paints no page ground, so this story paints it: a light accent
+ * judged against the browser's white is judged against the wrong colour.
+ */
+export const TheAccentClearsBothTheTextAndTheGround: Story = {
+  args: { underline: "none" },
+  render: (args) => (
+    <div
+      data-testid="ground"
+      style={{
+        background: "var(--surface-page)",
+        color: "var(--text-primary)",
+        padding: "1rem",
+      }}
+    >
+      <p data-testid="body">
+        Body text with <Link {...args} /> inside it.
+      </p>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = canvas.getByRole("link", { name: "the feed" });
+
+    const accent = getComputedStyle(link).color;
+    const body = getComputedStyle(canvas.getByTestId("body")).color;
+    const ground = getComputedStyle(canvas.getByTestId("ground")).backgroundColor;
+
+    // Colour alone tells it apart from the sentence around it (G183) ...
+    await expect(contrast(accent, body)).toBeGreaterThanOrEqual(3);
+    // ... while still reading as text on the page it sits on (1.4.3).
+    await expect(contrast(accent, ground)).toBeGreaterThanOrEqual(4.5);
+  },
+};
+
+/** Each style rests as its name says, before anything is hovered or focused. */
+export const EachUnderlineStyleRestsAsItSays: Story = {
+  render: (args) => (
+    <div>
+      {UNDERLINES.map((underline) => (
+        <Link key={underline} {...args} underline={underline}>
+          {underline}
+        </Link>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const at = (name: LinkUnderline) =>
+      getComputedStyle(canvas.getByRole("link", { name }));
+
+    await expect(at("none").textDecorationLine).toBe("none");
+
+    // The other three all declare the line; only its colour separates them.
+    await expect(at("always").textDecorationLine).toContain("underline");
+    await expect(at("always").textDecorationColor).toBe(at("always").color);
+
+    await expect(at("hover").textDecorationLine).toContain("underline");
+    await expect(at("hover").textDecorationColor).toBe("rgba(0, 0, 0, 0)");
+
+    await expect(at("subtle").textDecorationLine).toContain("underline");
+    await expect(at("subtle").textDecorationColor).not.toBe(at("subtle").color);
+    await expect(at("subtle").textDecorationColor).not.toBe("rgba(0, 0, 0, 0)");
+  },
+};
+
+/** No line means no line: hovering must not grow one. */
+export const NoUnderlineStaysNoUnderline: Story = {
+  args: { underline: "none" },
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole("link", { name: "the feed" });
+
+    await expect(getComputedStyle(link).textDecorationLine).toBe("none");
+
+    await userEvent.tab();
+    await expect(link).toHaveFocus();
+    await expect(getComputedStyle(link).textDecorationLine).toBe("none");
+  },
+};
+
+/** Already at full strength, so the state is carried by the lift, not the line. */
+export const AnAlwaysStyleLiftsRatherThanThickens: Story = {
+  args: { underline: "always" },
+  play: async ({ canvasElement }) => {
+    const link = within(canvasElement).getByRole("link", { name: "the feed" });
+    // Read as strings, not through the declaration: `getComputedStyle` returns a
+    // live object, so holding onto it would report the focused values back.
+    const { textUnderlineOffset: offset, textDecorationThickness: thickness } =
+      getComputedStyle(link);
+
+    await userEvent.tab();
+    await expect(link).toHaveFocus();
+
+    await waitFor(() => {
+      const lifted = getComputedStyle(link);
+      expect(lifted.textUnderlineOffset).not.toBe(offset);
+      // The lift is the whole change: thin-to-thick was ruled out.
+      expect(lifted.textDecorationThickness).toBe(thickness);
+    });
+  },
+};

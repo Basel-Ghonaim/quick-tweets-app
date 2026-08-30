@@ -1,13 +1,40 @@
 import { forwardRef, type ElementType } from "react";
 import styles from "./Link.module.css";
-import type { LinkProps } from "./Link.types";
+import type { LinkPlacement, LinkProps, LinkUnderline } from "./Link.types";
 import { classNames } from "../../shared";
 
 /** Targets that reuse the current browsing context, so no opener is exposed. */
 const KEEPS_CONTEXT = new Set(["_self", "_parent", "_top"]);
 
+/** A line has to be visible inside a sentence; a permanent one under everything
+ *  that stands alone is not what standing alone looks like. */
+const DEFAULT_UNDERLINE: Record<LinkPlacement, LinkUnderline> = {
+  "in-text": "subtle",
+  standalone: "hover",
+};
+
+/** Named rather than built, so `classReferences` can read every one of them. */
+const UNDERLINE: Record<LinkUnderline, string> = {
+  none: styles.underlineNone,
+  always: styles.underlineAlways,
+  hover: styles.underlineHover,
+  subtle: styles.underlineSubtle,
+};
+
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ as, variant = "in-text", href, target, rel, className, ...props }, ref) => {
+  (
+    {
+      as,
+      placement = "in-text",
+      underline,
+      href,
+      target,
+      rel,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     const Element = (as ?? "a") as ElementType;
 
     // `noopener` is the layer's guarantee; `noreferrer` stays the caller's,
@@ -26,9 +53,10 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
         rel={safeRel}
         className={classNames(
           styles.root,
-          // Named rather than interpolated: two members, and `classReferences`
-          // reads a dot access where it cannot read a built name.
-          variant === "in-text" ? styles.variantInText : styles.variantStandalone,
+          // Only standing alone carries rules; in a sentence the element's own
+          // inline behaviour is what the placement means.
+          placement === "standalone" && styles.placementStandalone,
+          UNDERLINE[underline ?? DEFAULT_UNDERLINE[placement]],
           className,
         )}
         {...props}

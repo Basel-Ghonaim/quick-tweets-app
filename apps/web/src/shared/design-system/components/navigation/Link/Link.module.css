@@ -4,31 +4,48 @@
   /* Underline geometry is the component's: one consumer names no shared concept. */
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.15em;
-  transition: text-decoration-color var(--motion-interactive);
+  transition:
+    text-decoration-color var(--motion-interactive),
+    text-underline-offset var(--motion-interactive);
 }
 
-/* Both variants reveal the same way and differ only in what they rest at: a line
-   inside a sentence has to be visible there, one standing alone does not. */
-.variantInText {
-  text-decoration-line: underline;
-  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
-}
-
-.variantStandalone {
+.placementStandalone {
   display: inline-flex;
   align-items: center;
-  /* Declared rather than absent: `text-decoration-line` cannot animate, so the
-     line is always reserved and only its colour travels. */
-  text-decoration-line: underline;
-  text-decoration-color: transparent;
   /* The floor belongs to a target, not to a control: this is the token's first
      non-Control consumer, and its name is now narrower than the concept. */
   min-block-size: var(--control-target-min);
 }
 
-.variantInText:hover,
-.variantInText:focus-visible,
-.variantStandalone:hover,
-.variantStandalone:focus-visible {
+.underlineNone {
+  text-decoration-line: none;
+}
+
+/* Already at full strength, so the lift carries the state instead of the colour. */
+.underlineAlways {
+  text-decoration-line: underline;
+}
+
+.underlineAlways:hover,
+.underlineAlways:focus-visible {
+  text-underline-offset: 0.25em;
+}
+
+/* Declared rather than absent: `text-decoration-line` cannot animate, so a
+   reserved line is the only kind that can arrive instead of appearing. */
+.underlineHover {
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+}
+
+.underlineSubtle {
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+.underlineHover:hover,
+.underlineHover:focus-visible,
+.underlineSubtle:hover,
+.underlineSubtle:focus-visible {
   text-decoration-color: currentColor;
 }

@@ -6,6 +6,11 @@
    lighter neighbour in this file: the canonical one sits far above the corridor,
    which is why it takes a half-step name rather than that one.
 
+   `violet-575` is a quarter-step, and the only one. A link distinguished by
+   colour alone must clear 3:1 against the text beside it while still clearing
+   4.5:1 on the page — a corridor narrower than the half-step already between
+   550 and 600, so neither rung reaches it and no `×50` could.
+
    `red-600-vivid` is the sixth and it is not a rung. Red's corridor is too narrow
    for lightness to carry a state change — the widest compliant step measured dE76
    2.1 from its resting fill, which reads as no change at all. Chroma carries it
@@ -50,6 +55,7 @@
   --palette-violet-400: #9176ff;
   --palette-violet-500: #7c5cff;
   --palette-violet-550: #7756fe;
+  --palette-violet-575: #714efd;
   --palette-violet-600: #6a46fb;
   --palette-violet-700: #4d24f1;
 
