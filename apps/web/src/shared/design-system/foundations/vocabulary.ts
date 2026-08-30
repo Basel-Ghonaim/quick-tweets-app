@@ -22,3 +22,15 @@ export type Role = (typeof ROLES)[number];
 export const CONTROL_SIZES = ["small", "medium", "large"] as const;
 
 export type ControlSize = (typeof CONTROL_SIZES)[number];
+
+/** Emphasis within the reading order, never status — which is what separates a
+ *  tone from a role. `--text-<tone>` is the semantic tier this names. */
+export const TONES = [
+  "primary",
+  "secondary",
+  "tertiary",
+  "muted",
+  "accent",
+] as const;
+
+export type Tone = (typeof TONES)[number];
