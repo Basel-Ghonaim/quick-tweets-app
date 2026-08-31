@@ -1,11 +1,12 @@
 # Login & Registration Refinements — Execution Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-07-30
+> **Last Updated:** 2026-08-31
 > **Parent Issue:** [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384)
 > **Supersedes:** —
+> **Archived (completed, 2026-08-31):** all six Work Items merged. The durable facts now live with their owners — endpoints and error shapes in the [API contract](../api/api-contract.md), the alias and uniqueness model in the [data model](../architecture/data-model.md) and `schema.prisma`, and the session and identity rules in [Authentication](../features/authentication/authentication.md) (§8).
 
 This plan sequences the settled **Login & Registration refinements** into six independently reviewable Work Items. The product and architecture decisions behind them are **closed** (recorded through prior analysis passes); this plan owns their **execution order, boundaries, and invariants**, and never reopens them.
 
@@ -161,4 +162,49 @@ Each Work Item is a separate, atomic unit with its own Issue and PR. The section
 
 ## 8. Reconciliation
 
-*Added as this plan approaches `Historical`: where each Work Item's durable facts landed in the permanent documents, which findings were recorded, and the forward links.*
+The effort is **complete**, and archived for the reason ADR 0006 asks be recorded here: **completion**, not supersession or abandonment. All six Work Items are merged and their Issues closed — #385, #388, #391, #394, #396, #399.
+
+This plan is now read-only provenance: how the effort was reasoned about and sequenced, never what the system currently guarantees.
+
+### Where the durable facts landed
+
+Little moved at this transition, and that is the point of pinned constraint 2. Co-versioning required each Work Item to carry its contract documentation inside the same Work Item, so the durable facts left this plan as the effort ran rather than in one migration at the end.
+
+| What | Now owned by |
+|---|---|
+| Endpoint shapes, request and response bodies, error codes, and the retirement of `GET /auth/me` | [API contract](../api/api-contract.md) |
+| The alias and reservation model, username uniqueness across two tables, the deletion footprint | [Data model](../architecture/data-model.md), and `schema.prisma` for field-level truth |
+| The session's minimal identity, id-based restore, and `name` as a read-side fallback | [Authentication](../features/authentication/authentication.md) |
+| Why authenticated-only media replaced the pre-auth register-with-avatar path | [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) |
+
+### The completion criteria, each with what proves it
+
+| § 7 criterion | Proof |
+|---|---|
+| Six Work Items merged, each green | #385, #388, #391, #394, #396, #399 — all closed by merge |
+| Register is transactional | `auth.repository.ts` composes the account and its refresh session in one `db.$transaction([...])`; the service takes the runner as a parameter |
+| Usernames are lowercase-only, rejected not normalized | `shared/validation/username.ts` — `^[a-z0-9_]+$`, 4–20, `.trim()`, composed by both registration and the rename |
+| Login accepts a neutral identifier | `auth.validator.ts` — `identifier`, presence-only, never format-validated on the login path |
+| `/auth/me` retired, `/users/me` canonical | the string appears in the tree exactly once, in the API contract, describing its retirement |
+| `name` truthfully optional, never derived | `schema.prisma` — `name String?`, with the read-side-fallback rule stated at the field |
+| Editable username, three guarantees | id-based session identity (Authentication §restore); `UsernameAlias` plus a `301` from a released handle in `user.controller.ts`; one resolver in `user.repository.ts` |
+| Contract, data-model and authentication documents consistent | each verified against the code above rather than against each other |
+| UI and screens still deferred | the auth module still renders its bootstrap design, and `_design/` is still mounted — its removal is [#546](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/546) |
+| No out-of-scope item pulled in | password reset, account deletion, `profileImage` cleanup, date-of-birth and Terms/Privacy persistence are all still absent |
+
+### What the pinned constraints become
+
+**Outlived the effort** — constraint 3's lowercase-only invariant and constraint 4's truthful absence are now product rules, stated by the data model and the API contract and enforced in code. They no longer depend on this plan.
+
+**Expired with it** — constraints 1, 2 and 5 were sequencing and scope discipline: one Work Item at a time, co-version inside the Work Item, keep C and A apart. They governed how this effort ran and bind nothing after it.
+
+**Held, with a limit worth stating** — constraint 6's third guarantee asked that the username rule and the handle resolver each be defined once. Both hold **within** a tier: the backend field is composed by registration and by the rename, and the resolver exists once. Across tiers the rule is stated twice, in `shared/validation/username.ts` and `modules/auth/config/authValidationRules.ts`, because there is nowhere yet to put a single definition — [ADR 0013](../architecture/decisions/0013-applications-and-cross-tier-packages.md)'s `packages/` layer is decided but unbuilt. Both ends say so at the code; neither pretends otherwise.
+
+### What this effort deliberately left
+
+**Password reset** was out of scope here and is not orphaned: it arrives through the channel-verification capability, which takes email as its first consumer. **The UI and screens** were deferred by design — this effort changed logic, validation, state, mappers and tests, and no screen.
+
+### Findings
+
+None were recorded against this effort.
+
