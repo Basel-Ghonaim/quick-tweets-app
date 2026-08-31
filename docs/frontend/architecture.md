@@ -5,8 +5,8 @@
 > **Authority:** The authoritative source for the frontend's **outer architecture** — the feature-sliced layout (`app/` · `modules/` · `shared/`), the dependency boundaries between those zones, the module contract, the composition root, and the thin platform utilities no other document owns. It owns the **structure between subsystems**, not the subsystems themselves: each platform subsystem's internals are owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, and where features meet the platform.
 > **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
-> **Version:** 1.5
-> **Last Updated:** 2026-08-29
+> **Version:** 1.6
+> **Last Updated:** 2026-08-31
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -58,7 +58,7 @@ Assembly happens once, at the edge, in a fixed order:
 
 1. **Bootstrap** — before anything renders, the entry point runs the bootstrap step, which wires shared infrastructure to app-layer dependencies (injecting the token getter and session callbacks into the auth client — the inversion described above).
 2. **Providers** — one component nests every provider the application mounts, so the entry point holds a single child and the nesting order lives in one place rather than at the edge. The composed Redux store is among them, itself a composition: each feature contributes its slice, and the shared data layer contributes its API slice and middleware, under one store.
-3. **The app shell** — the router mounts feature pages under their routes, gating first render on session initialization (a hook the auth feature provides).
+3. **The app shell** — the router mounts feature pages under their routes, and starts session restore without gating first render on it (a hook the auth feature provides).
 
 The design system's foundations (tokens and themes) are loaded once at the entry as a side effect, so every feature renders against the same visual base. **Which** theme, and the direction the document reads in, are settled before any of that: both are resolved by the Design System and *selected* by the application ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 4), and the selection is stamped on the document from the markup, ahead of the first paint, because a module cannot run early enough to avoid a flash.
 

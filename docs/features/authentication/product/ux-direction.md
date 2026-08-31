@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.4
-> **Last Updated:** 2026-08-27
+> **Version:** 1.5
+> **Last Updated:** 2026-08-31
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
@@ -96,7 +96,7 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 | Forgot password | "Send code" | "Back to login" |
 | Reset password | "Reset password" | — |
 
-- **One filled button per screen.** Everything else is `Button variant="ghost" size="small"` — including cross-screen navigation, since no `Link` component exists and ghost already carries the right weight (§15).
+- **One filled button per screen.** Everything else is `Button variant="ghost" size="small"`. **Cross-screen navigation is the exception and binds `Link`**, which carries the anchor semantics a button cannot (§15).
 - **Skip and Later must be unmissable but never visually co-equal with the primary action.** The research identified this as the most important CTA question: the target is *obviously available, not obviously recommended*.
 - **Skip is one tap.** No confirmation, no disguised sub-flow. Real products fail exactly here, and it destroys trust in the escape hatch.
 - **Resend is never hidden while cooling down** — visible, disabled, with its countdown legible.
@@ -260,6 +260,7 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 | `Checkbox` | `label` required |
 | `FileInput` | `variant` standard · dropzone · **avatar** (`avatarShape`, `avatarFill`, `avatarBorder`, `avatarSize`) |
 | `Typography` | display/heading/body/label variants; `tone`; element required for title variants |
+| `Link` | `href` required; `as` for the navigating element; `placement` in-text · standalone; `underline` none · always · hover · subtle; `tone` |
 | `Spinner` | `color` only — sizes itself from surrounding text |
 | Field anatomy | Internal; label, messages and wiring composed automatically |
 
@@ -269,7 +270,7 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 
 **This design requires components the layer does not yet carry, and says so.** An earlier revision recorded that it added none — true of the column-only screens it described, and false once `D8` and the journey stepper entered. The distinction that matters is *why* something is absent: a gap left by **scarcity** is closed by extending the vocabulary, while a gap closed by **analysis** stays closed.
 
-**Required, and committed** ([committed scope](../../../project/overview.md)): `Icon` · `Alert` · `Link` · `Stepper`. Each is interface vocabulary whose meaning survives this product; which layer builds each is the [admission test](../../../frontend/design-system/components.md)'s call, not this document's.
+**Required, and committed** ([committed scope](../../../project/overview.md)): `Icon` · `Alert` · `Stepper` — and `Link`, which is now **built** and listed with the available components above. Each is interface vocabulary whose meaning survives this product; which layer builds each is the [admission test](../../../frontend/design-system/components.md)'s call, not this document's.
 
 **The one-time-code input is committed too, and this design needs no component for it** — the table below settles what serves it. A commitment names a need; it never obliges a component to be built for that need, and here an existing control already carries it.
 
@@ -281,7 +282,7 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 | `Badge` — verified state | **Not needed.** Verification is expressed by the banner and restrictions *disappearing* — stronger than a badge appearing. |
 | OTP / code-entry field | **A single `Input`** — decided. Paste is the primary interaction and a single field does not fight it; the code's length also rules out a segmented treatment at the column's width. |
 
-**A trade that no longer needs making:** using `Button` for cross-screen navigation gave up anchor semantics — open-in-new-tab, middle-click — and was accepted only while `Link` did not exist. `Link` is committed, so auth's navigational secondaries bind it rather than inheriting the workaround. Until it is built, the ghost `Button` stands in and the migration is owed.
+**A trade that no longer needs making:** using `Button` for cross-screen navigation gave up anchor semantics — open-in-new-tab, middle-click — and was accepted only while `Link` did not exist. `Link` is built, so auth's navigational secondaries bind it rather than inheriting the workaround. There is no interim: nothing here has been authored against the stand-in.
 
 ### Icons — use what exists, prototype what does not
 
