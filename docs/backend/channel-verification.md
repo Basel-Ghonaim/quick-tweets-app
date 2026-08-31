@@ -1,10 +1,10 @@
 # Channel Verification Platform Subsystem
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the **Channel Verification subsystem's mechanisms and their rationale** — the module anatomy and its published surface, where the subject comes from, custody of the fact, how status is derived, the challenge lifecycle, the code and its digest, the single-failure discipline, the composed delivery port and its backends, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
-> It does **not** own: the boundary **decision** itself — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared auth-guard and rate-limiting mechanisms (the [Backend Security](security.md)'s); or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
-> **Scope:** The server-side capability (`apps/api/src/modules/channel-verification/`) and the outbound-delivery mechanism it composes (`apps/api/src/shared/mail/`). How a consumer decides what requires a proven endpoint is that consumer's, and is not decided here.
-> **Version:** 1.0
+> **Authority:** The authoritative source for the **Channel Verification subsystem's mechanisms and their rationale** — the module anatomy and its published surface, where the subject comes from, custody of the fact, how status is derived, the challenge lifecycle, the code and its digest, the single-failure discipline, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
+> It does **not** own: the boundary **decision** itself — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared auth-guard and rate-limiting mechanisms (the [Backend Security](security.md)'s); the **outbound mail mechanism** it composes, which is [`mail.md`](mail.md)'s; or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
+> **Scope:** The server-side capability (`apps/api/src/modules/channel-verification/`). How a consumer decides what requires a proven endpoint is that consumer's, and is not decided here.
+> **Version:** 1.1
 > **Last Updated:** 2026-08-31
 > **Owner:** Basel Ghonaim
 
@@ -74,15 +74,11 @@ A **configuration** fault is deliberately excluded from that collapse. An unusab
 
 The statuses and messages these produce on the wire are the [API contract](../api/api-contract.md)'s.
 
-## Delivery: composed, not owned
+## Delivery
 
-Conveying a challenge needs an outbound-delivery mechanism, and the capability **requires but does not own** it. It lives in `apps/api/src/shared/mail/` as a shared platform concern, so later consumers — password reset — compose the same mechanism rather than re-implementing it, and so they need not read a channel-verification document in order to use it.
+A challenge reaches its holder through the shared outbound mail mechanism, which this capability **composes and does not own** — the ownership direction [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) Decision 7 fixed. The port, its backends, how one is selected, and why failure is returned rather than raised are [`mail.md`](mail.md)'s.
 
-The **port** is one method taking a recipient, a subject and a body. Its failure is **returned, never thrown**, so a transport error cannot unwind work the caller has already committed. It is email-shaped rather than channel-agnostic, and it is **domain-ignorant by enforcement**: a test reads the port's own type surface and fails if it acquires any consumer vocabulary, because a port's boundary erodes one helpful field at a time.
-
-Two backends implement it. **Inert** accepts and discards the message and reports success, so callers exercise their normal path with no transport and no credentials; it withholds the body from its log, which may carry a single-use secret. **Capture** writes the whole message to a local, gitignored directory, so a person verifying by hand has an inbox — a code that is discarded on delivery and digested at rest is knowable to nobody, which is the property that makes the capability trustworthy and also what leaves hand-verification without one.
-
-Backend selection is **fail-safe**, and inert is both the default and the target of every fallback. An unrecognised mode warns and resolves to inert. Capture asked for in production is treated exactly as an unrecognised value — it warns and resolves to inert rather than crashing, because a startup crash over a mail setting is the worse failure. **Nothing ever falls back *to* capture**, which writes single-use secrets to disk and is reachable only by an exact opt-in outside production. Its destination is a **convention rather than a setting**: one fewer thing to misconfigure on a mechanism whose purpose is local verification. The mode is resolved once at startup rather than per send, so a misconfiguration warns where an operator will see it.
+What belongs here is only what this capability does with it: it **composes the message** — subject and body are the capability's, not the mechanism's — and it **sends after the challenge is committed**, so a delivery failure is reported and never destructive.
 
 ## The sweep: hygiene, not correctness
 
