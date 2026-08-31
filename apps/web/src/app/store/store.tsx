@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer } from "@modules/auth/store";
+import { authReducer } from "@modules/auth";
 import { baseApi } from "@shared/rtk-query";
 import { setupListeners } from "@reduxjs/toolkit/query/react";
 
