@@ -1,6 +1,6 @@
 # ADR 0015: Mail Delivery — Real Transport, Production Posture, and Owned Abuse Control
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-08-31
 > **Deciders:** Basel Ghonaim
 

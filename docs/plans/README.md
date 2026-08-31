@@ -60,6 +60,7 @@ A new plan is drafted outside the tracked tree — under `.project/`, or whereve
 | [design-system-components.md](design-system-components.md) | Execution | Historical | [#522](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/522) |
 | [design-system-reestablishment.md](design-system-reestablishment.md) | Execution | Historical | [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414) |
 | [login-registration-refinements.md](login-registration-refinements.md) | Execution | Historical | [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384) |
+| [mail-delivery.md](mail-delivery.md) | Execution | Active | *pending* |
 | [media-implementation.md](media-implementation.md) | Execution | Active | [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305) |
 | [auth-first-grant-retirement.md](auth-first-grant-retirement.md) | Migration | Historical | [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357) |
 | [documentation-migration-plan.md](documentation-migration-plan.md) | Migration | Historical | [#215](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/215) |
