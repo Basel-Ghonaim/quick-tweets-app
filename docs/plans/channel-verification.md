@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-29
+> **Last Updated:** 2026-08-31
 > **Parent Issue:** [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403)
 > **Supersedes:** —
 
@@ -17,7 +17,7 @@ It is a **strategy document**: it owns the effort's **execution order, boundarie
 
 - Deliver the capability that owns **proof of control over a communication channel endpoint**, with **email as the first and only implemented channel**.
 - Prove the **custody model** end-to-end: the fact lives wholly inside the capability, **nothing about verification is stored on the User row**, and consumers read a **boundary-resolved projection**.
-- Establish the **delivery boundary** — an outbound-delivery mechanism the capability *composes* and never owns — as the codebase's first, built so later consumers (password reset, notifications) compose the same mechanism.
+- Establish the **delivery boundary** — an outbound-delivery mechanism the capability *composes* and never owns — as the codebase's first, built so later consumers (password reset) compose the same mechanism.
 - Keep the capability **policy-free and decoupled from registration**: an account is created and authenticated with its endpoint **Unproven**, and the holder operates untrusted until some future consumer requires trust.
 
 ## 2. Boundary declaration
