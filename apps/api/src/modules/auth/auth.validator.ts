@@ -1,17 +1,12 @@
 /**
  * Auth validators — Zod schemas for auth endpoint request validation.
  *
- * Current purpose:
+ * Purpose:
  * - registerSchema: validates registration input (username, name, email, password)
  * - loginSchema: validates login input (identifier, password); presence-only
  *
  * Note: /refresh and /logout do NOT need body validation.
  * The refresh token is read from an httpOnly cookie (req.cookies), not req.body.
- *
- * Future expansion:
- * - forgotPasswordSchema: validates email for password reset
- * - resetPasswordSchema: validates token + new password
- * - changePasswordSchema: validates old + new password
  *
  * Constraints are aligned with the frontend form schemas (authFormSchemas.ts)
  * to ensure consistent validation on both sides.

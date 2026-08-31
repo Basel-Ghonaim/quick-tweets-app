@@ -5,7 +5,7 @@
 > It does **not** own: the boundary **decision** itself — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared auth-guard and rate-limiting mechanisms (the [Backend Security](security.md)'s); or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
 > **Scope:** The server-side capability (`apps/api/src/modules/channel-verification/`) and the outbound-delivery mechanism it composes (`apps/api/src/shared/mail/`). How a consumer decides what requires a proven endpoint is that consumer's, and is not decided here.
 > **Version:** 1.0
-> **Last Updated:** 2026-08-29
+> **Last Updated:** 2026-08-31
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -76,7 +76,7 @@ The statuses and messages these produce on the wire are the [API contract](../ap
 
 ## Delivery: composed, not owned
 
-Conveying a challenge needs an outbound-delivery mechanism, and the capability **requires but does not own** it. It lives in `apps/api/src/shared/mail/` as a shared platform concern, so later consumers — password reset, notifications — compose the same mechanism rather than re-implementing it, and so they need not read a channel-verification document in order to use it.
+Conveying a challenge needs an outbound-delivery mechanism, and the capability **requires but does not own** it. It lives in `apps/api/src/shared/mail/` as a shared platform concern, so later consumers — password reset — compose the same mechanism rather than re-implementing it, and so they need not read a channel-verification document in order to use it.
 
 The **port** is one method taking a recipient, a subject and a body. Its failure is **returned, never thrown**, so a transport error cannot unwind work the caller has already committed. It is email-shaped rather than channel-agnostic, and it is **domain-ignorant by enforcement**: a test reads the port's own type surface and fails if it acquires any consumer vocabulary, because a port's boundary erodes one helpful field at a time.
 

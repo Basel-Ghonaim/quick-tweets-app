@@ -4,8 +4,8 @@
 > **Class:** **Description** for current implementation status; **Commitment** for committed product scope ([Documentation Strategy §3](../architecture/documentation-strategy.md)). Each section says which it is.
 > **Authority:** The authoritative source for the **product's scope** — both what exists today and what the product is committed to. It does not describe *how* the system is built (see the architecture and platform documents) or the API surface (see the [API contract](../api/api-contract.md)).
 > **Scope:** What quick-tweets is, which capabilities exist today, and which the product is committed to. Mechanisms, endpoints, and per-feature internals live in their owning documents and are linked, never restated.
-> **Version:** 1.5
-> **Last Updated:** 2026-08-30
+> **Version:** 1.6
+> **Last Updated:** 2026-08-31
 > **Owner:** Basel Ghonaim
 
 ## What quick-tweets is
@@ -60,7 +60,7 @@ Where the [glossary](glossary.md) defines a term, this section uses it. Some com
 
 ### Capabilities
 
-Composing, editing and deleting one's own tweets · commenting · liking · reposting · sharing a tweet · following and unfollowing · viewing a profile's tweets, likes, followers and following · editing one's own profile · attaching media to a tweet.
+Composing, editing and deleting one's own tweets · commenting · liking · reposting · sharing a tweet · following and unfollowing · viewing a profile's tweets, likes, followers and following · editing one's own profile · recovering access to one's own account · attaching media to a tweet.
 
 ### Interface vocabulary
 

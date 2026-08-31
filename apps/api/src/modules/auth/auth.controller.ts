@@ -12,10 +12,6 @@
  *
  * Response format: All responses use sendSuccess() → { success: true, data: {...} }
  *
- * Future expansion:
- * - forgotPassword: validate email → call service → return 200
- * - resetPassword: validate token + password → call service → return 200
- *
  * Principle: SRP — only parses requests and sends responses, no business logic.
  * Principle: DIP — depends on IAuthService interface, not concrete implementation.
  */
