@@ -12,7 +12,6 @@
 import { env } from "../../config/env.js";
 import {
   runInTransaction as defaultRunInTransaction,
-  type DbClient,
   type RunInTransaction,
 } from "../../shared/database/index.js";
 import { createMailAdapter, type MailAdapter } from "../../shared/mail/index.js";
@@ -37,7 +36,6 @@ import type {
   IChannelVerificationService,
   IssueInput,
   IssueOutcome,
-  VerificationStatus,
 } from "./channelVerification.types.js";
 
 export interface ChannelVerificationServiceDeps {

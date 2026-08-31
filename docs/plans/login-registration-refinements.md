@@ -6,7 +6,7 @@
 > **Last Updated:** 2026-08-31
 > **Parent Issue:** [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384)
 > **Supersedes:** —
-> **Archived (completed, 2026-08-31):** all six Work Items merged. The durable facts now live with their owners — endpoints and error shapes in the [API contract](../api/api-contract.md), the alias and uniqueness model in the [data model](../architecture/data-model.md) and `schema.prisma`, and the session and identity rules in [Authentication](../features/authentication/authentication.md) (§8).
+> **Archived (completed, 2026-08-31):** all six Work Items merged. The durable facts now live with their owners — endpoints and error shapes in the [API contract](../api/api-contract.md), the alias and uniqueness model in the [data model](../architecture/data-model.md) and `schema.prisma`, and the session and identity rules in [Authentication](../features/authentication/authentication.md). §8 below records where each fact landed and what proves each completion criterion.
 
 This plan sequences the settled **Login & Registration refinements** into six independently reviewable Work Items. The product and architecture decisions behind them are **closed** (recorded through prior analysis passes); this plan owns their **execution order, boundaries, and invariants**, and never reopens them.
 

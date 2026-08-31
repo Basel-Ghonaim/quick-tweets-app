@@ -19,7 +19,6 @@ import { prisma, runInTransaction } from "../../shared/database/index.js";
 import { MediaAttachError } from "./media.errors.js";
 import { createMediaOwnership } from "./media.ownership.js";
 import { createMediaReferences } from "./media.references.js";
-import { createMediaRepository } from "./media.repository.js";
 import { mintToken } from "./media.tokens.js";
 
 const CONN = process.env.DATABASE_URL ?? "";
@@ -28,7 +27,6 @@ const TAG = `it-reclaim-${process.pid}-${Math.floor(process.hrtime()[1])}`;
 
 const ownership = createMediaOwnership();
 const references = createMediaReferences();
-const repo = createMediaRepository();
 
 let reachable = false;
 let userId = 0;

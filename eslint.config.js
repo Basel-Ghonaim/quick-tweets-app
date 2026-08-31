@@ -10,7 +10,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 // `**/dist`, not `dist`: build output now sits under apps/*, which a
 // root-relative pattern no longer matches.
-export default defineConfig([globalIgnores(['**/dist']), {
+export default defineConfig([globalIgnores(['**/dist', '**/storybook-static']), {
   files: ['**/*.{ts,tsx}'],
   extends: [
     js.configs.recommended,
@@ -21,5 +21,10 @@ export default defineConfig([globalIgnores(['**/dist']), {
   languageOptions: {
     ecmaVersion: 2020,
     globals: globals.browser,
+  },
+  rules: {
+    // A leading underscore is the declaration that a binding is deliberately
+    // unused — a stream drained for its side effect still needs one to iterate.
+    '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_' }],
   },
 }, ...storybook.configs["flat/recommended"]])

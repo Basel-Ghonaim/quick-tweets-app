@@ -15,7 +15,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "eslint .",
-    "check:boundaries": "vitest run checks/boundaries.test.ts"
+    "check:boundaries": "tsc -p checks/tsconfig.json && vitest run checks/boundaries.test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -1,6 +1,9 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
-import { useSessionRestore, AuthPage } from "@modules/auth";
-import { AuthDesignProvider } from "@modules/auth/_design";
+import {
+  useSessionRestore,
+  AuthPage,
+  AuthDesignProvider,
+} from "@modules/auth";
 import { Placeholder } from "./placeholder";
 
 export const App = () => {

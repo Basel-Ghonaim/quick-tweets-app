@@ -10,8 +10,7 @@ import { describe, expect, test } from "vitest";
 
 const FOUNDATIONS = join(process.cwd(), "src/shared/design-system/foundations");
 const THEME_DIR = join(FOUNDATIONS, "resolution/theme");
-// The bootstrap set is still a resolution of the same axis until WI-10 removes it,
-// so it is held to parity too — extracting it must not quietly halve this check.
+// One resolution axis today, iterated as a list so a second would extend it.
 
 function keysDefinedIn(dir: string, file: string): Set<string> {
   const css = readFileSync(join(dir, file), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");

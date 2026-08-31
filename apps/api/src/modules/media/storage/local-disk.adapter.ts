@@ -13,7 +13,6 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import { mkdir, readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
-import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import { MediaStorageError } from "../media.errors.js";
