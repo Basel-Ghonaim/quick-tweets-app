@@ -17,8 +17,8 @@
   position: absolute;
   inset-block-start: -10%;
   inset-inline-start: calc(var(--auth-page-inset) - 21rem);
-  inline-size: 62rem;
-  block-size: 62rem;
+  inline-size: 70rem;
+  block-size: 70rem;
   border-radius: var(--border-radius-full);
   background: radial-gradient(circle, var(--role-fill-primary) 0%, transparent 66%);
   opacity: 0.4;
@@ -31,8 +31,8 @@
   position: absolute;
   inset-block-start: -9.5rem;
   inset-inline-start: calc(var(--auth-page-inset) - 23.75rem);
-  inline-size: 62rem;
-  block-size: 62rem;
+  inline-size: 70rem;
+  block-size: 70rem;
   color: var(--role-fill-primary);
   opacity: 0.14;
   transform: rotate(-12deg);
