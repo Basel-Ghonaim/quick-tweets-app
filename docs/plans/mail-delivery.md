@@ -4,7 +4,7 @@
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
 > **Last Updated:** 2026-08-31
-> **Parent Issue:** *pending — created with the first Work Item*
+> **Parent Issue:** [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)
 > **Supersedes:** —
 
 This plan sequences the implementation of a **real outbound mail mechanism** into six independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), which owns the boundary, the production posture, the abuse controls and the result semantics, and which this plan never reopens. The mechanism as it exists today is owned by [`backend/mail.md`](../backend/mail.md).
@@ -45,11 +45,15 @@ Each Work Item cites the invariants it protects. Most are mechanically checkable
 
 Approved before drafting; **binding, and not reopened by any Work Item.**
 
-- **D1 — Provider-neutral SMTP.** A provider is a host and a credential, never a dependency. **The specific provider is chosen at execution** from the free transactional options, on a **dedicated sending subdomain** so that development traffic cannot damage the root domain's reputation. A local catcher is a host under this rule, not a backend.
+- **D1 — Provider-neutral SMTP.** A provider is a host and a credential, never a dependency — a **transport library is not a provider**, and using one does not breach this. **The specific provider is chosen at execution** from whatever free options deliver over SMTP; a transactional service and a mailbox provider's own relay both qualify, because the mechanism cannot tell them apart. A local catcher is a host under this rule, not a backend.
+
+  **Sender identity follows what exists.** Where the project owns a domain, sending uses a **dedicated subdomain**, so that real sending from development cannot damage the root domain's reputation. Where it owns none, a **verified individual sender** is used instead — the isolation a subdomain buys protects an asset that does not exist, so requiring one would be ceremony rather than protection. The trigger for revisiting is a state condition, not a date: **the project acquiring a domain, or mail needing to reach people other than the team.**
 - **D2 — Real delivery is required in development**, not a catcher only.
 - **D3 — Production refuses a mode that cannot deliver**, stated positively so a future non-delivering backend is refused by construction. `inert` remains available outside production.
 - **D4 — Development credentials are per-developer.** `.env` stays gitignored; `.env.example` carries a placeholder, as `JWT_SECRET` does today.
-- **D5 — The ceiling's alarm is a distinguished, greppable log line plus provider-side alerting.** No logging or monitoring infrastructure is introduced by this effort; `mail.md` states plainly that this is what "alarmed" means here.
+- **D5 — The ceiling's alarm is a distinguished, greppable log line.** No logging or monitoring infrastructure is introduced by this effort, and `mail.md` states plainly that this is what "alarmed" means here — so the document never implies coverage that does not exist.
+
+  **Where the alarm goes beyond that is deferred**, exactly as ADR 0015 defers it: the ADR requires the trip to be operator-visible and alarmed, and lists *where its alarm goes* among the operational tunables it does not decide. The deferral carries a **trigger rather than a date** — it is revisited at **the first environment that sends to people outside the team**, which is when spend and reputation stop being ours alone and an unwatched log line stops being adequate. Until then the ceiling itself is the protection and the dashboard is the view.
 - **D6 — The cap counts attempts, over a rolling window**, and an `unknown` outcome **consumes quota** — the message may have been relayed, and treating ignorance as "did not happen" would hand an attacker free retries.
 - **D7 — Cap storage failure fails closed.** The database was already required to persist the challenge moments earlier, so the cost is near zero, while failing open would remove the control precisely during an incident.
 - **D8 — The cap is a decorator over every backend**, so it is exercised constantly rather than first in production. The verification harness must retain headroom.
@@ -66,11 +70,12 @@ Approved before drafting; **binding, and not reopened by any Work Item.**
 It is satisfied when all of the following hold:
 
 - a provider is chosen from the free options, and **SMTP is available on its free tier** — several offer an HTTP API only, which D1's transport decision cannot use;
-- **domain authentication is available on that free tier**, and the dedicated sending subdomain and its DNS records are verified with the provider;
-- **a message has been observed arriving in an inbox that was not pre-registered with the provider** — a sandbox that delivers only to verified addresses would satisfy a looser wording while proving nothing about real delivery;
-- **provider-side alerting on send volume is configured**, which is the half of D5's alarm that lives outside the codebase and is owned here rather than by any Work Item.
+- **a sender identity the provider will actually send as is verified** — domain authentication and a dedicated subdomain where the project owns a domain, a verified individual sender where it does not (**D1**). A provider will not send from an unverified identity at all, so this gates sending regardless of which form it takes;
+- **a message has been observed arriving in an inbox that was not pre-registered with the provider** — a sandbox that delivers only to verified addresses would satisfy a looser wording while proving nothing about real delivery.
 
-Until all four hold, WI-1 cannot meet its own delivery criterion, and opening it would mean building against an unproven assumption.
+Until all three hold, WI-1 cannot meet its own delivery criterion, and opening it would mean building against an unproven assumption.
+
+Each condition gates **delivery capability** — whether we can send at all, authenticated, to someone we have not pre-arranged. Monitoring is not among them: it gates nothing about whether a message arrives, and ADR 0015 already treats where an alarm goes as operational.
 
 It is stated as a prerequisite rather than a risk for two reasons: it has the longest lead time in the effort and depends on nobody here, so it can start immediately and in parallel; and the provider's configuration shape is what the transport's settings are derived from, so committing to those settings before it is settled would be guessing.
 
@@ -113,7 +118,7 @@ It is stated as a prerequisite rather than a risk for two reasons: it has the lo
 - **Dependencies:** the **external prerequisite (§3.3)** — the provider is selected and proven able to deliver **before this Work Item opens**.
 - **Boundary validated:** that a real transport fits behind the port **without changing the message shape or the `send` signature** — the claim WI-7A of the prior effort could only assert with a second non-sending backend. The **result type does change**, by ADR 0015 Decision 9; that is the decision being implemented, not a boundary failure.
 - **Invariants protected:** **I1**, **I2**, **I4**, **I5**, **I8**, **I9**.
-- **Verification:** unit tests over an injected fake transport covering accepted, refused and timed-out sends · the guardrail test passes **unmodified** · a real message reaches a real inbox from a development configuration, reported as executed by hand · no test selects `smtp`.
+- **Verification:** unit tests over an injected fake transport covering accepted, refused and timed-out sends · the guardrail test passes **unmodified** · no test selects `smtp` · and **the effort's defining outcome, exercisable as soon as this Work Item lands**: a verification code requested for a real personal address, **received in that inbox**, submitted, and accepted — the capability already provides every other step, so this is the first moment the whole flow can run. Reported as executed by hand, never inferred from a relay's acceptance.
 - **DoD:** the three outcomes are each produced by a real path; **the message shape and the `send` signature are unchanged**; typecheck + unit green; the harness reflects the renamed field.
 - **Stop-risks:** if the transport **cannot** fit without changing the **message shape or the `send` signature** → **stop**; that is the wrong-abstraction risk ADR 0015 assumed away, and reshaping the port is an architectural decision, not a detail. A change confined to the **result** is not that risk.
 
@@ -196,9 +201,13 @@ Two things hold whatever the identifiers turn out to be. **Credentials carry a p
 
 ## 7 · Risks & mitigations
 
-- **A free tier's own limit can silently become the real ceiling.** If the provider refuses before our ceiling does, *its* refusal is not alarmed by us and the circuit breaker is defeated without anyone noticing. **Mitigation:** the ceiling is set **below** the provider's published limit, so our breaker trips first and visibly. WI-5 settles the value against whatever §3.3 selected.
+- **A free tier's own limit can silently become the real ceiling.** If the provider is reached before our ceiling is, its behaviour governs instead of ours — and a provider that **queues rather than refuses** is worse than one that refuses: the relay accepts the message, so the port reports it accepted, and it arrives late or never. For a code with a short expiry, "late" is a failed delivery reported as a success, and the three-state result cannot detect it.
+
+  **Mitigation — and this is the effort's primary protection, not one of two:** the ceiling is set **below** the provider's published limit, so our breaker trips first, visibly, and the provider's own limit is never reached. WI-5 settles the value against whatever §3.3 selected. Provider-side monitoring would only report a failure this prevents; per **D5** it is deferred, not relied upon.
 - **The provider and its domain verification are external and slow.** Owned by the prerequisite in **§3.3**, which gates WI-1 rather than being managed inside it.
-- **Real sending from development consumes real reputation and spend.** **Mitigation:** the dedicated subdomain isolates reputation; the ceiling binds every environment, not production alone.
+- **Real sending from development consumes real reputation and spend.** **Mitigation:** the ceiling binds every environment, not production alone — and where a domain exists, a dedicated subdomain isolates its reputation (**D1**).
+
+- **Sending without domain authentication weakens deliverability.** An unauthenticated sender fails alignment, so mail can be spam-foldered — most likely before the address has any interaction history. **Accepted knowingly** while the recipient is the team checking its own inbox, where a message in a spam folder is still a message received. It stops being acceptable at **D1's trigger**: a domain arriving, or mail needing to reach people other than the team. Avoid a `From` domain publishing a strict DMARC policy, which converts weak deliverability into outright rejection.
 - **A test could email a real person.** **Mitigation:** **I8** — unit tests inject a fake transport, integration runs never select `smtp`, and the harness stays on `capture`.
 - **The production rule guards an environment that does not exist.** There is no deploy pipeline; its first real exercise is the first deployment. **Mitigation:** cover it at the resolver's edges in unit tests, which is where the rule actually lives.
 - **CI has no database**, so the cap's concurrency behaviour is provable only locally — the posture Channel Verification already accepted. **Mitigation:** unit-cover everything a fake can prove; run integration locally before each PR and say which gate was run.
@@ -208,11 +217,12 @@ Two things hold whatever the identifiers turn out to be. **Credentials carry a p
 ## 8 · Completion criteria
 
 - All six Work Items merged, each green under the real CI gate (typecheck + unit; integration verified locally).
-- A real message **reaches a real inbox from a development configuration**, and the fact is reported as executed rather than assumed.
+- **The defining outcome — the whole flow works from a development configuration, end to end.** A person requests verification for their own real personal address, **the email arrives in that inbox**, they read the code from it, submit it, and the endpoint becomes `proven`. Not SMTP acceptance, not a relay's `250`, not a captured file: **a code received by a human and used successfully.** Reported as executed rather than assumed, and it is what "Mail Delivery is complete" means.
 - Production **refuses to boot** on a mode that cannot deliver; development is unchanged.
 - A send reports three outcomes, **each with a producer**; the wire reports what is known and asserts no delivery.
-- Recipient cap and ceiling enforced **over every backend**, fail-closed, with the ceiling's trip distinguishable in diagnostics and carrying the in-process half of **D5**'s alarm; the provider-side half is the prerequisite's (**§3.3**).
+- Recipient cap and ceiling enforced **over every backend**, fail-closed, with the ceiling's trip distinguishable in diagnostics and carrying **D5**'s alarm; the ceiling sits below the provider's own limit, so ours governs.
 - Retention cannot be set below the longest cap window (**I10**).
+- **Moving to a public environment is configuration, not redesign.** A different provider is a different host and credential; a different environment is a different set of values. Neither requires changing the port, the backends, the controls, Channel Verification, or any consumer — which is what **D1** and **I1** exist to guarantee, and what this criterion asks someone to confirm rather than assume.
 - Cap state references no consumer, and is pruned on its own schedule.
 - `shared/mail/` no longer exists; no module under `shared/` owns a model.
 - `mail.md`, `api-contract.md`, `data-model.md` co-versioned, and `security.md` cedes the cap by name.
