@@ -61,6 +61,26 @@ const envSchema = z
     // Bounds the whole attempt. Without it a hung relay holds an HTTP request
     // open and delays shutdown, since nothing else caps it.
     MAIL_SEND_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
+    // The abuse controls the mail mechanism owns (ADR 0015 Decision 4).
+    //
+    // The recipient cap answers inbox flooding and is enforced exactly. The
+    // ceiling answers spend and sender reputation, which are measured against
+    // the sender and cannot be bounded by a recipient key.
+    MAIL_RECIPIENT_CAP: z.coerce.number().int().positive().default(20),
+    MAIL_RECIPIENT_CAP_WINDOW_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(24 * 60 * 60 * 1000),
+    // Deliberately below a free tier's own daily allowance, so our breaker
+    // trips first and visibly. A provider that refuses before we do governs
+    // instead of us, and its refusal is not one we can alarm on.
+    MAIL_OUTBOUND_CEILING: z.coerce.number().int().positive().default(200),
+    MAIL_OUTBOUND_CEILING_WINDOW_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(24 * 60 * 60 * 1000),
     // Crockford base32 — I/L/O/U are absent because the code is typed by hand.
     // 12 characters over 32 symbols is 60 bits, which keeps a fast digest out of
     // offline brute-force range. Configuration, not platform logic.
