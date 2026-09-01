@@ -6,6 +6,6 @@ import styles from "./AuthBackdrop.module.css";
 export const AuthBackdrop = () => (
   <div className={styles.root} aria-hidden="true">
     <div className={styles.light} />
-    <BrandMark size={1000} className={styles.watermark} />
+    <BrandMark size={1250} className={styles.watermark} />
   </div>
 );
