@@ -8,6 +8,7 @@ export const AuthBackdrop = () => (
   <div className={styles.root} aria-hidden="true">
     <FeedTexture />
     <div className={styles.light} />
-    <BrandMark size={1250} className={styles.watermark} />
+    {/* Sized by the stylesheet, beside the light it has to move with. */}
+    <BrandMark className={styles.watermark} />
   </div>
 );

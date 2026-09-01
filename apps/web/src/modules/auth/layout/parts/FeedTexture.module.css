@@ -8,10 +8,9 @@
 .card {
   position: absolute;
   padding: var(--space-4);
-  border: var(--border-width-thin) solid
-    color-mix(in srgb, var(--role-fill-primary) 30%, var(--surface-default));
+  border: var(--border-width-thin) solid var(--border-strong);
   border-radius: var(--border-radius-xl);
-  background-color: color-mix(in srgb, var(--role-fill-primary) 18%, var(--surface-default));
+  background-color: var(--surface-subtle);
 }
 
 .head {

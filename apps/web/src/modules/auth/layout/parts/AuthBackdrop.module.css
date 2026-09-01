@@ -20,11 +20,8 @@
   inline-size: 62rem;
   block-size: 62rem;
   border-radius: var(--border-radius-full);
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--role-fill-primary) 45%, transparent) 0%,
-    transparent 66%
-  );
+  background: radial-gradient(circle, var(--role-fill-primary) 0%, transparent 66%);
+  opacity: 0.4;
   filter: blur(4.5rem);
 }
 
@@ -34,7 +31,10 @@
   position: absolute;
   inset-block-start: -9.5rem;
   inset-inline-start: calc(var(--auth-page-inset) - 23.75rem);
-  color: color-mix(in srgb, var(--role-fill-primary) 14%, transparent);
+  inline-size: 62rem;
+  block-size: 62rem;
+  color: var(--role-fill-primary);
+  opacity: 0.14;
   transform: rotate(-12deg);
 }
 

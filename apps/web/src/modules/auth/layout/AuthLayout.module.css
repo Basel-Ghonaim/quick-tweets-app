@@ -7,6 +7,7 @@
      so if the content centres and the light does not, the two come apart. */
   --auth-page-inset: max(0px, calc((100vw - var(--auth-page-max)) / 2));
 
+  display: flex;
   min-block-size: 100vh;
 }
 
@@ -17,7 +18,7 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  min-block-size: 100vh;
+  flex: 1;
   max-inline-size: var(--auth-page-max);
   margin-inline: auto;
   padding: var(--space-8) var(--space-6) var(--space-12);
