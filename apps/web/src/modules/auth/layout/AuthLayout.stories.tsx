@@ -50,27 +50,26 @@ const store = configureStore({ reducer: { auth: authReducer } });
 
 const at = (entry: string) => (Story: () => React.ReactElement) => (
   <Provider store={store}>
-  <ThemeProvider>
-  <MemoryRouter initialEntries={[entry]}>
-    <Routes>
-      <Route
-        path="/auth"
-        element={
-          <AuthDesignProvider showToggle={false}>
-            <AuthShell />
-          </AuthDesignProvider>
-        }
-      >
-        <Route path="signin" element={<Body />} />
-        <Route path="signup" element={<Body />} />
-      </Route>
-      <Route path="*" element={<Story />} />
-    </Routes>
-  </MemoryRouter>
-  </ThemeProvider>
+    <ThemeProvider>
+      <MemoryRouter initialEntries={[entry]}>
+        <Routes>
+          <Route
+            path="/auth"
+            element={
+              <AuthDesignProvider showToggle={false}>
+                <AuthShell />
+              </AuthDesignProvider>
+            }
+          >
+            <Route path="signin" element={<Body />} />
+            <Route path="signup" element={<Body />} />
+          </Route>
+          <Route path="*" element={<Story />} />
+        </Routes>
+      </MemoryRouter>
+    </ThemeProvider>
   </Provider>
 );
-
 export const TheShellHoldsStill: Story = {
   decorators: [at("/auth/signin?design=proposed")],
   play: async ({ canvasElement }) => {
@@ -128,6 +127,12 @@ export const TheThemeIsSwitchableFromTheShell: Story = {
 
     // The name did not move with the state.
     await expect(canvas.getByRole("button", { name: AUTH_COPY.brand.themeToggle })).toBeInTheDocument();
+
+    // The theme is on the document, so leaving it flipped would reach the next story.
+    await userEvent.click(toggle);
+    await waitFor(() =>
+      expect(document.documentElement.getAttribute("data-theme")).toBe(before),
+    );
   },
 };
 
