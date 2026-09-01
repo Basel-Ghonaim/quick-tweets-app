@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the **outbound mail mechanism's design and rationale** — the port and its contract, the backends that implement it, how one is selected, and how a consumer composes it. It owns the *how* and the *why*.
 > It does **not** own: the **boundary decision** — that delivery is a separately-owned mechanism a consumer composes and never absorbs — which is [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) Decision 7's, and the operational posture recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md); the **content** of any message, which belongs to the consumer that composes it; or any consumer's own behaviour — for the only consumer today, [Channel Verification](channel-verification.md).
 > **Scope:** The server-side mechanism at `apps/api/src/modules/mail-delivery/`. **This document describes what exists today.** One backend delivers; the other two deliberately withhold delivery and are what a developer or the verification harness runs against.
-> **Version:** 1.3
-> **Last Updated:** 2026-08-31
+> **Version:** 1.4
+> **Last Updated:** 2026-09-01
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -58,6 +58,24 @@ The mode is **resolved once, at import**, not per send — which is what makes a
 
 **Selecting SMTP without its settings is refused the same way.** The host, credentials and sender identity are validated as a group when — and only when — that mode is chosen, so the server does not start rather than failing at the first send. The non-delivering backends stay credential-free, which is why the requirement is conditional rather than blanket.
 
+## The abuse controls
+
+Two controls, because the threat has two halves. A **recipient cap** answers one inbox being flooded. It cannot answer **spend and sender reputation**, which are measured against the sender — one origin spraying many addresses passes a per-recipient cap untouched — so a **global outbound ceiling** counts everything, keyed on nothing.
+
+**Both wrap every backend.** The controls decorate whatever the registry returns, so the same path runs under the non-delivering backends too. A control that only guarded the delivering one would meet production for the first time, and a backend added later would have to remember to opt in.
+
+**The recipient cap is exact; the ceiling is not, and that is deliberate.** A recipient's slot is reserved under a per-recipient advisory lock: counting and then inserting lets two simultaneous sends past a cap of one, because neither transaction sees the other's uncommitted row. The ceiling takes no lock — it is a **circuit breaker provisioned with headroom**, and headroom is what absorbs the slippage a lock would otherwise buy at the price of serialising every send in the system. Contention stays where it belongs: two sends to one inbox wait on each other, two sends to different inboxes never meet.
+
+**An attempt is recorded before it is sent**, carrying `unknown` — the truth at that moment rather than a placeholder — and corrected once the send answers. If the process dies in between, the row stays accurate and still consumes quota, which is what an unknown outcome is supposed to do.
+
+**A control that cannot be enforced refuses.** If the count cannot be read the send does not happen: the caller reached that point only because a database was working moments earlier, so refusing costs almost nothing, while proceeding would remove the control precisely during the incident that made it unreadable.
+
+**What the alarm is.** A tripped ceiling emits one distinguished, greppable line, and that is the whole of the in-process alarm — there is no logging or monitoring infrastructure here and this document does not imply otherwise. Where an alarm goes beyond that is deferred, as [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md) defers it.
+
+**A refusal from a control is a refusal, not an unknown** — nothing was handed to a transport. It is distinguishable from a transport failure **in diagnostics only**: on the wire both are the same refusal, because telling one account that a global ceiling is exhausted would leak the system's state to it.
+
+**What is not partitioned, and why.** One cap covers every consumer. Splitting it by purpose is a per-case configuration surface, which [Engineering Principles §3](../development/engineering-principles.md) defers until a second instance shapes it. The residual is real and stated: with one shared cap a high-volume consumer can exhaust a quota a lower-volume one needs for the same address. A **per-actor** cap is a consumer's, not this mechanism's — delivery has no actor to key on.
+
 ## Composition
 
 Consumers take an adapter from the mechanism's published surface and never construct a backend directly, which is what keeps a change of backend invisible above this line. A small registry maps each mode to its constructor, so adding a backend is one entry rather than a branch, and the resolved mode supplies the default.
@@ -71,7 +89,7 @@ Stated because their absence is a design position, not an omission:
 - **It composes no message.** Subject and body arrive from the consumer, which owns its own wording, formatting and language. There is no template engine and no shared message vocabulary.
 - **It does not retry, queue, or deduplicate.** A send is attempted once, synchronously, and its outcome is returned.
 - **It handles no bounce, complaint or suppression.** Nothing reports back, because nothing is delivered.
-- **It applies no rate limit or send quota.** The controls that exist today live with the consumer — for Channel Verification, a per-address cooldown described in [its own document](channel-verification.md) — and at the HTTP edge in [Backend Security](security.md).
+- **It enforces no gating policy.** Whether an action *requires* something of a recipient is the consumer's decision; the controls above bound volume and nothing else. HTTP-edge rate limiting remains [Backend Security](security.md)'s.
 
 ## Responsibility boundary
 
