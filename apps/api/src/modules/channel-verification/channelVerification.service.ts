@@ -14,7 +14,7 @@ import {
   runInTransaction as defaultRunInTransaction,
   type RunInTransaction,
 } from "../../shared/database/index.js";
-import { createMailAdapter, type MailAdapter } from "../../shared/mail/index.js";
+import { createMailAdapter, type MailAdapter } from "../mail-delivery/index.js";
 import { isPrismaError } from "../../shared/utils/index.js";
 import {
   challengeCode,
