@@ -90,16 +90,24 @@ describe("an unrecognised value is warned about, never silent", () => {
 });
 
 describe("createMailAdapter", () => {
-  it("returns a usable adapter for the resolved mode", async () => {
+  it("returns an adapter for the resolved mode", () => {
+    expect(createMailAdapter("inert").send).toBeTypeOf("function");
+  });
+
+  it("puts every backend behind the abuse controls, even one that sends nothing", async () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
 
+    // No database is reachable here, so the controls cannot be enforced and
+    // fail closed. That refusal is the evidence: it can only come from the
+    // decorator, so the inert backend — which needs no infrastructure at all —
+    // is demonstrably behind it rather than merely declared to be.
     await expect(
       createMailAdapter("inert").send({
         to: "recipient@example.test",
         subject: "Subject line",
         body: "Body text",
       }),
-    ).resolves.toEqual({ outcome: "accepted" });
+    ).resolves.toMatchObject({ outcome: "refused" });
 
     spy.mockRestore();
   });
