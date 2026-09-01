@@ -20,6 +20,26 @@ export const AUTH_COPY = {
     themeToggle: "Dark mode",
   },
 
+  journey: {
+    steps: {
+      account: "Account",
+      profile: "Profile",
+      verify: "Verify",
+    },
+
+    /* Each state is said as well as coloured: a reader who cannot tell the
+       colours apart still learns where they are. */
+    states: {
+      done: "Done",
+      current: "In progress",
+      optional: "Optional",
+      skipped: "Skipped",
+    },
+
+    /* The list names what it is, since the steps alone do not say it. */
+    label: "Registration progress",
+  },
+
   signIn: {
     title: "Welcome back",
     subtitle: "Sign in to continue to your account",
