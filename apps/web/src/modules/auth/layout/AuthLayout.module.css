@@ -51,8 +51,18 @@
   align-self: center;
 }
 
-/* The form leads once there is only one column. */
-@media (width <= 71.25rem) {
+/*
+ * Two breakpoints, each where this layout stops working rather than where a
+ * device happens to be. The columns need 34rem + 4rem + 31.25rem plus the
+ * page's own inline padding, so they stack below 72rem; the compact set is
+ * where the card can no longer hold its padding and still leave a usable
+ * measure, which is every phone in portrait and no tablet.
+ *
+ * The values are repeated across this module's stylesheets because a custom
+ * property cannot be used in a media query (Finding 0011). A check holds them
+ * in agreement.
+ */
+@media (width <= 72rem) {
   .stage {
     grid-template-columns: minmax(0, 1fr);
     justify-items: center;
@@ -62,5 +72,17 @@
   .stage > :first-child {
     order: 1;
     align-self: start;
+  }
+}
+
+/* The measure the card gives back to its own content. */
+@media (width <= 36rem) {
+  .page {
+    padding: var(--space-6) var(--space-4) var(--space-8);
+  }
+
+  .stage {
+    gap: var(--space-8);
+    padding-block-start: var(--space-8);
   }
 }

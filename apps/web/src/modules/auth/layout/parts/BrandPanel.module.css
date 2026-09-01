@@ -79,3 +79,11 @@
   font: var(--type-body-medium);
   color: var(--text-secondary);
 }
+
+/* On a phone these push the form below the fold, and the form is why the
+   screen exists. */
+@media (width <= 36rem) {
+  .posts {
+    display: none;
+  }
+}

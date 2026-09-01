@@ -61,3 +61,13 @@
   background-color: var(--surface-page);
   opacity: 0.6;
 }
+
+/* Ten 300px cards are almost entirely off-screen at phone widths, so the
+   texture costs paint and reads as nothing. The light and the mark stay —
+   they are the ground's identity rather than its texture. */
+@media (width <= 36rem) {
+  .field,
+  .scrim {
+    display: none;
+  }
+}

@@ -7,3 +7,9 @@
   border-radius: var(--border-radius-xl);
   background-color: var(--surface-default);
 }
+
+@media (width <= 36rem) {
+  .root {
+    padding: var(--space-6);
+  }
+}
