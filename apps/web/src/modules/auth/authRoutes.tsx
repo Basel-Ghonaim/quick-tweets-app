@@ -1,0 +1,30 @@
+import { Navigate, Route } from "react-router-dom";
+import { AuthDesignProvider } from "./_design";
+import { AuthShell } from "./AuthShell";
+
+/**
+ * Everything auth contains.
+ *
+ * The composition root decides whether and where auth is mounted; which screens
+ * exist and what they are called is the feature's. That is what keeps a new
+ * screen from widening the module's public surface and editing `app/`.
+ */
+export const authRoute = (
+  <Route
+    path="auth"
+    element={
+      /*
+       * TEMPORARY — the design-comparison phase's only integration point. One
+       * instance for all of auth, so switching designs re-renders without
+       * remounting. It leaves with `_design/`.
+       */
+      <AuthDesignProvider>
+        <AuthShell />
+      </AuthDesignProvider>
+    }
+  >
+    <Route index element={<Navigate to="signin" replace />} />
+    <Route path="signin" />
+    <Route path="signup" />
+  </Route>
+);
