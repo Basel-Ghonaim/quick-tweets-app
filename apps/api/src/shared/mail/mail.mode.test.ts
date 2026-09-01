@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createMailAdapter } from "./index.js";
-import { resolveMailMode } from "./mail.mode.js";
+import { MailModeError, resolveMailMode } from "./mail.mode.js";
 
 const DEV = "development";
 
@@ -40,13 +40,11 @@ describe("capture is reachable only by an exact opt-in", () => {
     });
   }
 
-  it("is refused in production, warning rather than crashing", () => {
-    const warnings: string[] = [];
-
-    expect(resolveMailMode("capture", "production", (m) => warnings.push(m))).toBe("inert");
-
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain("production");
+  it("is refused in production, which now stops the boot rather than warning", () => {
+    // It writes single-use secrets to disk and cannot deliver, so it fails both
+    // of production's tests. The refusal used to warn and fall back to inert;
+    // falling back is exactly the silent outage the delivery rule removes.
+    expect(() => resolveMailMode("capture", "production", () => {})).toThrow(MailModeError);
   });
 
   it("is never what anything falls back to", () => {
@@ -54,7 +52,8 @@ describe("capture is reachable only by an exact opt-in", () => {
 
     for (const raw of everythingElse) {
       expect(resolveMailMode(raw, DEV, () => {})).not.toBe("capture");
-      expect(resolveMailMode(raw, "production", () => {})).not.toBe("capture");
+      // In production none of these resolve at all — they refuse.
+      expect(() => resolveMailMode(raw, "production", () => {})).toThrow(MailModeError);
     }
   });
 });

@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the **outbound mail mechanism's design and rationale** — the port and its contract, the backends that implement it, how one is selected, and how a consumer composes it. It owns the *how* and the *why*.
 > It does **not** own: the **boundary decision** — that delivery is a separately-owned mechanism a consumer composes and never absorbs — which is [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) Decision 7's, and the operational posture recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md); the **content** of any message, which belongs to the consumer that composes it; or any consumer's own behaviour — for the only consumer today, [Channel Verification](channel-verification.md).
 > **Scope:** The server-side mechanism at `apps/api/src/shared/mail/`. **This document describes what exists today.** One backend delivers; the other two deliberately withhold delivery and are what a developer or the verification harness runs against.
-> **Version:** 1.1
+> **Version:** 1.2
 > **Last Updated:** 2026-08-31
 > **Owner:** Basel Ghonaim
 
@@ -46,19 +46,17 @@ Its destination is a **convention rather than a setting** — one fewer thing to
 
 ## Selecting a backend
 
-Selection reads one environment variable, declared as a permissive string rather than an enumeration so that an unexpected value is handled rather than fatal.
+Selection reads one environment variable, and **the rule differs by environment — deliberately, because the cost of being wrong differs.**
 
-Resolution is **fail-safe, and inert is both the default and the target of every fallback**:
+**Outside production, resolution is fail-safe**: an unrecognised value warns and resolves to inert, so a mistyped setting can neither stop a developer's server nor silently select a live transport. An absent variable is the documented default rather than a mistake, and is not warned about. **Nothing ever falls back *to* capture**, which writes single-use secrets to disk and is reachable only by naming it exactly.
 
-- an unrecognised value **warns and resolves to inert**;
-- **capture asked for in production** is treated exactly as an unrecognised value — it warns and resolves to inert, because capture writes single-use secrets to disk and reaching it should take a deliberate, exact opt-in outside production;
-- **nothing ever falls back *to* capture.**
+**In production, a mode must be able to deliver or the process does not start.** The requirement is stated positively — *can this mode deliver?* — so a future non-delivering backend is refused without anyone remembering to list it. Capture is refused there as a consequence of that rule rather than as a special case, and an unrecognised value refuses rather than falling back.
 
-The mode is **resolved once, at import**, not per send, so a misconfiguration warns where an operator sees it — at startup — rather than on every message.
+**Why the two environments differ.** The fail-safe rule was sound while nothing could send: a fallback that delivers nothing costs nothing. It stopped being sound the moment a backend could — because inert does not merely fail, it **reports success**. A misconfigured deployment would send nothing while telling every caller it had, leaving one warning line as the only trace. A fail-safe default is safe only until it manufactures a false claim, and that is the line production now sits on the other side of ([ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md) Decision 3).
 
-**Selecting SMTP without its settings is refused, not warned about.** The host, credentials and sender identity are validated as a group when — and only when — that mode is chosen, so the server does not start rather than failing at the first send. The non-delivering backends stay credential-free, which is why the requirement is conditional rather than blanket.
+The mode is **resolved once, at import**, not per send — which is what makes a production refusal a failure to boot rather than a failure at the first message.
 
-> The rule that an unrecognised mail setting must not take the server down is a deliberate trade recorded in the code. It holds while no backend delivers: a fallback that sends nothing costs nothing. [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md) decides what must change about it once a backend can actually deliver.
+**Selecting SMTP without its settings is refused the same way.** The host, credentials and sender identity are validated as a group when — and only when — that mode is chosen, so the server does not start rather than failing at the first send. The non-delivering backends stay credential-free, which is why the requirement is conditional rather than blanket.
 
 ## Composition
 
