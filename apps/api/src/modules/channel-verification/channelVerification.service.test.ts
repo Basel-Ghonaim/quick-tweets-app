@@ -17,7 +17,7 @@ import type {
   IChannelVerificationRepository,
 
 } from "./channelVerification.types.js";
-import type { MailAdapter } from "../../shared/mail/index.js";
+import type { MailAdapter } from "../mail-delivery/index.js";
 
 const FORMAT: ChallengeCodeFormat = { alphabet: "0123456789ABCDEF", length: 8 };
 const TTL = 15 * 60 * 1000;

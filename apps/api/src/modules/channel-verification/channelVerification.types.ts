@@ -6,7 +6,7 @@
  */
 
 import type { DbClient } from "../../shared/database/index.js";
-import type { MailOutcome } from "../../shared/mail/index.js";
+import type { MailOutcome } from "../mail-delivery/index.js";
 
 declare const brand: unique symbol;
 

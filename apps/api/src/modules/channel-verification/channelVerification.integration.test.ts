@@ -13,7 +13,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { prisma } from "../../shared/database/index.js";
-import type { MailAdapter, MailMessage } from "../../shared/mail/index.js";
+import type { MailAdapter, MailMessage } from "../mail-delivery/index.js";
 import { createUserService } from "../users/user.service.js";
 import { createChannelVerificationService } from "./channelVerification.service.js";
 import { createChannelVerificationSweepJob } from "./channelVerification.sweep.job.js";
