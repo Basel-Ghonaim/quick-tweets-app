@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the backend's **security mechanisms and the reasoning behind them** — authentication and the token model, password handling, the auth cookie, rate limiting, and HTTP hardening. It owns the *how* and the *why*. It does **not** own the wire contract (the auth endpoints, the rate-limit figures, and the auth modes are the [API contract](../api/api-contract.md)'s), the security *principles* it applies ([Engineering Principles §7](../development/engineering-principles.md)), or the **frontend** side of the token model (the in-memory access token and the 401-refresh flow belong to the [frontend API client](../frontend/api-client.md)).
 > **Scope:** Server-side security mechanisms shared across the backend. Per-feature authorization rules live in the feature documents; the request lifecycle in the [system overview](../architecture/system-overview.md).
-> **Version:** 1.1
-> **Last Updated:** 2026-08-31
+> **Version:** 1.2
+> **Last Updated:** 2026-09-01
 > **Owner:** Basel Ghonaim
 
 ## Authentication: the token model
@@ -66,6 +66,8 @@ Five per-IP rate limiters protect different surfaces over a fixed window, each t
 - **verification confirm** — sized for people mistyping rather than for attackers, since a single-use code of that length is out of brute-force reach whatever this limiter says.
 
 The exact windows, limits, and `429` messages are owned by the [API contract](../api/api-contract.md). The app **trusts one proxy hop** so the limiter keys on the real client IP behind a reverse proxy — otherwise everyone behind the proxy would share a single counter.
+
+**Outbound send limits are not these limiters', and are not this document's.** The per-recipient cap and the global outbound ceiling the mail mechanism applies to messages it sends are a **Mail Delivery mechanism owned by [`backend/mail.md`](mail.md)** — the same cession this document makes for Media's read-side posture. They are a different kind of control from the ones here: these bound what arrives at the edge, per IP, in memory; those bound what leaves, per recipient and in total, durably.
 
 ## HTTP hardening
 
