@@ -26,6 +26,7 @@ import { createPostgresJobLock, createScheduler } from "./shared/scheduler/index
 import { createRefreshTokenCleanupJob } from "./modules/auth/refreshTokenCleanup.job.js";
 import { createMediaReclamationJob } from "./modules/media/reclamation/reclamation.job.js";
 import { createChannelVerificationSweepJob } from "./modules/channel-verification/channelVerification.sweep.job.js";
+import { createMailSendAttemptSweepJob } from "./modules/mail-delivery/mailSendAttempt.sweep.job.js";
 
 // ─── Startup ─────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ const start = async () => {
   scheduler.register(createRefreshTokenCleanupJob());
   scheduler.register(createMediaReclamationJob());
   scheduler.register(createChannelVerificationSweepJob());
+  scheduler.register(createMailSendAttemptSweepJob());
   scheduler.start();
   console.log("   Background scheduler started");
 
