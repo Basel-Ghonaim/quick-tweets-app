@@ -1,0 +1,10 @@
+.root {
+  inline-size: 100%;
+  max-inline-size: var(--auth-card-measure);
+  padding: var(--space-8) var(--space-10) var(--space-10);
+  border: var(--border-width-thin) solid var(--border-default);
+  /* `lg` or `xl`, per the design direction's radius rule. `xl` reads against the
+     components' `md` without the container disappearing into them. */
+  border-radius: var(--border-radius-xl);
+  background-color: var(--surface-default);
+}

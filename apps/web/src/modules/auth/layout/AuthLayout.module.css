@@ -1,0 +1,73 @@
+.root {
+  --auth-page-max: 85rem;
+  --auth-card-measure: 31.25rem;
+
+  /* How far the content sits from the viewport edge once the page reaches its
+     measure. The backdrop reads it too: the light is lit behind the headline,
+     so if the content centres and the light does not, the two come apart. */
+  --auth-page-inset: max(0px, calc((100vw - var(--auth-page-max)) / 2));
+
+  min-block-size: 100vh;
+}
+
+/*
+ * One measure for the page. Without it every pixel a wider viewport adds lands
+ * between the two columns, so the composition pulls apart instead of centring.
+ * The value is this page's own geometry — the panel, the gutter and the card
+ * added together — and no other surface must agree with it.
+ */
+.page {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100vh;
+  max-inline-size: var(--auth-page-max);
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-6) var(--space-12);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lockup {
+  display: inline-flex;
+  color: var(--role-on-surface-primary);
+}
+
+/*
+ * The panel and the card. The card hangs from the block start while the panel
+ * centres, so a tall screen and a short one begin at the same line.
+ */
+/* The card's column is a track rather than `auto`: an auto track sizes to its
+   content, and the card's content arrives through the outlet, so an empty one
+   collapsed the card to its own padding. */
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--auth-card-measure));
+  align-items: start;
+  gap: var(--space-16);
+  flex: 1;
+  padding-block-start: var(--space-12);
+}
+
+.stage > :first-child {
+  align-self: center;
+}
+
+/* One column below the measure the two columns need, and the form leads. */
+@media (width <= 71.25rem) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: var(--space-12);
+  }
+
+  .stage > :first-child {
+    order: 1;
+    align-self: start;
+  }
+}

@@ -1,0 +1,44 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--surface-page);
+}
+
+/*
+ * The ring light. Feature-local values, per the direction's rule that a page's
+ * brand treatment is not design language: the radius and the falloff are this
+ * composition's, and no second surface must agree with them.
+ *
+ * `--role-fill-primary-subtle` is the brand at a tenth, which is the one
+ * relationship the vocabulary does name — so the colour is bound and only the
+ * geometry is local.
+ */
+.light {
+  position: absolute;
+  inset-block-start: -20%;
+  inset-inline-start: -25%;
+  inline-size: 90vw;
+  block-size: 90vw;
+  border-radius: var(--border-radius-full);
+  background: radial-gradient(
+    circle,
+    var(--role-fill-primary-subtle) 0%,
+    transparent 70%
+  );
+}
+
+/*
+ * The mark, enormous and cropped by the inline edge, so it reads as the source
+ * of the light rather than as a decoration placed on top of it. The opacity is
+ * local for the same reason the geometry is.
+ */
+.watermark {
+  position: absolute;
+  inset-block-start: -10%;
+  inset-inline-start: -22%;
+  color: var(--role-fill-primary-subtle);
+  opacity: 0.6;
+}
