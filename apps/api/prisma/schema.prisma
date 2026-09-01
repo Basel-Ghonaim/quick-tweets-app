@@ -392,3 +392,33 @@ model ChannelVerificationChallenge {
   @@index([expiresAt])
   @@map("channel_verification_challenges")
 }
+
+// ─── MailSendAttempt ─────────────────────────────────────────────────────────
+// One outbound send attempt, recorded by the mail mechanism for its own abuse
+// controls (ADR 0015 Decision 4).
+//
+// It references no consumer and no consumer's rows. That is the point: deriving
+// a security control from a consumer's data would let that consumer's retention
+// setting silently weaken it.
+//
+// Per-event rather than a counter because the window is rolling, and a bucketed
+// count could only approximate one. The pruning job is what keeps the rows
+// bounded.
+model MailSendAttempt {
+  id Int @id @default(autoincrement())
+  // A digest of the lowercased recipient, never the address. The cap only ever
+  // asks whether two attempts share a recipient, so the address is never read
+  // back — and this table would otherwise hold every recipient ever mailed.
+  recipientKey String @map("recipient_key")
+  // Diagnostic only, and never read for a cap decision: every attempt counts
+  // regardless of how it turned out. Without it a tripped ceiling cannot be
+  // explained after the fact.
+  outcome   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // The per-recipient window query.
+  @@index([recipientKey, createdAt])
+  // The global ceiling's window query, and the pruning job's cutoff.
+  @@index([createdAt])
+  @@map("mail_send_attempts")
+}

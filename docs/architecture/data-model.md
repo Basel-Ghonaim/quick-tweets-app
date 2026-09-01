@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the data model's **relationship, cascade, and indexing rationale** — the *why* behind the schema. The field-level truth (types, defaults, column maps) is owned by [`schema.prisma`](../../apps/api/prisma/schema.prisma) and referenced here, never restated.
 > **Scope:** Why the entities relate as they do, how deletes propagate, and which indexes exist and what they serve. It is not a field listing.
-> **Version:** 1.1
-> **Last Updated:** 2026-08-14
+> **Version:** 1.2
+> **Last Updated:** 2026-09-01
 > **Owner:** Basel Ghonaim
 
 ## Overview
@@ -21,6 +21,7 @@ The domain is a small social graph: users author tweets, tweets gather comments 
 - A **refresh token** belongs to a user — server-side session state for authentication.
 - A **username alias** belongs to a user and records a **former handle** they renamed away from. It is **reserved indefinitely** (it never expires or releases), so historical username locators keep resolving to the current account and the freed handle can never be re-registered by anyone else. One shared resolver treats an alias as the fallback when a handle is not a current username.
 - The **Media** entities are a platform subsystem, not domain content: a **`MediaObject`** is the registry record for one stored file (identity, storage detail, status, and its **uploader** — an owning `User`, `NOT NULL`); a **`MediaReference`** is Media's own record that *something* references an object; **`TweetMedia`** is the tweets-domain **ordered** association to media; and **`MediaReclamationAudit`** / **`MediaQuarantine`** are the reclamation collector's append-only trail and its divergence-review queue. Feature tables hold only a **bare numeric reference** to a `MediaObject` (`User.avatar_media_id`, `Comment.media_id`, `TweetMedia.media_id`), never storage detail; the subsystem's mechanisms are owned by [`backend/media.md`](../backend/media.md).
+- A **`MailSendAttempt`** is the mail mechanism's record of one outbound send, kept for its own abuse controls. It is the only table here with **no relation to anything** — deliberately: a control derived from a consumer's rows would be weakened by that consumer's retention settings, which [ADR 0015](decisions/0015-mail-delivery-boundary-and-abuse-control.md) forbids. It stores a **digest** of the recipient rather than the address, because the controls only ask whether two attempts share a recipient; the mechanism is owned by [`backend/mail.md`](../backend/mail.md).
 
 ## Cascade behaviour
 
@@ -33,6 +34,8 @@ The rationale: the model has no meaningful orphan — a comment without its twee
 
 **Media relationships are the deliberate exception.** A feature's link to a `MediaObject` is a *reference to an object another module owns*, not owned data, so those foreign keys use **`onDelete: Restrict`**, not Cascade: `tweet_media`, and a media-carrying `comment`, refuse to vanish silently, and Media's own `media_references` / `media_quarantine` refuse to drop an object that is still referenced or under review. **Media's own `MediaObject.uploader` foreign key (`uploader_id`, `NOT NULL`) is likewise `onDelete: Restrict`:** a user cannot be deleted while they own media objects. The account-deletion path is currently **dormant** (no route); whenever it is implemented it must explicitly reconcile a user's owned media — reassign or reclaim — before removing the user, since the database refuses a silent cascade. This records the current constraint only and implies no new deletion semantics. Deleting a **tweet** instead **ends** its media references (through the coordinated application use-case that removes the comments first), and **Media reclaims** any now-unreferenced object from its own registry state — an object is never deleted by a database cascade. The reclamation lifecycle (tombstone retention, quarantine-on-divergence, report-vs-destructive) is owned by [`backend/media.md`](../backend/media.md); field-level truth by [`schema.prisma`](../../apps/api/prisma/schema.prisma).
 
+**`MailSendAttempt` cascades from nothing**, because it references nothing. Deleting an account leaves its attempts in place until they age out — they are the mechanism's own count, not the account's data, and a control that could be reset by deleting a row would not be a control.
+
 ## Indexing
 
 Indexes exist to serve the product's hot read paths; each maps to a query the application actually runs:
@@ -43,6 +46,7 @@ Indexes exist to serve the product's hot read paths; each maps to a query the ap
 - **Follows** carry a **unique (follower, followed)** constraint — you cannot follow someone twice — and are indexed in **both directions**: by follower ("who do I follow", which drives the feed) and by followed ("who follows me", which drives follower counts).
 - **Usernames** are unique **across two tables**: a handle is taken if it is a live `users.username` **or** a reserved `username_aliases.username`. Each table enforces its own `@unique`, and the application checks both (through the shared resolver) before a rename or a registration; the two per-table uniques are authoritative, so a duplicate racing past the check surfaces as a safe `409`, never a corrupt state. `username_aliases` is additionally indexed by `user_id` (a user's former-handle list); the `username` uniques already index the lookup the resolver runs.
 - **Media** carries the constraints attach and reclamation rely on: `media_objects` is uniquely keyed by `token` and by `storage_key` (the public handle and the storage-key↔object mapping); `media_references` is **unique `(media_id, referrer)`** so a repeated begin-signal is idempotent and an end is exact; `tweet_media` is unique on `(tweet_id, position)` and `(tweet_id, media_id)` (no two objects share a slot, none is attached twice); and the reclamation tables index `media_reclamation_audit(run_at)` and `media_quarantine(resolved_at)` — the soak's time-ordered trail and the open-divergence scan. There is deliberately **no index on `tweet_media(media_id)`**: the only query it would serve is "which tweets reference this object", the feature-schema scan reclamation is forbidden to run.
+- **Mail send attempts** carry the two ranges their windows scan: `(recipient_key, created_at)` for the per-recipient window, and `(created_at)` for the global one — which is the same question with the recipient dropped — and for the pruning cutoff, which ranges over creation time alone. There is no unique constraint: repetition is precisely what is being counted.
 
 Columns without their own index are either already unique (for example `username` and `email`, whose uniqueness already provides an index) or are not on a hot read path. The broader rules — bounded queries, avoiding N+1 — are owned by [Engineering Principles §9](../development/engineering-principles.md).
 
