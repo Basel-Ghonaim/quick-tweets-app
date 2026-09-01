@@ -1,0 +1,63 @@
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--surface-page);
+}
+
+/*
+ * The light is anchored to the content measure rather than the viewport,
+ * because it belongs behind the headline and the headline stops moving once
+ * the page reaches its measure. Anchored to the viewport the two come apart on
+ * a wide screen. Its geometry is feature-local; only the colour is bound.
+ */
+.light {
+  position: absolute;
+  inset-block-start: -10%;
+  inset-inline-start: calc(var(--auth-page-inset) - 21rem);
+  inline-size: 70rem;
+  block-size: 70rem;
+  border-radius: var(--border-radius-full);
+  background: radial-gradient(circle, var(--role-fill-primary) 0%, transparent 66%);
+  opacity: 0.4;
+  filter: blur(4.5rem);
+}
+
+/* Rotated and cropped by the inline edge so it reads as a mark lit from within
+   rather than a shape dropped on the ground. */
+.watermark {
+  position: absolute;
+  inset-block-start: -9.5rem;
+  inset-inline-start: calc(var(--auth-page-inset) - 23.75rem);
+  inline-size: 70rem;
+  block-size: 70rem;
+  color: var(--role-fill-primary);
+  opacity: 0.14;
+  transform: rotate(-12deg);
+}
+
+/*
+ * The light and the mark both land under the headline. Measured against the
+ * composited pixels the prototype recorded, the ground there reached a value
+ * that dropped the headline's second line to 2.26:1 and the tagline to 3.85:1
+ * — both below their floors. This restores the page's own ground across the
+ * text and fades out before it reaches the mark.
+ *
+ * One opacity for both themes: `--surface-page` already resolves per theme, and
+ * a component that read the theme attribute itself would participate in a
+ * resolution the Design System owns.
+ */
+.root::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    47.5rem 27rem at calc(var(--auth-page-inset) + 16.375rem) 47%,
+    var(--surface-page) 0%,
+    var(--surface-page) 32%,
+    transparent 78%
+  );
+  opacity: 0.55;
+}

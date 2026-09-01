@@ -8,6 +8,10 @@ import {
   type AuthDesignMode,
 } from "./authDesignMode";
 import { AuthDesignToggle } from "./AuthDesignToggle";
+import { PreservedSearchParams } from "../navigation";
+
+/** The only answer the navigation seam ever gets, and it leaves with this phase. */
+const CARRIED = [AUTH_DESIGN_PARAM] as const;
 
 interface AuthDesignProviderProps {
   children: ReactNode;
@@ -78,9 +82,11 @@ export const AuthDesignProvider = ({
   );
 
   return (
-    <AuthDesignContext.Provider value={value}>
-      {children}
-      {import.meta.env.DEV && showToggle && <AuthDesignToggle />}
-    </AuthDesignContext.Provider>
+    <PreservedSearchParams.Provider value={CARRIED}>
+      <AuthDesignContext.Provider value={value}>
+        {children}
+        {import.meta.env.DEV && showToggle && <AuthDesignToggle />}
+      </AuthDesignContext.Provider>
+    </PreservedSearchParams.Provider>
   );
 };

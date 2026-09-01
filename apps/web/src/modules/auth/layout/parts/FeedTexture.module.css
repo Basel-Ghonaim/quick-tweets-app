@@ -1,0 +1,73 @@
+/* Inset past the edges so the blur never reveals one. */
+.field {
+  position: absolute;
+  inset: -3.75rem;
+  filter: blur(0.875rem);
+}
+
+.card {
+  position: absolute;
+  padding: var(--space-4);
+  border: var(--border-width-thin) solid var(--border-strong);
+  border-radius: var(--border-radius-xl);
+  background-color: var(--surface-subtle);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.avatar {
+  inline-size: var(--space-8);
+  block-size: var(--space-8);
+  border-radius: var(--border-radius-full);
+  background-color: var(--role-fill-primary);
+}
+
+.name {
+  font: var(--type-label-medium);
+  color: var(--text-primary);
+}
+
+.meta {
+  font: var(--type-body-small);
+  color: var(--text-secondary);
+}
+
+.body {
+  margin-block: var(--space-2) 0;
+  font: var(--type-body-medium);
+  color: var(--text-primary);
+}
+
+/* Scattered rather than gridded: the eye should read a crowd, not a layout. */
+.card:nth-child(1)  { inset-block-start: 2%;  inset-inline-start: -3%; inline-size: 18.75rem; transform: rotate(-2deg); }
+.card:nth-child(2)  { inset-block-start: -3%; inset-inline-start: 17%; inline-size: 21.25rem; transform: rotate(1deg); }
+.card:nth-child(3)  { inset-block-start: 6%;  inset-inline-start: 39%; inline-size: 20rem;    transform: rotate(-1deg); }
+.card:nth-child(4)  { inset-block-start: 1%;  inset-inline-start: 63%; inline-size: 18.75rem; transform: rotate(2deg); }
+.card:nth-child(5)  { inset-block-start: 9%;  inset-inline-start: 82%; inline-size: 20.625rem; transform: rotate(-2deg); }
+.card:nth-child(6)  { inset-block-start: 33%; inset-inline-start: -4%; inline-size: 21.25rem; transform: rotate(1deg); }
+.card:nth-child(7)  { inset-block-start: 38%; inset-inline-start: 43%; inline-size: 20.625rem; transform: rotate(-1deg); }
+.card:nth-child(8)  { inset-block-start: 34%; inset-inline-start: 86%; inline-size: 20rem;    transform: rotate(2deg); }
+.card:nth-child(9)  { inset-block-start: 70%; inset-inline-start: 3%;  inline-size: 20rem;    transform: rotate(-2deg); }
+.card:nth-child(10) { inset-block-start: 74%; inset-inline-start: 53%; inline-size: 21.25rem; transform: rotate(1deg); }
+
+/* Pushes the field back into texture so nothing behind competes with the text. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background-color: var(--surface-page);
+  opacity: 0.6;
+}
+
+/* Ten 300px cards are almost entirely off-screen at phone widths, so the
+   texture costs paint and reads as nothing. The light and the mark stay —
+   they are the ground's identity rather than its texture. */
+@media (width <= 36rem) {
+  .field,
+  .scrim {
+    display: none;
+  }
+}

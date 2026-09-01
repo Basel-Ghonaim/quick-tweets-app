@@ -1,0 +1,89 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-inline-size: 34rem;
+}
+
+/* `display` is the one piece of text a surface is built around. */
+.headline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font: var(--type-display-large);
+}
+
+.headlineLine {
+  color: var(--text-primary);
+}
+
+.headlineAccent {
+  color: var(--text-accent);
+}
+
+.tagline {
+  margin: 0;
+}
+
+.posts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-block-start: var(--space-6);
+}
+
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: var(--border-radius-xl);
+  background-color: var(--surface-default);
+  max-inline-size: 26rem;
+}
+
+.post:nth-child(2) {
+  margin-inline-start: var(--space-8);
+}
+
+.postHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.postAvatar {
+  display: grid;
+  place-items: center;
+  inline-size: var(--space-8);
+  block-size: var(--space-8);
+  border-radius: var(--border-radius-full);
+  background-color: var(--role-fill-primary);
+  color: var(--role-fill-primary-text);
+  font: var(--type-label-small);
+}
+
+.postName {
+  font: var(--type-label-medium);
+  color: var(--text-primary);
+}
+
+.postMeta {
+  font: var(--type-body-small);
+  color: var(--text-muted);
+}
+
+.postBody {
+  margin: 0;
+  font: var(--type-body-medium);
+  color: var(--text-secondary);
+}
+
+/* On a phone these push the form below the fold, and the form is why the
+   screen exists. */
+@media (width <= 36rem) {
+  .posts {
+    display: none;
+  }
+}

@@ -4,7 +4,7 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.5
+> **Version:** 1.6
 > **Last Updated:** 2026-08-31
 > **Owner:** Basel Ghonaim
 
@@ -58,9 +58,11 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 
 ### The brand panel — `D8`, decided
 
-**Desktop carries a brand zone beside the form column; mobile does not.** The zone is *additive*: removing it leaves exactly the screen this section already describes, which is what keeps the decision independently reversible.
+**A continuous brand ground carries the page at every viewport, and the form column sits on it.** `D8` originally ratified a panel *beside* the column, additive and therefore independently reversible. That shape is replaced: the ground is full-bleed, it exists at every viewport rather than on desktop alone, and both themes resolve it.
 
-- **The zone never restructures the form column.** Every rule in §4–§10 applies identically with the zone present or absent — the zone sits *beside* the column, never around it and never inside it.
+**What the amendment gives up, said rather than left to lapse.** The original decision's safety argument was **reversibility** — removing the zone left exactly the screen the rest of this section describes. A ground the page sits *on* cannot be removed that way, so that argument no longer holds and `D8` is no longer independently reversible. This is a different archetype replacing a ratified one, decided once on evidence: it answers the archetype's own documented anti-pattern by resolving both themes, where the research records the pattern as usually dark-only. It is not a precedent, and the illustration that argued for it is not an authority.
+
+- **The zone never restructures the form column.** Every rule in §4–§10 applies identically with the ground present or absent — it sits *behind* the column and never inside it, and no rule below is qualified by it.
 - **The zone carries the product's pitch.** A headline, one supporting line, and a small number of sample posts showing what the product is for. It says what the reader is signing in to, which a wordmark alone cannot.
 - **The zone is inert.** **No field, no button, no link, no interactive element of any kind.** This is not restraint for its own sake; reading and focus order depend on it.
 - **Typography and colour only.** No photography and no illustration — ruled out on **availability, not taste**: the product owns no image assets and no illustration library. Sample posts are composed from type and colour like everything else, so they depend on nothing that does not exist.
@@ -70,7 +72,7 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 
 **Reading and focus order reach the form first, at every viewport.** This is the documented failure mode of the pattern, recorded in the [research](ux-research.md): the panel folds above the form and takes the focus order with it. An inert zone is most of the guarantee — a region containing nothing focusable cannot misplace focus — and how the order is achieved is composition's to decide.
 
-**On mobile the form leads.** The zone gives up its place beside the column and stops competing for the first screen; what remains of it, and where, is composition's to decide.
+**On mobile the form leads.** The ground remains, because it is what the page stands on; what else of the zone survives the narrow viewport, and where, is composition's to decide. What does not change is that the form is the first thing reached.
 
 ---
 
