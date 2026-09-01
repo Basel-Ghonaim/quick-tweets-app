@@ -14,6 +14,10 @@ export const AUTH_COPY = {
     headlineLine2: "with less.",
 
     tagline: "Short posts. Real conversations.",
+
+    /* Stable, because the control reports its state through `aria-pressed`. A
+       name that changed as well would say the state twice. */
+    themeToggle: "Dark mode",
   },
 
   /* Replaced rather than translated in a second language. */

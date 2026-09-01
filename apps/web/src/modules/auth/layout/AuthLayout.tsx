@@ -4,6 +4,7 @@ import { AUTH_COPY } from "../config/copy";
 import { AuthBackdrop } from "./parts/AuthBackdrop";
 import { BrandPanel } from "./parts/BrandPanel";
 import { AuthCard } from "./parts/AuthCard";
+import { ThemeToggle } from "./parts/ThemeToggle";
 import styles from "./AuthLayout.module.css";
 
 /**
@@ -20,6 +21,8 @@ export const AuthLayout = () => (
         <span className={styles.lockup} role="img" aria-label={AUTH_COPY.brand.markLabel}>
           <BrandMark size={40} />
         </span>
+
+        <ThemeToggle />
       </header>
 
       <main className={styles.stage}>

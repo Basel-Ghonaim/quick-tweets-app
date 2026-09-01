@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Provider } from "react-redux";
+import { ThemeProvider } from "@shared/preferences";
 import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "../store";
 import { AuthLayout } from "./AuthLayout";
@@ -34,7 +35,7 @@ const Body = () => {
   const { pathname, search } = useLocation();
 
   return (
-    <div>
+    <div style={{ color: "var(--text-primary)" }}>
       <p data-testid="where">{pathname + search}</p>
       <button type="button" onClick={() => navigate("/auth/signup")}>
         onward
@@ -49,6 +50,7 @@ const store = configureStore({ reducer: { auth: authReducer } });
 
 const at = (entry: string) => (Story: () => React.ReactElement) => (
   <Provider store={store}>
+  <ThemeProvider>
   <MemoryRouter initialEntries={[entry]}>
     <Routes>
       <Route
@@ -65,6 +67,7 @@ const at = (entry: string) => (Story: () => React.ReactElement) => (
       <Route path="*" element={<Story />} />
     </Routes>
   </MemoryRouter>
+  </ThemeProvider>
   </Provider>
 );
 
@@ -105,5 +108,25 @@ export const TheCurrentDesignIsTheDefault: Story = {
     const canvas = within(canvasElement);
 
     await expect(canvas.queryByLabelText(AUTH_COPY.brand.markLabel)).not.toBeInTheDocument();
+  },
+};
+
+/** A stable name with `aria-pressed`: the authoring practice treats a changing
+ *  name and a pressed state as alternatives, never as partners. */
+export const TheThemeIsSwitchableFromTheShell: Story = {
+  decorators: [at("/auth/signin?design=proposed")],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const toggle = canvas.getByRole("button", { name: AUTH_COPY.brand.themeToggle });
+
+    const before = document.documentElement.getAttribute("data-theme");
+    await userEvent.click(toggle);
+
+    await waitFor(() =>
+      expect(document.documentElement.getAttribute("data-theme")).not.toBe(before),
+    );
+
+    // The name did not move with the state.
+    await expect(canvas.getByRole("button", { name: AUTH_COPY.brand.themeToggle })).toBeInTheDocument();
   },
 };
