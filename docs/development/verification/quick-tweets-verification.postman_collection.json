@@ -4297,8 +4297,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
-                  "pm.test(\"the message was accepted for delivery\", () =>",
-                  "  pm.expect(pm.response.json().data.delivered).to.eql(true));",
+                  "pm.test(\"the backend accepted the message\", () =>",
+                  "  pm.expect(pm.response.json().data.delivery).to.eql(\"accepted\"));",
                   "// The code is NOT in this response and never will be. Open the newest file",
                   "// in server/.mail-capture/, copy the 12-character code, and set it as the",
                   "// environment variable cvCode before running CHV-06."

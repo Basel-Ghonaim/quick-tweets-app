@@ -1042,12 +1042,19 @@ It is **derived at read time**, never stored. An expired challenge therefore rea
 
 Issuing **rotates**: any outstanding challenge is superseded, so only the newest code works. The challenge is persisted before delivery is attempted, and a delivery failure is **reported, never destructive** — the code remains valid and can be resent.
 
+**The response reports what is known, not that mail arrived.** No sender can promise delivery: a relay's acceptance means it took responsibility, and a timeout means the outcome is genuinely undetermined — the message may or may not have gone. `delivery` therefore carries three values rather than a boolean, and a client should treat `unknown` as it treats `accepted`: the code may well be on its way, so offer a resend rather than declaring failure.
+
 ```jsonc
 // Response 202 — the challenge exists; delivery was attempted
 {
   "success": true,
   "data": {
-    "delivered": true    // false when the delivery backend refused; the challenge still stands
+    // What the send is KNOWN to have achieved — never a claim of delivery.
+    //   "accepted" — the backend took responsibility for the message
+    //   "refused"  — it definitely was not sent
+    //   "unknown"  — the attempt did not complete; it may or may not have been sent
+    // The challenge stands in every case and can be resent.
+    "delivery": "accepted"
   }
 }
 

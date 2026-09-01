@@ -6,6 +6,7 @@
  */
 
 import type { DbClient } from "../../shared/database/index.js";
+import type { MailOutcome } from "../../shared/mail/index.js";
 
 declare const brand: unique symbol;
 
@@ -216,10 +217,14 @@ export interface ConfirmInput {
 
 export interface IssueOutcome {
   /**
-   * Whether the mail port accepted the message. The challenge is persisted
-   * either way — a delivery failure is reported, never destructive.
+   * What the mail port is known to have achieved — accepted, refused, or
+   * genuinely unknown. The challenge is persisted regardless: a delivery
+   * problem is reported, never destructive.
+   *
+   * The port's own type is reused rather than mirrored, so the two cannot
+   * drift apart.
    */
-  delivered: boolean;
+  delivery: MailOutcome;
 }
 
 export interface IChannelVerificationService {
