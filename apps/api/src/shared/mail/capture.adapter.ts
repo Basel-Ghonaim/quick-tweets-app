@@ -60,12 +60,17 @@ export const createCaptureMailAdapter = (
         await writeFile(file, render(message, at), "utf8");
       } catch (error) {
         // The port reports failure rather than raising it, so a caller's
-        // committed work is never unwound by a delivery problem.
-        return { ok: false, reason: error instanceof Error ? error.message : "write failed" };
+        // committed work is never unwound by a delivery problem. A failed write
+        // is definite — nothing left this process — so it refuses rather than
+        // reporting the ignorance a network transport would.
+        return {
+          outcome: "refused",
+          reason: error instanceof Error ? error.message : "write failed",
+        };
       }
 
       log(`[mail:capture] wrote a message for ${message.to} to ${file}`);
-      return { ok: true };
+      return { outcome: "accepted" };
     },
   };
 };

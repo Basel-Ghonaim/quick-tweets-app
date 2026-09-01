@@ -10,13 +10,15 @@
  * capture.
  */
 
-export type MailMode = "inert" | "capture";
+export type MailMode = "inert" | "capture" | "smtp";
 
 export const resolveMailMode = (
   raw: string | undefined,
   nodeEnv: string,
   warn: (message: string) => void = (m) => console.warn(m),
 ): MailMode => {
+  if (raw === "smtp") return "smtp";
+
   if (raw === "capture") {
     if (nodeEnv !== "production") return "capture";
     warn(
