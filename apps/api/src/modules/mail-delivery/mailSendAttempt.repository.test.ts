@@ -1,80 +1,135 @@
 /**
  * The send-attempt repository, against a fake client.
  *
- * What a fake can prove is the shape of each query — which predicate is sent,
- * and that each window boundary falls where it is meant to. **Atomicity is not
- * claimed here**: whether concurrent attempts can exceed a cap is a property of
- * the database, and WI-5's integration test is where it is established.
+ * What a fake can prove is the *shape* of each query — which predicate is sent,
+ * that a lock is taken before the count, and that nothing is written once the
+ * cap is met. **Atomicity is not claimed here**: whether two concurrent
+ * reservations can both succeed is a property of the database, and the
+ * integration test against real Postgres is where it is established.
  */
 
 import { describe, expect, it, vi } from "vitest";
 
 import { createMailSendAttemptRepository } from "./mailSendAttempt.repository.js";
 
-/** Typed so a mock's recorded arguments read back without casts. */
-type CreateArg = { data: { recipientKey: string; outcome: string } };
+type CreateArg = { data: { recipientKey: string; outcome: string }; select?: unknown };
 type WhereArg = { where: { recipientKey?: string; createdAt: Record<string, Date> } };
+type UpdateArg = { where: { id: number }; data: { outcome: string } };
 
-const fakeDb = (over: Partial<Record<string, unknown>> = {}) => ({
-  mailSendAttempt: {
-    create: vi.fn(async (_arg: CreateArg) => ({})),
-    count: vi.fn(async (_arg: WhereArg) => 0),
-    deleteMany: vi.fn(async (_arg: WhereArg) => ({ count: 0 })),
-    ...over,
-  },
-});
+const fakeDb = (over: Partial<Record<string, unknown>> = {}) => {
+  const db = {
+    mailSendAttempt: {
+      create: vi.fn(async (_arg: CreateArg) => ({ id: 99 })),
+      count: vi.fn(async (_arg: WhereArg) => 0),
+      update: vi.fn(async (_arg: UpdateArg) => ({})),
+      deleteMany: vi.fn(async (_arg: WhereArg) => ({ count: 0 })),
+      ...over,
+    },
+    $executeRaw: vi.fn(async () => 0),
+    // The real client hands the callback a transactional client; the fake is
+    // its own, which is all the shape assertions need.
+    $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(db)),
+  };
+  return db;
+};
 
 const repoOver = (db: ReturnType<typeof fakeDb>) => createMailSendAttemptRepository(db as never);
 
 const SINCE = new Date("2026-09-01T12:00:00.000Z");
 
-describe("recording an attempt", () => {
-  it("stores the key and the outcome, and nothing else", async () => {
+describe("reserving a recipient's slot", () => {
+  it("takes the recipient's lock before counting anything", async () => {
     const db = fakeDb();
 
-    await repoOver(db).record({ recipientKey: "abc123", outcome: "accepted" });
+    await repoOver(db).reserveForRecipient({ recipientKey: "abc123", since: SINCE, limit: 3 });
 
-    expect(db.mailSendAttempt.create).toHaveBeenCalledWith({
-      data: { recipientKey: "abc123", outcome: "accepted" },
-    });
+    expect(db.$executeRaw).toHaveBeenCalled();
+    const lockOrder = db.$executeRaw.mock.invocationCallOrder[0]!;
+    const countOrder = db.mailSendAttempt.count.mock.invocationCallOrder[0]!;
+    expect(lockOrder).toBeLessThan(countOrder);
   });
 
-  it("records a refusal and an unknown the same way — every attempt counts", async () => {
+  it("runs inside a transaction, so the lock has a scope to be released at", async () => {
     const db = fakeDb();
-    const repo = repoOver(db);
 
-    await repo.record({ recipientKey: "abc123", outcome: "refused" });
-    await repo.record({ recipientKey: "abc123", outcome: "unknown" });
+    await repoOver(db).reserveForRecipient({ recipientKey: "abc123", since: SINCE, limit: 3 });
 
-    const outcomes = db.mailSendAttempt.create.mock.calls.map(([arg]) => arg.data.outcome);
-    expect(outcomes).toEqual(["refused", "unknown"]);
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
   });
-});
 
-describe("the per-recipient window", () => {
-  it("counts only that recipient, and only inside the window", async () => {
-    const db = fakeDb({ count: vi.fn(async (_arg: WhereArg) => 3) });
+  it("counts that recipient inside the window only", async () => {
+    const db = fakeDb();
 
-    const count = await repoOver(db).countForRecipient("abc123", SINCE);
+    await repoOver(db).reserveForRecipient({ recipientKey: "abc123", since: SINCE, limit: 3 });
 
-    expect(count).toBe(3);
     expect(db.mailSendAttempt.count).toHaveBeenCalledWith({
       where: { recipientKey: "abc123", createdAt: { gte: SINCE } },
     });
   });
 
-  it("includes an attempt exactly at the boundary rather than dropping it", async () => {
+  it("records the attempt and returns its id when the window has room", async () => {
+    const db = fakeDb({ count: vi.fn(async (_arg: WhereArg) => 2) });
+
+    const id = await repoOver(db).reserveForRecipient({
+      recipientKey: "abc123",
+      since: SINCE,
+      limit: 3,
+    });
+
+    expect(id).toBe(99);
+    expect(db.mailSendAttempt.create).toHaveBeenCalledTimes(1);
+  });
+
+  it("writes `unknown`, because at that moment nothing has been sent", async () => {
     const db = fakeDb();
 
-    await repoOver(db).countForRecipient("abc123", SINCE);
+    await repoOver(db).reserveForRecipient({ recipientKey: "abc123", since: SINCE, limit: 3 });
 
-    const [[arg]] = db.mailSendAttempt.count.mock.calls;
-    expect(arg.where.createdAt).toEqual({ gte: SINCE });
+    const [[arg]] = db.mailSendAttempt.create.mock.calls;
+    expect(arg.data).toEqual({ recipientKey: "abc123", outcome: "unknown" });
+  });
+
+  it("refuses at the limit, and writes nothing", async () => {
+    const db = fakeDb({ count: vi.fn(async (_arg: WhereArg) => 3) });
+
+    const id = await repoOver(db).reserveForRecipient({
+      recipientKey: "abc123",
+      since: SINCE,
+      limit: 3,
+    });
+
+    expect(id).toBeNull();
+    expect(db.mailSendAttempt.create).not.toHaveBeenCalled();
+  });
+
+  it("refuses past the limit too, rather than only exactly at it", async () => {
+    const db = fakeDb({ count: vi.fn(async (_arg: WhereArg) => 9) });
+
+    const id = await repoOver(db).reserveForRecipient({
+      recipientKey: "abc123",
+      since: SINCE,
+      limit: 3,
+    });
+
+    expect(id).toBeNull();
+  });
+});
+
+describe("correcting the outcome once the send answers", () => {
+  it("updates the reserved row and nothing else", async () => {
+    const db = fakeDb();
+
+    await repoOver(db).setOutcome(99, "accepted");
+
+    expect(db.mailSendAttempt.update).toHaveBeenCalledWith({
+      where: { id: 99 },
+      data: { outcome: "accepted" },
+    });
   });
 });
 
 describe("the global window", () => {
-  it("is the same question with the recipient dropped", async () => {
+  it("is the recipient question with the recipient dropped", async () => {
     const db = fakeDb({ count: vi.fn(async (_arg: WhereArg) => 41) });
 
     const count = await repoOver(db).countAll(SINCE);
@@ -83,6 +138,14 @@ describe("the global window", () => {
     expect(db.mailSendAttempt.count).toHaveBeenCalledWith({
       where: { createdAt: { gte: SINCE } },
     });
+  });
+
+  it("takes no lock — the ceiling is a breaker with headroom, not an exact quota", async () => {
+    const db = fakeDb();
+
+    await repoOver(db).countAll(SINCE);
+
+    expect(db.$executeRaw).not.toHaveBeenCalled();
   });
 });
 
@@ -105,21 +168,5 @@ describe("pruning", () => {
 
     const [[arg]] = db.mailSendAttempt.deleteMany.mock.calls;
     expect(arg.where.createdAt).toEqual({ lt: SINCE });
-  });
-});
-
-describe("the repository reaches nothing but its own table", () => {
-  it("touches no consumer's model", async () => {
-    const db = fakeDb();
-    const repo = repoOver(db);
-
-    await repo.record({ recipientKey: "abc123", outcome: "accepted" });
-    await repo.countForRecipient("abc123", SINCE);
-    await repo.countAll(SINCE);
-    await repo.deleteBefore(SINCE);
-
-    // A consumer model reached through this fake would be undefined and throw,
-    // so it could not pass unnoticed.
-    expect(Object.keys(db)).toEqual(["mailSendAttempt"]);
   });
 });
