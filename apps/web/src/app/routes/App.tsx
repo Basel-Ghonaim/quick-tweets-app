@@ -1,7 +1,7 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import {
   useSessionRestore,
-  AuthPage,
+  AuthShell,
   AuthDesignProvider,
 } from "@modules/auth";
 import { Placeholder } from "./placeholder";
@@ -25,13 +25,18 @@ export const App = () => {
           path="/auth"
           element={
             <AuthDesignProvider>
-              <Outlet />
+              <AuthShell />
             </AuthDesignProvider>
           }
         >
+          {/*
+           * The bodies the proposed shell renders into its card. They are empty
+           * while the screens are unbuilt, and the current design never mounts
+           * them at all — it renders its own page and ignores the outlet.
+           */}
           <Route index element={<Navigate to="signin" replace />} />
-          <Route path="signin" element={<AuthPage />} />
-          <Route path="signup" element={<AuthPage />} />
+          <Route path="signin" />
+          <Route path="signup" />
         </Route>
 
         {/*
