@@ -3,16 +3,12 @@ import { AUTH_COPY } from "../../config/copy";
 import styles from "./BrandPanel.module.css";
 
 /**
- * What the reader is signing in to.
+ * Inert by contract: nothing here is focusable, which is what makes reading and
+ * focus order reach the form first without anything to maintain.
  *
- * **Inert by contract, not by accident.** It holds no field, no button and no
- * link, which is what makes reading and focus order reach the form first at
- * every viewport without anything to maintain.
- *
- * The sample posts are pictures of posts rather than posts: they are announced
- * to nobody and they compose no product component, because a component shaped
- * by a decorative instance would carry that instance's assumptions into the
- * feed that has to live with it.
+ * The sample posts compose no product component. One shaped by a decoration
+ * would carry that decoration's assumptions into the feed that has to live
+ * with it.
  */
 export const BrandPanel = () => (
   <section className={styles.root}>

@@ -10,13 +10,7 @@ import {
 import { AuthDesignToggle } from "./AuthDesignToggle";
 import { PreservedSearchParams } from "../navigation";
 
-/**
- * The mode lives in the URL, so every navigation within auth has to carry it or
- * the reader silently lands in the other design. The module's own navigation
- * asks this seam which parameters travel; this phase is the only thing that
- * answers, and when it is deleted the seam's empty default applies with no call
- * site changed.
- */
+/** The only answer the navigation seam ever gets, and it leaves with this phase. */
 const CARRIED = [AUTH_DESIGN_PARAM] as const;
 
 interface AuthDesignProviderProps {

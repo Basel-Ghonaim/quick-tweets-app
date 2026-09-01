@@ -1,13 +1,7 @@
 /**
- * Builds a navigation target that carries named search parameters forward.
- *
  * React Router replaces the whole location when handed a path string, so a
  * parameter the current location carries is dropped by every `navigate("/x")`.
- * Where that parameter decides what the reader sees, the loss is silent: no
- * error, no remount, only a different page than the one they were looking at.
- *
- * Pure, so the rule is provable without a router. Which parameters travel is
- * the caller's — this decides only how.
+ * Where that parameter decides what the reader sees, the loss is silent.
  */
 export const carrySearchParams = (
   to: string,
@@ -20,8 +14,7 @@ export const carrySearchParams = (
   const params = new URLSearchParams(ownQuery);
 
   for (const name of preserved) {
-    // An explicit value in `to` is a decision the caller made; a carried one is
-    // a default, so it never overwrites.
+    // A value written into `to` is a decision; a carried one is only a default.
     if (params.has(name)) continue;
 
     const value = current.get(name);

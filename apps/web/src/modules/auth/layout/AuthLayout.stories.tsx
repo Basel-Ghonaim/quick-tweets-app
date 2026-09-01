@@ -10,13 +10,8 @@ import { AuthDesignProvider } from "../_design";
 import { useAuthNavigate } from "../navigation";
 import { AUTH_COPY } from "../config/copy";
 
-/**
- * Storybook mounts no application ground: `app.css` is imported only by the
- * entry point, so a story judged without painting `--surface-page` is judged
- * against the browser's white. That is the blind spot that hid a contrast
- * defect once already, so every story here paints the ground it claims to
- * render on.
- */
+/* Storybook mounts no application stylesheet, so a story that does not paint the
+   ground is judged against the browser's white. */
 const onTheGround = (Story: () => React.ReactElement) => (
   <div style={{ background: "var(--surface-page)", minHeight: "100vh" }}>
     <Story />
@@ -48,11 +43,8 @@ const Body = () => {
   );
 };
 
-/**
- * The current design reaches the module's own slice, so rendering that arm needs
- * a store. It is composed here from the module's reducer rather than borrowed
- * from the composition root, which a feature may not import.
- */
+/* Composed from the module's own reducer: a feature may not import the
+   composition root's store. */
 const store = configureStore({ reducer: { auth: authReducer } });
 
 const at = (entry: string) => (Story: () => React.ReactElement) => (
@@ -81,19 +73,14 @@ export const TheShellHoldsStill: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // The brand is announced through the element wrapping the mark, because the
-    // mark is decorative by its own contract.
     await expect(canvas.getByLabelText(AUTH_COPY.brand.markLabel)).toBeInTheDocument();
     await expect(canvas.getByText(AUTH_COPY.brand.headlineLine2)).toBeInTheDocument();
     await expect(canvas.getByText(AUTH_COPY.brand.tagline)).toBeInTheDocument();
   },
 };
 
-/**
- * The failure this Work Item exists to remove. The mode lives only in the URL,
- * and a bare-path navigation drops it — silently, because an absent parameter
- * and a malformed one both resolve to the current design.
- */
+/** An absent parameter and a malformed one both resolve to the current design,
+ *  so losing it in a navigation is silent. */
 export const TheModeSurvivesANavigation: Story = {
   decorators: [at("/auth/signin?design=proposed")],
   play: async ({ canvasElement }) => {
@@ -107,7 +94,6 @@ export const TheModeSurvivesANavigation: Story = {
       expect(canvas.getByTestId("where")).toHaveTextContent("/auth/signup?design=proposed"),
     );
 
-    // Still the proposed shell, which is what the parameter decides.
     await expect(canvas.getByLabelText(AUTH_COPY.brand.markLabel)).toBeInTheDocument();
   },
 };

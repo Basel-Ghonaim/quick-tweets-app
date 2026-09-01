@@ -5,9 +5,7 @@
   max-inline-size: 34rem;
 }
 
-/* The one piece of text this surface is built around, which is what `display`
-   names. Its two lines are two values in the catalogue rather than one split at
-   the call site, so a translator receives lines rather than fragments. */
+/* `display` is the one piece of text a surface is built around. */
 .headline {
   display: flex;
   flex-direction: column;
@@ -34,9 +32,6 @@
   margin-block-start: var(--space-6);
 }
 
-/* A picture of a post. It composes no product component deliberately: the feed's
-   card has to answer to the feed, and one shaped here would arrive carrying a
-   decoration's assumptions. */
 .post {
   display: flex;
   flex-direction: column;

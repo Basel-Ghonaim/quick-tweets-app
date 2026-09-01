@@ -3,14 +3,8 @@ import { useNavigate, useSearchParams, type NavigateOptions } from "react-router
 import { carrySearchParams } from "./carrySearchParams";
 import { PreservedSearchParams } from "./preservedSearchParams";
 
-/**
- * Navigating within auth.
- *
- * Every screen uses it instead of `useNavigate`, so carrying a parameter is a
- * property of the module rather than an obligation each call site has to
- * remember. A forgotten one fails silently, which is the failure this exists
- * to remove.
- */
+/** Used instead of `useNavigate` throughout the module: a call site that
+ *  forgets to carry the parameter fails silently. */
 export const useAuthNavigate = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

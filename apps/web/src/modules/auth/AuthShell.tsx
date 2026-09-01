@@ -3,17 +3,12 @@ import { AuthLayout } from "./layout";
 import { useAuthDesignMode } from "./_design";
 
 /**
- * The one place the design mode is read.
+ * The one place the design mode is read, and the only one: each reader is
+ * somewhere the eventual cleanup must visit.
  *
- * The comparison is whole-design: either the current experience renders or the
- * proposed one does, and the two are never mixed. Selecting the shell here is
- * what makes that structural — the proposed screens hang off the outlet the
- * proposed shell owns, so under the current design they are never mounted and
- * there is nothing to blend.
- *
- * Being the only reader is the removal cost. Every call site is somewhere the
- * cleanup has to visit, so keeping the count at one keeps that cost a known
- * quantity rather than a search.
+ * Selecting the shell is what makes "never blended" structural — the proposed
+ * screens hang off the outlet only the proposed shell owns, so under the
+ * current design they are never mounted.
  */
 export const AuthShell = () => {
   const { mode } = useAuthDesignMode();
