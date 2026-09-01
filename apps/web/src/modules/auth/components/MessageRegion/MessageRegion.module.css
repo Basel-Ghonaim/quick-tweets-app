@@ -1,0 +1,10 @@
+.root {
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width-thin) solid;
+  border-radius: var(--border-radius-md);
+}
+
+.error {
+  border-color: var(--role-fill-error);
+  color: var(--role-on-surface-error);
+}
