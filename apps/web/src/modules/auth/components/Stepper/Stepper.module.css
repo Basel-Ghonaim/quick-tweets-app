@@ -1,0 +1,76 @@
+.root {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  position: relative;
+}
+
+/* The track between nodes. Drawn from each step back to the one before it, so
+   the first has none and the count never has to be known. */
+.step:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  inset-block-start: var(--space-5);
+  inset-inline-end: 50%;
+  inline-size: calc(100% - var(--space-5));
+  border-block-start: var(--border-width-medium) solid var(--border-default);
+}
+
+.node {
+  display: grid;
+  place-items: center;
+  position: relative;
+  inline-size: var(--space-10);
+  block-size: var(--space-10);
+  border: var(--border-width-medium) solid var(--border-default);
+  border-radius: var(--border-radius-full);
+  background-color: var(--surface-default);
+  color: var(--text-muted);
+}
+
+.name {
+  font: var(--type-label-small);
+  color: var(--text-muted);
+}
+
+/* Said, not only coloured. */
+.state {
+  font: var(--type-body-small);
+  color: var(--text-muted);
+}
+
+.done .node {
+  border-color: var(--role-fill-primary);
+  color: var(--role-on-surface-primary);
+}
+
+.done .name {
+  color: var(--text-secondary);
+}
+
+.current .node {
+  border-color: var(--role-fill-primary);
+  background-color: var(--role-fill-primary);
+  color: var(--role-fill-primary-text);
+}
+
+.current .name,
+.current .state {
+  color: var(--role-on-surface-primary);
+}
+
+/* A skipped step is neither done nor waiting, so it reads as passed rather
+   than as complete: the node keeps its resting border and only the word
+   changes, which is the whole of the distinction. */
+.skipped .node {
+  border-style: dashed;
+}
