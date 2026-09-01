@@ -21,7 +21,7 @@ export const BrandPanel = () => (
       {AUTH_COPY.brand.tagline}
     </Typography>
 
-    <div className={styles.posts} aria-hidden="true">
+    <div className={styles.posts} data-testid="brand-posts" aria-hidden="true">
       {AUTH_COPY.samplePosts.map((post) => (
         <article key={post.handle} className={styles.post}>
           <div className={styles.postHead}>

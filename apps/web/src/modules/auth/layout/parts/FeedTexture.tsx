@@ -5,7 +5,7 @@ import styles from "./FeedTexture.module.css";
  *  a scrim so nothing here competes with the text in front of it. */
 export const FeedTexture = () => (
   <>
-    <div className={styles.field}>
+    <div className={styles.field} data-testid="feed-texture">
       {AUTH_COPY.backdropPosts.map((post) => (
         <article key={post.handle} className={styles.card}>
           <div className={styles.head}>

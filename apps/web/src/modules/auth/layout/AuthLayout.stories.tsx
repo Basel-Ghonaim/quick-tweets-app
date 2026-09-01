@@ -130,3 +130,42 @@ export const TheThemeIsSwitchableFromTheShell: Story = {
     await expect(canvas.getByRole("button", { name: AUTH_COPY.brand.themeToggle })).toBeInTheDocument();
   },
 };
+
+/**
+ * At a phone width the sample posts and the blurred feed go, and the form
+ * leads. Storybook's viewport resizes the real viewport rather than a wrapper,
+ * so the media queries this asserts are the ones a reader gets.
+ */
+export const TheCompactSetLeadsWithTheForm: Story = {
+  decorators: [at("/auth/signin?design=proposed")],
+  globals: { viewport: { value: "phone" } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(window.innerWidth).toBeLessThan(576);
+
+    // Present in the markup, absent from the page: what the compact set drops.
+    await expect(canvas.getByText(AUTH_COPY.brand.tagline)).toBeVisible();
+    await expect(canvas.getByTestId("brand-posts")).not.toBeVisible();
+    await expect(canvas.getByTestId("feed-texture")).not.toBeVisible();
+
+    // The form is above the pitch, not beside it.
+    const card = canvas.getByTestId("where").closest("div");
+    const pitch = canvas.getByText(AUTH_COPY.brand.tagline);
+    await expect(
+      card!.getBoundingClientRect().top < pitch.getBoundingClientRect().top,
+    ).toBe(true);
+  },
+};
+
+/** The same shell at a laptop width keeps both columns. */
+export const TheTwoColumnsHoldAtLaptopWidth: Story = {
+  decorators: [at("/auth/signin?design=proposed")],
+  globals: { viewport: { value: "laptop" } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByTestId("brand-posts")).toBeVisible();
+    await expect(canvas.getByTestId("feed-texture")).toBeVisible();
+  },
+};
