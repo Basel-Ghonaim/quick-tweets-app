@@ -31,7 +31,7 @@ const build = (
   resolve: (userId: number) => Promise<string | null> = async () => EMAIL,
 ) => {
   const service = {
-    issue: vi.fn(async () => ({ delivered: true })),
+    issue: vi.fn(async () => ({ delivery: "accepted" as const })),
     confirm: vi.fn(async () => {}),
     statusOf: vi.fn(async () => "unproven" as const),
     ...over,
@@ -95,15 +95,15 @@ describe("successful responses", () => {
     const { res } = await run(controller.issue);
 
     expect(res.status).toHaveBeenCalledWith(202);
-    expect(res.json).toHaveBeenCalledWith({ success: true, data: { delivered: true } });
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: { delivery: "accepted" } });
   });
 
   it("passes a failed delivery through rather than hiding it", async () => {
-    const { controller } = build({ issue: vi.fn(async () => ({ delivered: false })) });
+    const { controller } = build({ issue: vi.fn(async () => ({ delivery: "unknown" as const })) });
 
     const { res } = await run(controller.issue);
 
-    expect(res.json).toHaveBeenCalledWith({ success: true, data: { delivered: false } });
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: { delivery: "unknown" } });
   });
 
   it("answers a bare 204 on confirm", async () => {

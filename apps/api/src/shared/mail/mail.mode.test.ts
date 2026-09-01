@@ -14,7 +14,7 @@ describe("resolveMailMode — anything unrecognised resolves to inert", () => {
     "INERT",
     "inert ",
     " inert",
-    "smtp",
+    "relay",
     "true",
     "1",
   ];
@@ -50,7 +50,7 @@ describe("capture is reachable only by an exact opt-in", () => {
   });
 
   it("is never what anything falls back to", () => {
-    const everythingElse = [undefined, "", "smtp", "Capture", "1"];
+    const everythingElse = [undefined, "", "relay", "Capture", "1"];
 
     for (const raw of everythingElse) {
       expect(resolveMailMode(raw, DEV, () => {})).not.toBe("capture");
@@ -63,10 +63,10 @@ describe("an unrecognised value is warned about, never silent", () => {
   it("names the offending value in the warning", () => {
     const warnings: string[] = [];
 
-    resolveMailMode("smtp", DEV, (m) => warnings.push(m));
+    resolveMailMode("relay", DEV, (m) => warnings.push(m));
 
     expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain("smtp");
+    expect(warnings[0]).toContain("relay");
   });
 
   it("stays quiet for an absent or recognised value", () => {
@@ -75,6 +75,7 @@ describe("an unrecognised value is warned about, never silent", () => {
     resolveMailMode(undefined, DEV, (m) => warnings.push(m));
     resolveMailMode("inert", DEV, (m) => warnings.push(m));
     resolveMailMode("capture", DEV, (m) => warnings.push(m));
+    resolveMailMode("smtp", DEV, (m) => warnings.push(m));
 
     expect(warnings).toEqual([]);
   });
@@ -82,7 +83,7 @@ describe("an unrecognised value is warned about, never silent", () => {
   it("warns through the console when no warn is injected", () => {
     const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-    expect(resolveMailMode("smtp", DEV)).toBe("inert");
+    expect(resolveMailMode("relay", DEV)).toBe("inert");
     expect(spy).toHaveBeenCalledTimes(1);
 
     spy.mockRestore();
@@ -99,7 +100,7 @@ describe("createMailAdapter", () => {
         subject: "Subject line",
         body: "Body text",
       }),
-    ).resolves.toEqual({ ok: true });
+    ).resolves.toEqual({ outcome: "accepted" });
 
     spy.mockRestore();
   });

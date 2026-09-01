@@ -151,7 +151,9 @@ const fakeMail = (ok = true) => ({
   adapter: {
     send: vi.fn(async (message: { to: string; subject: string; body: string }) => {
       mail.sent.push(message);
-      return ok ? ({ ok: true } as const) : ({ ok: false, reason: "unreachable" } as const);
+      return ok
+        ? ({ outcome: "accepted" } as const)
+        : ({ outcome: "refused", reason: "unreachable" } as const);
     }),
   },
 });
@@ -182,7 +184,7 @@ describe("issuing", () => {
     const outcome = await service.issue({ userId: USER, endpoint: ENDPOINT });
 
     expect(challenges).toHaveLength(1);
-    expect(outcome.delivered).toBe(true);
+    expect(outcome.delivery).toBe("accepted");
     expect(mail.sent[0]!.to).toBe(ENDPOINT);
   });
 
@@ -209,7 +211,7 @@ describe("issuing", () => {
 
     const outcome = await service.issue({ userId: USER, endpoint: ENDPOINT });
 
-    expect(outcome.delivered).toBe(false);
+    expect(outcome.delivery).toBe("refused");
     expect(challenges).toHaveLength(1);
     expect(challenges[0]!.closedAt).toBeNull();
   });
@@ -355,7 +357,7 @@ describe("losing the unique constraint", () => {
 
     expect(attempts).toBe(2);
     expect(world.challenges).toHaveLength(1);
-    expect(outcome.delivered).toBe(true);
+    expect(outcome.delivery).toBe("accepted");
   });
 
   it("retries once when the one-open constraint rejects the insert", async () => {

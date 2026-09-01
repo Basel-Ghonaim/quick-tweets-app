@@ -11,7 +11,7 @@ const MESSAGE = {
 describe("the inert mail backend", () => {
   it("accepts a message and reports success", async () => {
     const adapter = createInertMailAdapter({ log: () => {} });
-    await expect(adapter.send(MESSAGE)).resolves.toEqual({ ok: true });
+    await expect(adapter.send(MESSAGE)).resolves.toEqual({ outcome: "accepted" });
   });
 
   it("announces exactly one line per send", async () => {
@@ -39,7 +39,7 @@ describe("the inert mail backend", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     await expect(createInertMailAdapter().send(MESSAGE)).resolves.toEqual({
-      ok: true,
+      outcome: "accepted",
     });
     expect(spy).toHaveBeenCalledTimes(1);
 

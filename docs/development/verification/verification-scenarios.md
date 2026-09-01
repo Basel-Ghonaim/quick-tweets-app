@@ -305,7 +305,7 @@ each:
 
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
 |----|---------------|--------|---------------------|-------------------|---------|----------------|
-| CHV-01 | Setup registered; server in `MAIL_MODE=capture` | `POST /channel-verification/challenges` (Bearer) | **202**; `data.delivered = true` | one `channel_verifications` row; one open challenge, `secret_hash` a **64-hex digest** (Checkpoint I) | via reset | ✅ |
+| CHV-01 | Setup registered; server in `MAIL_MODE=capture` | `POST /channel-verification/challenges` (Bearer) | **202**; `data.delivery = "accepted"` | one `channel_verifications` row; one open challenge, `secret_hash` a **64-hex digest** (Checkpoint I) | via reset | ✅ |
 | CHV-02 | CHV-01 | `GET /users/me` | 200; `emailVerification = "pending"` | — | — | ✅ |
 | CHV-03 | CHV-01, within 60s | `POST …/challenges` again | **429** `too_many_requests` — the per-address cooldown (**D2**) | no second open challenge | — | ✅ |
 | CHV-04 | CHV-01 | `POST …/challenges/confirm {code:"ZZZZZZZZZZZZ"}` | **400** `bad_request`, *"That verification code is not valid."* | challenge **still open** — a wrong guess does not consume it | — | ✅ |

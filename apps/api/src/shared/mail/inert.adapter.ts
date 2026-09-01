@@ -20,7 +20,7 @@ export const createInertMailAdapter = (
       log(
         `[mail:inert] discarded a message to ${message.to} — subject: ${message.subject}`,
       );
-      return { ok: true };
+      return { outcome: "accepted" };
     },
   };
 };

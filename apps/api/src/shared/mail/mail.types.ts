@@ -12,12 +12,27 @@ export interface MailMessage {
   body: string;
 }
 
+/**
+ * What a send is known to have achieved.
+ *
+ * Three outcomes rather than two, because a transport produces three. A timeout
+ * is **ignorance, not failure**: the relay may already have taken the message,
+ * so collapsing it into a failure would report something no backend can know
+ * (ADR 0015 Decision 9). Which conditions map to which outcome is the
+ * classification rule, and it is documented in `docs/backend/mail.md`.
+ *
+ * The port carries no transport diagnostic — no response code, nothing
+ * provider-shaped. `reason` is the whole of what a caller learns.
+ */
+export type MailOutcome = "accepted" | "refused" | "unknown";
+
 /** Failure is returned, never thrown, so a transport error cannot unwind work the caller already committed. */
 export type MailResult =
-  | { readonly ok: true }
-  | { readonly ok: false; readonly reason: string };
+  | { readonly outcome: "accepted" }
+  | { readonly outcome: "refused"; readonly reason: string }
+  | { readonly outcome: "unknown"; readonly reason: string };
 
 export interface MailAdapter {
-  /** Must not throw: foreseeable transport failures are reported as `{ ok: false }`. */
+  /** Must not throw: a foreseeable transport failure is reported as a result, never raised. */
   send(message: MailMessage): Promise<MailResult>;
 }

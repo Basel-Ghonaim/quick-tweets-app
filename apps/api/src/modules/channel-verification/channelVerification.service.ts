@@ -130,9 +130,9 @@ export const createChannelVerificationService = (
 
     // Sent after commit: a transport failure must not undo a persisted
     // challenge, and no row lock is held across a network call.
-    const delivery = await mail.send({ to: input.endpoint, ...composeMessage(code) });
+    const result = await mail.send({ to: input.endpoint, ...composeMessage(code) });
 
-    return { delivered: delivery.ok } satisfies IssueOutcome;
+    return { delivery: result.outcome } satisfies IssueOutcome;
   };
 
   const confirm: IChannelVerificationService["confirm"] = async ({

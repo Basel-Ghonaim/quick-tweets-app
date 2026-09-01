@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the **outbound mail mechanism's design and rationale** — the port and its contract, the backends that implement it, how one is selected, and how a consumer composes it. It owns the *how* and the *why*.
 > It does **not** own: the **boundary decision** — that delivery is a separately-owned mechanism a consumer composes and never absorbs — which is [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) Decision 7's, and the operational posture recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md); the **content** of any message, which belongs to the consumer that composes it; or any consumer's own behaviour — for the only consumer today, [Channel Verification](channel-verification.md).
-> **Scope:** The server-side mechanism at `apps/api/src/shared/mail/`. **This document describes what exists today.** The mechanism sends no mail: both implemented backends deliberately withhold delivery, and no transport, provider or credential exists anywhere in the codebase.
-> **Version:** 1.0
+> **Scope:** The server-side mechanism at `apps/api/src/shared/mail/`. **This document describes what exists today.** One backend delivers; the other two deliberately withhold delivery and are what a developer or the verification harness runs against.
+> **Version:** 1.1
 > **Last Updated:** 2026-08-31
 > **Owner:** Basel Ghonaim
 
@@ -22,15 +22,27 @@ One method, taking a recipient, a subject and a body. The shape is deliberately 
 
 **The port carries no consumer vocabulary, and that is enforced rather than reviewed.** A test reads the port's own type surface, strips its comments, and fails if it mentions any of a small set of words belonging to the domain of its current consumer. Comments are excluded on purpose: the boundary lives in the types, and a guard that also policed prose would eventually be relaxed to allow a sentence. The failure mode it exists to prevent is gradual — a port erodes one helpful field at a time.
 
+### What a send reports
+
+**Three outcomes, not two** — `accepted`, `refused`, `unknown`. A transport produces three, and collapsing them into a boolean would make the mechanism assert something no sender can know. *Accepted* means a backend took responsibility for the message; it is **not** a claim that anything arrived. *Refused* means it definitely did not go. *Unknown* means the attempt did not finish and the message may or may not have been relayed.
+
+**The classification rule is deliberately conservative: only a failure that provably preceded the hand-off is a refusal.** A connection that was never established, a host that did not resolve, a credential the relay rejected, an envelope it refused outright, or a permanent `5xx` — each of these is answered before any message body is transmitted, so nothing can have been delivered. Everything else is *unknown*: once the body is in flight, a timeout or a dropped socket leaves a relay that may well have accepted it and lost the acknowledgement.
+
+The asymmetry is intended. An unnecessary *unknown* costs a log line; a wrong *refused* costs the guarantee this vocabulary exists to provide.
+
+**The result carries no transport diagnostic** — no response code, nothing provider-shaped. A single `reason` string is the whole of what a caller learns, because a raw status code inside a provider-neutral port is transport detail leaking through the boundary the guard above exists to hold.
+
 ## The backends
 
-Two exist. Neither delivers, and both are honest about being local.
+Three exist. Two withhold delivery and are honest about being local; the third actually sends.
 
 **Inert** accepts a message, discards it, and reports success, so a caller exercises its ordinary path with no transport and no credentials. It logs that a message was discarded and to whom, and **withholds the body**, which may carry a single-use secret.
 
 **Capture** writes the whole message — headers and body — to a local directory, so a person verifying by hand has something to read. It exists because a secret that is discarded on delivery and stored only as a digest is knowable to nobody, which is exactly the property that makes such a secret trustworthy, and also what leaves hand-verification without an inbox. It creates its destination if absent, names files so they sort chronologically and are safe on any filesystem in use, and **returns a failure rather than raising one** if the write fails.
 
 Its destination is a **convention rather than a setting** — one fewer thing to misconfigure on a mechanism whose purpose is local inspection — and it is gitignored, because the files contain whatever the message carried.
+
+**SMTP** delivers. It is the only backend that reaches a network, and a provider is a host and a credential to it — swapping one changes configuration, never code. Its send is **bounded by a timeout**, because an unbounded attempt would hold an HTTP request open and delay shutdown; a timeout is also the commonest way an outcome becomes *unknown*.
 
 ## Selecting a backend
 
@@ -43,6 +55,8 @@ Resolution is **fail-safe, and inert is both the default and the target of every
 - **nothing ever falls back *to* capture.**
 
 The mode is **resolved once, at import**, not per send, so a misconfiguration warns where an operator sees it — at startup — rather than on every message.
+
+**Selecting SMTP without its settings is refused, not warned about.** The host, credentials and sender identity are validated as a group when — and only when — that mode is chosen, so the server does not start rather than failing at the first send. The non-delivering backends stay credential-free, which is why the requirement is conditional rather than blanket.
 
 > The rule that an unrecognised mail setting must not take the server down is a deliberate trade recorded in the code. It holds while no backend delivers: a fallback that sends nothing costs nothing. [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md) decides what must change about it once a backend can actually deliver.
 

@@ -32,7 +32,7 @@ const capturingMail = () => {
   const adapter: MailAdapter = {
     send: async (message) => {
       sent.push(message);
-      return { ok: true };
+      return { outcome: "accepted" as const };
     },
   };
   return { sent, adapter };
@@ -83,7 +83,7 @@ describe("the lifecycle end to end", () => {
     expect(await service.statusOf(userId, ENDPOINT)).toBe("unproven");
 
     const outcome = await service.issue({ userId, endpoint: ENDPOINT });
-    expect(outcome.delivered).toBe(true);
+    expect(outcome.delivery).toBe("accepted");
     expect(await service.statusOf(userId, ENDPOINT)).toBe("pending");
 
     await service.confirm({ userId, endpoint: ENDPOINT, code: codeIn(mail.sent[0]!) });

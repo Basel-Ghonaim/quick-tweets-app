@@ -36,7 +36,7 @@ describe("the capture mail backend", () => {
   it("reports success", async () => {
     const adapter = createCaptureMailAdapter({ dir: await scratch(), log: () => {} });
 
-    await expect(adapter.send(MESSAGE)).resolves.toEqual({ ok: true });
+    await expect(adapter.send(MESSAGE)).resolves.toEqual({ outcome: "accepted" });
   });
 
   it("writes the whole message — including the body a reader needs", async () => {
@@ -101,6 +101,6 @@ describe("the capture mail backend", () => {
 
     const result = await createCaptureMailAdapter({ dir: occupied, log: () => {} }).send(MESSAGE);
 
-    expect(result.ok).toBe(false);
+    expect(result.outcome).toBe("refused");
   });
 });

@@ -42,6 +42,25 @@ const envSchema = z
     // Permissive `string`, not an enum, so an unexpected value warns and stays
     // inert (see resolveMailMode) rather than taking the server down at startup.
     MAIL_MODE: z.string().default("inert"),
+    // The SMTP transport. A provider is a host and a credential (ADR 0015
+    // Decision 1), so these are all that changes when one is swapped. Optional
+    // here and required by the refine below only when `smtp` is selected —
+    // demanding credentials from a developer running inert would be noise.
+    SMTP_HOST: z.string().optional(),
+    SMTP_PORT: z.coerce.number().int().positive().default(587),
+    // False selects STARTTLS, which the 587 submission port uses.
+    SMTP_SECURE: z
+      .string()
+      .default("false")
+      .transform((v) => v === "true"),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASSWORD: z.string().optional(),
+    // Providers commonly require this to be the authenticated identity, and
+    // rewrite or reject anything else.
+    MAIL_FROM: z.string().optional(),
+    // Bounds the whole attempt. Without it a hung relay holds an HTTP request
+    // open and delays shutdown, since nothing else caps it.
+    MAIL_SEND_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
     // Crockford base32 — I/L/O/U are absent because the code is typed by hand.
     // 12 characters over 32 symbols is 60 bits, which keeps a fast digest out of
     // offline brute-force range. Configuration, not platform logic.
@@ -83,6 +102,22 @@ const envSchema = z
       .int()
       .positive()
       .default(7 * 24 * 60 * 60 * 1000),
+  })
+  // Selecting a transport without the settings it needs is a misconfiguration,
+  // and this project refuses to boot on those rather than failing at first use.
+  // Scoped to `smtp` so the non-sending modes stay credential-free.
+  .superRefine((cfg, ctx) => {
+    if (cfg.MAIL_MODE !== "smtp") return;
+
+    for (const key of ["SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD", "MAIL_FROM"] as const) {
+      if (!cfg[key]) {
+        ctx.addIssue({
+          code: "custom",
+          path: [key],
+          message: `${key} is required when MAIL_MODE="smtp"`,
+        });
+      }
+    }
   });
 
 export const env = envSchema.parse(process.env);
