@@ -8,6 +8,16 @@ import {
   type AuthDesignMode,
 } from "./authDesignMode";
 import { AuthDesignToggle } from "./AuthDesignToggle";
+import { PreservedSearchParams } from "../navigation";
+
+/**
+ * The mode lives in the URL, so every navigation within auth has to carry it or
+ * the reader silently lands in the other design. The module's own navigation
+ * asks this seam which parameters travel; this phase is the only thing that
+ * answers, and when it is deleted the seam's empty default applies with no call
+ * site changed.
+ */
+const CARRIED = [AUTH_DESIGN_PARAM] as const;
 
 interface AuthDesignProviderProps {
   children: ReactNode;
@@ -78,9 +88,11 @@ export const AuthDesignProvider = ({
   );
 
   return (
-    <AuthDesignContext.Provider value={value}>
-      {children}
-      {import.meta.env.DEV && showToggle && <AuthDesignToggle />}
-    </AuthDesignContext.Provider>
+    <PreservedSearchParams.Provider value={CARRIED}>
+      <AuthDesignContext.Provider value={value}>
+        {children}
+        {import.meta.env.DEV && showToggle && <AuthDesignToggle />}
+      </AuthDesignContext.Provider>
+    </PreservedSearchParams.Provider>
   );
 };
