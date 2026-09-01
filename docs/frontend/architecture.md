@@ -5,8 +5,8 @@
 > **Authority:** The authoritative source for the frontend's **outer architecture** — the feature-sliced layout (`app/` · `modules/` · `shared/`), the dependency boundaries between those zones, the module contract, the composition root, and the thin platform utilities no other document owns. It owns the **structure between subsystems**, not the subsystems themselves: each platform subsystem's internals are owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, and where features meet the platform.
 > **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
-> **Version:** 1.6
-> **Last Updated:** 2026-08-31
+> **Version:** 1.7
+> **Last Updated:** 2026-09-01
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -71,7 +71,7 @@ The contract exists to **protect a feature's independence and hide its internals
 What a feature module promises the rest of the application:
 
 - It is a **self-contained folder** under `modules/` — everything feature-specific lives inside it.
-- Its **designated public barrels are its only public surface** — currently the root barrel (the feature's page and its store slice) and the `hooks/` sub-barrel (the flow and session hooks the app shell consumes). Everything else is private.
+- Its **designated public barrels are its only public surface** — currently the root barrel (the feature's **route subtree** and its store slice) and the `hooks/` sub-barrel (the flow and session hooks the app shell consumes). Everything else is private. A feature exposing its screens one by one would let the composition root learn which screens exist and what they are called; exposing the subtree instead means the composition root decides **whether and where** a feature is mounted while the feature keeps **what is inside it**, and a new screen never widens the surface.
 - It **composes the platform** — forms through the form engine, controls through the design system, requests through the transport layer — and never re-implements a platform concern.
 - It depends **only downward** (on `shared/`), never on another feature or on `app/`.
 

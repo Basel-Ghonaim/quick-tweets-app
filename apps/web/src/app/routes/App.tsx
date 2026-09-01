@@ -1,9 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import {
-  useSessionRestore,
-  AuthShell,
-  AuthDesignProvider,
-} from "@modules/auth";
+import { useSessionRestore, authRoute } from "@modules/auth";
 import { Placeholder } from "./placeholder";
 
 export const App = () => {
@@ -13,31 +9,7 @@ export const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/*
-         * TEMPORARY — the design-comparison phase's only integration point.
-         * The provider is a layout element rather than a wrapper around each
-         * page so that it mounts once for all of auth: the paths below are
-         * untouched, and a single instance means switching designs re-renders
-         * without remounting. Removed with `_design/` once the auth UX is
-         * approved (#544).
-         */}
-        <Route
-          path="/auth"
-          element={
-            <AuthDesignProvider>
-              <AuthShell />
-            </AuthDesignProvider>
-          }
-        >
-          {/*
-           * The bodies the proposed shell renders into its card. They are empty
-           * while the screens are unbuilt, and the current design never mounts
-           * them at all — it renders its own page and ignores the outlet.
-           */}
-          <Route index element={<Navigate to="signin" replace />} />
-          <Route path="signin" />
-          <Route path="signup" />
-        </Route>
+        {authRoute}
 
         {/*
          * The product's committed surfaces, standing in until they are built.
