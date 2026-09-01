@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the **outbound mail mechanism's design and rationale** — the port and its contract, the backends that implement it, how one is selected, and how a consumer composes it. It owns the *how* and the *why*.
 > It does **not** own: the **boundary decision** — that delivery is a separately-owned mechanism a consumer composes and never absorbs — which is [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) Decision 7's, and the operational posture recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md); the **content** of any message, which belongs to the consumer that composes it; or any consumer's own behaviour — for the only consumer today, [Channel Verification](channel-verification.md).
 > **Scope:** The server-side mechanism at `apps/api/src/modules/mail-delivery/`. **This document describes what exists today.** One backend delivers; the other two deliberately withhold delivery and are what a developer or the verification harness runs against.
-> **Version:** 1.4
+> **Version:** 1.5
 > **Last Updated:** 2026-09-01
 > **Owner:** Basel Ghonaim
 
@@ -75,6 +75,16 @@ Two controls, because the threat has two halves. A **recipient cap** answers one
 **A refusal from a control is a refusal, not an unknown** — nothing was handed to a transport. It is distinguishable from a transport failure **in diagnostics only**: on the wire both are the same refusal, because telling one account that a global ceiling is exhausted would leak the system's state to it.
 
 **What is not partitioned, and why.** One cap covers every consumer. Splitting it by purpose is a per-case configuration surface, which [Engineering Principles §3](../development/engineering-principles.md) defers until a second instance shapes it. The residual is real and stated: with one shared cap a high-volume consumer can exhaust a quota a lower-volume one needs for the same address. A **per-actor** cap is a consumer's, not this mechanism's — delivery has no actor to key on.
+
+## The sweep
+
+Per-event rows are what let the window be exact rather than bucket-aligned, and something has to keep them bounded. A scheduled job removes attempts older than a retention period, running on the existing background scheduler as a single registration and reaching the database through the same repository every other caller uses.
+
+**It is hygiene, not correctness.** The controls count inside their window, so an attempt that has aged out is already irrelevant whether or not anything removed it. Disabling the job changes no answer the caps give — only how much of the diagnostic trail survives, and how large the table grows.
+
+**That relaxed posture is earned by one guarantee: retention can never be shorter than the longest window.** The two are separate settings whose names suggest no relationship, and if retention were the shorter the sweep would delete attempts a cap still counts — the cap would under-enforce with nothing reporting it. The environment schema **refuses to start** on that configuration rather than clamping it, because substituting a value an operator did not choose hides the mistake instead of surfacing it.
+
+Equality is permitted: the sweep removes what is **strictly older** than its cutoff and a window **includes** its edge, so the two meet without overlapping or leaving a gap.
 
 ## Composition
 
