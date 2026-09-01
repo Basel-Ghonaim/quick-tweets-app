@@ -20,6 +20,22 @@ export const AUTH_COPY = {
     themeToggle: "Dark mode",
   },
 
+  signIn: {
+    title: "Welcome back",
+    subtitle: "Sign in to continue to your account",
+
+    submit: "Sign in",
+    submitting: "Signing in…",
+
+    forgotPassword: "Forgot password?",
+
+    /* Where signing in ends and not having an account begins. Two controls
+       stacked under a form state no relationship; this says what they are. */
+    altLabel: "New to Quick Tweets?",
+    createAccount: "Create new account",
+    browseAsGuest: "Browse without an account",
+  },
+
   /* Replaced rather than translated in a second language. */
   samplePosts: [
     {
