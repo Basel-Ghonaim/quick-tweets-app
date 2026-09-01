@@ -81,6 +81,23 @@ const envSchema = z
       .int()
       .positive()
       .default(24 * 60 * 60 * 1000),
+    // How often spent attempts are swept, and how long one is kept.
+    //
+    // Hygiene, not correctness: the controls count inside their window, so an
+    // attempt that has aged out is already irrelevant whether or not anything
+    // removed it. Retention decides only how far back the controls can still
+    // see — which is why it may never be shorter than a window (see the refine
+    // below).
+    MAIL_ATTEMPT_SWEEP_INTERVAL_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(6 * 60 * 60 * 1000),
+    MAIL_ATTEMPT_RETENTION_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(7 * 24 * 60 * 60 * 1000),
     // Crockford base32 — I/L/O/U are absent because the code is typed by hand.
     // 12 characters over 32 symbols is 60 bits, which keeps a fast digest out of
     // offline brute-force range. Configuration, not platform logic.
