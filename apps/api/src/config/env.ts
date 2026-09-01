@@ -155,6 +155,31 @@ const envSchema = z
         });
       }
     }
+  })
+  // Retention may never be shorter than the longest window the controls count
+  // over. If it were, the sweep would delete attempts a window still counts and
+  // the caps would quietly under-enforce — no error, no log, just a control that
+  // stopped binding because one number was lowered.
+  //
+  // Refused rather than clamped: substituting a value an operator did not choose
+  // is the same class of quiet divergence, and startup is where this project
+  // already puts misconfiguration.
+  .superRefine((cfg, ctx) => {
+    const longestWindow = Math.max(
+      cfg.MAIL_RECIPIENT_CAP_WINDOW_MS,
+      cfg.MAIL_OUTBOUND_CEILING_WINDOW_MS,
+    );
+
+    if (cfg.MAIL_ATTEMPT_RETENTION_MS < longestWindow) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["MAIL_ATTEMPT_RETENTION_MS"],
+        message:
+          `MAIL_ATTEMPT_RETENTION_MS (${cfg.MAIL_ATTEMPT_RETENTION_MS}ms) is shorter than the ` +
+          `longest send window (${longestWindow}ms). The sweep would remove attempts the caps ` +
+          `still count, and they would under-enforce silently.`,
+      });
+    }
   });
 
 export const env = envSchema.parse(process.env);
