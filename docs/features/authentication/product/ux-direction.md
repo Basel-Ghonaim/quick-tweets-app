@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.6
-> **Last Updated:** 2026-08-31
+> **Version:** 1.7
+> **Last Updated:** 2026-09-01
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
@@ -39,7 +39,7 @@ The whole journey is built on optionality — the account is valid immediately, 
 | Level | Role | Use in auth |
 |---|---|---|
 | Brand moment | `display-large` / `display-medium` | The brand zone's single line of copy (§3) — the one surface in auth built around one piece of text |
-| Screen title | `heading-medium` or `heading-small` | "Log in", "Create your account", "Verify your email" |
+| Screen title | `heading-large`, `heading-medium` or `heading-small` | "Log in", "Create your account", "Verify your email" |
 | Supporting copy | `body-medium`, `body-small` | Explanatory text, the neutral confirmation |
 | Field labels, buttons, stepper | `label-medium`, `label-small` | Inside components; the stepper is auth-composed |
 
@@ -118,7 +118,7 @@ Bind **composite text styles only** — `--type-<role>-<step>`. Never assemble a
 
 Heading and display carry Inter; label and body carry Montserrat. A screen title in Inter over Montserrat body is the intended texture, not an accident to correct.
 
-In practice: screen titles `heading-medium`/`heading-small`; explanatory and confirmation copy `body-medium`/`body-small`; stepper labels `label-small`. A title variant **requires** an explicit element — appearance and document outline are chosen separately.
+In practice: screen titles `heading-large`/`heading-medium`/`heading-small`; explanatory and confirmation copy `body-medium`/`body-small`; stepper labels `label-small`. A title variant **requires** an explicit element — appearance and document outline are chosen separately.
 
 ---
 
@@ -288,9 +288,9 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 
 ### Icons — use what exists, prototype what does not
 
-The existing set covers most of what these flows need: `CheckIcon` for a completed step and verification success · `RefreshIcon` for resend · `EyeIcon`/`EyeOffIcon` free inside `Input` · `CameraIcon`/`UploadIcon`/`UserIcon` already used by `FileInput`'s avatar variant · `XIcon` for dismiss.
+The existing set covers what these flows need: `CheckIcon` for a completed step and verification success · `RefreshIcon` for resend · `EyeIcon`/`EyeOffIcon` free inside `Input` · `CameraIcon`/`UploadIcon`/`UserIcon` already used by `FileInput`'s avatar variant · `XIcon` for dismiss · `UserIcon`/`PencilIcon`/`EnvelopeIcon` for the three journey steps.
 
-**Where a design genuinely needs an icon that does not exist — an envelope, a lock, a back arrow — the design idea is not dropped.** Use a **clearly marked placeholder** during exploration and record it, so it is replaced when the real icon is added to the Design System later.
+**Where a design genuinely needs an icon that does not exist — a lock, a back arrow — the design idea is not dropped.** Use a **clearly marked placeholder** during exploration and record it, so it is replaced when the real icon is added to the Design System later. Where the need is settled rather than exploratory, the icon is added instead: an envelope and a pencil arrived that way for the journey stepper, which is cheaper than a placeholder that has to be found again.
 
 Two constraints on that:
 

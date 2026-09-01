@@ -11,3 +11,5 @@ export { CameraIcon } from "./CameraIcon";
 export { PlusIcon } from "./PlusIcon";
 export { FileTypeIcon } from "./FileTypeIcon";
 export { RefreshIcon } from "./RefreshIcon";
+export { PencilIcon } from "./PencilIcon";
+export { EnvelopeIcon } from "./EnvelopeIcon";
