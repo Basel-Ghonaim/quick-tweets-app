@@ -67,9 +67,16 @@ describe("a relay that takes the message", () => {
 });
 
 describe("failures that provably preceded the hand-off are refusals", () => {
+  // Every code the rule refuses on is exercised here. The three setup failures
+  // below belong in this table for the same reason as the first two: each is
+  // raised while the connection is still being established — DNS resolution,
+  // the socket, the TLS handshake — so no body can have reached a relay.
   const definite: [string, unknown][] = [
     ["connection refused", Object.assign(new Error("connect ECONNREFUSED"), { code: "ECONNREFUSED" })],
     ["host not found", Object.assign(new Error("getaddrinfo ENOTFOUND"), { code: "ENOTFOUND" })],
+    ["a DNS failure", Object.assign(new Error("DNS lookup failed"), { code: "EDNS" })],
+    ["a connection that never opened", Object.assign(new Error("Connection error"), { code: "ECONNECTION" })],
+    ["a TLS handshake that failed", Object.assign(new Error("SSL routines"), { code: "ETLS" })],
     ["authentication rejected", Object.assign(new Error("Invalid login"), { code: "EAUTH" })],
     ["envelope rejected", Object.assign(new Error("No recipients"), { code: "EENVELOPE" })],
     ["a permanent 5xx", Object.assign(new Error("550 mailbox unavailable"), { responseCode: 550 })],
