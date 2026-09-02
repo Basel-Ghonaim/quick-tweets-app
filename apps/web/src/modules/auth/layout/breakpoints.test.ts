@@ -7,9 +7,15 @@ import { describe, expect, test } from "vitest";
  * layout's two widths are written out in every stylesheet that reacts to them.
  * A change to one and not the others tears the composition, and nothing about
  * the result says which value was meant.
+ *
+ * The screens are scanned as well as the layout: a value repeated because it
+ * cannot be referenced is only held by a check that sees every place it is
+ * repeated. The current design is excluded — it is the untouched baseline and
+ * predates these two widths.
  */
 
-const LAYOUT = join(process.cwd(), "src/modules/auth/layout");
+const MODULE = join(process.cwd(), "src/modules/auth");
+const SCANNED = ["layout", "screens"].map((dir) => join(MODULE, dir));
 
 /** Where the two columns stop, and where the compact set begins. */
 const BREAKPOINTS = ["72rem", "36rem"];
@@ -26,8 +32,8 @@ const QUERY = /@media\s*\(width\s*<=\s*([^)]+)\)/g;
 const widthsIn = (file: string): string[] =>
   [...readFileSync(file, "utf8").matchAll(QUERY)].map((match) => match[1].trim());
 
-const files = stylesheets(LAYOUT);
-const label = (file: string) => relative(LAYOUT, file).split(sep).join("/");
+const files = SCANNED.flatMap(stylesheets);
+const label = (file: string) => relative(MODULE, file).split(sep).join("/");
 
 describe("the auth layout's breakpoints", () => {
   test("every stylesheet reacts only to the two the layout has", () => {
