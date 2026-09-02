@@ -4,12 +4,14 @@ import { useRegisterFlow } from "../../hooks";
 import { authFormSchemas } from "../../config/authFormSchemas";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
-import { AuthLink } from "../../navigation";
+import { AuthLink, useAuthNavigate } from "../../navigation";
 import styles from "./SignUp.module.css";
 
 const fields = toFieldEntries(authFormSchemas.registerFields);
 
 export const SignUp = () => {
+  const navigate = useAuthNavigate();
+
   const {
     values,
     errors,
@@ -18,7 +20,7 @@ export const SignUp = () => {
     serverError,
     handleChange,
     handleSubmit,
-  } = useRegisterFlow();
+  } = useRegisterFlow(() => navigate("/auth/profile"));
 
   return (
     <div className={styles.root}>

@@ -4,12 +4,14 @@ import { useLoginFlow } from "../../hooks";
 import { authFormSchemas } from "../../config/authFormSchemas";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
-import { AuthLink } from "../../navigation";
+import { AuthLink, useAuthNavigate } from "../../navigation";
 import styles from "./SignIn.module.css";
 
 const fields = toFieldEntries(authFormSchemas.loginFields);
 
 export const SignIn = () => {
+  const navigate = useAuthNavigate();
+
   const {
     values,
     errors,
@@ -18,7 +20,7 @@ export const SignIn = () => {
     serverError,
     handleChange,
     handleSubmit,
-  } = useLoginFlow();
+  } = useLoginFlow(() => navigate("/feed"));
 
   return (
     <div className={styles.root}>
