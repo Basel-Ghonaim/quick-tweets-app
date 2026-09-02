@@ -238,6 +238,35 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ## 8. Reconciliation
 
-*Added as this plan approaches `Historical`: where each Work Item's durable facts landed in the permanent documents, which findings were recorded, and the forward links. The capability's platform document is created when its subsystem exists in code (the Stable-Core rule, [ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); on its creation, ADR 0009 retains only the boundary and rationale.*
+### Where the durable knowledge landed
 
-That document is `docs/backend/channel-verification.md`, created by **WI-Docs**.
+| What | Now owned by |
+|---|---|
+| The boundary, the single owned fact, custody, and the lifecycle | [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) — which, since the platform document exists, retains only the boundary and rationale |
+| The subsystem's mechanisms — published surface, subject resolution, derived status, the challenge lifecycle, the digest, the single failure, the sweep, the concurrency invariants | [`backend/channel-verification.md`](../backend/channel-verification.md), created by **WI-Docs** under the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)) |
+| Endpoints, payloads, the opaque failure shape, the self-view projection | [API contract](../api/api-contract.md) |
+| Relationship, cascade and indexing rationale | [data model](../architecture/data-model.md) |
+| Hand-verification | the [verification harness](../development/verification/README.md), folder **10** |
+| **Delivery** — the port, its backends, their selection, the abuse controls and their sweep | [`backend/mail.md`](../backend/mail.md), under [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md). This effort built the boundary; a later one built the mechanism behind it |
+
+### Completion criteria, as they actually stand
+
+- **Met.** All ten Work Items merged · issue and confirm reach *Proven* and the self-view exposes it as a projection · all eight invariants hold, the grep-verifiable ones demonstrably · a changed endpoint yields *Unproven* with no write, and disabling the sweep changes no answer · the capability has its platform document, listed in the map and restating neither ADR 0009 nor the contract · the API contract is co-versioned.
+- **Retired, not met.** *"Delivery remains credential-free"* — see §7, superseded by [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md). The rest of that criterion stands.
+- **Outstanding.** The **human Postman gate is deferred and has not been run.** What has been run is an automated pass of folder 10 (see below), which is not the same act and does not stand in for it.
+
+### The harness run
+
+Folder 10 was executed under **Newman**, against the collection and the ordering this plan's WI-8 defined: **12 requests, 19 assertions, 0 failed**, including the successful-confirm leg (`204` → `proven` → replay refused identically) and the post-cooldown rotation. Newman is not a repository dependency; it was invoked transiently, so WI-8's non-goal stands.
+
+**What that run does not cover, stated so the gap is not mistaken for coverage:** CHV-11 and CHV-12 are runbook steps and are not requests in the collection, so no automated run reaches them; CHV-13 sends its single request **once**, where the scenario is eleven attempts, so the limiter leg was not exercised. Two steps the collection documents as manual were performed by the driver rather than by hand — reading the code from the capture file, and waiting out the resend cooldown.
+
+**The human Postman gate remains `Deferred — Not Run`.** It is tracked in [#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450), whose original WI-8 criterion is **retired rather than met** under the [mail-delivery plan](mail-delivery.md)'s D11, and it is the one act still standing between this plan and `Historical`.
+
+### Findings and follow-ups recorded
+
+[#578](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/578) (a `ChallengeCloseReason` variant with no producer, still open) · [#348](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/348) and [#449](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/449) (harness hygiene, deliberately untouched by WI-Docs and still untouched) · gating policy, which [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) assigns to each consuming endpoint and which no consumer has yet needed.
+
+### Status
+
+This plan stays **`Active`** until the human gate above is run. Everything else it set out to do is done and recorded here; archiving it now would assert a completion one criterion does not have.
