@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-31
+> **Last Updated:** 2026-09-02
 > **Parent Issue:** [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)
 > **Supersedes:** —
 
@@ -236,4 +236,38 @@ Two consequences follow. Its **WI-8 criterion is retired, not met** (**D11**), a
 
 ## 9 · Reconciliation
 
-*Added as this plan approaches `Historical`: where the durable knowledge landed, which findings were recorded, and the forward links.*
+### Where the durable knowledge landed
+
+| What | Now owned by |
+|---|---|
+| The boundary, the production posture, the abuse controls, the result's semantics | [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md) |
+| The mechanism — the port, its three backends, how one is selected, what a send reports, the controls, the recipient key's equality, the sweep | [`backend/mail.md`](../backend/mail.md) |
+| The send-attempt table's relationship, cascade and indexing rationale | [data model](../architecture/data-model.md) |
+| The wire field, and the removal of the boolean it replaced | [API contract](../api/api-contract.md), the latter as a recorded pre-release exception |
+| The cession of outbound limits from edge rate limiting | [Backend Security](../backend/security.md), by name |
+| The mechanism's place in the topology, and the background tier's ownership | [system overview](../architecture/system-overview.md) |
+| The consumer's own behaviour — composing the message, sending after commit | [`backend/channel-verification.md`](../backend/channel-verification.md) |
+
+### Completion criteria, as they actually stand
+
+- **Met.** All six Work Items merged, each green under the real gate · production refuses to boot on a mode that cannot deliver, development unchanged · three outcomes, each with a producer, and a wire field that asserts no delivery · the controls enforced over every backend, fail-closed, the ceiling's trip alarmed and distinguishable in diagnostics only · retention cannot fall below the longest window · cap state references no consumer and is pruned on its own schedule · `shared/mail/` is gone and no module under `shared/` owns a model · `mail.md`, `api-contract.md` and `data-model.md` co-versioned, and `security.md` cedes the cap by name.
+- **Not verifiable from the repository.** *"The ceiling sits below the provider's own limit"* — no provider is named anywhere in the code, by design (**D1**); the default is set against a general free-tier allowance rather than a named one, so this is a configuration claim an operator confirms, not a repository fact.
+- **Outstanding.** Two, and both need a person.
+  - **The defining outcome** — a code requested for a real personal address, **received in that inbox**, read and used successfully. It was reported as executed by hand during WI-1. That is testimony from the session that performed it; no artefact in this repository reproduces it, and this record does not restate it as something verified here.
+  - **The human Postman gate** — see below.
+
+### The harness run
+
+Folder 10 was executed under **Newman** against the collection as it stands after **this effort's last harness change**: **12 requests, 19 assertions, 0 failed**, including the successful-confirm leg and the post-cooldown rotation. It also exercised what this effort added — every send passed through the capped adapter to a real `mail_send_attempts` table, so a green `CHV-01` is evidence that the controls are reachable and not failing closed. Newman was invoked transiently and is not a repository dependency.
+
+**What it does not cover:** CHV-11 and CHV-12 are runbook steps rather than requests; CHV-13 ran once where the scenario is eleven attempts. The two steps the collection documents as manual — reading the code from the capture file, and waiting out the cooldown — were performed by the driver.
+
+**The human Postman gate is `Deferred — Not Run`**, and an automated pass is not a substitute for it. **D11** stands unchanged: the gate is run once, by a person, on the final harness, and Channel Verification's WI-8 criterion ([#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450)) is **retired rather than met** — never presented as a retrospective pass, and no more so for an automated run having gone green.
+
+### Findings and follow-ups recorded
+
+A closing review of this effort recorded, and deliberately did not fix: the codebase-wide *declared-without-producer* pattern (`MediaStatus "pending"`, `ErrorType "service_unavailable"`, two uncalled `AppError` factories, `ITweetService.getByAuthor`, `IMediaReferences.isReferenced`) · the mail repository's unreached transaction seam, and the advisory lock's scope implication for the first caller that uses it · `MailResult.reason`, produced everywhere and read nowhere · the pre-existing `Future expansion:` blocks and milestone tags, which [Engineering Principles §12](../development/engineering-principles.md) forbids pursuing as a campaign · [`project/overview.md`](../project/overview.md)'s denial of two capabilities that exist · `api-contract.md`'s missing currency header · the `npm audit` chain, whose remediation is a major downgrade · [#348](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/348) and [#449](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/449).
+
+### Status
+
+This plan stays **`Active`** until the human gate is run. Everything the effort set out to build is built, merged and recorded above; what remains is a person's act, and archiving before it would claim a completion the plan itself defines as theirs to give.
