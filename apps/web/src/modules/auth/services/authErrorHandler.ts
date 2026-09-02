@@ -5,7 +5,6 @@ const AUTH_MESSAGES: Partial<Record<AppError["type"], string>> = {
   unauthorized: "Incorrect username/email or password.",
   validation: "Please review the highlighted fields to correct the errors.",
   conflict: "This account is already registered. Try logging in.",
-  forbidden: "Your account is temporarily locked or unverified.",
   too_many_requests: "Too many failed attempts. Please wait a few minutes.",
 };
 
