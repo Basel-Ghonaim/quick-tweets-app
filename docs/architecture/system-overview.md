@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the system **topology** and the end-to-end **request lifecycle** across frontend, backend, and database. Per-subsystem mechanism detail and the wire contract are owned by their documents and linked here, never restated.
 > **Scope:** How the parts fit together and how a request flows through them. It does not specify endpoints (see the [API contract](../api/api-contract.md)) or per-subsystem internals (see the backend and frontend platform documents).
-> **Version:** 1.0
-> **Last Updated:** 2026-08-14
+> **Version:** 1.1
+> **Last Updated:** 2026-09-02
 > **Owner:** Basel Ghonaim
 
 ## Topology
@@ -17,7 +17,11 @@ quick-tweets is a monorepo of three tiers communicating over HTTP/JSON:
 
 The dependency is one-directional: the frontend depends on the contract, the backend fulfils it, and the database sits behind the backend as an implementation detail. The contract between frontend and backend — endpoints, payloads, error shapes, pagination — is owned by the [API contract](../api/api-contract.md).
 
-Two concerns sit alongside this request/response spine, both owned by [`backend/media.md`](../backend/media.md): the **Media subsystem** — a platform module inside the backend that stores and serves file bytes through a storage-adapter port (its read endpoint `GET /media/:token` is mounted **top-level, outside `/api/v1`**, returning raw bytes rather than the JSON envelope) — and the **background-execution tier**, a scheduler the backend starts at boot that runs recurring, non-request-triggered jobs (media reclamation and refresh-token cleanup) under single-run safety.
+Three concerns sit alongside this request/response spine, each owned by its own document.
+
+- The **Media subsystem** — a platform module inside the backend that stores and serves file bytes through a storage-adapter port. Its read endpoint `GET /media/:token` is mounted **top-level, outside `/api/v1`**, returning raw bytes rather than the JSON envelope. Owned by [`backend/media.md`](../backend/media.md).
+- The **outbound mail mechanism** — a platform module that carries a message to a recipient through a provider-neutral port, bounding its own volume with durable abuse controls. It reaches the network from inside a request rather than through this spine, and the capability that composes it never learns which backend is selected. Owned by [`backend/mail.md`](../backend/mail.md).
+- The **background-execution tier** — a scheduler the backend starts at boot that runs recurring, non-request-triggered jobs under single-run safety. The substrate is shared and domain-ignorant; **each job belongs to the subsystem that registered it**, so the tier has no single owner and this document deliberately does not enumerate its jobs.
 
 ## Request lifecycle
 
@@ -50,6 +54,8 @@ This document owns the topology and lifecycle only; each subsystem's internals a
 | Entities, relationships, cascade, indexing | [`architecture/data-model.md`](data-model.md) |
 | Backend layering, response wrapper, validation, security mechanisms | [`backend/conventions.md`](../backend/conventions.md) + [`backend/security.md`](../backend/security.md) |
 | The Media subsystem, storage adapter, and reclamation lifecycle | [`backend/media.md`](../backend/media.md) |
+| Proof of control over a communication channel — the fact, its lifecycle, and its sweep | [`backend/channel-verification.md`](../backend/channel-verification.md) |
+| The outbound mail mechanism, its backends, abuse controls, and sweep | [`backend/mail.md`](../backend/mail.md) |
 | Axios clients & interceptors, RTK Query, error normalization | [`frontend/api-client.md`](../frontend/api-client.md) + [`frontend/error-handling.md`](../frontend/error-handling.md) + `frontend/state-and-data.md` *(deferred)* |
 | A known deviation from this intended architecture | [Finding 0001 — schema-form ↔ design-system cycle](findings/0001-schema-form-design-system-cycle.md) |
 

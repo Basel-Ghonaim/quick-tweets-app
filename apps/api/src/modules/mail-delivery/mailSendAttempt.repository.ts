@@ -63,12 +63,6 @@ export interface IMailSendAttemptRepository {
   setOutcome(id: number, outcome: MailOutcome, client?: DbClient): Promise<void>;
 
   /**
-   * How many attempts reached one recipient at or after `since` — the
-   * per-recipient window.
-   */
-  countForRecipient(recipientKey: string, since: Date, client?: DbClient): Promise<number>;
-
-  /**
    * How many attempts were made in total at or after `since` — the global
    * ceiling's window, which is this same question with the recipient dropped.
    */
@@ -129,11 +123,6 @@ export const createMailSendAttemptRepository = (
   setOutcome: async (id, outcome, client: DbClient = db) => {
     await client.mailSendAttempt.update({ where: { id }, data: { outcome } });
   },
-
-  countForRecipient: async (recipientKey, since, client: DbClient = db) =>
-    client.mailSendAttempt.count({
-      where: { recipientKey, createdAt: { gte: since } },
-    }),
 
   countAll: async (since, client: DbClient = db) =>
     client.mailSendAttempt.count({ where: { createdAt: { gte: since } } }),

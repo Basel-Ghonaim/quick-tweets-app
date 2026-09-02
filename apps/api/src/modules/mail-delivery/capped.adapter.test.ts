@@ -24,7 +24,6 @@ const NOW = new Date("2026-09-01T12:00:00.000Z");
 const fakeRepo = (over: Partial<IMailSendAttemptRepository> = {}): IMailSendAttemptRepository => ({
   reserveForRecipient: vi.fn(async () => 1),
   setOutcome: vi.fn(async () => {}),
-  countForRecipient: vi.fn(async () => 0),
   countAll: vi.fn(async () => 0),
   deleteBefore: vi.fn(async () => 0),
   ...over,

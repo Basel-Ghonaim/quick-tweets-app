@@ -3,9 +3,13 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-08-31
+> **Last Updated:** 2026-09-02
 > **Parent Issue:** [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403)
 > **Supersedes:** —
+
+**Implementation status: Complete** · **Engineering work: Complete** · **Closure status: Pending Human Gate** · **Human Postman Gate: Deferred — Not Run**
+
+All ten Work Items are merged and every engineering criterion this plan set is met or explicitly retired — recorded criterion by criterion in [§8](#8-reconciliation). The plan stays `Active` for **one** reason: the human Postman gate is a completion criterion, it is deferred, and it has not been run. It is **not** marked passed, and an automated pass of folder 10 is not a substitute for it. When that gate is performed, the plan transitions to `Historical`; nothing else is outstanding.
 
 This plan sequences the implementation of the **Channel Verification** platform capability into ten independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) (Accepted), which owns the boundary, the single owned fact, custody, and the lifecycle, and which this plan never reopens.
 
@@ -52,7 +56,9 @@ Behavioural decisions taken during analysis and binding on implementation. Ident
 - **D5 — Replay protection.** A challenge is single-use. Closed, expired, superseded, wrong-value, and never-existed all return the **same opaque failure** (no distinction leaked, mirroring the generic `401` in login and Media's opaque attach errors); the distinction is retained **internally** for diagnostics only. Secret comparison is constant-time; **confirm is rate-limited** as well as issue. **Idempotent replay of a successful challenge is deliberately deferred** — revisit if a link affordance is adopted or real double-submit friction is observed.
 - **D6 — Active is the absence of `closedAt`.** No separate challenge state column: `closedAt IS NULL` plus `expiresAt` fully determines open / expired / closed, and makes the D1 index trivially expressible. A `closedReason` may exist for **diagnostics only** and must **never** be branched on for an authorization decision — `closedAt` remains the single source of truth for state. (This is I8 applied to the challenge.)
 
-- **D10 — Capture is reachable only by exact opt-in, and never in production.** The capture backend writes a **single-use secret to disk**, so selecting it by accident is not a cosmetic failure. It therefore inherits the mechanism's existing fail-safe shape rather than inventing a second one: an unrecognised `MAIL_MODE` continues to warn and resolve to `inert`, and `MAIL_MODE=capture` under `NODE_ENV=production` does the same — it **warns and resolves to `inert`** rather than crashing, because a startup crash over a mail setting is a worse failure than sending nothing. `inert` stays the default and stays the target every fallback resolves to: **no path ever makes `capture` the fallback.**
+- **D10 — Capture is reachable only by exact opt-in, and never in production.** The capture backend writes a **single-use secret to disk**, so selecting it by accident is not a cosmetic failure. It therefore inherits the mechanism's existing fail-safe shape rather than inventing a second one: an unrecognised `MAIL_MODE` warns and resolves to `inert`. `inert` stays the default and stays the target every fallback resolves to: **no path ever makes `capture` the fallback.**
+
+  > **Amended 2026-09-02 — the decision stands; how production enforces it is no longer stated here.** When this was taken, nothing else owned production's behaviour: neither [`backend/mail.md`](../backend/mail.md) nor [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md) existed, so this plan was the fact's only home. **ADR 0015 Decision 3** now makes production refuse any mode that cannot deliver, so `capture` is refused there **by construction rather than by falling back to `inert`** — superseding this decision's original reasoning that a startup crash over a mail setting is the worse failure. Outside production the fail-safe is unchanged. `mail.md` owns the resolution rule.
 - **D11 — No new configuration surface.** `MAIL_MODE=capture` is the **only** switch. The destination is a **convention**, not a setting, and it is gitignored. A second environment variable would be a second thing to misconfigure on a tool whose whole purpose is local manual verification — and this is pinned so the implementer does not reach for one mid-branch, since adding an environment variable is otherwise a stop.
 
 ### 3.3 Recommendations pending ratification
@@ -185,7 +191,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Dependencies:** **WI-1** (hard).
 - **Boundary validated:** that the delivery port genuinely supports **more than one** backend — the claim WI-1 could only assert — and that nothing above the mechanism observes which backend is selected.
 - **Invariants protected:** **I5** — and it *demonstrates* I5 rather than asserting it, since a capability that notices a delivery change was never behind the port.
-- **Verification:** unit tests over the capture backend (it writes the full message; it creates its destination). The mode resolution is proven at its edges: `capture` is selected **only** on exact opt-in outside production, and both an unrecognised value and `capture` under `NODE_ENV=production` warn and resolve to `inert` (**D10**). Two proofs that bite: **zero lines change inside `modules/channel-verification`** — diff-verifiable — and **the existing inert tests pass unchanged**, which is what "inert is untouched" means in evidence rather than in prose.
+- **Verification:** unit tests over the capture backend (it writes the full message; it creates its destination). The mode resolution is proven at its edges: `capture` is selected **only** on exact opt-in outside production, and both an unrecognised value and `capture` under `NODE_ENV=production` warn and resolve to `inert` (**D10**). *(That production assertion is what WI-7A verified and is left as the record of it; ADR 0015 Decision 3 later replaced the fallback with a refusal, so the test now asserts a throw — see D10's amendment.)* Two proofs that bite: **zero lines change inside `modules/channel-verification`** — diff-verifiable — and **the existing inert tests pass unchanged**, which is what "inert is untouched" means in evidence rather than in prose.
 - **DoD:** the capture backend exists and is selectable; `inert` unchanged and still the default and still every fallback's target; the destination is gitignored; `.env.example` documents the mode; typecheck + unit green.
 - **Commit/PR boundary:** one PR.
 - **Stop-risks:** if the capture backend **cannot be added without changing the port type**, → **stop**: that would confirm the wrong-abstraction risk §6 already names — a port shaped around its only implementation — and reshaping it is an architectural decision, not a detail of this Work Item. If `capture` cannot be made unreachable by accident, → **stop** rather than ship a mode that writes single-use secrets to disk on a stray environment value.
@@ -230,12 +236,41 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - An authenticated holder can request verification of their own email and confirm it; the endpoint becomes **Proven**; the self-view reflects it **as a projection**.
 - **All eight invariants hold**, and the grep-verifiable ones (**I1**, **I4**, **I5**, **I7**) are demonstrably true.
 - Changing the endpoint yields **Unproven with no write** to the capability; disabling the sweep job changes no answer.
-- Delivery remains credential-free and **inert by default**; the capture backend is selectable only by exact opt-in and never resolves as a fallback. No gating policy exists anywhere.
+- ~~Delivery remains credential-free and **inert by default**~~ — **retired 2026-09-02: not met, and not failed.** A later approved effort deliberately crossed the boundary this one excluded (§2: *"a **real mail provider** … no SMTP … no credentials"*). Under [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), credential-free now holds of the **non-delivering backends only**, and `inert` is the default **outside production**, which refuses any mode that cannot deliver. [`backend/mail.md`](../backend/mail.md) owns the accurate statement. **The rest of this criterion stands:** the capture backend is selectable only by exact opt-in and never resolves as a fallback, and no gating policy exists anywhere.
 - The API contract is co-versioned and the manual harness passes a full run — **including the successful-confirm leg**, with the execution method stated rather than implied.
 - **The capability has a platform document** — `docs/backend/channel-verification.md` exists, is listed in the documentation map, and owns the subsystem's mechanisms without restating ADR 0009 or the API contract.
 
 ## 8. Reconciliation
 
-*Added as this plan approaches `Historical`: where each Work Item's durable facts landed in the permanent documents, which findings were recorded, and the forward links. The capability's platform document is created when its subsystem exists in code (the Stable-Core rule, [ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); on its creation, ADR 0009 retains only the boundary and rationale.*
+### Where the durable knowledge landed
 
-That document is `docs/backend/channel-verification.md`, created by **WI-Docs**.
+| What | Now owned by |
+|---|---|
+| The boundary, the single owned fact, custody, and the lifecycle | [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) — which, since the platform document exists, retains only the boundary and rationale |
+| The subsystem's mechanisms — published surface, subject resolution, derived status, the challenge lifecycle, the digest, the single failure, the sweep, the concurrency invariants | [`backend/channel-verification.md`](../backend/channel-verification.md), created by **WI-Docs** under the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)) |
+| Endpoints, payloads, the opaque failure shape, the self-view projection | [API contract](../api/api-contract.md) |
+| Relationship, cascade and indexing rationale | [data model](../architecture/data-model.md) |
+| Hand-verification | the [verification harness](../development/verification/README.md), folder **10** |
+| **Delivery** — the port, its backends, their selection, the abuse controls and their sweep | [`backend/mail.md`](../backend/mail.md), under [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md). This effort built the boundary; a later one built the mechanism behind it |
+
+### Completion criteria, as they actually stand
+
+- **Met.** All ten Work Items merged · issue and confirm reach *Proven* and the self-view exposes it as a projection · all eight invariants hold, the grep-verifiable ones demonstrably · a changed endpoint yields *Unproven* with no write, and disabling the sweep changes no answer · the capability has its platform document, listed in the map and restating neither ADR 0009 nor the contract · the API contract is co-versioned.
+- **Retired, not met.** *"Delivery remains credential-free"* — see §7, superseded by [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md). The rest of that criterion stands.
+- **Outstanding.** The **human Postman gate is deferred and has not been run.** What has been run is an automated pass of folder 10 (see below), which is not the same act and does not stand in for it.
+
+### The harness run
+
+Folder 10 was executed under **Newman**, against the collection and the ordering this plan's WI-8 defined: **12 requests, 19 assertions, 0 failed**, including the successful-confirm leg (`204` → `proven` → replay refused identically) and the post-cooldown rotation. Newman is not a repository dependency; it was invoked transiently, so WI-8's non-goal stands.
+
+**What that run does not cover, stated so the gap is not mistaken for coverage:** CHV-11 and CHV-12 are runbook steps and are not requests in the collection, so no automated run reaches them; CHV-13 sends its single request **once**, where the scenario is eleven attempts, so the limiter leg was not exercised. Two steps the collection documents as manual were performed by the driver rather than by hand — reading the code from the capture file, and waiting out the resend cooldown.
+
+**The human Postman gate remains `Deferred — Not Run`.** It is tracked in [#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450), whose original WI-8 criterion is **retired rather than met** under the [mail-delivery plan](mail-delivery.md)'s D11, and it is the one act still standing between this plan and `Historical`.
+
+### Findings and follow-ups recorded
+
+[#578](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/578) (a `ChallengeCloseReason` variant with no producer, still open) · [#348](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/348) and [#449](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/449) (harness hygiene, deliberately untouched by WI-Docs and still untouched) · gating policy, which [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) assigns to each consuming endpoint and which no consumer has yet needed.
+
+### Status
+
+This plan stays **`Active`** until the human gate above is run. Everything else it set out to do is done and recorded here; archiving it now would assert a completion one criterion does not have.

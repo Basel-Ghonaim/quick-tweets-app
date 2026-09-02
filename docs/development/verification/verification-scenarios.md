@@ -292,6 +292,12 @@ each:
 > writes each message to `.mail-capture/`. Without it the code is unobtainable and
 > CHV-06 onward cannot run.
 >
+> **And the migrations must be applied**, `mail_send_attempts` included. Every
+> send passes through the mail mechanism's abuse controls, which **fail closed**
+> when their state cannot be read: an unapplied migration turns CHV-01 into a
+> `refused` produced by a correctly-behaving system. Read that answer as a missing
+> migration, never as a defect in the capability.
+>
 > **Three ordering constraints, all consequences rather than preferences.**
 > **CHV-13 must run last** — eleven confirmations exhaust the per-IP budget for
 > fifteen minutes and would block everything after it. **CHV-12 needs a restart**

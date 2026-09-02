@@ -39,8 +39,10 @@ const envSchema = z
     RECLAMATION_GRACE_MS: z.coerce.number().int().nonnegative().default(24 * 60 * 60 * 1000),
     RECLAMATION_INTERVAL_MS: z.coerce.number().int().positive().default(6 * 60 * 60 * 1000),
     RECLAMATION_BATCH: z.coerce.number().int().positive().default(100),
-    // Permissive `string`, not an enum, so an unexpected value warns and stays
-    // inert (see resolveMailMode) rather than taking the server down at startup.
+    // Permissive `string`, not an enum, because the value's fate depends on the
+    // environment rather than on the schema: outside production an unexpected
+    // one warns and stays inert, while production refuses anything that cannot
+    // deliver. `resolveMailMode` owns that split.
     MAIL_MODE: z.string().default("inert"),
     // The SMTP transport. A provider is a host and a credential (ADR 0015
     // Decision 1), so these are all that changes when one is swapped. Optional

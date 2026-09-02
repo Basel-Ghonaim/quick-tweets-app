@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the **outbound mail mechanism's design and rationale** — the port and its contract, the backends that implement it, how one is selected, and how a consumer composes it. It owns the *how* and the *why*.
 > It does **not** own: the **boundary decision** — that delivery is a separately-owned mechanism a consumer composes and never absorbs — which is [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) Decision 7's, and the operational posture recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md); the **content** of any message, which belongs to the consumer that composes it; or any consumer's own behaviour — for the only consumer today, [Channel Verification](channel-verification.md).
 > **Scope:** The server-side mechanism at `apps/api/src/modules/mail-delivery/`. **This document describes what exists today.** One backend delivers; the other two deliberately withhold delivery and are what a developer or the verification harness runs against.
-> **Version:** 1.5
-> **Last Updated:** 2026-09-01
+> **Version:** 1.6
+> **Last Updated:** 2026-09-02
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -62,6 +62,8 @@ The mode is **resolved once, at import**, not per send — which is what makes a
 
 Two controls, because the threat has two halves. A **recipient cap** answers one inbox being flooded. It cannot answer **spend and sender reputation**, which are measured against the sender — one origin spraying many addresses passes a per-recipient cap untouched — so a **global outbound ceiling** counts everything, keyed on nothing.
 
+**What counts as the same recipient is an equality and nothing more.** The address is lowercased and hashed, and the digest is what a window counts. Lowercasing closes the one bypass that costs nothing to close — the same inbox reached as `User@x.test` and `user@x.test` would otherwise be two keys and no cap at all. Stripping dots or plus-tags is deliberately **not** done: they mean different things at different providers, so a sender that guessed would merge two genuinely distinct recipients into one bucket. The digest is stored rather than the address because equality is the only question the controls ask, and keeping the address would accumulate every recipient ever mailed for a capability nothing uses.
+
 **Both wrap every backend.** The controls decorate whatever the registry returns, so the same path runs under the non-delivering backends too. A control that only guarded the delivering one would meet production for the first time, and a backend added later would have to remember to opt in.
 
 **The recipient cap is exact; the ceiling is not, and that is deliberate.** A recipient's slot is reserved under a per-recipient advisory lock: counting and then inserting lets two simultaneous sends past a cap of one, because neither transaction sees the other's uncommitted row. The ceiling takes no lock — it is a **circuit breaker provisioned with headroom**, and headroom is what absorbs the slippage a lock would otherwise buy at the price of serialising every send in the system. Contention stays where it belongs: two sends to one inbox wait on each other, two sends to different inboxes never meet.
@@ -98,7 +100,7 @@ Stated because their absence is a design position, not an omission:
 
 - **It composes no message.** Subject and body arrive from the consumer, which owns its own wording, formatting and language. There is no template engine and no shared message vocabulary.
 - **It does not retry, queue, or deduplicate.** A send is attempted once, synchronously, and its outcome is returned.
-- **It handles no bounce, complaint or suppression.** Nothing reports back, because nothing is delivered.
+- **It handles no bounce, complaint or suppression.** A send reports what the hand-off achieved and the mechanism then forgets the message; nothing asks a relay for its later verdict, and nothing here would receive one.
 - **It enforces no gating policy.** Whether an action *requires* something of a recipient is the consumer's decision; the controls above bound volume and nothing else. HTTP-edge rate limiting remains [Backend Security](security.md)'s.
 
 ## Responsibility boundary
