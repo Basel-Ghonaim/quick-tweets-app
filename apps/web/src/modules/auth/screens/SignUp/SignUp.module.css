@@ -4,9 +4,8 @@
   gap: var(--space-2);
 }
 
-/* A grid rather than a column, because the two password fields share a row.
-   `span` carries no layout of its own — it is a data attribute the consumer
-   reads — so the pairing is expressed here. */
+/* `span` carries no layout of its own — it is a data attribute the consumer
+   reads — so the password pairing is expressed here. */
 .form {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -8,10 +8,8 @@ import { describe, expect, test } from "vitest";
  * A change to one and not the others tears the composition, and nothing about
  * the result says which value was meant.
  *
- * The screens are scanned as well as the layout: a value repeated because it
- * cannot be referenced is only held by a check that sees every place it is
- * repeated. The current design is excluded — it is the untouched baseline and
- * predates these two widths.
+ * Screens are scanned too: a repeated value is only held by a check that sees
+ * every place it is repeated. The current design predates these two widths.
  */
 
 const MODULE = join(process.cwd(), "src/modules/auth");
