@@ -21,6 +21,7 @@
 | Change | Why an exception rather than `v2` |
 |---|---|
 | Tweet responses: `image` removed, superseded by the ordered `media` array | The field was documented as *"Reserved for future use. Always null in v1"* and never had a write path, so it never carried a value anything could depend on. No client reads it — the tweets UI has not been built. |
+| `POST /channel-verification/challenges`: the boolean `delivered` removed, superseded by the three-state `delivery` | The boolean asserted something no sender can promise. A relay's acceptance is not arrival, and a timeout leaves the outcome genuinely undetermined, so the field was **renamed rather than redefined** — a shape that kept its name while losing its meaning is the failure that makes a contract untrustworthy. No client reads it: no frontend calls channel verification. |
 
 ---
 
