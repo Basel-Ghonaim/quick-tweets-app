@@ -19,7 +19,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "../../shared/database/index.js";
 import { createMailSendAttemptRepository } from "./mailSendAttempt.repository.js";
 
-const TAG = `wi5-${Date.now().toString(36)}`;
+/** Prefixes every key this run writes, so its rows are its own to find and drop. */
+const TAG = `capsrace-${Date.now().toString(36)}`;
 const keyFor = (name: string) => `${TAG}-${name}`;
 
 const repo = createMailSendAttemptRepository();
