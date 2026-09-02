@@ -7,6 +7,10 @@
 > **Parent Issue:** [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)
 > **Supersedes:** —
 
+**Implementation status: Complete** · **Engineering work: Complete** · **Closure status: Pending Human Gate** · **Human Postman Gate: Deferred — Not Run**
+
+All six Work Items are merged and the mechanism is code-complete — every criterion recorded, criterion by criterion, in [§9](#9--reconciliation). The plan stays `Active` for **one** reason: the human Postman gate is a completion criterion, it is deferred, and it has not been run. It is **not** marked passed, and an automated pass of folder 10 is not a substitute for it — **D11** is unchanged. When that gate is performed, the plan transitions to `Historical`; the only other item §9 leaves open is the defining outcome, which was reported as executed by hand and is cited there as testimony rather than as something this repository verifies.
+
 This plan sequences the implementation of a **real outbound mail mechanism** into six independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), which owns the boundary, the production posture, the abuse controls and the result semantics, and which this plan never reopens. The mechanism as it exists today is owned by [`backend/mail.md`](../backend/mail.md).
 
 It is a **strategy document**: it owns the effort's execution order, boundaries, invariants, and the rationale for that order. Each Work Item's granular acceptance criteria and status belong to its Issue, which this plan links and never mirrors.
