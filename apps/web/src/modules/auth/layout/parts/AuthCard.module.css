@@ -8,6 +8,15 @@
   background-color: var(--surface-default);
 }
 
+.signature {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-block: var(--space-8) 0;
+  color: var(--text-muted);
+}
+
 @media (width <= 36rem) {
   .root {
     padding: var(--space-6);

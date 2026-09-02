@@ -1,0 +1,44 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* `span` carries no layout of its own — it is a data attribute the consumer
+   reads — so the password pairing is expressed here. */
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-block-start: var(--space-6);
+}
+
+.form > * {
+  grid-column: 1 / -1;
+}
+
+.form > [data-type="password"] {
+  grid-column: auto;
+}
+
+/* Two columns of a password field leave each too narrow to carry its own
+   error once the card reaches the compact width. */
+@media (width <= 36rem) {
+  .form > [data-type="password"] {
+    grid-column: 1 / -1;
+  }
+}
+
+.alternatives {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-6);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-width-thin) solid var(--border-default);
+}
+
+.altLabel {
+  margin: 0;
+}

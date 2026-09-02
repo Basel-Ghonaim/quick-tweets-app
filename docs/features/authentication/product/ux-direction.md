@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.7
-> **Last Updated:** 2026-09-01
+> **Version:** 1.8
+> **Last Updated:** 2026-09-02
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
@@ -14,7 +14,7 @@
 
 **What it may now do, and could not before:** name a token or a component the design requires and the vocabulary does not yet carry. That is a proposal into the [Foundation](../../../frontend/design-system/foundation.md) and the [authoring contract](../../../frontend/design-system/components.md), never a value invented at a call site — the prohibition on hardcoded literals is untouched.
 
-**`D8` is the one it now decides.** The [brief](ux-brief.md) deferred the brand surface *to* visual design rather than away from it; §3 ratifies a **typographic brand panel**, and no later exploration reopens its shape.
+**`D8` is the one it now decides.** The [brief](ux-brief.md) deferred the brand surface *to* visual design rather than away from it; §3 ratifies a **continuous brand ground** carrying the page at every viewport, and no later exploration reopens its shape.
 
 ---
 
@@ -51,7 +51,7 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 
 ## 3 · Layout principles
 
-- **The form column is the invariant, and it is the deliverable.** Every auth screen is a single, centred, width-constrained column, designed to be **complete and correct standing alone** — not a half-layout awaiting a second half. The brand zone `D8` introduces is *additive beside* this column and never restructures it. That is what keeps `D8` independently reversible, and it means the design is complete at the column level with the zone or without it.
+- **The form column is the invariant, and it is the deliverable.** Every auth screen is a single, width-constrained column, designed to be **complete and correct standing alone** — not a half-layout awaiting a second half. The brand zone `D8` introduces sits *behind and beside* this column and never restructures it: every rule in §4–§10 holds with the zone present or absent.
 - **One concern per screen.** Login is a single dense screen (`D4`). Registration, Profile and Verify are separate steps; do not merge them to save a screen.
 - **Vertical rhythm is composed from the spacing scale.** Layout spacing belongs to the consumer, not the Design System — auth composes its own from `--space-*` directly, which the Foundation explicitly permits.
 - **No layout reservations for OAuth.** `D1` removed it; leave no gap, divider or "or" separator where it used to sit.
@@ -92,13 +92,15 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 | Screen | Primary (filled) | Secondary (text weight) |
 |---|---|---|
 | Login | "Log in" | "Forgot password?" · "Create new account" · "Browse without an account" |
-| Registration | "Continue" | "Back to login" |
+| Registration | "Create account" | "Back to login" · "Browse without an account" |
 | Phase 2 · Profile | "Save" / "Continue" | **"Skip"** |
 | Phase 3 · Verify | "Verify" | **"Later"** · "Resend" (visible cooldown) |
 | Forgot password | "Send code" | "Back to login" |
 | Reset password | "Reset password" | — |
 
 - **One filled button per screen.** Everything else is `Button variant="ghost" size="small"`. **Cross-screen navigation is the exception and binds `Link`**, which carries the anchor semantics a button cannot (§15).
+- **A CTA names what its own action does, not where the reader is in a sequence.** Registration's button reads "Create account" because the account exists the moment it succeeds — the journey continues afterwards, and every step of it is optional, so a label borrowed from the sequence would understate what the reader just did.
+- **Leaving without an account is offered wherever an account is being asked for**, which is registration as well as login (`D9`). A reader who arrives at the form and decides against one should not have to go back a screen to read.
 - **Skip and Later must be unmissable but never visually co-equal with the primary action.** The research identified this as the most important CTA question: the target is *obviously available, not obviously recommended*.
 - **Skip is one tap.** No confirmation, no disguised sub-flow. Real products fail exactly here, and it destroys trust in the escape hatch.
 - **Resend is never hidden while cooling down** — visible, disabled, with its countdown legible.
@@ -140,13 +142,13 @@ This is not pedantry — it is a defect this project shipped and caught. In the 
 
 **Every colour decision must be reviewed in both themes. No exceptions.**
 
-### Elevation — restrained, and now backed
+### Elevation — restrained, and unbacked
 
-Shadows exist only as primitives, declared once rather than per theme, so a shadow tuned for the light ground is wrong on the dark one. **Auth previously used no elevation at all** — not because flatness was the design, but because the system could not back a shadow decision. That was a scarcity workaround, and it is retired here.
+Shadows exist only as primitives, declared once rather than per theme, so a shadow tuned for the light ground is wrong on the dark one. **No semantic elevation tier is earned**, and the primitive family says so at its own declaration: no consumer has established an elevation role, so an `--elevation-*` intent would be invention.
 
-**Surface and border remain the primary means of separation**: `--surface-default` on `--surface-page`, divided by a `--border-width-thin` hairline in `--border-default`. §1's *unceremonious* register still holds — a login form is not a floating object, and nothing in auth is dramatic.
+**Surface and border are therefore the means of separation**, not a preference among several: `--surface-default` on `--surface-page`, divided by a `--border-width-thin` hairline in `--border-default`. §1's *unceremonious* register agrees — a login form is not a floating object, and nothing in auth is dramatic.
 
-Where a container genuinely needs lifting off its ground, elevation is now available through a **semantic tier resolved per theme**, and never through a raw shadow primitive. A tier that does not exist yet is named as a gap (§17.1), not approximated.
+Where a container would genuinely need lifting off its ground, that is a **stop into a proposed tier** (§17.1) — never a raw shadow primitive bound at a call site, and never a per-theme shadow invented by the consumer. Nothing in auth needs one today.
 
 ---
 
@@ -175,7 +177,9 @@ Where a container genuinely needs lifting off its ground, elevation is now avail
 
 Every flow needs somewhere to speak about the form as a whole: a failed login, a rate limit, the neutral forgot-password confirmation, an expired link, a reset success. `Alert` is committed but unbuilt, and **auth does not need to wait for it.**
 
-**Auth composes the region from vocabulary that already exists:** `Typography` for the text, a role's `-subtle` fill with `--role-on-surface-<role>` text for the treatment, `--border-radius-md` and a hairline border for the shape, `--space-*` for padding, and `role="alert"` on the container so it is announced rather than merely rendered.
+**Auth composes the region from vocabulary that already exists:** `Typography` for the text, a role's `-subtle` fill with `--role-on-surface-<role>` text for the treatment, `--border-radius-md` and a hairline border in that role for the shape, `--space-*` for padding, and `role="alert"` on the container so it is announced rather than merely rendered.
+
+**The fill is a tenth-alpha wash, so the pair it forms is a composite no token check can measure.** `tokenContrast` compares token against token; a translucent fill resolves against whatever sits behind it. In light, `--role-on-surface-error` against its own composited fill measured **4.13:1 on the card and 3.98:1 on the page** against a 4.5 floor — so the token moved one step darker, to **5.54:1 and 5.34:1**, which also lifts it on every plain surface. What guards the composite is the rendered accessibility run, not the token check ([Finding 0022](../../../architecture/findings/0022-subtle-fills-are-composites-no-token-check-measures.md)).
 
 This is **feature-local composition**, which the Foundation explicitly permits — a page's composition belongs to the page until a shared concept is established. `Alert` is committed rather than speculative, so this region is **an interim standing in for it** — not the evidence that would justify it. What the region settles is the *shape* `Alert` should take, proven against six real screens before a line of it is written; auth's messages bind `Alert` once it exists.
 
@@ -214,12 +218,12 @@ Already guaranteed by the layer. **The job is not to add them — it is to not b
 
 - **Never design a custom focus treatment.** Components compose the owned focus ring and never declare their own; an exploration inventing a focus style breaks a system invariant.
 - **The minimum hit target is `--control-target-min`**, already floored by the controls. Design nothing smaller — including any interactive part of the stepper.
-- **Contrast is token-guaranteed in both themes** *provided* §7's on-surface/fill rule is respected.
+- **Contrast is token-guaranteed in both themes** for the pairs `tokenContrast` actually asserts — a role's text against a surface, and on-fill text against its fill — *provided* §7's on-surface/fill rule is respected. **A translucent fill is outside that guarantee**: the check measures token against token and cannot see a composite, so a design that stacks a `-subtle` fill on a surface owes its own measurement (§9).
 - **Never signal state by colour alone** — why the stepper's optional steps carry a text label, and why an error needs more than a red border.
 - **Status messages must be announced**, not merely rendered: the neutral confirmation, the expired-link message and any form-level error need a live region. Field-level errors already have `role="alert"` for free.
 - **Focus moves to the first error on failed submit.**
 - **Icon-only controls need an accessible name.** `IconButton` enforces this at the type level; any new icon-only affordance inherits the obligation.
-- **The brand zone carries no focusable element** (§3). That is what makes reading and focus order correct across the split without anything to maintain — the invariant is structural, not a checklist item.
+- **The brand zone carries no focusable element** (§3). That is what makes reading and focus order reach the form first at every viewport without anything to maintain — the invariant is structural, not a checklist item.
 
 ---
 
@@ -324,7 +328,7 @@ Each was observed in a real product and is rejected for a stated reason:
 3. **Icons: use the existing set, or a clearly marked placeholder** (§15). An exploration never adds one in passing.
 4. **Never redesign a component's internals** — only its composition on a page.
 5. **Both themes, always.** A light-only review cannot catch §7's contrast class of defect.
-6. **Do not decide `D6` or `D7`.** `D8` is decided — the brand panel of §3 — and an exploration composes within it rather than reopening its shape.
+6. **Do not decide `D6` or `D7`.** `D8` is decided — the brand ground of §3 — and an exploration composes within it rather than reopening its shape.
 7. **Do not reopen `D1`–`D5`** or the three-phase journey.
 8. **No pixel values** except where the Design System already defines one.
 9. **§12's accessibility invariants are non-negotiable** — an exploration breaking one is wrong regardless of how it looks.
@@ -337,7 +341,7 @@ Visual detail, deliberately unresolved — and **none of it requires a component
 
 - Exact copy for the neutral confirmation, the expired link-or-code dead end, and the optional-step labels — the *shape* is decided, the words are not.
 
-**Resolved and no longer open:** the stepper's visual form and where its optional label sits · the message region's proportions · registration's step count within Phase 1 · the column's measure and its vertical rhythm · the brand zone's ground and copy · card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · **which components this design requires, and which stay closed by analysis** (§15) · how a missing icon is handled during exploration (placeholder, §15) · **whether auth has a brand surface, and of what kind** (`D8` — a typographic brand panel, §3).
+**Resolved and no longer open:** the stepper's visual form and where its optional label sits · the message region's proportions · registration's step count within Phase 1 · the column's measure and its vertical rhythm · the brand zone's ground and copy · card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · **which components this design requires, and which stay closed by analysis** (§15) · how a missing icon is handled during exploration (placeholder, §15) · **whether auth has a brand surface, and of what kind** (`D8` — a continuous typographic brand ground, §3) · **registration's primary and secondary actions** (§5).
 
 ---
 

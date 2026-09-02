@@ -34,7 +34,7 @@
   --role-on-surface-secondary: var(--palette-neutral-600);
   --role-on-surface-success: var(--palette-green-700);
   --role-on-surface-warning: var(--palette-amber-700);
-  --role-on-surface-error: var(--palette-red-600);
+  --role-on-surface-error: var(--palette-red-700);
   --role-on-surface-info: var(--palette-blue-600);
 }
 

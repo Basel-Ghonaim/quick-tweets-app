@@ -1,15 +1,15 @@
 import { Button, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
-import { useLoginFlow } from "../../hooks";
+import { useRegisterFlow } from "../../hooks";
 import { authFormSchemas } from "../../config/authFormSchemas";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
 import { AuthLink } from "../../navigation";
-import styles from "./SignIn.module.css";
+import styles from "./SignUp.module.css";
 
-const fields = toFieldEntries(authFormSchemas.loginFields);
+const fields = toFieldEntries(authFormSchemas.registerFields);
 
-export const SignIn = () => {
+export const SignUp = () => {
   const {
     values,
     errors,
@@ -18,15 +18,15 @@ export const SignIn = () => {
     serverError,
     handleChange,
     handleSubmit,
-  } = useLoginFlow();
+  } = useRegisterFlow();
 
   return (
     <div className={styles.root}>
       <Typography variant="heading-large" as="h1">
-        {AUTH_COPY.signIn.title}
+        {AUTH_COPY.signUp.title}
       </Typography>
       <Typography variant="body-medium" tone="secondary">
-        {AUTH_COPY.signIn.subtitle}
+        {AUTH_COPY.signUp.subtitle}
       </Typography>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -53,31 +53,23 @@ export const SignIn = () => {
           type="submit"
           fullWidth
           isLoading={isSubmitting}
-          loadingText={AUTH_COPY.signIn.submitting}
+          loadingText={AUTH_COPY.signUp.submitting}
         >
-          {AUTH_COPY.signIn.submit}
+          {AUTH_COPY.signUp.submit}
         </Button>
-
-        <p className={styles.aside}>
-          <AuthLink href="/auth/forgot" tone="muted">
-            {AUTH_COPY.signIn.forgotPassword}
-          </AuthLink>
-        </p>
       </form>
 
-      {/* Below the rule is for people who cannot sign in because they have no
-          account: make one, or read without one. */}
+      {/* Below the rule is for people who should not be creating an account:
+          they already have one, or they only came to read. */}
       <div className={styles.alternatives}>
         <Typography variant="body-small" tone="muted" className={styles.altLabel}>
-          {AUTH_COPY.signIn.altLabel}
+          {AUTH_COPY.signUp.altLabel}
         </Typography>
 
-        <AuthLink href="/auth/signup">
-          {AUTH_COPY.signIn.createAccount}
-        </AuthLink>
+        <AuthLink href="/auth/signin">{AUTH_COPY.signUp.backToLogin}</AuthLink>
 
         <AuthLink href="/feed" tone="muted">
-          {AUTH_COPY.signIn.browseAsGuest}
+          {AUTH_COPY.signUp.browseAsGuest}
         </AuthLink>
       </div>
     </div>

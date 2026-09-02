@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for the **ratified product and UX decisions** governing the authentication experience — which flows exist, what states each must support, and the post-registration journey. It owns **decisions**, never their visual expression and never their component mapping.
 > **Scope:** The auth experience as a product: Login, Registration, Profile Completion, Email Verification, Forgot Password, Reset Password, and the unverified in-app state. Feature behaviour as currently implemented is the [authentication feature document](../authentication.md)'s; the wire contract is the [API contract](../../../api/api-contract.md)'s.
-> **Version:** 1.2
-> **Last Updated:** 2026-08-25
+> **Version:** 1.3
+> **Last Updated:** 2026-09-02
 > **Owner:** Basel Ghonaim
 
 `D1`–`D5`, `D9`, and the post-registration journey (Phases 1–3) are **settled product direction and are not reopened downstream.** `D6` and `D7` are **deferred**, and no later phase may foreclose them. `D8` was deferred *to* visual design and has since been decided there.
@@ -19,7 +19,7 @@ These decisions were subsequently tested against how real products behave; what 
 | Tier | Contents |
 |---|---|
 | **Live now (backend live, UI buildable today)** | Register (username · email · password) · login by neutral identifier (username or email) · logout · logout-all · silent refresh · `/users/me` · rate limiting · generic `401` · editable username · **`PATCH /users/me` for name, bio and avatar** · **authenticated media upload (`POST /media`)** |
-| **Built in the backend, not wired to the product** | Channel Verification: issue/confirm, single-use time-limited codes, replay refusal — email is its first channel. Mail delivery is a port that exists but is `inert`: **nothing is actually sent yet** |
+| **Built in the backend, not wired to the product** | Channel Verification: issue/confirm, single-use time-limited codes, replay refusal — email is its first channel. Mail delivery is a port with a delivering backend and its own abuse controls; **which backend runs is configuration**, and the non-delivering ones are what a developer runs against ([`backend/mail.md`](../../../backend/mail.md)) |
 | **Future, required by direction** | Email Verification as a product flow · **Forgot/Reset Password** (needs a reset credential and an endpoint that do not exist yet; the only fixed constraints are expiry and single use) · the authenticated shell to land on |
 
 > **Core note:** Profile Completion (Phase 2) is the **only stage of the entire auth experience buildable today with zero new backend work** — the endpoint is live and every component it needs already exists.
@@ -44,9 +44,9 @@ These decisions were subsequently tested against how real products behave; what 
 
 **`D6` · `D7` — deferred.** Session-expiry re-entry and remember-me are out of scope for this phase; no layout may assume an answer to either.
 
-**`D8` — delegated to visual design, and decided there.** This brief still takes no position of its own on the brand surface: the [design direction](ux-direction.md) owns it and has ratified a **typographic brand panel**, additive beside the form column and absent on mobile. The screen inventory below remains **content requirements, not layout.**
+**`D8` — delegated to visual design, and decided there.** This brief takes no position of its own on the brand surface, and does not restate the one the [design direction](ux-direction.md) took: §3 there owns its shape and its constraints. The screen inventory below remains **content requirements, not layout.**
 
-**`D9` — The feed is readable without an account.** Login offers a third way on, beside signing in and registering: browsing as a guest. Reading is all a guest may do — posting, liking, following and uploading each require an account — so a write action met as a guest is a prompt to sign up, never a silent failure.
+**`D9` — The feed is readable without an account.** Every screen that asks for an account offers a third way on beside signing in and registering: browsing as a guest. Reading is all a guest may do — posting, liking, following and uploading each require an account — so a write action met as a guest is a prompt to sign up, never a silent failure.
 
 ---
 
@@ -94,7 +94,7 @@ Three fields on a single combined screen, with one explicit skip action:
 | Flow | Screens | States that must exist |
 |---|---|---|
 | **Login (primary)** | 1 | idle · submitting · **generic credential error** (never field-specific) · rate-limited · → app. CTAs: "Create new account", "Forgot password?", **"Browse without an account"** |
-| **Phase 1 · Registration** | 1 | idle · inline validation (lowercase-only username **rejected, not normalized** · email format · password + confirm) · `409` duplicate (field-specific is safe here) · rate-limited · submitting · success → Phase 2 |
+| **Phase 1 · Registration** | 1 | idle · inline validation (lowercase-only username **rejected, not normalized** · email format · password + confirm) · `409` duplicate (field-specific is safe here) · rate-limited · submitting · success → Phase 2. CTAs: "Back to login", **"Browse without an account"** |
 | **Phase 2 · Profile completion** | 1 | idle · per-field inline validation (50- and 160-character limits) · **avatar upload: idle → in progress → success → retryable failure** · image type/size rejection with an explicit message · saving · success → Phase 3 · **"Skip" → Phase 3 directly** |
 | **Phase 3 · Email verification** | prompt + outcome | OTP entry · resend with an **announced** cooldown · invalid/expired code · resend exhausted · verified ✓ · **"Later" → app** · deep-link path: success landing and expired-link landing |
 | **Unverified in-app state** | banner + restricted moment | persistent reminder · restricted-action response · both dissolve together on verification |

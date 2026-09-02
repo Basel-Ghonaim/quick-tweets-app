@@ -56,6 +56,20 @@ export const AUTH_COPY = {
     browseAsGuest: "Browse without an account",
   },
 
+  signUp: {
+    title: "Create your account",
+    subtitle: "This takes about a minute.",
+
+    /* The account exists the moment this succeeds; the steps after it are
+       optional, so the label names the action rather than the sequence. */
+    submit: "Create account",
+    submitting: "Creating account…",
+
+    altLabel: "Already have an account?",
+    backToLogin: "Back to login",
+    browseAsGuest: "Browse without an account",
+  },
+
   /* Replaced rather than translated in a second language. */
   samplePosts: [
     {
