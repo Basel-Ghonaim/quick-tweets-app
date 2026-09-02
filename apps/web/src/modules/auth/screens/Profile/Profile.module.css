@@ -1,0 +1,42 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-block-start: var(--space-6);
+}
+
+.avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Reserves its line so the form does not shift as the upload reports. */
+.uploadState {
+  min-block-size: var(--space-5);
+  margin: 0;
+  font: var(--type-body-small);
+  color: var(--text-secondary);
+}
+
+/* Shares the row the bio's error already reserves, so it costs no height. */
+.count {
+  margin: 0;
+  margin-block-start: calc(var(--space-4) * -1);
+  text-align: end;
+  font: var(--type-body-small);
+  color: var(--text-muted);
+}
+
+.aside {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}

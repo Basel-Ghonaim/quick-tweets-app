@@ -3,6 +3,7 @@ import { AuthDesignProvider } from "./_design";
 import { AuthShell } from "./AuthShell";
 import { SignIn } from "./screens/SignIn";
 import { SignUp } from "./screens/SignUp";
+import { Profile } from "./screens/Profile";
 import { JourneyLayout } from "./layout/JourneyLayout";
 
 /**
@@ -30,6 +31,7 @@ export const authRoute = (
     <Route path="signin" element={<SignIn />} />
     <Route element={<JourneyLayout />}>
       <Route path="signup" element={<SignUp />} />
+      <Route path="profile" element={<Profile />} />
     </Route>
   </Route>
 );
