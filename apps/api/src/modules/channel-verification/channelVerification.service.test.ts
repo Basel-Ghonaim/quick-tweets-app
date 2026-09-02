@@ -206,6 +206,34 @@ describe("issuing", () => {
     expect(challenges[0]!.expiresAt.getTime()).toBe(T0.getTime() + TTL);
   });
 
+  it("reports the whole cooldown as the resend window", async () => {
+    const { service } = build();
+
+    const outcome = await service.issue({ userId: USER, endpoint: ENDPOINT });
+
+    expect(outcome.resendAvailableInSeconds).toBe(COOLDOWN / 1000);
+  });
+
+  it("shortens the window by however long the send took", async () => {
+    // Stands in for a slow transport: the anchor is stamped at T0, and every
+    // later reading — including the one that produces the answer — is ten
+    // seconds on.
+    let firstRead = true;
+    const { service } = build({
+      now: () => {
+        if (firstRead) {
+          firstRead = false;
+          return T0;
+        }
+        return new Date(T0.getTime() + 10_000);
+      },
+    });
+
+    const outcome = await service.issue({ userId: USER, endpoint: ENDPOINT });
+
+    expect(outcome.resendAvailableInSeconds).toBe(COOLDOWN / 1000 - 10);
+  });
+
   it("keeps the challenge when delivery fails — reported, never destructive", async () => {
     const { service, challenges } = build({ mailOk: false });
 

@@ -55,9 +55,9 @@ export const createChannelVerificationController = (
       // passed downstream in place of a subject.
       if (endpoint === null) throw AppError.notFound("Account");
 
-      const { delivery } = await service.issue({ userId, endpoint });
+      const { delivery, resendAvailableInSeconds } = await service.issue({ userId, endpoint });
 
-      sendSuccess(res, { delivery }, 202);
+      sendSuccess(res, { delivery, resendAvailableInSeconds }, 202);
     } catch (err) {
       next(asHttpError(err));
     }

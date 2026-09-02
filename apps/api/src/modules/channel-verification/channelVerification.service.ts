@@ -49,6 +49,16 @@ export interface ChannelVerificationServiceDeps {
   resendCooldownMs?: number;
 }
 
+/**
+ * Whole seconds from `from` until `target`, never negative.
+ *
+ * Rounded up so a caller told `n` and waiting `n` is past the window rather
+ * than a fraction short of it — the difference between one wasted refusal and
+ * none.
+ */
+const secondsUntil = (target: Date, from: Date): number =>
+  Math.max(0, Math.ceil((target.getTime() - from.getTime()) / 1000));
+
 const composeMessage = (code: ChallengeCode) => ({
   subject: "Your verification code",
   body: `Your verification code is ${code}. It expires shortly; if you did not request it, ignore this message.`,
@@ -128,11 +138,22 @@ export const createChannelVerificationService = (
       code = await persistChallenge(input, at);
     }
 
+    // The anchor `persistChallenge` just stamped. Held now so the window is
+    // measured from when the throttle actually started, not from when the send
+    // happened to finish.
+    const resendAvailableAt = new Date(at.getTime() + resendCooldownMs);
+
     // Sent after commit: a transport failure must not undo a persisted
     // challenge, and no row lock is held across a network call.
     const result = await mail.send({ to: input.endpoint, ...composeMessage(code) });
 
-    return { delivery: result.outcome } satisfies IssueOutcome;
+    return {
+      delivery: result.outcome,
+      // Read after the send, so a slow transport shortens the number rather
+      // than inflating it: a caller counting down from a stale figure would
+      // still be waiting when the window had already opened.
+      resendAvailableInSeconds: secondsUntil(resendAvailableAt, now()),
+    } satisfies IssueOutcome;
   };
 
   const confirm: IChannelVerificationService["confirm"] = async ({
