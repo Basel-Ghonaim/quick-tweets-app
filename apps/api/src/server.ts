@@ -47,10 +47,11 @@ const start = async () => {
     console.log(`   Environment: ${env.NODE_ENV}\n`);
   });
 
-  // 3. Background jobs — the scheduler runs the refresh-token cleanup (M10),
-  //    media reclamation (M11, report-only unless explicitly set destructive),
-  //    and the channel-verification sweep (hygiene; no answer depends on it).
-  //    A dedicated lock connection gives cross-instance single-run.
+  // 3. Background jobs — each owned by the module it belongs to; the scheduler
+  //    holds no domain knowledge and the registrations below are the whole of
+  //    what it knows. A dedicated lock connection gives cross-instance
+  //    single-run. Media reclamation is report-only unless explicitly set
+  //    destructive; the two sweeps are hygiene, and no answer depends on them.
   const jobLock = createPostgresJobLock();
   const scheduler = createScheduler({ lock: jobLock });
   scheduler.register(createRefreshTokenCleanupJob());
