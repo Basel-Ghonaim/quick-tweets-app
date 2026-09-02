@@ -81,6 +81,19 @@ export const TheShellHoldsStill: Story = {
   },
 };
 
+/** The body here renders no signature of its own, so finding one is the card
+ *  carrying it. */
+export const TheCardSignsItself: Story = {
+  decorators: [at("/auth/signin?design=proposed")],
+  play: async ({ canvasElement }) => {
+    const card = canvasElement.querySelector("main > div:last-of-type");
+
+    await expect(
+      within(card as HTMLElement).getByText(AUTH_COPY.brand.markLabel),
+    ).toBeVisible();
+  },
+};
+
 /** An absent parameter and a malformed one both resolve to the current design,
  *  so losing it in a navigation is silent. */
 export const TheModeSurvivesANavigation: Story = {

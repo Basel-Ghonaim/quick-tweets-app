@@ -1,6 +1,5 @@
 import { Button, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
-import { BrandMark } from "@shared/brand";
 import { useLoginFlow } from "../../hooks";
 import { authFormSchemas } from "../../config/authFormSchemas";
 import { AUTH_COPY } from "../../config/copy";
@@ -81,13 +80,6 @@ export const SignIn = () => {
           {AUTH_COPY.signIn.browseAsGuest}
         </AuthLink>
       </div>
-
-      <p className={styles.signature}>
-        <BrandMark size={16} />
-        <Typography variant="body-small" tone="muted">
-          {AUTH_COPY.brand.markLabel}
-        </Typography>
-      </p>
     </div>
   );
 };
