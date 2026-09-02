@@ -14,9 +14,21 @@ export type ChannelVerificationErrorCode =
 export class ChannelVerificationError extends Error {
   public readonly code: ChannelVerificationErrorCode;
 
-  constructor(code: ChannelVerificationErrorCode, message: string) {
+  /**
+   * Whole seconds until the refused action may be retried, where the module
+   * knows. Carried transport-agnostically — the boundary decides that HTTP
+   * spells it `Retry-After`.
+   */
+  public readonly retryAfterSeconds?: number;
+
+  constructor(
+    code: ChannelVerificationErrorCode,
+    message: string,
+    retryAfterSeconds?: number,
+  ) {
     super(message);
     this.code = code;
+    this.retryAfterSeconds = retryAfterSeconds;
     this.name = "ChannelVerificationError";
     // Preserve the prototype chain for `instanceof` across the transpile target.
     Object.setPrototypeOf(this, ChannelVerificationError.prototype);
@@ -42,11 +54,18 @@ export class ChannelVerificationError extends Error {
     );
   }
 
-  /** Another challenge was issued for this subject too recently. */
-  static cooldownActive(): ChannelVerificationError {
+  /**
+   * Another challenge was issued for this subject too recently.
+   *
+   * Carries how long is left, because the caller is asking about their own
+   * address and their own throttle: nothing here is another account's to leak,
+   * and withholding it only forces the caller to guess the setting.
+   */
+  static cooldownActive(retryAfterSeconds?: number): ChannelVerificationError {
     return new ChannelVerificationError(
       "cooldown_active",
       "A challenge was issued for this endpoint too recently",
+      retryAfterSeconds,
     );
   }
 

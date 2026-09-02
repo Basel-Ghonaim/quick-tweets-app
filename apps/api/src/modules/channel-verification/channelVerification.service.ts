@@ -95,7 +95,11 @@ export const createChannelVerificationService = (
         lastChallengedAt !== null &&
         at.getTime() - lastChallengedAt.getTime() < resendCooldownMs
       ) {
-        throw ChannelVerificationError.cooldownActive();
+        // The same anchor a successful issue reports its window from, read from
+        // the other side: what is left of it rather than the whole of it.
+        throw ChannelVerificationError.cooldownActive(
+          secondsUntil(new Date(lastChallengedAt.getTime() + resendCooldownMs), at),
+        );
       }
 
       // A resend rotates: the previous secret stops working, so a message that

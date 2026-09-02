@@ -287,6 +287,20 @@ describe("the resend throttle", () => {
     });
   });
 
+  it("says how much of the window is left, from the same anchor", async () => {
+    let clock = T0;
+    const { service } = build({ now: () => clock });
+    await service.issue({ userId: USER, endpoint: ENDPOINT });
+
+    // Twenty seconds into a sixty-second window.
+    clock = new Date(T0.getTime() + 20_000);
+
+    await expect(service.issue({ userId: USER, endpoint: ENDPOINT })).rejects.toMatchObject({
+      code: "cooldown_active",
+      retryAfterSeconds: 40,
+    });
+  });
+
   it("rotates once the cooldown has passed, and the old code stops working", async () => {
     let clock = T0;
     const { service, challenges } = build({ now: () => clock });
