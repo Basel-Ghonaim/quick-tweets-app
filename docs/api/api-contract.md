@@ -820,7 +820,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 // register), or the avatar could not be attached / violates the avatar policy (JPEG or PNG
 // only, ≤ 1 MiB). Opaque: never names the token.
 { "success": false, "error": { "type": "validation", "message": "Avatar does not meet the requirements",
-    "details": { "avatar": ["Avatar must be a JPEG or PNG image"] } } }
+    "errors": { "avatar": ["Avatar must be a JPEG or PNG image"] } } }
 ```
 
 **Notes:**

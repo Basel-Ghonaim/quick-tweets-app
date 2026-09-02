@@ -11,6 +11,7 @@ import {
 } from "@shared/schema-form";
 import { useAuthActions } from "./useAuthActions";
 import { authFormSchemas } from "../config/authFormSchemas";
+import { afterSuccess } from "../services";
 
 import type { AuthRequestType } from "../store";
 
@@ -67,12 +68,20 @@ const useAuthFormBase = <
 
 // ─── Public Consumer Hooks ────────────────────────────────────────────────────
 
-export const useLoginFlow = () => {
+export const useLoginFlow = (onDone?: () => void) => {
   const { login } = useAuthActions();
-  return useAuthFormBase(authFormSchemas.loginFields, login, "login");
+  return useAuthFormBase(
+    authFormSchemas.loginFields,
+    afterSuccess(login, onDone),
+    "login",
+  );
 };
 
-export const useRegisterFlow = () => {
+export const useRegisterFlow = (onDone?: () => void) => {
   const { register } = useAuthActions();
-  return useAuthFormBase(authFormSchemas.registerFields, register, "register");
+  return useAuthFormBase(
+    authFormSchemas.registerFields,
+    afterSuccess(register, onDone),
+    "register",
+  );
 };
