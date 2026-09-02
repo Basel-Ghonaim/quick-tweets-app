@@ -2,6 +2,7 @@ import { Navigate, Route } from "react-router-dom";
 import { AuthDesignProvider } from "./_design";
 import { AuthShell } from "./AuthShell";
 import { SignIn } from "./screens/SignIn";
+import { SignUp } from "./screens/SignUp";
 import { JourneyLayout } from "./layout/JourneyLayout";
 
 /**
@@ -28,7 +29,7 @@ export const authRoute = (
     <Route index element={<Navigate to="signin" replace />} />
     <Route path="signin" element={<SignIn />} />
     <Route element={<JourneyLayout />}>
-      <Route path="signup" />
+      <Route path="signup" element={<SignUp />} />
     </Route>
   </Route>
 );
