@@ -7,7 +7,7 @@ import { restProfile } from "./restProfile";
 import { executeProfileUpdate } from "./executeProfileUpdate";
 import { profileFormSchema } from "./profileFormSchema";
 import { useAvatarUpload } from "./useAvatarUpload";
-import type { ProfileEdits } from "./profile.types";
+import { composeEdits } from "./composeEdits";
 import type { AvatarUploadStatus } from "./avatarUpload";
 
 interface ProfileFlow {
@@ -38,8 +38,7 @@ export const useProfileFlow = (onDone?: () => void, repo = restProfile()): Profi
 
   const submit = useCallback(
     async (values: { name: string; bio: string }) => {
-      const edits: ProfileEdits = { name: values.name, bio: values.bio };
-      if (avatar.token) edits.avatarToken = avatar.token;
+      const edits = composeEdits(values, avatar.token);
 
       await executeProfileUpdate(dispatch, () => repo.updateProfile(edits));
       onDone?.();
