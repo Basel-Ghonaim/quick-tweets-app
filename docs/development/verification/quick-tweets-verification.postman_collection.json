@@ -4223,7 +4223,7 @@
     },
     {
       "name": "10 · Channel verification (CHV)",
-      "description": "Proof of control over the account's email.\n\nREQUIRES the server started with MAIL_MODE=capture, which writes each message to server/.mail-capture/. The code is deliberately absent from every API response: read it from the newest file and set it as cvCode before CHV-06.\n\nEvery request carries an explicit auth block, because the collection root declares bearer {{accessTokenA}} — without one, CHV-09 would run authenticated and the rest would act as User A rather than this run's account.\n\nCHV-11 (address change) and CHV-12 (expiry) are runbook steps rather than requests here, since one needs SQL and the other a restart with a short TTL. CHV-13 must run last, and depends on CHV-12's restart having cleared the confirm limiter.",
+      "description": "Proof of control over the account's email.\n\nREQUIRES the server started with MAIL_MODE=capture, which writes each message to .mail-capture/. The code is deliberately absent from every API response: read it from the newest file and set it as cvCode before CHV-06.\n\nEvery request carries an explicit auth block, because the collection root declares bearer {{accessTokenA}} — without one, CHV-09 would run authenticated and the rest would act as User A rather than this run's account.\n\nCHV-11 (address change) and CHV-12 (expiry) are runbook steps rather than requests here, since one needs SQL and the other a restart with a short TTL. CHV-13 must run last, and depends on CHV-12's restart having cleared the confirm limiter.",
       "item": [
         {
           "name": "0 · Setup · register this run's account",
@@ -4300,7 +4300,7 @@
                   "pm.test(\"the backend accepted the message\", () =>",
                   "  pm.expect(pm.response.json().data.delivery).to.eql(\"accepted\"));",
                   "// The code is NOT in this response and never will be. Open the newest file",
-                  "// in server/.mail-capture/, copy the 12-character code, and set it as the",
+                  "// in .mail-capture/, copy the 12-character code, and set it as the",
                   "// environment variable cvCode before running CHV-06."
                 ]
               }
@@ -4528,7 +4528,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// cvCode is read BY HAND from the newest file in server/.mail-capture/.",
+                  "// cvCode is read BY HAND from the newest file in .mail-capture/.",
                   "// Postman cannot read the filesystem; that manual step is the point.",
                   "if (!pm.environment.get(\"cvCode\")) {",
                   "  throw new Error(\"Set cvCode from the capture file before running CHV-06\");",

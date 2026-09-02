@@ -125,17 +125,26 @@ and CHV-06 onward cannot run — that is not a gap in the harness but the proper
 being verified: the plaintext exists in process memory for one request, and
 nowhere else.
 
+**It also needs the migrations applied**, `mail_send_attempts` included. Every
+send passes through the mail mechanism's abuse controls, which **fail closed**:
+if that table is unreachable the send is refused rather than attempted, so CHV-01
+answers `refused` while the API is behaving exactly as designed. Apply migrations
+before the run, and read a `refused` there as a missing migration rather than a
+defect.
+
 Its guarantees, in one line each: the **proof binds to the address, not the
 account**, so changing the address reads `unproven` with nothing written; **every
 confirmation failure is the same response**, so malformed, wrong, expired,
 superseded and replayed are indistinguishable; and **status is derived**, so an
 expired challenge reads correctly with no sweep having run.
 
-Two ordering constraints are consequences rather than preferences: **CHV-13 runs
-last** (eleven confirmations exhaust the per-IP budget for fifteen minutes), and
+**Three** ordering constraints are consequences rather than preferences: **CHV-13
+runs last** (eleven confirmations exhaust the per-IP budget for fifteen minutes);
 **CHV-12 needs a restart** with a short `CHANNEL_VERIFICATION_CHALLENGE_TTL_MS`,
 since the default is not waitable by hand and shortening it throughout would
-expire codes before they could be pasted.
+expire codes before they could be pasted; and **CHV-13 depends on that restart**
+having cleared the confirm limiter, or its arithmetic engages on the fifth
+attempt rather than the eleventh. The catalogue states why each one holds.
 
 ## Scope
 

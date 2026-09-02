@@ -283,6 +283,33 @@ WHERE v.user_id = :cvUserId AND ch.closed_at IS NULL AND ch.expires_at < now();
 > this harness rejects — nothing fabricates a state the system cannot produce,
 > and no persistence fact about challenges is relied on to make a scenario pass.
 
+#### The two steps folder 10 cannot make as requests
+
+The scenario catalogue sends you here for both. Neither has an endpoint.
+
+**CHV-11 — move the address, then restore it.** Run the move, call
+`GET /users/me` (it must read `unproven`), then put the address back.
+
+```sql
+-- Move it. Any unused, unique value works.
+UPDATE users SET email = 'moved-' || email WHERE id = :cvUserId;
+
+-- Restore it after observing the projection.
+UPDATE users SET email = regexp_replace(email, '^moved-', '') WHERE id = :cvUserId;
+```
+
+**CHV-12 — restart with a waitable expiry.** Stop the server and start it again
+with a short `CHANNEL_VERIFICATION_CHALLENGE_TTL_MS` (a few seconds), still in
+`MAIL_MODE=capture`. Issue against a fresh unproven address, wait past the
+expiry, and read the projection — **run no sweep.** That restart is also what
+clears the confirm limiter CHV-13's arithmetic assumes, which is why CHV-13 runs
+after it.
+
+> **Apply the migrations before any of this**, `mail_send_attempts` included: the
+> mail mechanism's controls fail closed, so an unapplied migration makes CHV-01
+> answer `refused` from a correctly-behaving system. The scenario catalogue's
+> setup precondition states why.
+
 > **USR-05** and **USR-07** have no distinct DB shape of their own — they are the
 > *refusals* this reservation produces (a former handle rejected to a rename and to
 > a registration). Confirm them by their `409` and by this checkpoint showing the
