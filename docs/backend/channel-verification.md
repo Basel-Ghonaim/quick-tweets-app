@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the **Channel Verification subsystem's mechanisms and their rationale** — the module anatomy and its published surface, where the subject comes from, custody of the fact, how status is derived, the challenge lifecycle, the code and its digest, the single-failure discipline, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
 > It does **not** own: the boundary **decision** itself — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared auth-guard and rate-limiting mechanisms (the [Backend Security](security.md)'s); the **outbound mail mechanism** it composes, which is [`mail.md`](mail.md)'s; or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
 > **Scope:** The server-side capability (`apps/api/src/modules/channel-verification/`). How a consumer decides what requires a proven endpoint is that consumer's, and is not decided here.
-> **Version:** 1.1
-> **Last Updated:** 2026-08-31
+> **Version:** 1.2
+> **Last Updated:** 2026-09-02
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -55,6 +55,8 @@ Derivation lives on the status unit rather than on the service so that **what is
 **Issue** runs its persisted half in a single transaction: upsert the record, take a row lock on it, read the resend cooldown *under* that lock, close any open challenge as superseded, mint a code, persist its digest with an expiry, and stamp the record's last-challenged time. A resend therefore **rotates** — the previous secret stops working, so a message that may have been exposed cannot be used, and the newest message is the one that works. The cooldown is anchored **on the record, not the challenge**, so rotating a challenge cannot reset the throttle.
 
 **Delivery happens after the commit.** A transport failure must not undo a persisted challenge, and no row lock is held across a network call. A refusal is reported rather than raised: the challenge stands and can be resent.
+
+**What remains of the cooldown is reported, never left to be guessed.** Both a successful issue and a refusal inside the window answer with the seconds still to run, computed from the record's anchor rather than restated from the setting — the same number seen from either side. On the success path it is read *after* the send, so time spent in delivery shortens it: a figure fixed before the send would leave a caller counting down after the window had already opened. The capability carries seconds and nothing transport-shaped; that HTTP spells one of them `Retry-After` is the [API contract](../api/api-contract.md)'s.
 
 **Confirm** validates the submitted value's shape, finds the record, finds its open challenge, refuses anything past its expiry — a read, writing nothing — and compares in constant time. Only then does it open a transaction to close the challenge and record the proof.
 
