@@ -81,6 +81,23 @@ const envSchema = z
       .int()
       .positive()
       .default(24 * 60 * 60 * 1000),
+    // How often spent attempts are swept, and how long one is kept.
+    //
+    // Hygiene, not correctness: the controls count inside their window, so an
+    // attempt that has aged out is already irrelevant whether or not anything
+    // removed it. Retention decides only how far back the controls can still
+    // see — which is why it may never be shorter than a window (see the refine
+    // below).
+    MAIL_ATTEMPT_SWEEP_INTERVAL_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(6 * 60 * 60 * 1000),
+    MAIL_ATTEMPT_RETENTION_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(7 * 24 * 60 * 60 * 1000),
     // Crockford base32 — I/L/O/U are absent because the code is typed by hand.
     // 12 characters over 32 symbols is 60 bits, which keeps a fast digest out of
     // offline brute-force range. Configuration, not platform logic.
@@ -137,6 +154,31 @@ const envSchema = z
           message: `${key} is required when MAIL_MODE="smtp"`,
         });
       }
+    }
+  })
+  // Retention may never be shorter than the longest window the controls count
+  // over. If it were, the sweep would delete attempts a window still counts and
+  // the caps would quietly under-enforce — no error, no log, just a control that
+  // stopped binding because one number was lowered.
+  //
+  // Refused rather than clamped: substituting a value an operator did not choose
+  // is the same class of quiet divergence, and startup is where this project
+  // already puts misconfiguration.
+  .superRefine((cfg, ctx) => {
+    const longestWindow = Math.max(
+      cfg.MAIL_RECIPIENT_CAP_WINDOW_MS,
+      cfg.MAIL_OUTBOUND_CEILING_WINDOW_MS,
+    );
+
+    if (cfg.MAIL_ATTEMPT_RETENTION_MS < longestWindow) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["MAIL_ATTEMPT_RETENTION_MS"],
+        message:
+          `MAIL_ATTEMPT_RETENTION_MS (${cfg.MAIL_ATTEMPT_RETENTION_MS}ms) is shorter than the ` +
+          `longest send window (${longestWindow}ms). The sweep would remove attempts the caps ` +
+          `still count, and they would under-enforce silently.`,
+      });
     }
   });
 
