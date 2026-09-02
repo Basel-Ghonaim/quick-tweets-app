@@ -7,4 +7,6 @@
 .error {
   border-color: var(--role-fill-error);
   color: var(--role-on-surface-error);
+  background: var(--role-fill-error-subtle);
 }
+
