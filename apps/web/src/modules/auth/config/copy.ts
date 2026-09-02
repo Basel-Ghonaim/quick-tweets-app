@@ -70,6 +70,29 @@ export const AUTH_COPY = {
     browseAsGuest: "Browse without an account",
   },
 
+  profile: {
+    title: "Add a profile",
+    subtitle: "Optional — a picture, a name and a line about you.",
+
+    submit: "Save",
+    submitting: "Saving…",
+    skip: "Skip for now",
+
+    avatarLabel: "Profile picture",
+    avatarHint: "JPEG or PNG, up to 1 MB.",
+
+    /* Announced rather than only drawn: the upload finishes while the reader is
+       somewhere else on the form. */
+    uploading: "Uploading your picture…",
+    uploaded: "Picture ready.",
+    uploadFailed: "That picture could not be uploaded.",
+    uploadRetry: "Try again",
+
+    /* The count is a live number, so it is read by sight; the limit is
+       announced once through the field's own description. */
+    bioCount: (used: number, limit: number) => `${used} / ${limit}`,
+  },
+
   /* Replaced rather than translated in a second language. */
   samplePosts: [
     {
