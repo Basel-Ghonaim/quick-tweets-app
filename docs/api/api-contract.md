@@ -226,11 +226,17 @@ interface ErrorBody {
 
 ### Rate Limiting
 
+Every limiter below is **per IP**, over a fixed window, and answers with `type: "rate_limit"`. Routes are limited by prefix **except** where a route's own cost earns it something tighter — which is why `/media` and `/channel-verification` carry a limiter per route rather than one across the prefix, and why neither falls under the general cap.
+
 | Scope | Endpoints | Limit | 429 Message |
 |---|---|---|---|
 | Auth | `/auth/login`, `/auth/register` | 10 req / 15 min | "Too many login attempts. For your security, please wait 15 minutes before trying again." |
 | Refresh | `/auth/refresh` | 30 req / 15 min | "Too many refresh requests. Please wait a few minutes before continuing." |
-| API | All other routes | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
+| Verification issue | `POST /channel-verification/challenges` | **10 req / 15 min** | "Too many verification requests. Please wait 15 minutes before trying again." |
+| Verification confirm | `POST /channel-verification/challenges/confirm` | **10 req / 15 min** | "Too many confirmation attempts. Please wait 15 minutes before trying again." |
+| API | `/tweets`, `/comments`, `/users`, `/follows`, and `POST /media` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
+
+> **The verification endpoints return two different `429`s, and they mean different things.** `type: "rate_limit"` is the per-IP limiter above — a fifteen-minute lockout. `type: "too_many_requests"` is Channel Verification's own **per-address cooldown**, measured in seconds and carrying `Retry-After`. The first says *this client is asking too often*; the second says *this address was sent a code moments ago*. A client that conflates them will make a user wait fifteen minutes for a sixty-second throttle.
 
 ### Auth Modes
 
@@ -1037,7 +1043,7 @@ It is **derived at read time**, never stored. An expired challenge therefore rea
 
 ### `POST /channel-verification/challenges` — Request a code
 
-**Auth:** Required. **Rate limit:** 10 requests / 15 min per IP, *and* a durable per-address cooldown of 60 seconds — the cooldown is the real control, since the per-IP limiter cannot stop an address being targeted from rotating addresses.
+**Auth:** Required. **Rate limit:** 10 requests / 15 min per IP, *and* a durable **per-address cooldown** — the cooldown is the real control, since the per-IP limiter cannot stop an address being targeted from rotating addresses. Its length is a server setting (60 seconds by default); a client reads what remains of it from `resendAvailableInSeconds` on the `202` and from `Retry-After` on the cooldown `429`, and never hardcodes it.
 
 **Request:** no body. The address is the authenticated account's own.
 
@@ -1055,7 +1061,13 @@ Issuing **rotates**: any outstanding challenge is superseded, so only the newest
     //   "refused"  — it definitely was not sent
     //   "unknown"  — the attempt did not complete; it may or may not have been sent
     // The challenge stands in every case and can be resent.
-    "delivery": "accepted"
+    "delivery": "accepted",
+
+    // Whole seconds until this address may be issued another code. Derived from
+    // the record's own cooldown anchor and read as the answer is produced, so a
+    // slow send SHORTENS it rather than inflating it. Use this for a resend
+    // countdown; do not hardcode the cooldown, which is a server setting.
+    "resendAvailableInSeconds": 60
   }
 }
 
@@ -1065,8 +1077,16 @@ Issuing **rotates**: any outstanding challenge is superseded, so only the newest
 // Response 404 — the authenticated account no longer exists
 { "success": false, "error": { "type": "not_found", "message": "Account not found" } }
 
-// Response 429 — a code was requested for this address too recently (the per-address cooldown)
+// Response 429 — a code was requested for this ADDRESS too recently (the
+// per-address cooldown, measured in seconds). Carries `Retry-After` with the
+// whole seconds remaining, from the same anchor the 202 reports its window from.
+//   Retry-After: 40
 { "success": false, "error": { "type": "too_many_requests", "message": "A verification code was requested too recently. Please wait before requesting another." } }
+
+// Response 429 — too many requests from this IP (the per-IP limiter, 10 / 15 min).
+// A DIFFERENT refusal from the one above: a fifteen-minute lockout on the client,
+// not a seconds-long throttle on the address. Distinguish them by `type`.
+{ "success": false, "error": { "type": "rate_limit", "message": "Too many verification requests. Please wait 15 minutes before trying again." } }
 ```
 
 ### `POST /channel-verification/challenges/confirm` — Submit a code
@@ -1091,6 +1111,12 @@ The presence check itself still applies, and it is the one case that answers dif
 
 // Response 401 — no valid Bearer token
 { "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
+
+// Response 429 — too many confirmations from this IP (the per-IP limiter, 10 / 15 min).
+// Sized for people mistyping rather than for attackers: a single-use code of this
+// length is out of brute-force reach whatever this limiter says. There is no
+// per-address cooldown on confirm, so `too_many_requests` never appears here.
+{ "success": false, "error": { "type": "rate_limit", "message": "Too many confirmation attempts. Please wait 15 minutes before trying again." } }
 ```
 
 > **One failure shape, deliberately.** Uniform opacity is auditable; a carve-out is not. The moment one cause reports itself it acquires its own message, then its own status, and the guarantee decays by increments — the same reasoning as the generic `401` on login. A code is **single-use**, so replaying a confirmed one is refused identically; a *wrong* value, by contrast, leaves the challenge usable, so one mistyped character cannot deny a holder their own verification.

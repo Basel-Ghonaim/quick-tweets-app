@@ -225,6 +225,17 @@ export interface IssueOutcome {
    * drift apart.
    */
   delivery: MailOutcome;
+
+  /**
+   * How long until this subject may be issued another challenge.
+   *
+   * Derived from the record's own cooldown anchor and read at the moment the
+   * answer is produced — not restated from configuration. A caller that
+   * hardcoded the setting would be wrong twice: whenever an operator changed
+   * it, and on every send, since delivery is attempted after the anchor is
+   * stamped and consumes part of the window before the caller hears anything.
+   */
+  resendAvailableInSeconds: number;
 }
 
 export interface IChannelVerificationService {

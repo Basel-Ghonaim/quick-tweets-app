@@ -84,6 +84,10 @@ describe("the lifecycle end to end", () => {
 
     const outcome = await service.issue({ userId, endpoint: ENDPOINT });
     expect(outcome.delivery).toBe("accepted");
+    // A real window against a real clock: positive, and never longer than the
+    // cooldown it is derived from.
+    expect(outcome.resendAvailableInSeconds).toBeGreaterThan(0);
+    expect(outcome.resendAvailableInSeconds).toBeLessThanOrEqual(COOLDOWN / 1000);
     expect(await service.statusOf(userId, ENDPOINT)).toBe("pending");
 
     await service.confirm({ userId, endpoint: ENDPOINT, code: codeIn(mail.sent[0]!) });

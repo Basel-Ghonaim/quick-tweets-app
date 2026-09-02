@@ -22,6 +22,7 @@ const fakeRes = () => {
     status: vi.fn(() => res),
     json: vi.fn(() => res),
     send: vi.fn(() => res),
+    setHeader: vi.fn(() => res),
   };
   return res;
 };
@@ -31,7 +32,7 @@ const build = (
   resolve: (userId: number) => Promise<string | null> = async () => EMAIL,
 ) => {
   const service = {
-    issue: vi.fn(async () => ({ delivery: "accepted" as const })),
+    issue: vi.fn(async () => ({ delivery: "accepted" as const, resendAvailableInSeconds: 60 })),
     confirm: vi.fn(async () => {}),
     statusOf: vi.fn(async () => "unproven" as const),
     ...over,
@@ -89,21 +90,42 @@ describe("resolving the subject", () => {
 });
 
 describe("successful responses", () => {
-  it("reports the delivery outcome on issue", async () => {
+  it("reports the delivery outcome and the resend window on issue", async () => {
     const { controller } = build();
 
     const { res } = await run(controller.issue);
 
     expect(res.status).toHaveBeenCalledWith(202);
-    expect(res.json).toHaveBeenCalledWith({ success: true, data: { delivery: "accepted" } });
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: { delivery: "accepted", resendAvailableInSeconds: 60 },
+    });
   });
 
   it("passes a failed delivery through rather than hiding it", async () => {
-    const { controller } = build({ issue: vi.fn(async () => ({ delivery: "unknown" as const })) });
+    const { controller } = build({
+      issue: vi.fn(async () => ({ delivery: "unknown" as const, resendAvailableInSeconds: 42 })),
+    });
 
     const { res } = await run(controller.issue);
 
-    expect(res.json).toHaveBeenCalledWith({ success: true, data: { delivery: "unknown" } });
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: { delivery: "unknown", resendAvailableInSeconds: 42 },
+    });
+  });
+
+  it("reports the window the service gave, never a figure of its own", async () => {
+    const { controller } = build({
+      issue: vi.fn(async () => ({ delivery: "accepted" as const, resendAvailableInSeconds: 7 })),
+    });
+
+    const { res } = await run(controller.issue);
+
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: { delivery: "accepted", resendAvailableInSeconds: 7 },
+    });
   });
 
   it("answers a bare 204 on confirm", async () => {
@@ -127,6 +149,33 @@ describe("error translation", () => {
     const { error } = await run(controller.issue);
 
     expect(error?.statusCode).toBe(429);
+  });
+
+  it("says when to retry, in the header rather than the envelope", async () => {
+    const { controller } = build({
+      issue: vi.fn(async () => {
+        throw ChannelVerificationError.cooldownActive(37);
+      }),
+    });
+
+    const { res, error } = await run(controller.issue);
+
+    expect(res.setHeader).toHaveBeenCalledWith("Retry-After", "37");
+    expect(error?.statusCode).toBe(429);
+    // The envelope is unchanged: the seconds travel in the header only.
+    expect(error).not.toHaveProperty("retryAfterSeconds");
+  });
+
+  it("sets no header when the module did not say how long", async () => {
+    const { controller } = build({
+      issue: vi.fn(async () => {
+        throw ChannelVerificationError.cooldownActive();
+      }),
+    });
+
+    const { res } = await run(controller.issue);
+
+    expect(res.setHeader).not.toHaveBeenCalled();
   });
 
   it("leaves an unrelated failure untranslated", async () => {

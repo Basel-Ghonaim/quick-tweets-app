@@ -39,6 +39,17 @@ const asHttpError = (err: unknown): unknown => {
   return err;
 };
 
+/**
+ * A refusal that knows when to retry says so in the header HTTP already has for
+ * it. The error envelope is left alone deliberately: adding a field there would
+ * change the shape every error in the system shares, for one caller's benefit.
+ */
+const applyRetryAfter = (res: Response, err: unknown): void => {
+  if (err instanceof ChannelVerificationError && err.retryAfterSeconds !== undefined) {
+    res.setHeader("Retry-After", String(err.retryAfterSeconds));
+  }
+};
+
 export const createChannelVerificationController = (
   service: IChannelVerificationService = createChannelVerificationService(),
   resolveEndpoint: (userId: number) => Promise<string | null> = resolveCurrentEmail,
@@ -55,10 +66,11 @@ export const createChannelVerificationController = (
       // passed downstream in place of a subject.
       if (endpoint === null) throw AppError.notFound("Account");
 
-      const { delivery } = await service.issue({ userId, endpoint });
+      const { delivery, resendAvailableInSeconds } = await service.issue({ userId, endpoint });
 
-      sendSuccess(res, { delivery }, 202);
+      sendSuccess(res, { delivery, resendAvailableInSeconds }, 202);
     } catch (err) {
+      applyRetryAfter(res, err);
       next(asHttpError(err));
     }
   },
