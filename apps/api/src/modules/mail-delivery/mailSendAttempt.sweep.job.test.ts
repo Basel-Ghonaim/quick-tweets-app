@@ -13,7 +13,6 @@ const RETENTION = 7 * 24 * 60 * 60 * 1000;
 const fakeRepo = (over: Partial<IMailSendAttemptRepository> = {}): IMailSendAttemptRepository => ({
   reserveForRecipient: vi.fn(async () => 1),
   setOutcome: vi.fn(async () => {}),
-  countForRecipient: vi.fn(async () => 0),
   countAll: vi.fn(async () => 0),
   deleteBefore: vi.fn(async () => 0),
   ...over,
