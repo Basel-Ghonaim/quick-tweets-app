@@ -3,6 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-08-31
 > **Deciders:** Basel Ghonaim
+> **Revised:** 2026-09-03 — Decision 6's condition is met: [ADR 0016](0016-password-reset-credential-change-authority.md) introduces the second consumer, and the partition it earns takes the shape of a **reserved recovery floor** within the existing per-recipient budget rather than separate per-purpose quotas. Decision unchanged.
 
 ## Context
 
@@ -42,6 +43,8 @@ Two controls because the threat has two halves. A recipient key answers **inbox 
 **6. The cap is not partitioned by purpose.** A per-purpose partition is a **per-case configuration surface**, which [Engineering Principles §3](../../development/engineering-principles.md) names among the generalization machinery to be built only "when a second instance exists to shape it." One consumer exists.
 
 The residual is stated rather than hidden: with a single shared cap, a high-volume consumer can exhaust a quota a lower-volume one needs for the same address. **The second consumer is what earns the partition**, and nothing about deferring it defers the mechanism.
+
+**That consumer has since arrived** ([ADR 0016](0016-password-reset-credential-change-authority.md)), and the residual is no longer theoretical: verification traffic to an address can exhaust the budget **account recovery needs for that same address**, failing the one flow whose purpose is reaching someone already locked out. The partition is therefore built — as a **reserved floor for recovery within the existing per-recipient budget**, not as separate per-purpose quotas, so the per-address total this cap exists to bound is unchanged and only its allocation becomes purpose-aware. Its mechanism is owned by [`backend/mail.md`](../../backend/mail.md) and co-versioned when it is built.
 
 **7. A per-actor cap belongs to each consumer that has an actor, never to Delivery.** Delivery has no actor concept — a message is a recipient, a subject and a body — and acquiring one would import the vocabulary its boundary exists to exclude. Channel Verification's per-address cooldown is the precedent for a consumer holding such a control.
 
