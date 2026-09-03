@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { Stepper, type JourneyStepId, type StepState } from "../components/Stepper";
+import { stepSegment } from "./stepSegment";
 import styles from "./JourneyLayout.module.css";
 
 const ORDER = ["account", "profile", "verify"] as const satisfies readonly JourneyStepId[];
@@ -24,7 +25,7 @@ const STEP_AT: Record<string, JourneyStepId> = {
  */
 export const JourneyLayout = () => {
   const { pathname } = useLocation();
-  const current = ORDER.indexOf(STEP_AT[pathname.split("/").pop() ?? ""]);
+  const current = ORDER.indexOf(STEP_AT[stepSegment(pathname)]);
 
   const states = Object.fromEntries(
     ORDER.map((id, index) => [
