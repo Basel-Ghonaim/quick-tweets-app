@@ -6,8 +6,6 @@ import { ThemeProvider } from "@shared/preferences";
 import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "../store";
 import { AuthLayout } from "./AuthLayout";
-import { AuthShell } from "../AuthShell";
-import { AuthDesignProvider } from "../_design";
 import { useAuthNavigate } from "../navigation";
 import { AUTH_COPY } from "../config/copy";
 
@@ -53,14 +51,7 @@ const at = (entry: string) => (Story: () => React.ReactElement) => (
     <ThemeProvider>
       <MemoryRouter initialEntries={[entry]}>
         <Routes>
-          <Route
-            path="/auth"
-            element={
-              <AuthDesignProvider showToggle={false}>
-                <AuthShell />
-              </AuthDesignProvider>
-            }
-          >
+          <Route path="/auth" element={<AuthLayout />}>
             <Route path="signin" element={<Body />} />
             <Route path="signup" element={<Body />} />
           </Route>
@@ -71,7 +62,7 @@ const at = (entry: string) => (Story: () => React.ReactElement) => (
   </Provider>
 );
 export const TheShellHoldsStill: Story = {
-  decorators: [at("/auth/signin?design=proposed")],
+  decorators: [at("/auth/signin")],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -84,7 +75,7 @@ export const TheShellHoldsStill: Story = {
 /** The body here renders no signature of its own, so finding one is the card
  *  carrying it. */
 export const TheCardSignsItself: Story = {
-  decorators: [at("/auth/signin?design=proposed")],
+  decorators: [at("/auth/signin")],
   play: async ({ canvasElement }) => {
     const card = canvasElement.querySelector("main > div:last-of-type");
 
@@ -94,39 +85,10 @@ export const TheCardSignsItself: Story = {
   },
 };
 
-/** An absent parameter and a malformed one both resolve to the current design,
- *  so losing it in a navigation is silent. */
-export const TheModeSurvivesANavigation: Story = {
-  decorators: [at("/auth/signin?design=proposed")],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(canvas.getByTestId("where")).toHaveTextContent("/auth/signin?design=proposed");
-
-    await userEvent.click(canvas.getByRole("button", { name: "onward" }));
-
-    await waitFor(() =>
-      expect(canvas.getByTestId("where")).toHaveTextContent("/auth/signup?design=proposed"),
-    );
-
-    await expect(canvas.getByLabelText(AUTH_COPY.brand.markLabel)).toBeInTheDocument();
-  },
-};
-
-/** Without the parameter the current design renders, and the shell is absent. */
-export const TheCurrentDesignIsTheDefault: Story = {
-  decorators: [at("/auth/signin")],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(canvas.queryByLabelText(AUTH_COPY.brand.markLabel)).not.toBeInTheDocument();
-  },
-};
-
 /** A stable name with `aria-pressed`: the authoring practice treats a changing
  *  name and a pressed state as alternatives, never as partners. */
 export const TheThemeIsSwitchableFromTheShell: Story = {
-  decorators: [at("/auth/signin?design=proposed")],
+  decorators: [at("/auth/signin")],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const toggle = canvas.getByRole("button", { name: AUTH_COPY.brand.themeToggle });
@@ -155,7 +117,7 @@ export const TheThemeIsSwitchableFromTheShell: Story = {
  * so the media queries this asserts are the ones a reader gets.
  */
 export const TheCompactSetLeadsWithTheForm: Story = {
-  decorators: [at("/auth/signin?design=proposed")],
+  decorators: [at("/auth/signin")],
   globals: { viewport: { value: "phone" } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -178,7 +140,7 @@ export const TheCompactSetLeadsWithTheForm: Story = {
 
 /** The same shell at a laptop width keeps both columns. */
 export const TheTwoColumnsHoldAtLaptopWidth: Story = {
-  decorators: [at("/auth/signin?design=proposed")],
+  decorators: [at("/auth/signin")],
   globals: { viewport: { value: "laptop" } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
