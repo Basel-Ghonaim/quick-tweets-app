@@ -56,4 +56,5 @@ export interface SerializedAppError<T extends ErrorType = ErrorType> {
   message: string;
   status: number;
   errors?: ErrorPayload<T>;
+  retryAfterSeconds?: number;
 }

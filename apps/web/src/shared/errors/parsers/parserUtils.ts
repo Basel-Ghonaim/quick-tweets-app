@@ -24,16 +24,34 @@ export interface BackendErrorBody {
  * 2. Otherwise → fall back to reverse-lookup by HTTP status code.
  * 3. Validation errors are always forwarded from the backend payload.
  */
+/** `Retry-After` in its delta-seconds form. The HTTP-date form is not read: no
+ *  endpoint here sends one, and guessing at a clock skew would be worse. */
+export const retryAfterSeconds = (raw?: string): number | undefined => {
+  // An empty string is Number 0, so the value is trimmed and checked before it
+  // is read as a wait of no seconds at all.
+  const value = raw?.trim();
+  if (!value) return undefined;
+
+  const seconds = Number(value);
+  return Number.isFinite(seconds) && seconds >= 0 ? Math.ceil(seconds) : undefined;
+};
+
 export const buildAppError = (
   status: number,
   backendType?: string,
   validationErrors?: ValidationErrorsPayload,
+  retryAfter?: number,
 ): AppError => {
   // If the backend sent a recognized ErrorType, use it directly
   if (backendType && backendType in errorConfigMap) {
     const type = backendType as ErrorType;
 
-    return createAppError(type, errorConfigMap[type].defaultMessage, validationErrors);
+    return createAppError(
+      type,
+      errorConfigMap[type].defaultMessage,
+      validationErrors,
+      retryAfter,
+    );
   }
 
   // Fallback: resolve by HTTP status code
@@ -41,5 +59,5 @@ export const buildAppError = (
     status as Parameters<typeof getErrorConfigByStatus>[0],
   );
 
-  return createAppError(resolved.type, resolved.defaultMessage, validationErrors);
+  return createAppError(resolved.type, resolved.defaultMessage, validationErrors, retryAfter);
 };

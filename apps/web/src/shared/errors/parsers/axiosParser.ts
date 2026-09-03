@@ -2,7 +2,7 @@ import type { AxiosError } from "axios";
 import type { AppError } from "../AppError";
 import { createAppError } from "../errorFactory";
 import { errorConfigMap } from "../errorConfig";
-import { buildAppError, type BackendErrorBody } from "./parserUtils";
+import { buildAppError, retryAfterSeconds, type BackendErrorBody } from "./parserUtils";
 
 export const parseAxiosError = (
   error: AxiosError<BackendErrorBody>,
@@ -14,7 +14,12 @@ export const parseAxiosError = (
     const backendType = response.data?.error?.type;
     const validationErrors = response.data?.error?.errors;
 
-    return buildAppError(response.status, backendType, validationErrors);
+    return buildAppError(
+      response.status,
+      backendType,
+      validationErrors,
+      retryAfterSeconds(response.headers?.["retry-after"]),
+    );
   }
 
   // No response — handle Axios-specific network/transport codes
