@@ -4,7 +4,7 @@ import { AuthShell } from "./AuthShell";
 import { SignIn } from "./screens/SignIn";
 import { SignUp } from "./screens/SignUp";
 import { Profile } from "./screens/Profile";
-import { Verify } from "./screens/Verify";
+import { VerifyAsk, VerifyCode } from "./screens/Verify";
 import { JourneyLayout } from "./layout/JourneyLayout";
 import { GuestOnly } from "./navigation";
 
@@ -41,7 +41,10 @@ export const authRoute = (
         }
       />
       <Route path="profile" element={<Profile />} />
-      <Route path="verify" element={<Verify />} />
+      <Route path="verify">
+        <Route index element={<VerifyAsk />} />
+        <Route path="code" element={<VerifyCode />} />
+      </Route>
     </Route>
   </Route>
 );

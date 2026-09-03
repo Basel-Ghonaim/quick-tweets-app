@@ -110,6 +110,7 @@ export const AUTH_COPY = {
     submit: "Verify email",
     submitting: "Verifying…",
     later: "Later",
+    backToProfile: "Back to profile",
 
     codeLabel: "Verification code",
     codeHint: "Letters and digits. Case and spacing do not matter.",

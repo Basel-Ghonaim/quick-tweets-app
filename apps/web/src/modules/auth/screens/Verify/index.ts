@@ -1,1 +1,2 @@
-export { Verify } from "./Verify";
+export { VerifyAsk } from "./VerifyAsk";
+export { VerifyCode } from "./VerifyCode";

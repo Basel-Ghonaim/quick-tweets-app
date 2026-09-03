@@ -32,6 +32,16 @@
   white-space: nowrap;
 }
 
+.asides {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-start: var(--space-6);
+  padding-block-start: var(--space-6);
+  border-block-start: var(--border-width-thin) solid var(--border-default);
+}
+
 .aside {
   display: flex;
   justify-content: center;

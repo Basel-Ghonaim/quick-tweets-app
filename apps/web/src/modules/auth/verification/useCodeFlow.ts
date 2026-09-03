@@ -1,53 +1,51 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
-import type { SerializedAppError } from "@shared/errors";
+import type { AppError, SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import { useAuthDispatch, useAuthSelector } from "../store/hooks";
 import { restVerification } from "./restVerification";
 import { executeVerification } from "./executeVerification";
 import { normaliseChallengeCode } from "./challengeCode";
-import {
-  canResend,
-  resendCooldownInitial,
-  resendCooldownReducer,
-} from "./resendCooldown";
+import { canResend, resendCooldownInitial, resendCooldownReducer } from "./resendCooldown";
 
-export type VerifyStage = "ask" | "code";
-
-interface VerifyFlow {
-  stage: VerifyStage;
+interface CodeFlow {
   code: string;
   setCode: (raw: string) => void;
-  isSending: boolean;
   isSubmitting: boolean;
+  isResending: boolean;
   error: SerializedAppError | null;
   secondsLeft: number;
   canResend: boolean;
-  /** Written only when the wait ends, so the live region speaks once. */
   announcement: string;
-  send: () => void;
+  resend: () => void;
   submit: (event: React.FormEvent) => void;
 }
 
-export const useVerifyFlow = (
+/**
+ * The wait is unknown on arrival, because a reader who reloads keeps the field
+ * and loses the clock. Rather than guess it, the screen lets a resend ask: a
+ * refusal answers with the seconds it has left, and an acceptance answers with
+ * a fresh window. Either way the number is the server's.
+ */
+export const useCodeFlow = (
   onVerified?: () => void,
   repo = restVerification(),
   resendReadyMessage = "",
-): VerifyFlow => {
+  openingWindow = 0,
+): CodeFlow => {
   const dispatch = useAuthDispatch();
-  const issueState = useAuthSelector((state) => state.auth.requests.issueCode);
-  const confirmState = useAuthSelector((state) => state.auth.requests.confirmCode);
+  const issue = useRequestState(useAuthSelector((s) => s.auth.requests.issueCode));
+  const confirm = useRequestState(useAuthSelector((s) => s.auth.requests.confirmCode));
 
-  const issue = useRequestState(issueState);
-  const confirm = useRequestState(confirmState);
-
-  /* Read once at mount rather than synchronised: a resend passes through
-     loading, and a stage kept level with the status would drop the reader back
-     to the ask while their code is still on screen. */
-  const [stage, setStage] = useState<VerifyStage>(
-    issueState.status === "success" ? "code" : "ask",
-  );
   const [code, setCodeRaw] = useState("");
-  const [cooldown, tick] = useReducer(resendCooldownReducer, resendCooldownInitial);
+  const [cooldown, tick] = useReducer(
+    resendCooldownReducer,
+    openingWindow > 0
+      ? resendCooldownReducer(resendCooldownInitial, {
+          type: "started",
+          seconds: openingWindow,
+        })
+      : resendCooldownInitial,
+  );
 
   useEffect(() => {
     if (cooldown.secondsLeft === 0) return;
@@ -56,13 +54,16 @@ export const useVerifyFlow = (
     return () => clearInterval(id);
   }, [cooldown.secondsLeft]);
 
-  const send = useCallback(() => {
+  const resend = useCallback(() => {
     void executeVerification(dispatch, () => repo.issue(), "issueCode")
-      .then(({ resendAvailableInSeconds }) => {
-        tick({ type: "started", seconds: resendAvailableInSeconds });
-        setStage("code");
-      })
-      .catch(() => {});
+      .then(({ resendAvailableInSeconds }) =>
+        tick({ type: "started", seconds: resendAvailableInSeconds }),
+      )
+      .catch((refusal: AppError) => {
+        if (refusal.retryAfterSeconds !== undefined) {
+          tick({ type: "started", seconds: refusal.retryAfterSeconds });
+        }
+      });
   }, [dispatch, repo]);
 
   const submit = useCallback(
@@ -77,16 +78,15 @@ export const useVerifyFlow = (
   );
 
   return {
-    stage,
     code,
     setCode: (raw) => setCodeRaw(normaliseChallengeCode(raw)),
-    isSending: issue.isLoading,
     isSubmitting: confirm.isLoading,
+    isResending: issue.isLoading,
     error: confirm.error ?? issue.error,
     secondsLeft: cooldown.secondsLeft,
     canResend: canResend(cooldown),
     announcement: cooldown.justEnded ? resendReadyMessage : "",
-    send,
+    resend,
     submit,
   };
 };
