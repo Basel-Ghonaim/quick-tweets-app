@@ -51,13 +51,15 @@ Auth is also where the operation lands: the password hash, its comparison, and t
 
 **9. Its timing and its code format are its own configuration, never Channel Verification's.** The boundary this record draws in the large holds in the small too: a shared setting would let one flow's operational retuning silently move the other's security properties, and neither owner would see it happen.
 
-The values approved with this boundary are a **10-minute credential lifetime**, a **60-second resend cooldown**, and a **12-character code drawn from Crockford Base32** — the alphabet that omits `I`, `L`, `O` and `U`. Each is recorded here rather than left wholly to implementation because each follows from something this record decides:
+The **approved initial values** are a **10-minute credential lifetime**, a **60-second resend cooldown**, and a **12-character code drawn from Crockford Base32** — the alphabet that omits `I`, `L`, `O` and `U`. Each is recorded here rather than left wholly to implementation because each follows from something this record decides:
 
 - The lifetime is **shorter than verification's** because Decision 1's credential changes a password, and authority to change a credential should be spendable for less time than a status report.
 - The excluded letters matter more to the actor Decision 1 names — someone locked out, retyping from a phone — than to a holder already signed in.
 - The length is what makes the single paste-friendly field the right control rather than a segmented one, a decision the [design direction](../../features/authentication/product/ux-direction.md) already took and which shortening the code would reopen.
 
-**They remain tunables, and this ADR does not own them.** It records the values approved alongside the boundary; where they live and how they are carried is configuration.
+**What this decision owns is the separation and the reason for it.** The three values above are **approved defaults, settled and recorded** — not provisional, and not left to whoever implements first. What they are *not* is architectural constants: retuning one is an operational judgement that moves no boundary, made where configuration lives and reviewed as configuration.
+
+**The boundary is the part that cannot move without reopening this decision** — that these settings are Password Reset's own, and that Channel Verification's are not consulted, shared, or defaulted from.
 
 ## What this ADR does not decide
 
