@@ -1,6 +1,6 @@
 # ADR 0016: Password Reset — Credential-Change Authority, Owned Separately and Composed from What Exists
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-09-03
 > **Deciders:** Basel Ghonaim
 
