@@ -68,7 +68,17 @@ const envSchema = z
     // The recipient cap answers inbox flooding and is enforced exactly. The
     // ceiling answers spend and sender reputation, which are measured against
     // the sender and cannot be bounded by a recipient key.
+    //
+    // Two named limits, not one: a reserved floor for account recovery
+    // (ADR 0015 Decision 6's condition, met by ADR 0016) means the cap a
+    // consumer is admitted under is no longer a single number. MAIL_RECIPIENT_CAP
+    // is the reserved ceiling; MAIL_RECIPIENT_CAP_GENERAL is what every other
+    // consumer is admitted under, strictly below it, so the gap between the two
+    // is what only the reserved consumer can claim. The window is shared —
+    // both count the same per-recipient rolling budget, just admitted
+    // differently.
     MAIL_RECIPIENT_CAP: z.coerce.number().int().positive().default(20),
+    MAIL_RECIPIENT_CAP_GENERAL: z.coerce.number().int().positive().default(15),
     MAIL_RECIPIENT_CAP_WINDOW_MS: z.coerce
       .number()
       .int()
@@ -180,6 +190,23 @@ const envSchema = z
           `MAIL_ATTEMPT_RETENTION_MS (${cfg.MAIL_ATTEMPT_RETENTION_MS}ms) is shorter than the ` +
           `longest send window (${longestWindow}ms). The sweep would remove attempts the caps ` +
           `still count, and they would under-enforce silently.`,
+      });
+    }
+  })
+  // A reserve that is not strictly smaller than the cap it is carved out of
+  // reserves nothing: every consumer would be admitted under the same number,
+  // and the gap the reserved consumer depends on would not exist. Refused
+  // rather than clamped, for the same reason as the guard above — a silently
+  // substituted value hides exactly the misconfiguration this exists to catch.
+  .superRefine((cfg, ctx) => {
+    if (cfg.MAIL_RECIPIENT_CAP_GENERAL >= cfg.MAIL_RECIPIENT_CAP) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["MAIL_RECIPIENT_CAP_GENERAL"],
+        message:
+          `MAIL_RECIPIENT_CAP_GENERAL (${cfg.MAIL_RECIPIENT_CAP_GENERAL}) must be strictly less ` +
+          `than MAIL_RECIPIENT_CAP (${cfg.MAIL_RECIPIENT_CAP}), or the reserved floor it is meant ` +
+          `to carve out does not exist.`,
       });
     }
   });
