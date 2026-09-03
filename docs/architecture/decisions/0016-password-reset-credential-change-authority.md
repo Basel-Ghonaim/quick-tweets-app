@@ -31,7 +31,7 @@ Two of the mechanisms it needs already exist, and both were built anticipating t
 
 ADR 0009 Decision 2 gives that capability **exactly one fact**, about an endpoint, and its trustworthiness is a function of that narrowness. Widening it to carry credential-change authority would dissolve the property the capability exists to have.
 
-**3. It is a feature of Auth, and lives in `apps/api/src/modules/auth/`** — not a platform capability and not a module of its own.
+**3. It is an Auth capability, and lives in `apps/api/src/modules/auth/`** — it owns a distinct fact of its own (Decision 1), but it is not a *platform* capability and not a module of its own.
 
 The distinction is not a matter of taste here, because **the repository already draws it consistently**: every platform capability publishes a barrel — `channel-verification`, `mail-delivery`, `media` — and **no feature does** — `auth`, `tweets`, `comments`, `users`, `follows`. A platform capability exists because something *else* reads its fact. **Nothing reads recovery's fact**; it is produced and spent inside one flow, so there is no surface to publish and no consumer to publish it to.
 
@@ -49,6 +49,16 @@ Auth is also where the operation lands: the password hash, its comparison, and t
 
 **8. Completing a reset revokes every session**, through Auth's existing per-user revocation, and the flow ends at login rather than in an authenticated app. This is ratified product direction (UX brief `D5`); it is recorded here because it is a *security* obligation of the capability, not only a navigational one — a credential change that left old sessions alive would leave the attacker it was invoked against still signed in.
 
+**9. Its timing and its code format are its own configuration, never Channel Verification's.** The boundary this record draws in the large holds in the small too: a shared setting would let one flow's operational retuning silently move the other's security properties, and neither owner would see it happen.
+
+The values approved with this boundary are a **10-minute credential lifetime**, a **60-second resend cooldown**, and a **12-character code drawn from Crockford Base32** — the alphabet that omits `I`, `L`, `O` and `U`. Each is recorded here rather than left wholly to implementation because each follows from something this record decides:
+
+- The lifetime is **shorter than verification's** because Decision 1's credential changes a password, and authority to change a credential should be spendable for less time than a status report.
+- The excluded letters matter more to the actor Decision 1 names — someone locked out, retyping from a phone — than to a holder already signed in.
+- The length is what makes the single paste-friendly field the right control rather than a segmented one, a decision the [design direction](../../features/authentication/product/ux-direction.md) already took and which shortening the code would reopen.
+
+**They remain tunables, and this ADR does not own them.** It records the values approved alongside the boundary; where they live and how they are carried is configuration.
+
 ## What this ADR does not decide
 
 Deliberately deferred, each to a named home:
@@ -57,7 +67,7 @@ Deliberately deferred, each to a named home:
 - **The endpoints, their payloads and their status codes** — the [API contract](../../api/api-contract.md)'s, co-versioned when they are built.
 - **How response neutrality is achieved against timing** — Decision 6's residual; an implementation obligation.
 - **The emailed-link path.** The UX brief's `D3` ratifies two independent paths for this flow. The code path is sequenced first; **nothing here reopens or removes the link**, and the credential model is required not to foreclose it.
-- **Values** — expiry, resend cooldown, code format and length. Configuration, recorded in the effort's execution plan, and deliberately **not shared with Channel Verification's settings**: one flow's tuning must never silently move another's.
+- **How Decision 9's values are carried** — the setting names, their place in the environment schema, and any later retuning. Configuration, owned by the effort's execution plan and the schema, not by this record.
 - **Delivery's reserved recovery floor.** [ADR 0015](0015-mail-delivery-boundary-and-abuse-control.md) Decision 6's, whose stated condition this record's acceptance meets.
 
 ## Alternatives considered
