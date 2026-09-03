@@ -68,7 +68,7 @@ export const createChannelVerificationService = (
   deps: ChannelVerificationServiceDeps = {},
 ): IChannelVerificationService => {
   const repo = deps.repo ?? createChannelVerificationRepository();
-  const mail = deps.mail ?? createMailAdapter();
+  const mail = deps.mail ?? createMailAdapter(undefined, env.MAIL_RECIPIENT_CAP_GENERAL);
   const now = deps.now ?? (() => new Date());
   const status = deps.status ?? createChannelVerificationStatus(repo, now);
   const runTransaction = deps.runInTransaction ?? defaultRunInTransaction;

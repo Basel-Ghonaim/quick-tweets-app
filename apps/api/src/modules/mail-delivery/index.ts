@@ -42,10 +42,13 @@ const CONFIGURED_MODE = resolveMailMode(env.MAIL_MODE, env.NODE_ENV);
  * production for the first time, and a backend added later inherits it without
  * doing anything.
  */
-export const createMailAdapter = (mode: MailMode = CONFIGURED_MODE): MailAdapter =>
+export const createMailAdapter = (
+  mode: MailMode = CONFIGURED_MODE,
+  recipientCap: number = env.MAIL_RECIPIENT_CAP_GENERAL,
+): MailAdapter =>
   createCappedMailAdapter(BACKENDS[mode](), {
     repo: createMailSendAttemptRepository(),
-    recipientCap: env.MAIL_RECIPIENT_CAP,
+    recipientCap,
     recipientWindowMs: env.MAIL_RECIPIENT_CAP_WINDOW_MS,
     outboundCeiling: env.MAIL_OUTBOUND_CEILING,
     ceilingWindowMs: env.MAIL_OUTBOUND_CEILING_WINDOW_MS,

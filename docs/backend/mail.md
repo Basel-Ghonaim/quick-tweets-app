@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the **outbound mail mechanism's design and rationale** — the port and its contract, the backends that implement it, how one is selected, and how a consumer composes it. It owns the *how* and the *why*.
 > It does **not** own: the **boundary decision** — that delivery is a separately-owned mechanism a consumer composes and never absorbs — which is [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md) Decision 7's, and the operational posture recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md); the **content** of any message, which belongs to the consumer that composes it; or any consumer's own behaviour — for the only consumer today, [Channel Verification](channel-verification.md).
 > **Scope:** The server-side mechanism at `apps/api/src/modules/mail-delivery/`. **This document describes what exists today.** One backend delivers; the other two deliberately withhold delivery and are what a developer or the verification harness runs against.
-> **Version:** 1.6
-> **Last Updated:** 2026-09-02
+> **Version:** 1.7
+> **Last Updated:** 2026-09-03
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -76,7 +76,7 @@ Two controls, because the threat has two halves. A **recipient cap** answers one
 
 **A refusal from a control is a refusal, not an unknown** — nothing was handed to a transport. It is distinguishable from a transport failure **in diagnostics only**: on the wire both are the same refusal, because telling one account that a global ceiling is exhausted would leak the system's state to it.
 
-**What is not partitioned, and why.** One cap covers every consumer. Splitting it by purpose is a per-case configuration surface, which [Engineering Principles §3](../development/engineering-principles.md) defers until a second instance shapes it. The residual is real and stated: with one shared cap a high-volume consumer can exhaust a quota a lower-volume one needs for the same address. A **per-actor** cap is a consumer's, not this mechanism's — delivery has no actor to key on.
+**One count, admitted asymmetrically — not partitioned by purpose.** A second consumer earned the reserve [Engineering Principles §3](../development/engineering-principles.md) defers a partition until, and the residual this document once only stated is now addressed — but not by splitting the count. There is still one running total per recipient; what differs is the **threshold** a caller is admitted under. `MAIL_RECIPIENT_CAP` is the reserved ceiling; `MAIL_RECIPIENT_CAP_GENERAL` is what every other consumer composes with, strictly below it, so the gap between the two is headroom only the reserved consumer can reach. Which limit a call is composed with is the caller's own choice at `createMailAdapter(mode, recipientCap)`; the mechanism itself carries no notion of who is asking or why — a limit is a number, never a purpose, and nothing here reads a consumer's identity to decide one. A **per-actor** cap remains a consumer's, not this mechanism's — delivery has no actor to key on.
 
 ## The sweep
 
