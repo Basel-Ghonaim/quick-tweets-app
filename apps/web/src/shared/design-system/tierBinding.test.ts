@@ -27,10 +27,7 @@ import { ROLES } from "./foundations/vocabulary";
  * FileInput variants kept injecting superseded tokens through a migration.
  *
  * Scoped to the Design System layer, not to every consumer: a consumer
- * legitimately composes with the curated scales. It also tolerates the auth
- * module binding the type scale directly, which is not the same licence — that
- * module is a prototype awaiting migration, and now that the language authors
- * heading and display roles there is a role for it to bind.
+ * legitimately composes with the curated scales.
  */
 
 const SRC = join(process.cwd(), "src");
