@@ -40,7 +40,12 @@ export const useVerifyFlow = (
   const issue = useRequestState(issueState);
   const confirm = useRequestState(confirmState);
 
-  const [stage, setStage] = useState<VerifyStage>("ask");
+  /* Read once at mount rather than synchronised: a resend passes through
+     loading, and a stage kept level with the status would drop the reader back
+     to the ask while their code is still on screen. */
+  const [stage, setStage] = useState<VerifyStage>(
+    issueState.status === "success" ? "code" : "ask",
+  );
   const [code, setCodeRaw] = useState("");
   const [cooldown, tick] = useReducer(resendCooldownReducer, resendCooldownInitial);
 
@@ -51,16 +56,11 @@ export const useVerifyFlow = (
     return () => clearInterval(id);
   }, [cooldown.secondsLeft]);
 
-  /* Only ever forward: a resend passes through loading on its way back to
-     success, and a stage read straight off the status would flip to the ask. */
-  useEffect(() => {
-    if (issue.isSuccess) setStage("code");
-  }, [issue.isSuccess]);
-
   const send = useCallback(() => {
     void executeVerification(dispatch, () => repo.issue(), "issueCode")
       .then(({ resendAvailableInSeconds }) => {
         tick({ type: "started", seconds: resendAvailableInSeconds });
+        setStage("code");
       })
       .catch(() => {});
   }, [dispatch, repo]);
