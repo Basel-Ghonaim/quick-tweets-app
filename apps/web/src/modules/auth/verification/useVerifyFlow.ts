@@ -51,11 +51,16 @@ export const useVerifyFlow = (
     return () => clearInterval(id);
   }, [cooldown.secondsLeft]);
 
+  /* Only ever forward: a resend passes through loading on its way back to
+     success, and a stage read straight off the status would flip to the ask. */
+  useEffect(() => {
+    if (issue.isSuccess) setStage("code");
+  }, [issue.isSuccess]);
+
   const send = useCallback(() => {
     void executeVerification(dispatch, () => repo.issue(), "issueCode")
       .then(({ resendAvailableInSeconds }) => {
         tick({ type: "started", seconds: resendAvailableInSeconds });
-        setStage("code");
       })
       .catch(() => {});
   }, [dispatch, repo]);

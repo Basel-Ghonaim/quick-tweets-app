@@ -1,0 +1,39 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ask,
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-block-start: var(--space-6);
+}
+
+/* Right-aligned under the field it belongs to, as the sign-in aside is. */
+.resend {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+/* Present for assistive technology only: the countdown beside it is what a
+   sighted reader follows. */
+.announce {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.aside {
+  display: flex;
+  justify-content: center;
+  margin-block: var(--space-6) 0;
+}

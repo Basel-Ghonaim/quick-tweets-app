@@ -4,7 +4,9 @@ import { AuthShell } from "./AuthShell";
 import { SignIn } from "./screens/SignIn";
 import { SignUp } from "./screens/SignUp";
 import { Profile } from "./screens/Profile";
+import { Verify } from "./screens/Verify";
 import { JourneyLayout } from "./layout/JourneyLayout";
+import { GuestOnly } from "./navigation";
 
 /**
  * Everything auth contains.
@@ -30,8 +32,16 @@ export const authRoute = (
     <Route index element={<Navigate to="signin" replace />} />
     <Route path="signin" element={<SignIn />} />
     <Route element={<JourneyLayout />}>
-      <Route path="signup" element={<SignUp />} />
+      <Route
+        path="signup"
+        element={
+          <GuestOnly>
+            <SignUp />
+          </GuestOnly>
+        }
+      />
       <Route path="profile" element={<Profile />} />
+      <Route path="verify" element={<Verify />} />
     </Route>
   </Route>
 );
