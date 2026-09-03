@@ -151,6 +151,50 @@ const envSchema = z
       .int()
       .positive()
       .default(7 * 24 * 60 * 60 * 1000),
+    // Password Reset's own configuration (ADR 0016 Decision 9) — never read
+    // from, defaulted from, or falling back to any CHANNEL_VERIFICATION_*
+    // variable. A shared setting would let one flow's retuning move the
+    // other's security properties with neither owner seeing it happen.
+    //
+    // Shorter than verification's own TTL: this credential authorizes a
+    // password change rather than reporting a status, so it is spendable for
+    // less time than one that only proves control of an endpoint.
+    RESET_CODE_TTL_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(10 * 60 * 1000),
+    // The durable abuse control; the per-IP limiter (WI-3) is only the outer
+    // layer. Also what the request flow reads under its per-user advisory
+    // lock to decide whether a resend is silently ignored.
+    RESET_RESEND_COOLDOWN_MS: z.coerce
+      .number()
+      .int()
+      .nonnegative()
+      .default(60 * 1000),
+    // Crockford base32 (no I/L/O/U): the actor retyping this is someone
+    // already locked out, on a phone, more often than a signed-in holder.
+    RESET_CODE_ALPHABET: z.string().default("0123456789ABCDEFGHJKMNPQRSTVWXYZ"),
+    // 12 over 32 symbols is 60 bits — also why the design took a single
+    // paste-friendly field over a segmented one; shortening this reopens that.
+    RESET_CODE_LENGTH: z.coerce.number().int().positive().default(12),
+    // How often spent/expired credentials are swept (ms; default 6h). Hygiene
+    // only — usable/expired/spent is derived, so nothing depends on this
+    // having run.
+    RESET_CHALLENGE_SWEEP_INTERVAL_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(6 * 60 * 60 * 1000),
+    // How long a spent or expired credential is kept before removal (ms;
+    // default 7d). Diagnostics only. `positive()` is load-bearing: the sweep
+    // deletes where `used_at < cutoff OR expires_at < cutoff`, and a negative
+    // value would push the cutoff into the future, matching live credentials.
+    RESET_CHALLENGE_RETENTION_MS: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(7 * 24 * 60 * 60 * 1000),
   })
   // Selecting a transport without the settings it needs is a misconfiguration,
   // and this project refuses to boot on those rather than failing at first use.
@@ -207,6 +251,27 @@ const envSchema = z
           `MAIL_RECIPIENT_CAP_GENERAL (${cfg.MAIL_RECIPIENT_CAP_GENERAL}) must be strictly less ` +
           `than MAIL_RECIPIENT_CAP (${cfg.MAIL_RECIPIENT_CAP}), or the reserved floor it is meant ` +
           `to carve out does not exist.`,
+      });
+    }
+  })
+  // Password Reset's cooldown is anchored on its most recent row, not on a
+  // separate standing record the way Channel Verification's is — so, unlike
+  // Channel Verification, a row surviving long enough for the NEXT request to
+  // find it is what makes the cooldown hold at all. If retention could fall
+  // below the cooldown, the sweep could remove a row before its own cooldown
+  // window closes, and a resend arriving in that gap would misread as a
+  // first-ever request — the cooldown silently defeated by an unrelated
+  // setting, the same class of drift the mail retention guard above exists to
+  // catch.
+  .superRefine((cfg, ctx) => {
+    if (cfg.RESET_CHALLENGE_RETENTION_MS < cfg.RESET_RESEND_COOLDOWN_MS) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["RESET_CHALLENGE_RETENTION_MS"],
+        message:
+          `RESET_CHALLENGE_RETENTION_MS (${cfg.RESET_CHALLENGE_RETENTION_MS}ms) is shorter than ` +
+          `RESET_RESEND_COOLDOWN_MS (${cfg.RESET_RESEND_COOLDOWN_MS}ms). The sweep could remove a ` +
+          `row before its own cooldown window closes, and the cooldown would under-enforce silently.`,
       });
     }
   });
