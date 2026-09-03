@@ -7,8 +7,16 @@ export class AppError<T extends ErrorType = ErrorType> extends Error {
   public readonly type: T;
   public readonly status: number;
   public readonly errors?: ErrorPayload<T>;
+  /** Whole seconds a refusal named as its own retry window. Present only where
+   *  the response carried one; HTTP spells it `Retry-After`. */
+  public readonly retryAfterSeconds?: number;
 
-  constructor(type: T, message: string, errors?: ErrorPayload<T>) {
+  constructor(
+    type: T,
+    message: string,
+    errors?: ErrorPayload<T>,
+    retryAfterSeconds?: number,
+  ) {
     super(message);
 
     this.name = this.constructor.name;
@@ -16,6 +24,7 @@ export class AppError<T extends ErrorType = ErrorType> extends Error {
     this.type = type;
     this.status = errorConfigMap[type].status;
     this.errors = errors;
+    this.retryAfterSeconds = retryAfterSeconds;
 
     if ("captureStackTrace" in Error) {
       (
@@ -42,6 +51,7 @@ export class AppError<T extends ErrorType = ErrorType> extends Error {
       message: this.message,
       status: this.status,
       errors: this.errors,
+      retryAfterSeconds: this.retryAfterSeconds,
     };
   }
 }

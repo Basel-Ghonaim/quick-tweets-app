@@ -8,8 +8,9 @@ export const createAppError = <T extends ErrorType = ErrorType>(
   type: T,
   message: string,
   errors?: ErrorPayload<T>,
+  retryAfterSeconds?: number,
 ): AppError<T> => {
-  return new AppError(type, message, errors);
+  return new AppError(type, message, errors, retryAfterSeconds);
 };
 
 export const createUnknownError = (error?: unknown): AppError<"unknown"> => {

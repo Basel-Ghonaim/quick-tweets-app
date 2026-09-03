@@ -3,6 +3,7 @@ import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
 import { useProfileFlow, profileFormSchema, BIO_MAX } from "../../profile";
+import { useAuthNavigate } from "../../navigation";
 import styles from "./Profile.module.css";
 
 const fields = toFieldEntries(profileFormSchema);
@@ -11,8 +12,8 @@ const AVATAR_ACCEPT = "image/jpeg,image/png";
 const AVATAR_MAX_BYTES = 1024 * 1024;
 
 export const Profile = () => {
-  /* No destination is passed: Phase 3 does not exist and moving between the
-     journey's steps is its own Work Item, so both actions end here. */
+  const navigate = useAuthNavigate();
+
   const {
     values,
     errors,
@@ -23,7 +24,7 @@ export const Profile = () => {
     handleChange,
     handleSubmit,
     skip,
-  } = useProfileFlow();
+  } = useProfileFlow(() => navigate("/auth/verify"));
 
   const uploadMessage = AUTH_COPY.profile[
     avatar.status === "uploading"

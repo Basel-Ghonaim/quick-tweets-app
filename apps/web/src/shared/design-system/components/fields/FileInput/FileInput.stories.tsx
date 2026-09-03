@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, within } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 import { THEMES, THEME_ATTRIBUTE } from "../../../foundations";
 import { FileInput } from "./FileInput";
 import type { FileInputProps } from "./FileInput.types";
@@ -474,8 +474,9 @@ export const AvatarOverlayRevealsOnKeyboardFocus: AvatarStory = {
     await expect(getComputedStyle(overlay).opacity).toBe("0");
 
     remove.focus();
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    await expect(getComputedStyle(overlay).opacity).toBe("1");
+    // Waited for rather than slept through: the same assertion, without a fixed
+    // window that a loaded suite can outrun.
+    await waitFor(() => expect(getComputedStyle(overlay).opacity).toBe("1"));
   },
 };
 
@@ -491,8 +492,7 @@ export const ThumbnailRemoveRevealsOnKeyboardFocus: DropzoneStory = {
     await expect(getComputedStyle(remove).opacity).toBe("0");
 
     remove.focus();
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    await expect(getComputedStyle(remove).opacity).toBe("1");
+    await waitFor(() => expect(getComputedStyle(remove).opacity).toBe("1"));
   },
 };
 
