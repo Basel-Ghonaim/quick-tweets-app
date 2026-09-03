@@ -44,6 +44,12 @@ export const errorConfigMap: Record<ErrorType, ErrorConfig> = {
     status: 429,
     defaultMessage: "Too many requests. Please slow down and try again later.",
   },
+  /* Also 429, and a different refusal: the edge limiter rather than a resource
+     asking a caller to wait. The reverse lookup keeps the older of the two. */
+  rate_limit: {
+    status: 429,
+    defaultMessage: "Too many requests. Please slow down and try again later.",
+  },
   canceled: { status: 499, defaultMessage: "The request was canceled." },
   server: {
     status: 500,

@@ -10,6 +10,7 @@ export type ErrorType =
   | "timeout"
   | "conflict"
   | "too_many_requests"
+  | "rate_limit"
   | "bad_request"
   | "unknown"
   | "payload_too_large"
