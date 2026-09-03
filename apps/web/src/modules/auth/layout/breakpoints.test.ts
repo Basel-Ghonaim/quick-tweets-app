@@ -8,12 +8,12 @@ import { describe, expect, test } from "vitest";
  * A change to one and not the others tears the composition, and nothing about
  * the result says which value was meant.
  *
- * Screens are scanned too: a repeated value is only held by a check that sees
- * every place it is repeated. The current design predates these two widths.
+ * The whole module is scanned: a repeated value is only held by a check that
+ * sees every place it is repeated.
  */
 
 const MODULE = join(process.cwd(), "src/modules/auth");
-const SCANNED = ["layout", "screens"].map((dir) => join(MODULE, dir));
+const SCANNED = [MODULE];
 
 /** Where the two columns stop, and where the compact set begins. */
 const BREAKPOINTS = ["72rem", "36rem"];
