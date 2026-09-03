@@ -47,8 +47,12 @@ import type {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** Number of bcrypt salt rounds. 12 = ~250ms per hash — secure yet responsive. */
-const SALT_ROUNDS = 12;
+/**
+ * Number of bcrypt salt rounds. 12 = ~250ms per hash — secure yet responsive.
+ * Exported so a password reset hashes under the same cost this module uses,
+ * rather than a second copy of the same number drifting from it.
+ */
+export const SALT_ROUNDS = 12;
 
 /** Refresh token validity period in days. */
 const REFRESH_TOKEN_DAYS = 7;
