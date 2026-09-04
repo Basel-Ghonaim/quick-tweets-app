@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-02
+> **Last Updated:** 2026-09-04
 > **Parent Issue:** [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)
 > **Supersedes:** —
 
@@ -270,7 +270,7 @@ Folder 10 was executed under **Newman** against the collection as it stands afte
 
 ### Findings and follow-ups recorded
 
-A closing review of this effort recorded, and deliberately did not fix: the codebase-wide *declared-without-producer* pattern (`MediaStatus "pending"`, `ErrorType "service_unavailable"`, two uncalled `AppError` factories, `ITweetService.getByAuthor`, `IMediaReferences.isReferenced`) · the mail repository's unreached transaction seam, and the advisory lock's scope implication for the first caller that uses it · `MailResult.reason`, produced everywhere and read nowhere · the pre-existing `Future expansion:` blocks and milestone tags, which [Engineering Principles §12](../development/engineering-principles.md) forbids pursuing as a campaign · [`project/overview.md`](../project/overview.md)'s denial of two capabilities that exist · `api-contract.md`'s missing currency header · the `npm audit` chain, whose remediation is a major downgrade · [#348](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/348) and [#449](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/449).
+A closing review of this effort recorded, and deliberately did not fix: the codebase-wide *declared-without-producer* pattern (`MediaStatus "pending"`, `ErrorType "service_unavailable"`, two uncalled `AppError` factories, `ITweetService.getByAuthor`, `IMediaReferences.isReferenced`) · the mail repository's unreached transaction seam, and the advisory lock's scope implication for the first caller that uses it · `MailResult.reason`, produced everywhere and read nowhere · the pre-existing `Future expansion:` blocks and milestone tags, which [Engineering Principles §12](../development/engineering-principles.md) forbids pursuing as a campaign — of which the two this effort named by file, in `auth.repository.ts` and `auth.types.ts`, were since removed by [Password Reset](password-reset.md)'s WI-2, the Work Item that legitimately touched both and built the very work they proposed as future; that is §12's Boy Scout clause rather than the campaign it forbids, and the remaining blocks and tags stand · [`project/overview.md`](../project/overview.md)'s denial of two capabilities that exist · `api-contract.md`'s missing currency header · the `npm audit` chain, whose remediation is a major downgrade · [#348](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/348) and [#449](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/449).
 
 ### Status
 
