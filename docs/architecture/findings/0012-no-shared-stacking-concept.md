@@ -26,6 +26,12 @@ Not for having no consumers — **an unconsumed family is not an unfinished fami
 
 The roadmap makes Tooltip, Menu and Dialog approved components, which looks like *named commitment*. It is not sufficient here: the commitment names the components, not the order they stack in, and the order is the only thing the vocabulary would carry.
 
+## Update — 2026-09-03
+
+**Two of the three sites in the table above no longer exist.** `LeftPanel` and `AuthTabs` belonged to the prototype auth design, which has been removed. The module's remaining `z-index` declarations — the shell's page layer over its own backdrop — are the same kind the table describes: local ordering inside one positioned context, competing with nothing.
+
+The conclusion is unchanged, and so is the status: **nothing in the codebase yet asks which of two independent floating things wins.**
+
 ## When to reconsider
 
 **When two independent floating components must stack against each other** — a menu inside a dialog, a tooltip over a toast. The first pair to genuinely conflict establishes the order, and it will be an order derived from real overlap rather than one guessed in advance. Local stacking inside a component's own context never needs it.

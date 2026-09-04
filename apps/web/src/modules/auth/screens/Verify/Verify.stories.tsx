@@ -6,8 +6,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
-import { AuthShell } from "../../AuthShell";
-import { AuthDesignProvider } from "../../_design";
+import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { authReducer, authActions } from "../../store";
 import { AUTH_COPY } from "../../config/copy";
@@ -43,14 +42,7 @@ const at = (
       <ThemeProvider>
         <MemoryRouter initialEntries={[entry]}>
           <Routes>
-            <Route
-              path="/auth"
-              element={
-                <AuthDesignProvider showToggle={false}>
-                  <AuthShell />
-                </AuthDesignProvider>
-              }
-            >
+            <Route path="/auth" element={<AuthLayout />}>
               <Route element={<JourneyLayout />}>
                 <Route path="verify">
                   <Route index element={<VerifyAsk />} />
@@ -67,13 +59,12 @@ const at = (
   );
 };
 
-const ASK = "/auth/verify?design=proposed";
-const CODE = "/auth/verify/code?design=proposed";
+const ASK = "/auth/verify";
+const CODE = "/auth/verify/code";
 
 /** What the ask hands over when it leaves. */
 const carrying = (seconds: number) => ({
   pathname: "/auth/verify/code",
-  search: "?design=proposed",
   state: { resendAvailableInSeconds: seconds },
 });
 

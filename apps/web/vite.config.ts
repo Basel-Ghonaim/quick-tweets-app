@@ -44,6 +44,7 @@ export default defineConfig({
       })],
       test: {
         name: 'storybook',
+        setupFiles: ['./.storybook/domValidity.ts'],
         browser: {
           enabled: true,
           headless: true,

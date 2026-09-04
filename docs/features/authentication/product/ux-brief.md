@@ -24,7 +24,7 @@ These decisions were subsequently tested against how real products behave; what 
 
 > **Core note:** Profile Completion (Phase 2) is the **only stage of the entire auth experience buildable today with zero new backend work** — the endpoint is live and every component it needs already exists.
 
-> The current `/auth` page is a **prototype and migration surface**, not a design reference ([frontend architecture](../../../frontend/architecture.md) identifies it as such). With `D1` and `D4`, its OAuth buttons and tab pattern are formally retired by direction.
+> The `/auth` page that preceded this direction was a prototype, and it has been removed. With `D1` and `D4`, its OAuth buttons and tab pattern were formally retired by direction.
 
 ---
 

@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the **authentication feature** — what it does, how its flows work, how it **composes** the platform, and its feature-specific configuration and policies. It owns the feature, **not the mechanisms it composes**: every shared mechanism it touches is owned by a platform document and linked here, never restated.
 > **Scope:** The auth feature module (`apps/web/src/modules/auth/`) and its behavior. The wire contract is the [API contract](../../api/api-contract.md)'s; the server-side security mechanisms are [Backend Security](../../backend/security.md)'s; the transport and the client half of the token model are the [frontend API client](../../frontend/api-client.md)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organization is the current implementation of **this feature only — explicitly not the canonical template for future features** (the template is deliberately deferred by the [frontend architecture](../../frontend/architecture.md) until a second feature validates or reshapes it). Anything not described here is not yet built, not architecturally rejected.
-> **Version:** 1.3
-> **Last Updated:** 2026-08-31
+> **Version:** 1.4
+> **Last Updated:** 2026-09-03
 > **Owner:** Basel Ghonaim
 
 ## What the feature does
@@ -15,7 +15,6 @@ Authentication is the frontend's first — and currently only — fully built fe
 - **Register** — account creation with username, email, and password. `name` is not part of registration — it is optional profile data set later via `PATCH /users/me` (absent = no display name; the read side falls back to `username`). The form presents an avatar picker, but registration itself is **Media-free**: the account is created without an image, and an avatar is set separately through the authenticated profile update (`PATCH /users/me`), not at register. The pre-auth register-with-avatar path (the original [#256](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/256) concern) was retired in favour of authenticated-only media ([ADR 0008](../../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md)); the Media subsystem is owned by [`backend/media.md`](../../backend/media.md).
 - **Login / Logout** — credential sign-in, and sign-out that revokes the server session.
 - **Silent session restore** — a returning user is signed back in on app startup, from the server, without re-entering credentials.
-- **The auth page** — a split-panel screen (brand panel + form card) whose sign-in/sign-up tabs are **URL-driven** (`/auth/signin`, `/auth/signup`); switching tabs navigates, so the active form is deep-linkable. The social-login buttons on the page are **visual placeholders** — no OAuth is implemented.
 
 ## Responsibility boundary
 

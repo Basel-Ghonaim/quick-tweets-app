@@ -30,6 +30,12 @@ Choosing a mechanism *and* a scale with neither a design nor a consumer would ha
 
 **When a real responsive design appears, together with a valid consumption mechanism.** At that point the questions are, in order: which layer owns responsive decisions, what mechanism carries them, and only then what the scale should be. Nothing here forecloses a breakpoint system — it records that the previous one could not be used and had no owner.
 
+## Update — 2026-09-03
+
+**The three values the Observation names are gone.** `480px`, `768px` and `1024px` belonged to the prototype auth design, which has been removed; the module now writes only `72rem` and `36rem`, and a check holds every stylesheet in it to those two.
+
+**The mechanism question is untouched, which is why this stays `Open`.** Half of the reconsideration condition is now met — a real responsive design exists — and the other half is not: those two widths are still literals repeated across stylesheets, held by a check rather than carried by any valid token mechanism. The finding's subject was always the mechanism, not the values.
+
 ## Related
 
 - [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 2 — consumer count is evidence, never a gate; what is admitted is a shared concept.

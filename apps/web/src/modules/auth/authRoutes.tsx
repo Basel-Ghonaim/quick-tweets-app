@@ -1,11 +1,9 @@
 import { Navigate, Route } from "react-router-dom";
-import { AuthDesignProvider } from "./_design";
-import { AuthShell } from "./AuthShell";
+import { AuthLayout, JourneyLayout } from "./layout";
 import { SignIn } from "./screens/SignIn";
 import { SignUp } from "./screens/SignUp";
 import { Profile } from "./screens/Profile";
 import { VerifyAsk, VerifyCode } from "./screens/Verify";
-import { JourneyLayout } from "./layout/JourneyLayout";
 import { GuestOnly } from "./navigation";
 
 /**
@@ -16,19 +14,7 @@ import { GuestOnly } from "./navigation";
  * screen from widening the module's public surface and editing `app/`.
  */
 export const authRoute = (
-  <Route
-    path="auth"
-    element={
-      /*
-       * TEMPORARY — the design-comparison phase's only integration point. One
-       * instance for all of auth, so switching designs re-renders without
-       * remounting. It leaves with `_design/`.
-       */
-      <AuthDesignProvider>
-        <AuthShell />
-      </AuthDesignProvider>
-    }
-  >
+  <Route path="auth" element={<AuthLayout />}>
     <Route index element={<Navigate to="signin" replace />} />
     <Route path="signin" element={<SignIn />} />
     <Route element={<JourneyLayout />}>

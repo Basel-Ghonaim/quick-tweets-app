@@ -5,8 +5,7 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { SignIn } from "./SignIn";
-import { AuthShell } from "../../AuthShell";
-import { AuthDesignProvider } from "../../_design";
+import { AuthLayout } from "../../layout";
 import { authReducer, authActions } from "../../store";
 import { AUTH_COPY } from "../../config/copy";
 
@@ -37,16 +36,9 @@ const withState = (seed?: (dispatch: ReturnType<typeof configureStore>["dispatch
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>
       <ThemeProvider>
-        <MemoryRouter initialEntries={["/auth/signin?design=proposed"]}>
+        <MemoryRouter initialEntries={["/auth/signin"]}>
           <Routes>
-            <Route
-              path="/auth"
-              element={
-                <AuthDesignProvider showToggle={false}>
-                  <AuthShell />
-                </AuthDesignProvider>
-              }
-            >
+            <Route path="/auth" element={<AuthLayout />}>
               <Route path="signin" element={<SignIn />} />
             </Route>
             <Route path="*" element={<Story />} />
