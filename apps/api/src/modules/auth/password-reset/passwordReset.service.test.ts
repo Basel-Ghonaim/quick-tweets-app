@@ -13,8 +13,8 @@
 import bcrypt from "bcrypt";
 import { describe, expect, it, vi } from "vitest";
 
-import type { MailAdapter, MailMessage } from "../mail-delivery/index.js";
-import type { IAuthRepository, ITokenRepository } from "./auth.types.js";
+import type { MailAdapter, MailMessage } from "../../mail-delivery/index.js";
+import type { IAuthRepository, ITokenRepository } from "../auth.types.js";
 import { PasswordResetError } from "./passwordReset.errors.js";
 import { createPasswordResetService } from "./passwordReset.service.js";
 import type {

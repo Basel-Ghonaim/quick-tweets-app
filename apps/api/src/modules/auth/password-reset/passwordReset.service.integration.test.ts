@@ -14,10 +14,10 @@
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { prisma, runInTransaction } from "../../shared/database/index.js";
-import type { MailAdapter, MailMessage } from "../mail-delivery/index.js";
-import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
-import { createAuthService } from "./auth.service.js";
+import { prisma, runInTransaction } from "../../../shared/database/index.js";
+import type { MailAdapter, MailMessage } from "../../mail-delivery/index.js";
+import { createAuthRepository, createTokenRepository } from "../auth.repository.js";
+import { createAuthService } from "../auth.service.js";
 import { createPasswordResetRepository } from "./passwordReset.repository.js";
 import { createPasswordResetService } from "./passwordReset.service.js";
 

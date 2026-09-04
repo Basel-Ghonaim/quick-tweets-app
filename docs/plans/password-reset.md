@@ -68,13 +68,16 @@ None. Every open question this plan depends on was resolved in the review that p
 
 ## 4. Strategy & sequencing
 
-**Order: 1 → 2 → 3 → 4.**
+**Order: 1 → 2 → 2A → 3 → 4.**
 
 ```
 1 (reserved recovery floor, mail-delivery composition)
         │
         ▼
 2 (credential schema + lifecycle service, inside Auth)
+        │
+        ▼
+2A (structural: Reset's files group under auth/password-reset/)
         │
         ▼
 3 (HTTP surface: request / confirm / apply)
@@ -84,10 +87,11 @@ None. Every open question this plan depends on was resolved in the review that p
 ```
 
 - **1 → 2** *(soft, but ordered on purpose)*: nothing in WI-2 calls Delivery, so there is no hard dependency — but WI-2's service composes the reset adapter with `limit = 20`, and validating the floor first means that composition is never built against an unreserved cap, even briefly.
+- **2 → 2A → 3** *(sequencing, and deliberately not folded)*: WI-2 left `modules/auth/` holding two independently-layered stacks flat, which is the one shape this repository already answers with a directory — `media/` is the only multi-subject module and it subdivides, grouping `storage/` at three files while single-subject `mail-delivery/` stays flat at twenty-three. **2A runs before WI-3 rather than after WI-4** because WI-3 creates Reset's controller, routes and validator: moving eleven files now is cheaper than moving sixteen later, and those files are then born in their final location. It is **never combined with WI-3** — a pure rename mixed into a feature diff is the hardest kind to review, which is the reason WI-2's own review sent a formatter pass back.
 - **2 → 3** *(hard)*: the HTTP surface is a thin translation of an already-tested service — the same reasoning Channel Verification's own plan used for its WI-4 → WI-5 boundary.
 - **3 → 4** *(hard)*: the harness verifies behaviour that must already exist; the API contract describes endpoints that must already respond.
 
-**Why four, not more.** Channel Verification needed ten Work Items because it was proving an unprecedented boundary — custody, derived status, a delivery port with no prior implementation. None of that is being proven again here: the pattern, the port, and the sweep substrate all exist and are being **copied**, not invented (ADR 0016 Decision 4). What remains genuinely separable is the Delivery-side composition change (touches a different module, reviewable by someone who need not read Auth's service logic at all), the credential's lifecycle (the effort's real risk, exactly as Channel Verification's challenge lifecycle was its own plan's riskiest Work Item), the HTTP translation, and the closing triad of sweep/contract/harness — which land together because none of the three is independently risky and each is small.
+**Why four capability Work Items, not more** — 2A is structural and builds none of the capability, which is exactly why it is numbered apart rather than counted among them. Channel Verification needed ten Work Items because it was proving an unprecedented boundary — custody, derived status, a delivery port with no prior implementation. None of that is being proven again here: the pattern, the port, and the sweep substrate all exist and are being **copied**, not invented (ADR 0016 Decision 4). What remains genuinely separable is the Delivery-side composition change (touches a different module, reviewable by someone who need not read Auth's service logic at all), the credential's lifecycle (the effort's real risk, exactly as Channel Verification's challenge lifecycle was its own plan's riskiest Work Item), the HTTP translation, and the closing triad of sweep/contract/harness — which land together because none of the three is independently risky and each is small.
 
 ---
 
@@ -119,6 +123,18 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **DoD:** the lifecycle is complete and unit-covered; nothing is exported beyond what WI-3 will need; typecheck + unit green.
 - **Commit/PR boundary:** one PR.
 - **Stop-risks:** if neutrality (**I5**) cannot be achieved without the response depending on whether the account exists in any observable way (timing, headers, or body) → **stop**; that is D3's premise failing, not a detail to patch around.
+
+### WI-2A — Reset's files group under `auth/password-reset/`
+- **Goal & rationale:** structural only. WI-2 left `modules/auth/` at 26 files holding three subjects separated by filename prefix alone, one of which — `passwordReset.*` — is a complete second stack. **The repository's convention is one subject per directory level, and it is not about size:** seven of eight backend modules are flat and each holds exactly one subject, while `media/`, the only multi-subject module, subdivides — grouping `storage/` at three files while single-subject `mail-delivery/` stays flat at twenty-three. Reset is structurally `media/reclamation/`, which reaches its parent through `../media.types.js` exactly as this will reach `../auth.types.js`.
+- **Scope:** this amendment *(first commit)*; the move of eleven `passwordReset.*` files into `auth/password-reset/`; the fifteen import specifiers whose depth changes. Filenames **keep** their prefix, following `reclamation/reclamation.job.ts`. **No `index.ts`** — `reclamation/` has none, and one here would publish a surface nothing consumes.
+- **Non-goals:** no behaviour change; no new, deleted or renamed symbol; no type, signature or export change; no schema, endpoint or configuration change; no change to `auth.*` or `refreshTokenCleanup.job.*`, which stay put; **no WI-3 work of any kind**.
+- **Dependencies:** **WI-2** (hard — the files must exist). **Blocks WI-3**, so its new files are created in their final location.
+- **Boundary validated:** that Reset's coupling to Auth is genuinely the three imports the review found, and that a directory makes it visible — after the move, "does Reset reach further into Auth than it should?" is a `../` count rather than an import audit.
+- **Invariants protected:** none directly; **I6**'s guard must keep scanning a non-empty set, which its own "found at least one file" assertion proves.
+- **Verification:** `git show -M` reports every move as a rename with the whole delta in import specifiers; no file outside the moved set appears in the diff but this plan; every suite matches its pre-move count **exactly** — a structural change that moves a number has changed behaviour.
+- **DoD:** the directory exists with no barrel; typecheck clean; every count unchanged.
+- **Commit/PR boundary:** one PR, **never combined with WI-3**.
+- **Stop-risks:** if an import needs more than a depth change, **stop** — that is a coupling the review missed, and a finding about the boundary rather than a detail of this move. If grouping appears to require an `index.ts`, **stop**: that contradicts ADR 0016's own reasoning for placing Reset inside Auth.
 
 ### WI-3 — HTTP surface: request / confirm / apply
 - **Goal & rationale:** make the capability reachable, translating WI-2's already-tested service into three unauthenticated endpoints. Follows immediately because, per Channel Verification's own precedent, this layer should be thin enough that its risk is fully retired by WI-2's tests.
@@ -156,7 +172,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ## 7. Completion criteria (whole effort)
 
-- All four Work Items merged to `main`, each green (typecheck + unit; integration verified locally).
+- All four capability Work Items merged to `main`, each green (typecheck + unit; integration verified locally), and the structural **2A** with them.
 - An anonymous requester can recover access to an account they own end-to-end: request → confirm → apply → every prior session invalid → sign in with the new password.
 - **All eight invariants hold**, and the grep-verifiable ones (**I1, I4, I6**) are demonstrably true.
 - A request for a real address and a request for an unknown one are **provably indistinguishable** at the HTTP boundary — status, body, and shape.
