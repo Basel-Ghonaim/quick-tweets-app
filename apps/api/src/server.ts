@@ -27,6 +27,7 @@ import { createRefreshTokenCleanupJob } from "./modules/auth/refreshTokenCleanup
 import { createMediaReclamationJob } from "./modules/media/reclamation/reclamation.job.js";
 import { createChannelVerificationSweepJob } from "./modules/channel-verification/channelVerification.sweep.job.js";
 import { createMailSendAttemptSweepJob } from "./modules/mail-delivery/mailSendAttempt.sweep.job.js";
+import { createPasswordResetSweepJob } from "./modules/auth/password-reset/passwordReset.sweep.job.js";
 
 // ─── Startup ─────────────────────────────────────────────────────────────────
 
@@ -51,13 +52,14 @@ const start = async () => {
   //    holds no domain knowledge and the registrations below are the whole of
   //    what it knows. A dedicated lock connection gives cross-instance
   //    single-run. Media reclamation is report-only unless explicitly set
-  //    destructive; the two sweeps are hygiene, and no answer depends on them.
+  //    destructive; the sweeps are hygiene, and no answer depends on them.
   const jobLock = createPostgresJobLock();
   const scheduler = createScheduler({ lock: jobLock });
   scheduler.register(createRefreshTokenCleanupJob());
   scheduler.register(createMediaReclamationJob());
   scheduler.register(createChannelVerificationSweepJob());
   scheduler.register(createMailSendAttemptSweepJob());
+  scheduler.register(createPasswordResetSweepJob());
   scheduler.start();
   console.log("   Background scheduler started");
 
