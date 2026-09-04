@@ -1,0 +1,77 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  applyResetSchema,
+  confirmResetSchema,
+  requestResetSchema,
+} from "./passwordReset.validator.js";
+
+describe("request — the address", () => {
+  it("accepts a well-formed address, lowercased to match how it was stored", () => {
+    expect(requestResetSchema.parse({ email: "User@Example.TEST" })).toEqual({
+      email: "user@example.test",
+    });
+  });
+
+  // Registration's schema orders `.email()` before `.trim()`, so surrounding
+  // whitespace fails there too. Matched rather than corrected: a padded
+  // address that could reset but not register would be the worse surprise,
+  // and the ordering is registration's to change, not this Work Item's.
+  it("rejects a padded address, exactly as registration does", () => {
+    expect(() => requestResetSchema.parse({ email: "  user@example.test  " })).toThrow();
+  });
+
+  it("rejects a malformed address — a caller learns only about what they typed", () => {
+    expect(() => requestResetSchema.parse({ email: "not-an-address" })).toThrow();
+  });
+
+  it("rejects a missing address", () => {
+    expect(() => requestResetSchema.parse({})).toThrow();
+  });
+});
+
+describe("the submitted code — presence only", () => {
+  // The point of these: every one of these values must reach the capability
+  // and fail there, identically. If any of them were rejected here instead,
+  // "malformed" would answer differently from "wrong", which is the exact
+  // distinction the opaque failure exists to deny.
+  const shapesThatMustStillReachTheCapability = [
+    ["far too short", "A"],
+    ["far too long", "A".repeat(64)],
+    ["outside the alphabet", "iloveyou1234"],
+    ["excluded Crockford letters", "IIIILLLLOOOO"],
+    ["lowercase", "abcdefghjkmn"],
+    ["punctuation", "ABCD-EFGH-JKM"],
+  ] as const;
+
+  for (const [label, code] of shapesThatMustStillReachTheCapability) {
+    it(`accepts ${label} at the boundary, leaving the verdict to the capability`, () => {
+      expect(confirmResetSchema.parse({ code })).toEqual({ code });
+    });
+  }
+
+  it("rejects only an absent or empty value — a malformed request, not a failed reset", () => {
+    expect(() => confirmResetSchema.parse({})).toThrow();
+    expect(() => confirmResetSchema.parse({ code: "" })).toThrow();
+  });
+});
+
+describe("apply — the new password", () => {
+  const CODE = "0123456789AB";
+
+  it("accepts a code of any shape together with a compliant password", () => {
+    const input = { code: "whatever-shape", newPassword: "Str0ng!Passw0rd" };
+    expect(applyResetSchema.parse(input)).toEqual(input);
+  });
+
+  it("holds the new password to registration's rules", () => {
+    for (const weak of ["Sh0rt!", "alllowercase1!", "ALLUPPERCASE1!", "NoDigitsHere!", "NoSymbol1234"]) {
+      expect(() => applyResetSchema.parse({ code: CODE, newPassword: weak })).toThrow();
+    }
+  });
+
+  it("reuses registration's rules rather than restating them — the two cannot drift", async () => {
+    const { registerSchema } = await import("../auth.validator.js");
+    expect(applyResetSchema.shape.newPassword).toBe(registerSchema.shape.password);
+  });
+});

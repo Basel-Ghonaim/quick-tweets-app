@@ -145,3 +145,82 @@ export const verificationConfirmLimiter = rateLimit({
     },
   },
 });
+
+// ─── Password Reset Limiters ─────────────────────────────────────────────────
+// Tighter than the channel-verification pair above, and the reason is the
+// actor rather than the operation: those endpoints sit behind `authGuard`, so
+// an attacker must hold a session to reach them at all. These are anonymous.
+
+/**
+ * Requesting a reset sends mail to an address the caller chose, which makes it
+ * the effort's only unauthenticated path to someone else's inbox.
+ *
+ * Two durable controls sit beneath this one and are the real answer: the
+ * per-account resend cooldown the capability enforces, and Delivery's
+ * per-recipient cap with its reserved recovery floor. This limiter is the
+ * cheap outer layer — per-IP and in-memory, so it cannot stop one address
+ * being targeted from rotating IPs, which is precisely why it is not what the
+ * abuse posture rests on.
+ *
+ * Applied to: POST /auth/password-reset
+ * Limit: 5 requests per 15 minutes per IP
+ */
+export const passwordResetRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      type: "rate_limit",
+      message: "Too many password reset requests. Please wait 15 minutes before trying again.",
+    },
+  },
+});
+
+/**
+ * Checking a code is read-only and cheap, and a 12-character Crockford Base32
+ * code is out of brute-force reach whatever this limiter says. It is sized for
+ * someone retyping from an inbox on a phone — the actor the alphabet was
+ * chosen for — not for an attacker the entropy already answers.
+ *
+ * Applied to: POST /auth/password-reset/confirm
+ * Limit: 10 requests per 15 minutes per IP
+ */
+export const passwordResetConfirmLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      type: "rate_limit",
+      message: "Too many attempts. Please wait 15 minutes before trying again.",
+    },
+  },
+});
+
+/**
+ * Applying costs a bcrypt hash before the code is even looked at — the same
+ * ordering registration uses, so the work is never done while holding a
+ * database connection. That makes this the one reset endpoint where a
+ * rejected request still costs real CPU, so it is the tightest of the three.
+ *
+ * Applied to: POST /auth/password-reset/apply
+ * Limit: 5 requests per 15 minutes per IP
+ */
+export const passwordResetApplyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      type: "rate_limit",
+      message: "Too many attempts. Please wait 15 minutes before trying again.",
+    },
+  },
+});
