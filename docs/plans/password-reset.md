@@ -7,6 +7,10 @@
 > **Parent Issue:** [#632](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/632)
 > **Supersedes:** —
 
+**Implementation status: Complete** · **Engineering work: Complete** · **Closure status: Pending Human Gate** · **Human Postman Gate (folder 11): Not Run**
+
+All four Work Items are merged, and the structural **2A** with them. The plan stays `Active` for one reason: the manual harness is a completion criterion (§7), it has not been run by a person, and no automated pass substitutes for it. Criterion by criterion in [§8](#8-reconciliation).
+
 This plan sequences the implementation of **Password Reset** into four independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md) (Accepted), which owns the boundary — a dedicated Auth capability, not an extension of Channel Verification — the single owned fact, the ownership split from Channel Verification and Mail Delivery, and the approved configuration defaults. **This plan never reopens it.**
 
 Two further decisions were resolved in review before this plan was drafted and are equally **closed** here: the timing-neutrality mechanism (§3.2 D3) and the reserved-recovery-floor shape (§3.2 D4). Both are implementation-level choices ADR 0016 deliberately deferred; neither is an architectural decision this plan may revisit.
@@ -183,4 +187,43 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ## 8. Reconciliation
 
-*Added as this plan approaches `Historical`.*
+*Written as this plan approaches `Historical`. It does not reach it here: the manual harness is a completion criterion (§7), it has not been run by a person, and that is the human's act — the same place both sibling plans stand.*
+
+### Where the durable facts landed
+
+| Fact | Now owned by |
+|---|---|
+| The boundary — why recovery is its own capability, inside Auth, and not an extension of Channel Verification | [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md) |
+| The wire — three endpoints, their statuses, the constant `202`, the single opaque `400`, and **why they differ from Channel Verification's** | [API contract](../api/api-contract.md) |
+| The credential's relationships, cascade and indexes | [data model](../architecture/data-model.md) |
+| The reserved recovery floor, and the two-limit composition it takes | [`backend/mail.md`](../backend/mail.md) |
+| Hand-verification | [verification harness](../development/verification/README.md) — folder 11, scenarios PWR-01…PWR-15, Checkpoint J |
+
+**No platform document was created.** Under the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)) one is earned when a subsystem has a stable core that no other document owns; here every durable fact has a home in the table above, and ADR 0016 remains the interim record it said it would be. That is a judgement this plan records rather than takes silently: if a second channel of recovery, or a second consumer of the credential, ever arrives, the calculation changes.
+
+### Criterion by criterion (§7)
+
+| Criterion | Standing |
+|---|---|
+| All four Work Items merged, each green, and the structural 2A with them | **Met** — #634, #637, #639, #641, and this one |
+| An anonymous requester can recover end to end | **Met in code**, proven by integration tests over real Postgres; the by-hand demonstration is the harness's, and it is unrun |
+| All eight invariants hold; the grep-verifiable ones demonstrably | **Met** — I1/I4/I6 grep-clean, I3 asserted against the router Express builds, I5 asserted byte-for-byte, I7 counted in the database |
+| A real and an unknown address are provably indistinguishable at the boundary | **Met** — and widened past the original wording: all **three** branches, including the cooldown, which is where I5 was hardest to hold |
+| The reserved floor exists, is startup-validated, and no consumer vocabulary crosses the port | **Met** — #634; `mail.port-guardrail.test.ts` passed unmodified throughout |
+| The API contract co-versioned and the manual harness passes a full run, method stated | **Half met.** The contract is co-versioned here. **The harness has not been run by a person**, and no automated pass substitutes for it |
+| No line inside `modules/channel-verification/` or `modules/mail-delivery/` changed but WI-1's composition update | **Met** — verifiable by `git log --name-only` across the five branches |
+
+### What the harness deliberately does not cover
+
+**The reserved recovery floor's observable effect.** §5's WI-4 asked for it *"to the extent it can be driven"*, and its stop-risk said to record rather than widen the harness if it could not be. It cannot, for a mechanical reason: exhausting the general per-recipient budget takes **15** sends to one address, and the only consumer that produces them is Channel Verification's issue endpoint, whose per-IP limiter is **10 per 15 minutes** and is a **hardcoded literal, not configuration**. The harness therefore cannot reach the threshold without a code change, and seeding `mail_send_attempts` directly is exactly the precondition the stop-risk forbids.
+
+The property is proven where it can be — `recipientCapReserve.integration.test.ts`, two tests against real Postgres — so what is missing is a hand-observation of something already mechanically established, not the guarantee itself.
+
+### Recorded, not fixed
+
+- **`verification/README.md`'s Scope section still says the harness verifies "M1–M9"** and calls background execution and physical deletion "intentionally unbuilt". Both were built, and folders 09, 10 and 11 all postdate that sentence. It predates this effort, belongs to the Media harness's own debt, and is left alone rather than absorbed.
+- **Registration orders `.email()` before `.trim()`**, so a padded address is rejected. Reset matches it rather than diverging; the ordering is registration's to change.
+
+### Forward links
+
+The effort's remaining act is the **human Postman gate on folder 11**. It joins the two already outstanding — Channel Verification's ([#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450)) and Mail Delivery's ([#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)) — and this plan takes no position on whether they are run together; that is a sequencing choice for whoever runs them, not a decision this record makes.
