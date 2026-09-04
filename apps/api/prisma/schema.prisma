@@ -10,13 +10,13 @@
 // - MediaObject: Media registry — storage detail + identity (Media platform module)
 
 generator client {
-  provider        = "prisma-client"
+  provider = "prisma-client"
   // Partial indexes are still a preview feature. The one-open-challenge
   // constraint is security-relevant, so it belongs in the schema: were it only
   // hand-written in a migration, a later `migrate dev` would generate a
   // DROP INDEX for it and silently retire the guarantee.
   previewFeatures = ["partialIndexes"]
-  output          = "../src/generated/prisma"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -32,7 +32,7 @@ model User {
   name          String?
   email         String   @unique
   passwordHash  String   @map("password_hash")
-  profileImage  String?  @map("profile_image") // DEPRECATED (always null) — superseded by avatarMediaId; retired with the later author-avatar migration
+  profileImage  String?  @map("profile_image")     // DEPRECATED (always null) — superseded by avatarMediaId; retired with the later author-avatar migration
   // Avatar as a bare numeric Media Reference (MediaObject.id): deliberately NO
   // Prisma relation and NO DB foreign key. MediaObject stays unaware of its
   // referrers (ADR 0005 Decision 9), and Media owns reference integrity and
@@ -45,17 +45,17 @@ model User {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
-  refreshTokens           RefreshToken[]
-  tweets                  Tweet[]
-  comments                Comment[]
-  likes                   Like[]
-  followers               Follow[]                 @relation("following") // people who follow ME
-  following               Follow[]                 @relation("followers") // people I follow
-  mediaObjects            MediaObject[] // media uploaded/owned (registry provenance)
-  usernameAliases         UsernameAlias[] // former handles this user released (reserved)
+  refreshTokens RefreshToken[]
+  tweets        Tweet[]
+  comments      Comment[]
+  likes         Like[]
+  followers     Follow[]       @relation("following")  // people who follow ME
+  following     Follow[]       @relation("followers")  // people I follow
+  mediaObjects  MediaObject[]  // media uploaded/owned (registry provenance)
+  usernameAliases UsernameAlias[]  // former handles this user released (reserved)
   // Back-relation only: proof of control is stored wholly in channel_verifications,
   // never as a column here (ADR 0009 Decision 6).
-  channelVerifications    ChannelVerification[]
+  channelVerifications ChannelVerification[]
   passwordResetChallenges PasswordResetChallenge[]
 
   @@map("users")
@@ -70,7 +70,7 @@ model User {
 // (Postgres cannot express it as one constraint) plus the two @unique columns.
 model UsernameAlias {
   id        Int      @id @default(autoincrement())
-  username  String   @unique // the released handle (lowercase-only)
+  username  String   @unique                    // the released handle (lowercase-only)
   userId    Int      @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
@@ -239,8 +239,8 @@ model Like {
 
 model Follow {
   id          Int      @id @default(autoincrement())
-  followerId  Int      @map("follower_id") // the person who follows
-  followingId Int      @map("following_id") // the person being followed
+  followerId  Int      @map("follower_id")     // the person who follows
+  followingId Int      @map("following_id")    // the person being followed
   createdAt   DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -248,9 +248,9 @@ model Follow {
   following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   // Constraints & Indexes
-  @@unique([followerId, followingId]) // can't follow someone twice
-  @@index([followerId]) // "who am I following?" (feed query)
-  @@index([followingId]) // "who follows me?" (follower count)
+  @@unique([followerId, followingId])   // can't follow someone twice
+  @@index([followerId])                  // "who am I following?" (feed query)
+  @@index([followingId])                 // "who follows me?" (follower count)
   @@map("follows")
 }
 
@@ -268,15 +268,15 @@ model Follow {
 // (the Decision-8 divergence).
 
 model MediaObject {
-  id          Int      @id @default(autoincrement())
-  token       String   @unique // opaque, non-enumerable public read handle
-  storageKey  String   @unique @map("storage_key") // backend location; internal to Media
-  contentType String   @map("content_type") // verified, content-derived type (set at ingest)
-  size        Int // byte count
-  status      String   @default("ready") // "ready" | "deleted" (tombstone; M11 drives deletion)
-  uploaderId  Int      @map("uploader_id") // the authenticated uploader that owns the object (single provenance model, ADR 0008)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id             Int       @id @default(autoincrement())
+  token          String    @unique                          // opaque, non-enumerable public read handle
+  storageKey     String    @unique @map("storage_key")      // backend location; internal to Media
+  contentType    String    @map("content_type")             // verified, content-derived type (set at ingest)
+  size           Int                                         // byte count
+  status         String    @default("ready")                // "ready" | "deleted" (tombstone; M11 drives deletion)
+  uploaderId     Int       @map("uploader_id")              // the authenticated uploader that owns the object (single provenance model, ADR 0008)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   // Relations
   uploader    User              @relation(fields: [uploaderId], references: [id], onDelete: Restrict)
@@ -336,12 +336,12 @@ model MediaReference {
 
 model MediaReclamationAudit {
   id         Int      @id @default(autoincrement())
-  mediaId    Int?     @map("media_id") // null for orphan-bytes (no registry row)
-  storageKey String?  @map("storage_key") // recorded for orphan-bytes
-  reason     String // abandoned | unreferenced | row_without_bytes | orphan_bytes
-  outcome    String // would_reclaim | reclaimed | would_quarantine | quarantined
+  mediaId    Int?     @map("media_id")     // null for orphan-bytes (no registry row)
+  storageKey String?  @map("storage_key")  // recorded for orphan-bytes
+  reason     String                         // abandoned | unreferenced | row_without_bytes | orphan_bytes
+  outcome    String                         // would_reclaim | reclaimed | would_quarantine | quarantined
   bytes      Int      @default(0)
-  mode       String // report | destructive
+  mode       String                         // report | destructive
   runAt      DateTime @map("run_at")
   createdAt  DateTime @default(now()) @map("created_at")
 
@@ -359,12 +359,12 @@ model MediaReclamationAudit {
 
 model MediaQuarantine {
   id         Int       @id @default(autoincrement())
-  mediaId    Int?      @map("media_id") // null for orphan-bytes
+  mediaId    Int?      @map("media_id")     // null for orphan-bytes
   storageKey String?   @map("storage_key")
-  kind       String // row_without_bytes | orphan_bytes
+  kind       String                          // row_without_bytes | orphan_bytes
   detail     String    @default("")
   detectedAt DateTime  @map("detected_at")
-  resolvedAt DateTime? @map("resolved_at") // OPEN while null
+  resolvedAt DateTime? @map("resolved_at")   // OPEN while null
   createdAt  DateTime  @default(now()) @map("created_at")
 
   // Within Media's own boundary — a real FK. Nullable for the orphan-bytes case.
@@ -384,13 +384,13 @@ model MediaQuarantine {
 // therefore needs no write to be correct, so a lagging sweep cannot make the
 // system answer wrongly.
 model ChannelVerification {
-  id               Int       @id @default(autoincrement())
-  userId           Int       @map("user_id")
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     Int  @id @default(autoincrement())
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   // The proven value, frozen. Divergence from the account's current endpoint is
   // the signal that the new one is unproven — not drift to reconcile.
-  endpoint         String
-  provenAt         DateTime? @map("proven_at")
+  endpoint String
+  provenAt DateTime? @map("proven_at")
   // Anchored on the record rather than the challenge, so rotating a challenge
   // cannot reset the resend throttle.
   lastChallengedAt DateTime? @map("last_challenged_at")
@@ -417,11 +417,11 @@ model ChannelVerificationChallenge {
   verificationId Int                 @map("verification_id")
   verification   ChannelVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
   // Digested at rest: an emailed secret is more exposed than an HttpOnly cookie.
-  secretHash     String              @map("secret_hash")
-  expiresAt      DateTime            @map("expires_at")
-  closedAt       DateTime?           @map("closed_at")
-  closedReason   String?             @map("closed_reason")
-  createdAt      DateTime            @default(now()) @map("created_at")
+  secretHash   String    @map("secret_hash")
+  expiresAt    DateTime  @map("expires_at")
+  closedAt     DateTime? @map("closed_at")
+  closedReason String?   @map("closed_reason")
+  createdAt    DateTime  @default(now()) @map("created_at")
 
   // At most one open challenge per record: concurrent live secrets widen the
   // attack surface for no user benefit. Partial, because a plain unique would
@@ -443,16 +443,16 @@ model ChannelVerificationChallenge {
 // count could only approximate one. The pruning job is what keeps the rows
 // bounded.
 model MailSendAttempt {
-  id           Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   // A digest of the lowercased recipient, never the address. The cap only ever
   // asks whether two attempts share a recipient, so the address is never read
   // back — and this table would otherwise hold every recipient ever mailed.
-  recipientKey String   @map("recipient_key")
+  recipientKey String @map("recipient_key")
   // Diagnostic only, and never read for a cap decision: every attempt counts
   // regardless of how it turned out. Without it a tripped ceiling cannot be
   // explained after the fact.
-  outcome      String
-  createdAt    DateTime @default(now()) @map("created_at")
+  outcome   String
+  createdAt DateTime @default(now()) @map("created_at")
 
   // The per-recipient window query.
   @@index([recipientKey, createdAt])
