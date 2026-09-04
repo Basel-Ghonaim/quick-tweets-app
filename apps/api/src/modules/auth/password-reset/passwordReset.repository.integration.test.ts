@@ -11,7 +11,7 @@
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { prisma } from "../../shared/database/index.js";
+import { prisma } from "../../../shared/database/index.js";
 import { createPasswordResetRepository } from "./passwordReset.repository.js";
 
 const TAG = `pwreset-${Date.now().toString(36)}`;

@@ -8,7 +8,7 @@
  * successful use, not standing).
  */
 
-import type { DbClient } from "../../shared/database/index.js";
+import type { DbClient } from "../../../shared/database/index.js";
 
 declare const brand: unique symbol;
 

@@ -9,7 +9,7 @@
  * decide; nothing here compares a timestamp to anything.
  */
 
-import { prisma, type DbClient } from "../../shared/database/index.js";
+import { prisma, type DbClient } from "../../../shared/database/index.js";
 import type {
   CreateChallengeInput,
   IPasswordResetRepository,

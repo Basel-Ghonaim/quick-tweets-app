@@ -13,15 +13,15 @@
 
 import bcrypt from "bcrypt";
 
-import { env } from "../../config/env.js";
+import { env } from "../../../config/env.js";
 import {
   runInTransaction as defaultRunInTransaction,
   type RunInTransaction,
-} from "../../shared/database/index.js";
-import { createMailAdapter, type MailAdapter } from "../mail-delivery/index.js";
-import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
-import { SALT_ROUNDS } from "./auth.service.js";
-import type { IAuthRepository, ITokenRepository } from "./auth.types.js";
+} from "../../../shared/database/index.js";
+import { createMailAdapter, type MailAdapter } from "../../mail-delivery/index.js";
+import { createAuthRepository, createTokenRepository } from "../auth.repository.js";
+import { SALT_ROUNDS } from "../auth.service.js";
+import type { IAuthRepository, ITokenRepository } from "../auth.types.js";
 import {
   digestResetCode,
   mintResetCode,
