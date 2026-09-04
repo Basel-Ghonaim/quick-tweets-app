@@ -16,11 +16,11 @@ export const AuthCard = ({ children }: { children: ReactNode }) => (
   <div className={styles.root}>
     {children}
 
-    <p className={styles.signature}>
+    <div className={styles.signature}>
       <BrandMark size={16} />
       <Typography variant="body-small" tone="muted">
         {AUTH_COPY.brand.markLabel}
       </Typography>
-    </p>
+    </div>
   </div>
 );
