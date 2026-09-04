@@ -2,14 +2,9 @@
  * Auth repository — Prisma implementation of IAuthRepository and ITokenRepository.
  *
  * Current purpose:
- * - Implements user database queries (find, create) via Prisma
+ * - Implements user database queries (find, create, password update) via Prisma
  * - Implements refresh token CRUD (create, find, delete) via Prisma
  * - Uses factory functions with default parameter injection for testability
- *
- * Future expansion:
- * - Add updateUser for profile editing
- * - Add findByEmail for password reset flow
- * - Add soft-delete support (mark as deleted instead of removing)
  *
  * Principle: SRP — only executes database queries, no business logic.
  * Principle: LSP — can be swapped for any implementation that fulfills the interfaces.
@@ -62,6 +57,10 @@ export const createAuthRepository = (
     db.user.findUnique({ where: { id }, select: userSafeSelect }),
 
   create: (data: CreateUserData, client: DbClient = db) => client.user.create({ data }),
+
+  updatePasswordHash: async (userId, passwordHash, client: DbClient = db) => {
+    await client.user.update({ where: { id: userId }, data: { passwordHash } });
+  },
 });
 
 // ─── Token Repository ────────────────────────────────────────────────────────
@@ -85,8 +84,8 @@ export const createTokenRepository = (
     await db.refreshToken.deleteMany({ where: { token } });
   },
 
-  deleteAllUserTokens: async (userId) => {
-    await db.refreshToken.deleteMany({ where: { userId } });
+  deleteAllUserTokens: async (userId, client: DbClient = db) => {
+    await client.refreshToken.deleteMany({ where: { userId } });
   },
 
   deleteExpired: async (now) => {

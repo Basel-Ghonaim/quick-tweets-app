@@ -40,6 +40,7 @@ const makeWorld = (existingUsernames: string[] = []) => {
       users.push(u);
       return u as never;
     },
+    updatePasswordHash: async () => {},
   };
 
   const tokenRepo: ITokenRepository = {

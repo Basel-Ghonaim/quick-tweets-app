@@ -36,6 +36,7 @@ const makeSvc = () => {
     findByEmail: async (e) => { calls.byEmail.push(e); return (e === user.email ? user : null) as never; },
     findById: async () => null as never,
     create: async () => user as never,
+    updatePasswordHash: async () => {},
   };
   const tokenRepo: ITokenRepository = {
     createRefreshToken: async () => ({}) as never,

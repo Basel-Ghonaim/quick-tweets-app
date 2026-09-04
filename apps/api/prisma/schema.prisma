@@ -56,6 +56,7 @@ model User {
   // Back-relation only: proof of control is stored wholly in channel_verifications,
   // never as a column here (ADR 0009 Decision 6).
   channelVerifications ChannelVerification[]
+  passwordResetChallenges PasswordResetChallenge[]
 
   @@map("users")
 }
@@ -87,6 +88,43 @@ model RefreshToken {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("refresh_tokens")
+}
+
+// ─── PasswordResetChallenge ───────────────────────────────────────────────────
+// A momentary authorization to change one password, entirely Auth's own
+// (ADR 0016) — no standing record the way Channel Verification has one: the
+// resend cooldown anchors on this table's own most recent row per user, so a
+// second table for that purpose is not needed.
+//
+// There is no state column, mirroring ChannelVerificationChallenge: used_at
+// IS NULL together with expires_at fully determines usable / expired / spent.
+// A row is retained after use, never deleted, so a replay stays distinguishable
+// from a code that never existed — deletion is the sweep's job, on age alone.
+//
+// Looked up by its digest, not by (user, code): the screen that submits the
+// code does not re-collect the email, so confirm/apply resolve the account
+// FROM the row the code identifies, the reverse of Channel Verification's own
+// subject-first lookup. code_hash is therefore unique — collision odds are
+// cryptographically negligible, and making it a hard constraint means two rows
+// can never coexist for one code rather than leaving that to be merely unlikely.
+model PasswordResetChallenge {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Digested at rest, the same reasoning as Channel Verification's own
+  // secret_hash: an emailed code is more exposed than an HttpOnly cookie.
+  codeHash  String    @unique @map("code_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Serves the request flow's cooldown check: the most recent row for a known
+  // user, read under the repository's advisory lock rather than a database
+  // constraint — there is deliberately no "at most one usable row" index, since
+  // a resend never touches the prior row (it is left to expire and be swept).
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+  @@map("password_reset_challenges")
 }
 
 // ─── Tweet ───────────────────────────────────────────────────────────────────

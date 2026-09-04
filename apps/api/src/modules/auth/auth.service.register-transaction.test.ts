@@ -62,6 +62,7 @@ const makeHarness = (opts: HarnessOpts = {}) => {
       (staged ?? committed).push(row);
       return { ...row, name: null, passwordHash: data.passwordHash } as never;
     },
+    updatePasswordHash: async () => {},
   };
 
   const tokenRepo: ITokenRepository = {

@@ -7,10 +7,6 @@
  * - Defines CreateUserData shape for user creation
  * - Defines RefreshTokenRecord shape for token queries
  *
- * Future expansion:
- * - Add UpdateUserData for profile editing
- * - Add PasswordResetToken types for forgot password flow
- *
  * Principle: DIP — the service layer depends on these interfaces, not on Prisma.
  * Principle: ISP — IAuthRepository and ITokenRepository are separate because
  *   user queries and token queries are consumed by different parts of the system.
@@ -48,6 +44,8 @@ export interface IAuthRepository {
   findById(id: number): Promise<UserSafe | null>;
   /** Create a user. The optional `client` lets a caller run it inside a transaction. */
   create(data: CreateUserData, client?: DbClient): Promise<User>;
+  /** Replace the stored hash. The caller has already hashed the new password — this only writes it. */
+  updatePasswordHash(userId: number, passwordHash: string, client?: DbClient): Promise<void>;
 }
 
 /**
@@ -70,7 +68,8 @@ export interface ITokenRepository {
   ): Promise<RefreshToken>;
   findRefreshToken(token: string): Promise<RefreshTokenRecord | null>;
   deleteRefreshToken(token: string): Promise<void>;
-  deleteAllUserTokens(userId: number): Promise<void>;
+  /** The optional `client` lets a caller run it inside a transaction — so a password reset can revoke every session atomically with the password change it is conditioned on. */
+  deleteAllUserTokens(userId: number, client?: DbClient): Promise<void>;
   /** Delete every refresh token whose `expiresAt` is before `now`; returns the count removed. */
   deleteExpired(now: Date): Promise<number>;
   rotateRefreshToken(
