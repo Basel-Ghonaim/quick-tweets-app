@@ -17,7 +17,7 @@
  * rate-limited endpoint into a CPU amplifier.
  */
 
-import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { createHash, randomInt } from "node:crypto";
 
 import { PasswordResetError } from "./passwordReset.errors.js";
 import type { ResetCode, ResetCodeFormat } from "./passwordReset.types.js";
@@ -65,21 +65,11 @@ export const resetCode = (value: string, format: ResetCodeFormat): ResetCode => 
   return value as ResetCode;
 };
 
-/** The form the code is persisted in. */
+/**
+ * The form the code is persisted in, and the form a submitted code is looked
+ * up by: this capability resolves the account FROM the digest rather than
+ * comparing a submitted secret against one record's stored value, so it needs
+ * no comparison of its own.
+ */
 export const digestResetCode = (code: ResetCode): string =>
   createHash("sha256").update(code).digest("hex");
-
-/**
- * Whether `code` produced `storedHash`, compared without leaking how far the
- * two matched.
- */
-export const resetCodeMatches = (code: ResetCode, storedHash: string): boolean => {
-  const candidate = Buffer.from(digestResetCode(code), "hex");
-  const stored = Buffer.from(storedHash, "hex");
-
-  // timingSafeEqual demands equal lengths; a stored value of another shape is
-  // a mismatch, not an exception.
-  if (candidate.length !== stored.length) return false;
-
-  return timingSafeEqual(candidate, stored);
-};

@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  digestResetCode,
-  mintResetCode,
-  resetCode,
-  resetCodeMatches,
-} from "./passwordReset.codes.js";
+import { digestResetCode, mintResetCode, resetCode } from "./passwordReset.codes.js";
 import { PasswordResetError } from "./passwordReset.errors.js";
 import type { ResetCode, ResetCodeFormat } from "./passwordReset.types.js";
 
@@ -112,7 +107,7 @@ describe("validation before lookup", () => {
   });
 });
 
-describe("digest and comparison", () => {
+describe("digest", () => {
   it("is stable for one code and different across codes", () => {
     const a = "AAAAAA" as ResetCode;
     const b = "BBBBBB" as ResetCode;
@@ -126,17 +121,4 @@ describe("digest and comparison", () => {
     expect(digestResetCode(code)).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it("matches the code that produced the digest, and nothing else", () => {
-    const code = mintResetCode(FORMAT);
-    const stored = digestResetCode(code);
-
-    expect(resetCodeMatches(code, stored)).toBe(true);
-    expect(resetCodeMatches("ZZZZZZ" as ResetCode, stored)).toBe(false);
-  });
-
-  it("treats a stored value of another shape as a mismatch, not an error", () => {
-    const code = mintResetCode(FORMAT);
-    expect(resetCodeMatches(code, "")).toBe(false);
-    expect(resetCodeMatches(code, "abcd")).toBe(false);
-  });
 });
