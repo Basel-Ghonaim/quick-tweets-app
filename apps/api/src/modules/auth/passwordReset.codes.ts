@@ -3,8 +3,9 @@
  * stored as.
  *
  * Copied from Channel Verification's construction, not imported from it
- * (ADR 0016 Decision 4) — the two mechanisms are identical, but nothing yet
- * justifies extracting a shared one from a single pair of instances.
+ * (ADR 0016 Decision 4). Minting and the digest are the same; the lookup is
+ * not, so this module carries no comparison of its own — which is one more
+ * reason nothing yet justifies extracting a shared unit from the pair.
  *
  * The plaintext code exists only in the message sent to the holder and in
  * the value they submit back; what is persisted is a digest, because a code
