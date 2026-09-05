@@ -22,7 +22,11 @@ export const restoreSession = async (
   dispatch: Dispatch,
   deps: RestoreSessionDeps = defaultDeps(),
 ): Promise<void> => {
-  if (!deps.hasHint()) return;
+  // No hint is an answer, not the absence of one: this reader is a guest.
+  if (!deps.hasHint()) {
+    dispatch(authActions.sessionSettled());
+    return;
+  }
 
   try {
     const { user, accessToken } = await deps.refresh();
