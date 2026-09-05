@@ -5,6 +5,7 @@ export const initialState: AuthState = {
   // reload (POST /auth/refresh) — never seeded from local persistence.
   user: null,
   accessToken: null,
+  session: "unknown",
   requests: {
     login: { status: "idle", error: null },
     register: { status: "idle", error: null },

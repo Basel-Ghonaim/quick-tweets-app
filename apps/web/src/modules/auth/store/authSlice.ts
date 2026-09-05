@@ -53,8 +53,14 @@ export const authSlice = createSlice({
         };
       }
     },
+    // Every dispatch of this is an answer — signed out, expired, or nothing to
+    // restore — so the status stays settled rather than reverting to unknown.
     authLogout: () => {
-      return initialState;
+      return { ...initialState, session: "settled" as const };
+    },
+
+    sessionSettled: (state) => {
+      state.session = "settled";
     },
 
     // Identity-only update for silent session hydration — startup restore
@@ -65,6 +71,7 @@ export const authSlice = createSlice({
       const { user, accessToken } = action.payload;
       if (user) state.user = user;
       if (accessToken) state.accessToken = accessToken;
+      state.session = "settled";
     },
   },
 });
