@@ -20,7 +20,7 @@ export const SignUp = () => {
     serverError,
     handleChange,
     handleSubmit,
-  } = useRegisterFlow(() => navigate("/auth/profile"));
+  } = useRegisterFlow(() => navigate("/auth/onboarding"));
 
   return (
     <div className={styles.root}>
