@@ -3,6 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-09-03
 > **Deciders:** Basel Ghonaim
+> **Revised:** 2026-09-05 — the deferred platform document now exists and is linked from Consequences; this ADR keeps only the boundary and rationale. Decision unchanged.
 
 ## Context
 
@@ -87,6 +88,6 @@ Deliberately deferred, each to a named home:
 - **Auth gains a second credential and a second scheduled sweep**, mirroring `RefreshToken` and its cleanup job. Its module grows; its published surface does not, because it still publishes none.
 - **Delivery gains its second consumer**, which **meets [ADR 0015](0015-mail-delivery-boundary-and-abuse-control.md) Decision 6's stated condition** — *"the second consumer is what earns the partition."* The partition takes the shape of a **reserved recovery floor** and is **its own Work Item, sequenced before recovery sends any mail**, so the first release cannot ship the starvation D6 named: verification traffic exhausting the per-address budget that recovery needs.
 - **The API contract gains the recovery endpoints** when they are built, co-versioned then ([Documentation Strategy §10](../documentation-strategy.md)).
-- **A platform document is not created now.** Under the Stable-Core rule ([ADR 0004](0004-stable-core-platform-document-rule.md)) it is earned once the subsystem exists in code; until then this record is the interim one, exactly as ADR 0009 was for Channel Verification.
+- **The subsystem's platform document now exists** — [`backend/password-reset.md`](../../backend/password-reset.md) — created once the subsystem existed in code, per the Stable-Core rule ([ADR 0004](0004-stable-core-platform-document-rule.md)) and exactly as ADR 0009's was for Channel Verification. It owns the operative mechanisms; **this record retains only the boundary and rationale**, preserving one-owner-per-fact.
 - **[ADR 0009](0009-channel-verification-platform-capability.md) is unchanged**, and this record is the answer to the question its Context left open when it placed password reset out of scope.
 - Status moves from `Proposed` to `Accepted` **on merge**; its lifecycle thereafter is the [Documentation Strategy](../documentation-strategy.md)'s.
