@@ -29,7 +29,10 @@ import { userRoutes } from "./modules/users/user.routes.js";
 import { followRoutes } from "./modules/follows/follow.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { channelVerificationRoutes } from "./modules/channel-verification/channelVerification.routes.js";
-import { channelVerificationStatus } from "./modules/channel-verification/index.js";
+import {
+  channelVerificationStatus,
+  type VerificationStatus,
+} from "./modules/channel-verification/index.js";
 import { createJourneyRoutes } from "./modules/auth/journey/journey.routes.js";
 import { mediaReadRoutes } from "./modules/media/media.read.routes.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
@@ -79,24 +82,30 @@ app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1/channel-verification", channelVerificationRoutes);
 
 /*
- * The onboarding journey needs one fact Channel Verification owns — whether a
- * live challenge exists — and does not import it. Here is where the two meet:
- * the address comes from the shared identity helper, exactly as the
- * verification surface resolves its own subject, and the tri-state is narrowed
- * to the single question the journey asks.
+ * The onboarding journey needs two facts Channel Verification owns and does not
+ * import it. Here is where the two meet: the address comes from the shared
+ * identity helper, exactly as the verification surface resolves its own
+ * subject, and the tri-state is narrowed to the questions the journey asks.
  *
  * Behind the prefix limiter rather than per-route ones: neither route spends an
  * external resource nor checks a secret, so neither earns a tighter tier, and a
  * limited prefix is what stops a later route arriving with no limit at all.
  */
+const channelStatusOf = async (userId: number): Promise<VerificationStatus | null> => {
+  const email = await resolveCurrentEmail(userId);
+  // An account that has gone answers neither question, and says so as a miss
+  // rather than as an error the journey would have to interpret.
+  if (email === null) return null;
+
+  return channelVerificationStatus.statusOf(userId, email);
+};
+
 app.use(
   "/api/v1/onboarding",
   apiLimiter,
-  createJourneyRoutes(async (userId) => {
-    const email = await resolveCurrentEmail(userId);
-    if (email === null) return false;
-
-    return (await channelVerificationStatus.statusOf(userId, email)) === "pending";
+  createJourneyRoutes({
+    hasLiveChallenge: async (userId) => (await channelStatusOf(userId)) === "pending",
+    hasProvenChannel: async (userId) => (await channelStatusOf(userId)) === "proven",
   }),
 );
 

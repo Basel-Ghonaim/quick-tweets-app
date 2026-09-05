@@ -28,8 +28,8 @@ const asHttpError = (err: unknown): unknown =>
   err instanceof JourneyError ? AppError.conflict(REFUSED) : err;
 
 export const createJourneyController = (
-  hasLiveChallenge: VerificationProbe,
-  service: IJourneyService = createJourneyService(hasLiveChallenge),
+  verification: VerificationProbe,
+  service: IJourneyService = createJourneyService(verification),
 ) => ({
   /**
    * GET /onboarding/journey

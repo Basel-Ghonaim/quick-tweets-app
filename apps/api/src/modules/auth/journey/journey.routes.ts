@@ -24,8 +24,8 @@ import { createJourneyController } from "./journey.controller.js";
 import { advanceJourneySchema } from "./journey.validator.js";
 import type { VerificationProbe } from "./journey.types.js";
 
-export const createJourneyRoutes = (hasLiveChallenge: VerificationProbe): Router => {
-  const controller = createJourneyController(hasLiveChallenge);
+export const createJourneyRoutes = (verification: VerificationProbe): Router => {
+  const controller = createJourneyController(verification);
   const routes = Router();
 
   routes.get("/journey", authGuard, controller.read);

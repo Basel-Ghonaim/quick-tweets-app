@@ -151,7 +151,7 @@ describe("a mark is filled once, whoever gets there first", () => {
     const journey = (await repo.findByUserId(userId))!;
 
     const closes = await Promise.all(
-      Array.from({ length: RACERS }, () => repo.close(journey.id, new Date(), "code")),
+      Array.from({ length: RACERS }, () => repo.close(journey.id, new Date(), "code", "later")),
     );
 
     expect(closes.filter(Boolean)).toHaveLength(1);
@@ -159,6 +159,45 @@ describe("a mark is filled once, whoever gets there first", () => {
     const row = await prisma.onboardingJourney.findUnique({ where: { userId } });
     expect(row!.closedAt).not.toBeNull();
     expect(row!.closedReason).toBe("code");
+  });
+
+  /* Both facts about the end are written with the mark, so a closed journey can
+     never carry one and lack the other. */
+  it("writes how the verification step ended, with the close", async () => {
+    const userId = await makeUser("ended");
+    await repo.create(userId);
+    const journey = (await repo.findByUserId(userId))!;
+
+    await repo.close(journey.id, new Date(), "code", "verified");
+
+    const row = await prisma.onboardingJourney.findUnique({ where: { userId } });
+    expect(row!.verificationOutcome).toBe("verified");
+  });
+
+  it("refuses a close that records no outcome", async () => {
+    const userId = await makeUser("endless");
+    await repo.create(userId);
+    const journey = (await repo.findByUserId(userId))!;
+
+    await expect(
+      prisma.onboardingJourney.update({
+        where: { id: journey.id },
+        data: { closedAt: new Date(), closedReason: "verify" },
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("refuses an outcome outside the two the journey knows", async () => {
+    const userId = await makeUser("endbad");
+    await repo.create(userId);
+    const journey = (await repo.findByUserId(userId))!;
+
+    await expect(
+      prisma.onboardingJourney.update({
+        where: { id: journey.id },
+        data: { closedAt: new Date(), verificationOutcome: "abandoned" },
+      }),
+    ).rejects.toThrow();
   });
 });
 

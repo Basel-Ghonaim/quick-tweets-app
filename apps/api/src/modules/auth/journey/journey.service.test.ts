@@ -33,8 +33,15 @@ const repoOf = (...reads: Array<JourneyRecord | null>): IJourneyRepository => {
   };
 };
 
-const yes = async () => true;
-const no = async () => false;
+/* The journey asks two questions of a channel it does not own; a stub answers
+   both so a test never depends on which one a path happens to reach. */
+const probe = (live: boolean, proven: boolean) => ({
+  hasLiveChallenge: async () => live,
+  hasProvenChannel: async () => proven,
+});
+
+const yes = probe(true, false);
+const no = probe(false, false);
 
 describe("reading where a reader belongs", () => {
   it("answers none when the account has no journey", async () => {
@@ -149,7 +156,39 @@ describe("advancing the journey", () => {
       phase: "none",
       profileOutcome: null,
     });
-    expect(repo.close).toHaveBeenCalledWith(1, AT, "verify");
+    expect(repo.close).toHaveBeenCalledWith(1, AT, "verify", "later");
+  });
+
+  /* The fact belongs to the capability that owns it, so the journey reads it
+     rather than being told, and records what it said at that moment. */
+  it("records a proven channel as verified", async () => {
+    const repo = repoOf(record({ profileSettledAt: AT }), record({ closedAt: AT }));
+    const service = createJourneyService(probe(false, true), repo, () => AT);
+
+    await service.advance(USER, { to: "completed" });
+
+    expect(repo.close).toHaveBeenCalledWith(1, AT, "verify", "verified");
+  });
+
+  it("records an unproven channel as later, from the code step too", async () => {
+    const repo = repoOf(record({ codeReachedAt: AT }), record({ closedAt: AT }));
+    const service = createJourneyService(probe(false, false), repo, () => AT);
+
+    await service.advance(USER, { to: "completed" });
+
+    expect(repo.close).toHaveBeenCalledWith(1, AT, "code", "later");
+  });
+
+  /* Nothing consumes the outcome, and publishing a fact with no consumer would
+     widen the surface ahead of a need. */
+  it("keeps the outcome off the answer", async () => {
+    const repo = repoOf(record({ profileSettledAt: AT }), record({ closedAt: AT }));
+    const service = createJourneyService(probe(false, true), repo, () => AT);
+
+    await expect(service.advance(USER, { to: "completed" })).resolves.toEqual({
+      phase: "none",
+      profileOutcome: null,
+    });
   });
 
   it("closes from the code screen, recording that step instead", async () => {
@@ -158,20 +197,27 @@ describe("advancing the journey", () => {
 
     await service.advance(USER, { to: "completed" });
 
-    expect(repo.close).toHaveBeenCalledWith(1, AT, "code");
+    expect(repo.close).toHaveBeenCalledWith(1, AT, "code", "later");
   });
 
   /* A lost response is exactly what a flaky network takes, so the retry that
      follows it must not be the thing that errors. */
   it("treats a repeated close as a no-op rather than a failure", async () => {
     const repo = repoOf(record({ closedAt: AT }));
-    const service = createJourneyService(yes, repo, () => AT);
+    const asked = vi.fn(async () => true);
+    const service = createJourneyService(
+      { hasLiveChallenge: async () => false, hasProvenChannel: asked },
+      repo,
+      () => AT,
+    );
 
     await expect(service.advance(USER, { to: "completed" })).resolves.toEqual({
       phase: "none",
       profileOutcome: null,
     });
     expect(repo.close).not.toHaveBeenCalled();
+    // A repeat costs no read either: the no-op is decided before the close is.
+    expect(asked).not.toHaveBeenCalled();
   });
 
   it("answers the true phase when a racing tab already moved on", async () => {

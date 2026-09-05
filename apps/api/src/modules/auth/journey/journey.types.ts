@@ -22,6 +22,10 @@ export type JourneyTarget = "verify" | "code" | "completed";
  *  so the reader's own choice is the only witness. */
 export type ProfileOutcome = "saved" | "skipped";
 
+/** How the verification step ended. Read from the capability that owns the fact
+ *  at the moment of closing, never asserted by a caller. */
+export type VerificationOutcome = "verified" | "later";
+
 /**
  * A requested move, carrying whatever that move needs.
  *
@@ -55,14 +59,22 @@ export interface JourneyRecord extends JourneyMarks {
 }
 
 /**
- * Whether a live verification challenge exists for this account right now.
+ * The two things the journey needs to know about a channel it does not own.
  *
- * Named as the journey's own need rather than as another module's type: the
- * capability depends on this shape, never on whoever satisfies it, so it holds
- * no import of the subsystem that owns the fact. The composition root supplies
- * it (`app.ts`), which is the same place the account's address is resolved.
+ * Named as the journey's own questions rather than as another module's type:
+ * the capability depends on this shape, never on whoever satisfies it, so it
+ * holds no import of the subsystem that owns the fact. The composition root
+ * supplies both (`app.ts`), which is the same place the address is resolved.
+ *
+ * Two booleans rather than that module's tri-state, because a shared vocabulary
+ * is the coupling this seam exists to prevent.
  */
-export type VerificationProbe = (userId: number) => Promise<boolean>;
+export interface VerificationProbe {
+  /** Is a challenge outstanding right now? Gates reaching the code step. */
+  hasLiveChallenge(userId: number): Promise<boolean>;
+  /** Has the channel been proven? Read once, when the journey closes. */
+  hasProvenChannel(userId: number): Promise<boolean>;
+}
 
 /**
  * Creating this account's one journey, as registration needs it and nothing
@@ -94,8 +106,18 @@ export interface IJourneyRepository {
   /** Reach the code step, only while it has not been reached. */
   reachCode(id: number, at: Date, client?: DbClient): Promise<boolean>;
 
-  /** Close the journey, only while it is still open. */
-  close(id: number, at: Date, reason: string, client?: DbClient): Promise<boolean>;
+  /**
+   * Close the journey, only while it is still open. The step left and what
+   * happened there are written with the mark, so a closed journey can never
+   * lack either.
+   */
+  close(
+    id: number,
+    at: Date,
+    reason: string,
+    outcome: VerificationOutcome,
+    client?: DbClient,
+  ): Promise<boolean>;
 }
 
 export interface IJourneyService {

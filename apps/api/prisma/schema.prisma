@@ -161,6 +161,9 @@ model OnboardingJourney {
   // The step the reader left when the journey closed: "verify" | "code".
   // Diagnostic only, never read for a decision.
   closedReason     String?   @map("closed_reason")
+  // How the verification step ended: "verified" | "later". Observed from the
+  // capability that owns the fact at the moment of closing, never asserted.
+  verificationOutcome String? @map("verification_outcome")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
