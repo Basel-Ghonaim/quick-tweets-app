@@ -41,6 +41,14 @@ export interface JourneyRecord extends JourneyMarks {
  */
 export type VerificationProbe = (userId: number) => Promise<boolean>;
 
+/**
+ * Creating this account's one journey, as registration needs it and nothing
+ * more. Auth depends on this rather than on the service, which would drag in
+ * the verification probe that only one transition uses and registration never
+ * touches.
+ */
+export type BeginJourney = (userId: number, client?: DbClient) => Promise<void>;
+
 export interface IJourneyRepository {
   /** Create this account's one journey. Enlistable in a caller's transaction,
    *  because it must commit with the account or not at all. */

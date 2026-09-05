@@ -32,7 +32,10 @@ export type Transition =
   | { kind: "noop" }
   | { kind: "settleProfile" }
   | { kind: "reachCode" }
-  | { kind: "close"; reason: "declined" };
+  /** `from` is the step the reader left, which is all the journey can honestly
+   *  say about how it ended: whether an address was proven is verification's
+   *  fact, and a reader reaches the same exit by verifying or by skipping. */
+  | { kind: "close"; from: "verify" | "code" };
 
 const REFUSED = { kind: "refused" } as const;
 const NOOP = { kind: "noop" } as const;
@@ -68,9 +71,9 @@ export const decideTransition = (phase: JourneyPhase, to: JourneyTarget): Transi
   }
 
   if (phase === "verify") {
-    return to === "code" ? { kind: "reachCode" } : { kind: "close", reason: "declined" };
+    return to === "code" ? { kind: "reachCode" } : { kind: "close", from: "verify" };
   }
 
   // `code` is terminal, so the only move left is out.
-  return { kind: "close", reason: "declined" };
+  return { kind: "close", from: "code" };
 };
