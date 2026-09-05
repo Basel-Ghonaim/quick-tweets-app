@@ -5,7 +5,7 @@ import { createJourneyController } from "./journey.controller.js";
 import { JourneyError } from "./journey.errors.js";
 import type { IJourneyService } from "./journey.types.js";
 
-const yes = async () => true;
+const yes = { hasLiveChallenge: async () => true, hasProvenChannel: async () => false };
 
 const invoke = async (service: IJourneyService) => {
   const controller = createJourneyController(yes, service);

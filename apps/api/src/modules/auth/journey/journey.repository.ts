@@ -80,10 +80,11 @@ export const createJourneyRepository = (
     return count === 1;
   },
 
-  close: async (id, at, reason, client: DbClient = db) => {
+  close: async (id, at, reason, outcome, client: DbClient = db) => {
     const { count } = await client.onboardingJourney.updateMany({
       where: { id, closedAt: null },
-      data: { closedAt: at, closedReason: reason },
+      // One write, so a closed journey cannot lack either fact about its end.
+      data: { closedAt: at, closedReason: reason, verificationOutcome: outcome },
     });
     return count === 1;
   },

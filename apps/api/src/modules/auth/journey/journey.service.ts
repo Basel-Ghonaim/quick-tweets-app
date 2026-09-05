@@ -2,8 +2,9 @@
  * Onboarding Journey — the rules, and the only place a move is applied.
  *
  * Whether a move is legal is decided by a pure function; what this adds is the
- * one condition that needs the world — a reader may not reach the code screen
- * unless a live challenge actually exists — and the writes that follow.
+ * two conditions that need the world — a reader may not reach the code screen
+ * unless a live challenge exists, and closing records whether the channel was
+ * ever proven — and the writes that follow.
  *
  * The capability never imports the subsystem that owns verification. It states
  * what it needs as a probe and is handed one at composition, so the copy the
@@ -22,13 +23,13 @@ import type {
 } from "./journey.types.js";
 
 /**
- * @param hasLiveChallenge - required and undefaulted: the capability must not
- *   reach for its own answer, and a default would be exactly that reach.
+ * @param verification - required and undefaulted: the capability must not reach
+ *   for its own answers, and a default would be exactly that reach.
  * @param repo - data access (defaults to the Prisma implementation)
  * @param now - clock seam, so the marks are assertable
  */
 export const createJourneyService = (
-  hasLiveChallenge: VerificationProbe,
+  verification: VerificationProbe,
   repo: IJourneyRepository = createJourneyRepository(),
   now: () => Date = () => new Date(),
 ): IJourneyService => {
@@ -77,14 +78,21 @@ export const createJourneyService = (
              type into it. Without this a client could latch itself onto the
              end of the journey with no code in flight, and the latch is the
              one state nothing walks back. */
-          if (!(await hasLiveChallenge(userId))) throw JourneyError.illegalTransition();
+          if (!(await verification.hasLiveChallenge(userId)))
+            throw JourneyError.illegalTransition();
 
           await repo.reachCode(journey.id, now());
           return currentState(userId);
 
-        case "close":
-          await repo.close(journey.id, now(), decision.from);
+        case "close": {
+          /* Read rather than taken from the caller: the fact belongs to the
+             capability that owns it, and a client's word for it would be a
+             second copy free to disagree. */
+          const proven = await verification.hasProvenChannel(userId);
+
+          await repo.close(journey.id, now(), decision.from, proven ? "verified" : "later");
           return currentState(userId);
+        }
       }
     },
   };
