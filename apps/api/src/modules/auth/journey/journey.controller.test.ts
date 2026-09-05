@@ -12,7 +12,11 @@ const invoke = async (service: IJourneyService) => {
   const next = vi.fn();
   const res = { json: vi.fn(), status: vi.fn().mockReturnThis() } as never;
 
-  await controller.advance({ userId: 1, body: { to: "verify" } } as never, res, next);
+  await controller.advance(
+    { userId: 1, body: { to: "verify", outcome: "saved" } } as never,
+    res,
+    next,
+  );
 
   return next.mock.calls[0]![0] as AppError;
 };
@@ -26,14 +30,14 @@ const invoke = async (service: IJourneyService) => {
 describe("what a refused move discloses", () => {
   it("says the same thing whether the journey is missing or the move is illegal", async () => {
     const missing = await invoke({
-      phaseFor: async () => "none",
+      stateFor: async () => ({ phase: "none", profileOutcome: null }),
       advance: async () => {
         throw JourneyError.noJourney();
       },
     });
 
     const illegal = await invoke({
-      phaseFor: async () => "profile",
+      stateFor: async () => ({ phase: "profile", profileOutcome: null }),
       advance: async () => {
         throw JourneyError.illegalTransition();
       },

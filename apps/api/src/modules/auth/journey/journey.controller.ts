@@ -13,7 +13,7 @@ import { AppError } from "../../../shared/errors/index.js";
 import { sendSuccess } from "../../../shared/response/index.js";
 import { JourneyError } from "./journey.errors.js";
 import { createJourneyService } from "./journey.service.js";
-import type { IJourneyService, JourneyTarget, VerificationProbe } from "./journey.types.js";
+import type { IJourneyService, JourneyMove, VerificationProbe } from "./journey.types.js";
 
 /**
  * A refused move is a conflict with the journey's current state, not a bad
@@ -37,12 +37,10 @@ export const createJourneyController = (
    */
   read: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const phase = await service.phaseFor(req.userId!);
-
       // No journey is a legitimate answer rather than an error, so there is no
       // 404 here: a caller must never have to read a status code to decide
       // where to send a reader.
-      sendSuccess(res, { phase });
+      sendSuccess(res, await service.stateFor(req.userId!));
     } catch (err) {
       next(err);
     }
@@ -50,14 +48,12 @@ export const createJourneyController = (
 
   /**
    * POST /onboarding/journey/advance
-   * Moves the journey, or refuses. Answers with the resulting phase either way,
+   * Moves the journey, or refuses. Answers with the resulting state either way,
    * so a client re-syncs from every response rather than from its own guess.
    */
   advance: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const phase = await service.advance(req.userId!, req.body.to as JourneyTarget);
-
-      sendSuccess(res, { phase });
+      sendSuccess(res, await service.advance(req.userId!, req.body as JourneyMove));
     } catch (err) {
       next(asHttpError(err));
     }

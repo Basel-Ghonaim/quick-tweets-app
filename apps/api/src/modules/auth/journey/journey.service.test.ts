@@ -13,6 +13,7 @@ const record = (over: Partial<JourneyRecord> = {}): JourneyRecord => ({
   profileSettledAt: null,
   codeReachedAt: null,
   closedAt: null,
+  profileOutcome: null,
   ...over,
 });
 
@@ -26,7 +27,8 @@ const repoOf = (...reads: Array<JourneyRecord | null>): IJourneyRepository => {
   return {
     create: vi.fn(async () => {}),
     findByUserId: vi.fn(async () => (queue.length > 1 ? queue.shift()! : queue[0]!)),
-    fillMark: vi.fn(async () => true),
+    settleProfile: vi.fn(async () => true),
+    reachCode: vi.fn(async () => true),
     close: vi.fn(async () => true),
   };
 };
@@ -38,16 +40,20 @@ describe("reading where a reader belongs", () => {
   it("answers none when the account has no journey", async () => {
     const service = createJourneyService(yes, repoOf(null), () => AT);
 
-    await expect(service.phaseFor(USER)).resolves.toBe("none");
+    await expect(service.stateFor(USER)).resolves.toEqual({
+      phase: "none",
+      profileOutcome: null,
+    });
   });
 
   it("writes nothing", async () => {
     const repo = repoOf(record());
     const service = createJourneyService(yes, repo, () => AT);
 
-    await service.phaseFor(USER);
+    await service.stateFor(USER);
 
-    expect(repo.fillMark).not.toHaveBeenCalled();
+    expect(repo.settleProfile).not.toHaveBeenCalled();
+    expect(repo.reachCode).not.toHaveBeenCalled();
     expect(repo.close).not.toHaveBeenCalled();
   });
 });
@@ -56,23 +62,57 @@ describe("advancing the journey", () => {
   it("refuses when the account has no journey", async () => {
     const service = createJourneyService(yes, repoOf(null), () => AT);
 
-    await expect(service.advance(USER, "verify")).rejects.toBeInstanceOf(JourneyError);
+    await expect(
+      service.advance(USER, { to: "verify", outcome: "saved" }),
+    ).rejects.toBeInstanceOf(JourneyError);
   });
 
-  it("settles profile and answers with the phase that follows", async () => {
-    const repo = repoOf(record(), record({ profileSettledAt: AT }));
+  it("settles profile and answers with the state that follows", async () => {
+    const repo = repoOf(
+      record(),
+      record({ profileSettledAt: AT, profileOutcome: "saved" }),
+    );
     const service = createJourneyService(yes, repo, () => AT);
 
-    await expect(service.advance(USER, "verify")).resolves.toBe("verify");
-    expect(repo.fillMark).toHaveBeenCalledWith(1, "profileSettledAt", AT);
+    await expect(
+      service.advance(USER, { to: "verify", outcome: "saved" }),
+    ).resolves.toEqual({ phase: "verify", profileOutcome: "saved" });
+    expect(repo.settleProfile).toHaveBeenCalledWith(1, AT, "saved");
+  });
+
+  /* The two ways out of the profile step differ in exactly one thing, and it is
+     the thing the server could not otherwise know. */
+  it("records a skip as a skip, not as a settled step alone", async () => {
+    const repo = repoOf(
+      record(),
+      record({ profileSettledAt: AT, profileOutcome: "skipped" }),
+    );
+    const service = createJourneyService(yes, repo, () => AT);
+
+    await expect(
+      service.advance(USER, { to: "verify", outcome: "skipped" }),
+    ).resolves.toEqual({ phase: "verify", profileOutcome: "skipped" });
+    expect(repo.settleProfile).toHaveBeenCalledWith(1, AT, "skipped");
+  });
+
+  it("carries the stored outcome on every later answer", async () => {
+    const settled = record({ profileSettledAt: AT, profileOutcome: "skipped" });
+    const service = createJourneyService(yes, repoOf(settled), () => AT);
+
+    await expect(service.stateFor(USER)).resolves.toEqual({
+      phase: "verify",
+      profileOutcome: "skipped",
+    });
   });
 
   it("refuses to skip profile, and writes nothing when it does", async () => {
     const repo = repoOf(record());
     const service = createJourneyService(yes, repo, () => AT);
 
-    await expect(service.advance(USER, "code")).rejects.toBeInstanceOf(JourneyError);
-    expect(repo.fillMark).not.toHaveBeenCalled();
+    await expect(service.advance(USER, { to: "code" })).rejects.toBeInstanceOf(
+      JourneyError,
+    );
+    expect(repo.settleProfile).not.toHaveBeenCalled();
   });
 
   /* The latch is the one state nothing walks back, so it may not be reached
@@ -81,26 +121,34 @@ describe("advancing the journey", () => {
     const repo = repoOf(record({ profileSettledAt: AT }));
     const service = createJourneyService(no, repo, () => AT);
 
-    await expect(service.advance(USER, "code")).rejects.toBeInstanceOf(JourneyError);
-    expect(repo.fillMark).not.toHaveBeenCalled();
+    await expect(service.advance(USER, { to: "code" })).rejects.toBeInstanceOf(
+      JourneyError,
+    );
+    expect(repo.reachCode).not.toHaveBeenCalled();
   });
 
   it("reaches the code screen when one is", async () => {
     const repo = repoOf(
-      record({ profileSettledAt: AT }),
-      record({ profileSettledAt: AT, codeReachedAt: AT }),
+      record({ profileSettledAt: AT, profileOutcome: "saved" }),
+      record({ profileSettledAt: AT, codeReachedAt: AT, profileOutcome: "saved" }),
     );
     const service = createJourneyService(yes, repo, () => AT);
 
-    await expect(service.advance(USER, "code")).resolves.toBe("code");
-    expect(repo.fillMark).toHaveBeenCalledWith(1, "codeReachedAt", AT);
+    await expect(service.advance(USER, { to: "code" })).resolves.toEqual({
+      phase: "code",
+      profileOutcome: "saved",
+    });
+    expect(repo.reachCode).toHaveBeenCalledWith(1, AT);
   });
 
   it("closes from the ask, recording the step the reader left", async () => {
     const repo = repoOf(record({ profileSettledAt: AT }), record({ closedAt: AT }));
     const service = createJourneyService(yes, repo, () => AT);
 
-    await expect(service.advance(USER, "completed")).resolves.toBe("none");
+    await expect(service.advance(USER, { to: "completed" })).resolves.toEqual({
+      phase: "none",
+      profileOutcome: null,
+    });
     expect(repo.close).toHaveBeenCalledWith(1, AT, "verify");
   });
 
@@ -108,7 +156,7 @@ describe("advancing the journey", () => {
     const repo = repoOf(record({ codeReachedAt: AT }), record({ closedAt: AT }));
     const service = createJourneyService(yes, repo, () => AT);
 
-    await service.advance(USER, "completed");
+    await service.advance(USER, { to: "completed" });
 
     expect(repo.close).toHaveBeenCalledWith(1, AT, "code");
   });
@@ -119,7 +167,10 @@ describe("advancing the journey", () => {
     const repo = repoOf(record({ closedAt: AT }));
     const service = createJourneyService(yes, repo, () => AT);
 
-    await expect(service.advance(USER, "completed")).resolves.toBe("none");
+    await expect(service.advance(USER, { to: "completed" })).resolves.toEqual({
+      phase: "none",
+      profileOutcome: null,
+    });
     expect(repo.close).not.toHaveBeenCalled();
   });
 
@@ -127,11 +178,16 @@ describe("advancing the journey", () => {
     // The write finds the mark already filled; the re-read is what tells the
     // truth, and it says the other tab went further.
     const repo: IJourneyRepository = {
-      ...repoOf(record(), record({ profileSettledAt: AT, codeReachedAt: AT })),
-      fillMark: vi.fn(async () => false),
+      ...repoOf(
+        record(),
+        record({ profileSettledAt: AT, codeReachedAt: AT, profileOutcome: "saved" }),
+      ),
+      settleProfile: vi.fn(async () => false),
     };
     const service = createJourneyService(yes, repo, () => AT);
 
-    await expect(service.advance(USER, "verify")).resolves.toBe("code");
+    await expect(
+      service.advance(USER, { to: "verify", outcome: "skipped" }),
+    ).resolves.toEqual({ phase: "code", profileOutcome: "saved" });
   });
 });

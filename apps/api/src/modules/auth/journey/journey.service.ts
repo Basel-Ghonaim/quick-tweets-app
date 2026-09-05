@@ -16,7 +16,8 @@ import { createJourneyRepository } from "./journey.repository.js";
 import type {
   IJourneyRepository,
   IJourneyService,
-  JourneyPhase,
+  JourneyRecord,
+  JourneyState,
   VerificationProbe,
 } from "./journey.types.js";
 
@@ -31,35 +32,45 @@ export const createJourneyService = (
   repo: IJourneyRepository = createJourneyRepository(),
   now: () => Date = () => new Date(),
 ): IJourneyService => {
+  const stateOf = (journey: JourneyRecord | null): JourneyState => ({
+    phase: phaseOf(journey),
+    profileOutcome: journey?.profileOutcome ?? null,
+  });
+
   /**
-   * Read the phase back from the row rather than assuming the move landed.
+   * Read the state back from the row rather than assuming the move landed.
    *
    * A racing tab may have advanced further between the decision and the write,
    * so the truthful answer is the one the record now gives — which is what lets
    * a client re-sync from any response instead of trusting its own guess.
    */
-  const currentPhase = async (userId: number): Promise<JourneyPhase> =>
-    phaseOf(await repo.findByUserId(userId));
+  const currentState = async (userId: number): Promise<JourneyState> =>
+    stateOf(await repo.findByUserId(userId));
 
   return {
-    phaseFor: currentPhase,
+    stateFor: currentState,
 
-    advance: async (userId, to) => {
+    advance: async (userId, move) => {
       const journey = await repo.findByUserId(userId);
       if (journey === null) throw JourneyError.noJourney();
 
-      const decision = decideTransition(phaseOf(journey), to);
+      const decision = decideTransition(phaseOf(journey), move.to);
 
       switch (decision.kind) {
         case "refused":
           throw JourneyError.illegalTransition();
 
         case "noop":
-          return phaseOf(journey);
+          return stateOf(journey);
 
         case "settleProfile":
-          await repo.fillMark(journey.id, "profileSettledAt", now());
-          return currentPhase(userId);
+          /* The decision is reached only from `to: "verify"`, which is the one
+             move that carries an outcome — so the narrowing is the union's
+             rather than a check of its own. */
+          if (move.to !== "verify") throw JourneyError.illegalTransition();
+
+          await repo.settleProfile(journey.id, now(), move.outcome);
+          return currentState(userId);
 
         case "reachCode":
           /* The terminal screen is only reachable when there is something to
@@ -68,12 +79,12 @@ export const createJourneyService = (
              one state nothing walks back. */
           if (!(await hasLiveChallenge(userId))) throw JourneyError.illegalTransition();
 
-          await repo.fillMark(journey.id, "codeReachedAt", now());
-          return currentPhase(userId);
+          await repo.reachCode(journey.id, now());
+          return currentState(userId);
 
         case "close":
           await repo.close(journey.id, now(), decision.from);
-          return currentPhase(userId);
+          return currentState(userId);
       }
     },
   };
