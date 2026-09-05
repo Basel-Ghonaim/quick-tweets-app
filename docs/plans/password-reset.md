@@ -1,15 +1,16 @@
 # Password Reset — Execution Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-04
+> **Last Updated:** 2026-09-05
 > **Parent Issue:** [#632](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/632)
 > **Supersedes:** —
+> **Archived:** 2026-09-05 — completed, the human Postman gate on folder 11 having been run and passed. Its durable facts now live in [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md), [`backend/password-reset.md`](../backend/password-reset.md), the [API contract](../api/api-contract.md), the [data model](../architecture/data-model.md), [`backend/mail.md`](../backend/mail.md) and the [verification harness](../development/verification/README.md); this plan is retained as provenance.
 
-**Implementation status: Complete** · **Engineering work: Complete** · **Closure status: Pending Human Gate** · **Human Postman Gate (folder 11): Not Run**
+**Implementation status: Complete** · **Engineering work: Complete** · **Human Postman Gate (folder 11): Run and passed** · **Closure status: Complete**
 
-All four Work Items are merged, and the structural **2A** with them. The plan stays `Active` for one reason: the manual harness is a completion criterion (§7), it has not been run by a person, and no automated pass substitutes for it. Criterion by criterion in [§8](#8-reconciliation).
+All four Work Items are merged, the structural **2A** with them, and the one criterion that held this plan `Active` — a person running the manual harness — has been met. Criterion by criterion in [§8](#8-reconciliation).
 
 This plan sequences the implementation of **Password Reset** into four independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md) (Accepted), which owns the boundary — a dedicated Auth capability, not an extension of Channel Verification — the single owned fact, the ownership split from Channel Verification and Mail Delivery, and the approved configuration defaults. **This plan never reopens it.**
 
@@ -187,7 +188,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ## 8. Reconciliation
 
-*Written as this plan approaches `Historical`. It does not reach it here: the manual harness is a completion criterion (§7), it has not been run by a person, and that is the human's act — the same place both sibling plans stand.*
+*Final. Begun as this plan approached `Historical` and completed when the one act it was waiting on — a person running folder 11 — was performed and passed. The two sibling plans still stand where this one used to.*
 
 ### Where the durable facts landed
 
@@ -199,18 +200,22 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 | The reserved recovery floor, and the two-limit composition it takes | [`backend/mail.md`](../backend/mail.md) |
 | Hand-verification | [verification harness](../development/verification/README.md) — folder 11, scenarios PWR-01…PWR-15, Checkpoint J |
 
-**No platform document was created.** Under the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)) one is earned when a subsystem has a stable core that no other document owns; here every durable fact has a home in the table above, and ADR 0016 remains the interim record it said it would be. That is a judgement this plan records rather than takes silently: if a second channel of recovery, or a second consumer of the credential, ever arrives, the calculation changes.
+**The capability's own document is [`backend/password-reset.md`](../backend/password-reset.md).**
+
+This corrects a judgement WI-4 recorded here and got wrong, rather than overwriting it silently. That entry read *"No platform document was created… ADR 0016 remains the interim record it said it would be"* — but ADR 0016's own Consequences set the trigger as *"earned **once the subsystem exists in code**; until then this record is the interim one, exactly as ADR 0009 was for Channel Verification."* The subsystem already existed in code when WI-4 wrote that, so the condition was met and the entry misread its own governing record. ADR 0009's named parallel also settles the location: its document is [`backend/channel-verification.md`](../backend/channel-verification.md), so this one is its sibling.
+
+What remains true from the original entry is the reason it gave for caution — every durable fact does have an owner in the table above, and the new document restates none of them. It describes the subsystem: its anatomy, the lifecycle, the neutrality mechanism, and the operational expectations that had no home.
 
 ### Criterion by criterion (§7)
 
 | Criterion | Standing |
 |---|---|
-| All four Work Items merged, each green, and the structural 2A with them | **Met** — #634, #637, #639, #641, and this one |
-| An anonymous requester can recover end to end | **Met in code**, proven by integration tests over real Postgres; the by-hand demonstration is the harness's, and it is unrun |
+| All four Work Items merged, each green, and the structural 2A with them | **Met** — #634, #637, #639, #641, #643 |
+| An anonymous requester can recover end to end | **Met** — by integration tests over real Postgres, and demonstrated by hand in the gate run |
 | All eight invariants hold; the grep-verifiable ones demonstrably | **Met** — I1/I4/I6 grep-clean, I3 asserted against the router Express builds, I5 asserted byte-for-byte, I7 counted in the database |
 | A real and an unknown address are provably indistinguishable at the boundary | **Met** — and widened past the original wording: all **three** branches, including the cooldown, which is where I5 was hardest to hold |
 | The reserved floor exists, is startup-validated, and no consumer vocabulary crosses the port | **Met** — #634; `mail.port-guardrail.test.ts` passed unmodified throughout |
-| The API contract co-versioned and the manual harness passes a full run, method stated | **Half met.** The contract is co-versioned here. **The harness has not been run by a person**, and no automated pass substitutes for it |
+| The API contract co-versioned and the manual harness passes a full run, method stated | **Met.** The contract was co-versioned in #643, and folder 11 was **run by a person and passed** — see *The gate* below |
 | No line inside `modules/channel-verification/` or `modules/mail-delivery/` changed but WI-1's composition update | **Met** — verifiable by `git log --name-only` across the five branches |
 
 ### What the harness deliberately does not cover
@@ -224,6 +229,12 @@ The property is proven where it can be — `recipientCapReserve.integration.test
 - **`verification/README.md`'s Scope section still says the harness verifies "M1–M9"** and calls background execution and physical deletion "intentionally unbuilt". Both were built, and folders 09, 10 and 11 all postdate that sentence. It predates this effort, belongs to the Media harness's own debt, and is left alone rather than absorbed.
 - **Registration orders `.email()` before `.trim()`**, so a padded address is rejected. Reset matches it rather than diverging; the ordering is registration's to change.
 
+### The gate
+
+**Folder 11 was run by a person and passed, with no issues raised.** That is what closed this plan, and it is recorded as what it is: a human's report of a manual run, not something this repository can re-derive. The implementer's separate `curl` pass and Checkpoint J run (#643) proved the scenarios *achievable and their expectations correct* — they were never a substitute, and the distinction is preserved here rather than collapsed now that both have happened.
+
+The two gates still outstanding are **not** this effort's: Channel Verification's ([#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450)) and Mail Delivery's ([#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)) remain open, and their plans stay `Active`. Folder 11 passing says nothing about folders 10 or the mail mechanism's own deferred run.
+
 ### Forward links
 
-The effort's remaining act is the **human Postman gate on folder 11**. It joins the two already outstanding — Channel Verification's ([#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450)) and Mail Delivery's ([#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)) — and this plan takes no position on whether they are run together; that is a sequencing choice for whoever runs them, not a decision this record makes.
+Where each durable fact now lives is the table at the top of this section. The capability's document is [`backend/password-reset.md`](../backend/password-reset.md); the decision that shaped it is [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md), which links forward to that document from its Consequences.

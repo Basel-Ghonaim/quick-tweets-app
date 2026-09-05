@@ -27,6 +27,7 @@ This is the **map** of the project's documentation — every document, what it o
 - [media.md](backend/media.md) — the Media subsystem: the storage-adapter port, the registry/reference model, ingest and content-authoritative validation, read/resolution, ownership/attach/reference coordination, and the reclamation lifecycle.
 - [channel-verification.md](backend/channel-verification.md) — the Channel Verification subsystem: the published query surface, the subject boundary, custody of the fact, derived status, the challenge lifecycle and its digest, what it composes the mail mechanism to do, the sweep, and the concurrency invariants.
 - [mail.md](backend/mail.md) — the outbound mail mechanism: the port and its returned-not-thrown contract, the backends that implement it and how one is selected, what a send reports, the per-recipient cap and the global outbound ceiling, and the sweep that bounds their state. One backend delivers over SMTP; the other two deliberately withhold delivery.
+- [password-reset.md](backend/password-reset.md) — the Password Reset subsystem: why it publishes nothing, custody of the momentary credential, the request/confirm/apply lifecycle, how the neutral response is achieved and where it is only mitigated, the single-failure discipline, session revocation, the sweep and the startup guard that earns it, and the concurrency invariants.
 
 ### `frontend/` — client platform subsystems
 - [architecture.md](frontend/architecture.md) — the feature-sliced zones, the dependency rule, the composition root, and the thin utilities.
