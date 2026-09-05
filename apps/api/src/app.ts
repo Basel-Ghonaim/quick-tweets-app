@@ -29,9 +29,12 @@ import { userRoutes } from "./modules/users/user.routes.js";
 import { followRoutes } from "./modules/follows/follow.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { channelVerificationRoutes } from "./modules/channel-verification/channelVerification.routes.js";
+import { channelVerificationStatus } from "./modules/channel-verification/index.js";
+import { createJourneyRoutes } from "./modules/auth/journey/journey.routes.js";
 import { mediaReadRoutes } from "./modules/media/media.read.routes.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import { env } from "./config/env.js";
+import { resolveCurrentEmail } from "./shared/identity/index.js";
 import { prisma } from "./shared/database/index.js";
 
 export const app = express();
@@ -74,6 +77,28 @@ app.use("/api/v1/media", mediaRoutes);
 // Channel verification likewise carries a limiter per route, sized for what each
 // one costs: issuing spends mail, confirming is typed by hand.
 app.use("/api/v1/channel-verification", channelVerificationRoutes);
+
+/*
+ * The onboarding journey needs one fact Channel Verification owns — whether a
+ * live challenge exists — and does not import it. Here is where the two meet:
+ * the address comes from the shared identity helper, exactly as the
+ * verification surface resolves its own subject, and the tri-state is narrowed
+ * to the single question the journey asks.
+ *
+ * Behind the prefix limiter rather than per-route ones: neither route spends an
+ * external resource nor checks a secret, so neither earns a tighter tier, and a
+ * limited prefix is what stops a later route arriving with no limit at all.
+ */
+app.use(
+  "/api/v1/onboarding",
+  apiLimiter,
+  createJourneyRoutes(async (userId) => {
+    const email = await resolveCurrentEmail(userId);
+    if (email === null) return false;
+
+    return (await channelVerificationStatus.statusOf(userId, email)) === "pending";
+  }),
+);
 
 // ─── Media Read (top-level, outside /api/v1 — a stable, embeddable public URL) ─
 app.use("/media", mediaReadRoutes);
