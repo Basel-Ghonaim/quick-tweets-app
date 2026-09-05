@@ -330,3 +330,84 @@ each:
 > is the per-IP limiter in front of the route (`type: "rate_limit"`) — the cheap
 > outer layer, which cannot stop one address being targeted from many IPs. Reading
 > them as the same thing would misattribute which control is doing the work.
+
+## 11 · Password reset (PWR)
+
+Recovery for an account whose password its owner no longer has. What this folder
+verifies, in one line each:
+
+> - **G1 — one answer, whatever happened.** An address no account has, a real
+>   address, and a real address inside its cooldown produce a **byte-identical**
+>   response (PWR-01/02/03). This is the guarantee the whole capability is shaped
+>   around, and it is the one Channel Verification deliberately does *not* make:
+>   that surface is authenticated, so it can afford to report a cooldown.
+> - **G2 — one failure shape.** Wrong, malformed, spent and never-issued are
+>   reported identically (PWR-04/05/13). The single carve-out is an **absent**
+>   value, which is a malformed request rather than an answer about a code
+>   (PWR-06) — and it discloses nothing, since the caller knows they sent nothing.
+> - **G3 — confirm checks, apply consumes.** The same code confirms twice
+>   (PWR-07/08) and is spent exactly once (PWR-10/13).
+> - **G4 — a reset ends every session.** Two sessions exist before it and none
+>   after (PWR-10, Checkpoint J), and the flow returns to Login rather than
+>   signing anyone in.
+> - **G5 — spent/expired is derived.** An expired credential is refused with no
+>   sweep having run, and its row is still there (PWR-14, **I8**).
+>
+> **Self-isolated.** The folder mints its own account with a per-run unique handle,
+> so it never disturbs `verify_alice`/`verify_bob`. The run's identity is
+> `{{pwrUsername}}`; its captured code is `{{pwrCode}}`.
+>
+> **Setup precondition.** The server must run with `MAIL_MODE=capture`, which
+> writes each message to `.mail-capture/` relative to the API process's working
+> directory. Without it the code is unobtainable and PWR-07 onward cannot run.
+>
+> **And the migrations must be applied**, `password_reset_challenges` and
+> `mail_send_attempts` both. Every send passes through the mail mechanism's abuse
+> controls, which **fail closed** when their state cannot be read: an unapplied
+> migration turns PWR-02 into a silent no-send produced by a correctly-behaving
+> system. Read that as a missing migration, never as a defect.
+>
+> **Two ordering constraints, both consequences rather than preferences.**
+> **PWR-14 needs a restart** with a short `RESET_CODE_TTL_MS`, because the default
+> ten minutes is not waitable by hand and shortening it for the whole folder would
+> expire codes before they can be pasted. **PWR-15 must run last, and after its
+> own restart** — it exhausts the per-IP request budget for fifteen minutes and
+> would block everything after it. It starts from a cleared counter deliberately,
+> rather than from an exact count of every request above it: folder 10's CHV-13
+> documents that arithmetic and a runner has to get it right, and this avoids
+> needing to.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| PWR-01 | Setup registered; server in `MAIL_MODE=capture` | `POST /auth/password-reset` for an address **no account has** | **202**; body `{"success":true,"data":null}`; **no `Retry-After`** | no `password_reset_challenges` row (Checkpoint J) | — | ☐ |
+| PWR-02 | PWR-01 | same request for the **real** address | **202**, **byte-identical** to PWR-01 (**G1**) | one row, `code_hash` a **64-hex digest**, `used_at` null (Checkpoint J) | via reset | ☐ |
+| PWR-03 | PWR-02, within 60s | same request again | **202**, **byte-identical** again — the cooldown is silent (**G1**) | **still one row** — no second credential minted | — | ☐ |
+| PWR-04 | PWR-02 | `POST …/confirm {code:"ZZZZZZZZZZZZ"}` | **400** `bad_request`, *"That reset code is not valid."*, **no field errors** | row unchanged | — | ☐ |
+| PWR-05 | PWR-02 | confirm `{code:"!!"}` (malformed) | **byte-identical** to PWR-04 — **not** a `422` (**G2**) | unchanged | — | ☐ |
+| PWR-06 | — | confirm `{code:""}` | **422** `validation` with a `code` field error — a malformed *request* (**G2**) | unchanged | — | ☐ |
+| PWR-07 | PWR-02; code read from `.mail-capture/` into `{{pwrCode}}` | confirm with that code | **204**, empty body | row **unchanged** — `used_at` still null (**G3**) | — | ☐ |
+| PWR-08 | PWR-07 | confirm with the **same** code again | **204** again — confirm consumed nothing (**G3**) | unchanged | — | ☐ |
+| PWR-09 | PWR-07 | `POST …/apply` with that code and `"weak"` | **422** `validation`, field error on `newPassword` | **row still unspent** — a weak password never costs the code | — | ☐ |
+| PWR-10 | PWR-09 | apply with that code and a compliant password | **204**, empty body, **no tokens and no cookie** (**D2**) | `used_at` set; **`refresh_tokens` for this account empty** (**G4**, Checkpoint J) | via reset | ☐ |
+| PWR-11 | PWR-10 | `POST /auth/login` with the **new** password | **200** | a single new session row | — | ☐ |
+| PWR-12 | PWR-10 | login with the **old** password | **401** `unauthorized`, the generic credential error | unchanged | — | ☐ |
+| PWR-13 | PWR-10 | apply with the **same** code again | **byte-identical** to PWR-04 — a replay is indistinguishable from a value that never existed (**G2**) | unchanged | — | ☐ |
+| PWR-14 | Restart with a short `RESET_CODE_TTL_MS`; request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
+| PWR-15 | **Run last**, after a restart clearing the in-memory counter | six requests in a row | attempts 1–5 → **202**; **attempt 6 → 429** `rate_limit` | unchanged | wait 15 min or restart | ☐ |
+
+> **Why there is no `429` here that the capability itself produced.** Folder 10 has
+> two different `429`s — a per-address cooldown and a per-IP limiter — and reading
+> them as the same thing would misattribute which control is doing the work. This
+> folder has only the second. The cooldown is real and durable, but it is
+> **silent** (PWR-03): reporting it would disclose that the address belongs to an
+> account, which is precisely what **G1** forbids.
+
+> **What this folder does not cover, and why.** The **reserved recovery floor** —
+> that a burst of verification traffic cannot exhaust the per-recipient budget
+> recovery needs — is not hand-drivable. Reaching the general limit takes 15 sends
+> to one address, and the only consumer that produces them is Channel
+> Verification's issue endpoint, whose per-IP limiter is 10 per 15 minutes and is a
+> **code literal, not configuration**. Seeding `mail_send_attempts` directly would
+> be exactly the precondition the plan forbids. The property is proven where it
+> can be: `recipientCapReserve.integration.test.ts`, two tests against real
+> Postgres.

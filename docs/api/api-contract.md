@@ -55,6 +55,9 @@ POST   /api/v1/auth/login
 POST   /api/v1/auth/logout
 POST   /api/v1/auth/logout-all
 POST   /api/v1/auth/refresh
+POST   /api/v1/auth/password-reset          (unauthenticated)
+POST   /api/v1/auth/password-reset/confirm  (unauthenticated)
+POST   /api/v1/auth/password-reset/apply    (unauthenticated)
 
 GET    /api/v1/tweets
 GET    /api/v1/tweets?author=:username
@@ -1120,3 +1123,106 @@ The presence check itself still applies, and it is the one case that answers dif
 ```
 
 > **One failure shape, deliberately.** Uniform opacity is auditable; a carve-out is not. The moment one cause reports itself it acquires its own message, then its own status, and the guarantee decays by increments — the same reasoning as the generic `401` on login. A code is **single-use**, so replaying a confirmed one is refused identically; a *wrong* value, by contrast, leaves the challenge usable, so one mistyped character cannot deny a holder their own verification.
+
+---
+
+## Password Reset
+
+Recovering access to an account whose password its owner no longer has. The capability owns one fact — that the bearer of a code is currently authorized to set a new password — and it is **not** Channel Verification: different subject, different actor, different lifetime, different consequence. Governing decision: [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md).
+
+**All three endpoints are unauthenticated**, and that is the point rather than an oversight. The actor is whoever holds the code; requiring a session would exclude precisely the people recovery exists for.
+
+The flow is **request → confirm → apply**. `confirm` reports whether a code is currently usable and consumes nothing, so the screen that collects the code can check it before asking for a new password; `apply` re-validates the same code and only then spends it. The client holds the code across the two steps and resubmits it — no second credential bridges them.
+
+### Why these responses look different from Channel Verification's
+
+The two capabilities both mint an emailed code and otherwise share almost nothing on the wire. The differences are deliberate, so they are listed rather than left to be inferred:
+
+| | Channel Verification | Password Reset |
+|---|---|---|
+| `delivery` on the `202` | reported | **absent** — reporting it would confirm a send happened, and a send happens only for an address that exists |
+| `resendAvailableInSeconds` | reported | **absent** — a cooldown exists only for a real account, so reporting one discloses that the account is real |
+| `Retry-After` on a cooldown | sent | **never sent**, for the same reason |
+| A cooldown refusal | a distinct `429` | **indistinguishable** from every other outcome |
+
+Channel Verification can report all of these safely because it is **authenticated**: the caller has already proved who they are, so nothing is disclosed. These endpoints are anonymous, and every one of those fields would answer the single question the capability refuses to answer.
+
+### `POST /auth/password-reset` — Request a code
+
+**Auth:** None. **Rate limit:** 5 requests / 15 min per IP. The durable controls sit beneath it and are the real answer: a per-account resend cooldown (60 seconds by default), and the mail mechanism's per-recipient cap with its reserved recovery floor ([`backend/mail.md`](../backend/mail.md)).
+
+**The response is a constant.** It is byte-for-byte identical whether the address belongs to no account, belongs to an account eligible for a fresh code, or belongs to an account still inside its cooldown. No field, header or status varies, and none is planned to: existence is never revealed, and never by advancing to a further step either.
+
+```jsonc
+// Request
+{ "email": "holder@example.test" }
+
+// Response 202 — always this, whatever happened. It does NOT mean a code was
+// sent; it means the request was accepted and, if an account exists and is
+// eligible, a code is on its way.
+{ "success": true, "data": null }
+
+// Response 422 — the address is not a well-formed email. A malformed REQUEST,
+// not an answer about the account, so it is the one case that differs — and it
+// discloses nothing, since the caller knows what they typed.
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "email": ["Invalid email format"] } } }
+
+// Response 429 — too many requests from this IP. No Retry-After: see above.
+{ "success": false, "error": { "type": "rate_limit", "message": "Too many password reset requests. Please wait 15 minutes before trying again." } }
+```
+
+> **The mail is dispatched after this response is written**, never before it. Only one of the three branches has a message to send, so awaiting the send would put a measurable duration where the constant body denies one. A send that fails is not reported: there is nothing in it for a caller to learn, and a fresh request supersedes a lost code.
+
+### `POST /auth/password-reset/confirm` — Check a code
+
+**Auth:** None. **Rate limit:** 10 requests / 15 min per IP. Sized for someone retyping from an inbox on a phone rather than for an attacker: a 12-character code drawn from Crockford Base32 is out of brute-force reach whatever this limiter says.
+
+**Read-only.** It reports usability and changes nothing — the same code checked twice reports usable both times. Spending it is `apply`'s.
+
+**Validation is presence-only**, exactly as Channel Verification's confirm is and for the same reason: rejecting a malformed value with a `422` and field errors would tell a caller something a wrong value does not. An **absent or empty** `code` is a malformed request and returns `422`; every value that is actually present — however malformed — reaches the capability and collapses into the single `400`.
+
+```jsonc
+// Request
+{ "code": "7QK3MNP2XVZB" }
+
+// Response 204 — the code is currently usable. No body. Nothing was consumed.
+
+// Response 400 — the single failure. Never issued, expired, already used and
+// simply wrong are ALL reported identically: same status, same message, no
+// field errors.
+{ "success": false, "error": { "type": "bad_request", "message": "That reset code is not valid." } }
+
+// Response 429 — too many attempts from this IP.
+{ "success": false, "error": { "type": "rate_limit", "message": "Too many attempts. Please wait 15 minutes before trying again." } }
+```
+
+### `POST /auth/password-reset/apply` — Set the new password
+
+**Auth:** None. **Rate limit:** 5 requests / 15 min per IP — the tightest of the three, because this endpoint hashes the submitted password before the code is examined, so even a rejected request costs real work.
+
+The new password is held to **exactly** registration's rules; the two share one schema rather than two copies of it.
+
+On success the code is spent, the password is written, and **every session for the account is revoked** in one transaction — including the caller's own, if they had one. No tokens are returned and no session is established: the flow ends at Login. A credential change that left old sessions alive would leave whoever it was invoked against still signed in.
+
+```jsonc
+// Request
+{ "code": "7QK3MNP2XVZB", "newPassword": "N3wPassw0rd!" }
+
+// Response 204 — the password is changed and every session is gone. No body,
+// no tokens, no cookie. The client goes to Login.
+
+// Response 400 — the same single failure as confirm's, including a code that
+// was valid a moment ago and has since been spent or superseded.
+{ "success": false, "error": { "type": "bad_request", "message": "That reset code is not valid." } }
+
+// Response 422 — the new password fails the policy, or a required field is
+// absent. Field errors are returned, exactly as on register.
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "newPassword": ["Password must contain at least one digit"] } } }
+
+// Response 429 — too many attempts from this IP.
+{ "success": false, "error": { "type": "rate_limit", "message": "Too many attempts. Please wait 15 minutes before trying again." } }
+```
+
+> **Single use is decided by the write, not the read.** Two callers racing on one code cannot both succeed: the update marking it used is conditional on it still being unused, and the transaction fails before any password is written if it loses. A code that is merely *wrong*, by contrast, leaves the credential usable — one mistyped character cannot deny a holder their own recovery.
+
+> **These endpoints are additive** and appear in `v1` without a Pre-release Exception: nothing was removed or reshaped, so no consumer can have depended on a prior form.

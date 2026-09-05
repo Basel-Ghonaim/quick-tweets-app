@@ -146,6 +146,52 @@ expire codes before they could be pasted; and **CHV-13 depends on that restart**
 having cleared the confirm limiter, or its arithmetic engages on the fifth
 attempt rather than the eleventh. The catalogue states why each one holds.
 
+## Password reset
+
+Folder **11 · Password reset** exercises recovery for an account whose password its
+owner no longer has: request a code, read it from the capture file, confirm it,
+apply it, and watch every prior session disappear. Like folder 10 it is
+**self-isolated** (its own account, a per-run unique handle) and
+**non-destructive**. See scenarios **PWR-01…PWR-15** and **Checkpoint J**.
+
+**It needs the same two preconditions as folder 10** — the server started with
+`MAIL_MODE=capture`, and the migrations applied, `password_reset_challenges` and
+`mail_send_attempts` both — and for the same reasons. All three endpoints are
+**unauthenticated**, which is the point rather than an oversight: requiring a
+session would exclude precisely the people recovery exists for.
+
+The guarantee worth watching is the first one. **PWR-01, PWR-02 and PWR-03 must be
+byte-identical**: an address no account has, a real address, and a real address
+still inside its resend cooldown all answer the same. That is the opposite of
+folder 10's CHV-03, which answers a cooldown with a distinct `429` — and the
+difference is deliberate. Channel verification is authenticated, so it can afford
+to report a cooldown; this surface is anonymous, where reporting one would
+disclose that the address belongs to an account. If those three ever diverge, the
+capability has stopped doing the one thing it exists to do.
+
+Its other guarantees: **confirm checks and apply consumes**, so the same code
+confirms twice and is spent exactly once; **every failure is the same response**,
+so wrong, malformed, spent and never-issued are indistinguishable, with an absent
+value the single carve-out because it is a malformed request rather than an
+answer about a code; **a reset ends every session**, verified by counting rows
+rather than by trusting the endpoint; and **spent/expired is derived**, so an
+expired credential is refused with its row still sitting there unswept.
+
+**Two** ordering constraints, both consequences: **PWR-14 needs a restart** with a
+short `RESET_CODE_TTL_MS`, since the default ten minutes is not waitable by hand;
+and **PWR-15 runs last, after its own restart**, because it exhausts the per-IP
+request budget for fifteen minutes. PWR-15 starts from a cleared counter on
+purpose — folder 10's CHV-13 has to document exactly how many attempts precede it
+and a runner has to get that arithmetic right, and this avoids needing to.
+
+**What it deliberately does not cover:** the reserved recovery floor. Reaching the
+general per-recipient limit takes 15 sends to one address, and the only consumer
+that can produce them is channel verification's issue endpoint, whose per-IP
+limiter is 10 per 15 minutes and is a **code literal, not configuration** — so the
+harness cannot get there without a code change, and seeding the attempts table
+directly is the precondition this harness refuses to take. That property is
+proven where it can be, in `recipientCapReserve.integration.test.ts`.
+
 ## Scope
 
 This harness verifies **M1–M9**. It deliberately does **not**:

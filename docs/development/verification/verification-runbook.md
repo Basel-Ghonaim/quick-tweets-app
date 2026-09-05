@@ -315,6 +315,69 @@ after it.
 > a registration). Confirm them by their `409` and by this checkpoint showing the
 > alias still owned by the original account.
 
+
+### Checkpoint J — Password reset custody and revocation (folder 11)
+```sql
+-- The credential lives entirely inside Auth, shares nothing with Channel
+-- Verification, and a completed reset leaves no session alive. Substitute
+-- :pwrUserId with the id folder 11's Setup captured.
+
+-- 1. ISOLATION: the reset credential has no foreign key to, and no column
+--    naming, any channel-verification table. MUST return 0 rows.
+SELECT tc.constraint_name, ccu.table_name AS references_table
+FROM information_schema.table_constraints tc
+JOIN information_schema.constraint_column_usage ccu
+  ON ccu.constraint_name = tc.constraint_name
+WHERE tc.table_name = 'password_reset_challenges'
+  AND tc.constraint_type = 'FOREIGN KEY'
+  AND ccu.table_name LIKE 'channel_verification%';
+
+-- 2. The credential, and the shape it is stored in. After PWR-02 exactly one
+--    row; after PWR-03 still exactly one (the cooldown minted nothing);
+--    code_hash is a 64-character digest and never the code itself.
+SELECT id, user_id, length(code_hash) AS code_hash_length,
+       expires_at, used_at, created_at
+FROM password_reset_challenges
+WHERE user_id = :pwrUserId
+ORDER BY created_at DESC;
+
+-- 3. REVOCATION (I7): after PWR-10 this MUST be 0, and after PWR-11's login
+--    exactly 1 — the new session, and nothing that predates the reset.
+SELECT count(*) AS live_sessions
+FROM refresh_tokens
+WHERE user_id = :pwrUserId;
+
+-- 4. DERIVED, NOT STORED (I8): after PWR-14 the expired row is still present
+--    and still unspent. Nothing had to write for confirm to refuse it, and no
+--    sweep has run. MUST return the row, with used_at NULL and expires_at past.
+SELECT id, expires_at, used_at, expires_at < now() AS is_expired
+FROM password_reset_challenges
+WHERE user_id = :pwrUserId
+ORDER BY created_at DESC
+LIMIT 1;
+
+-- 5. And the credential table carries no status column — usable is decided by
+--    used_at and expires_at alone. MUST be 0.
+SELECT count(*) AS status_columns
+FROM information_schema.columns
+WHERE table_name = 'password_reset_challenges'
+  AND (column_name ILIKE '%status%' OR column_name ILIKE '%state%');
+```
+
+> **PWR-15 runs last, and after its own restart.** Six requests exhaust the per-IP
+> budget for fifteen minutes and would block everything after them. It starts from
+> a cleared counter deliberately: folder 10's CHV-13 has to document exactly how
+> many attempts precede it and a runner has to get that arithmetic right, and
+> starting fresh removes the need to.
+
+> **PWR-14 is a runbook step, not a request.** The default `RESET_CODE_TTL_MS` is
+> ten minutes, which is not waitable by hand, and shortening it for the whole
+> folder would expire codes before they can be pasted. Restart the API with
+> `RESET_CODE_TTL_MS=5000`, run PWR-02 again to mint a fresh code, wait past five
+> seconds, then confirm it. The answer must be the same `400` as PWR-04, and
+> query 4 above must still find the row — the point being that **no writer had to
+> run** for an expired credential to stop working.
+
 ## Comment media checkpoints (CM-1 … CM-6)
 
 > For Postman folder **08 · Comment Media**. Referrer tag `comment:{commentId}`,
@@ -418,7 +481,8 @@ the whole collection at once — the point is to inspect state between steps.
 | 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |
 | 7 — Username rename | 09 | **H** (after USR-01, USR-09, and USR-10) |
 | 8 — Channel verification | 10 | **I** (after CHV-01, CHV-06, and CHV-11). Run in order: CHV-13 **last**, and only after CHV-12's restart has cleared the confirm limiter |
-| 9 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
+| 9 — Password reset | 11 | **J** (after PWR-02, PWR-10, and PWR-14). Run in order: PWR-15 **last**, and only after its own restart has cleared the request limiter |
+| 10 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
 
 A phase is "green" only when its API assertions pass **and** its DB checkpoint
 matches. Record outcomes in [verification-scenarios.md](verification-scenarios.md)
