@@ -24,7 +24,10 @@ interface StoredUser {
 const makeWorld = (existingUsernames: string[] = []) => {
   const users: StoredUser[] = [];
   let nextId = 1;
-  const calls = { createRefresh: [] as { userId: number }[] };
+  const calls = {
+    createRefresh: [] as { userId: number }[],
+    beginJourney: [] as { userId: number }[],
+  };
 
   const authRepo: IAuthRepository = {
     findByUsername: async (u) =>
@@ -65,13 +68,20 @@ const makeWorld = (existingUsernames: string[] = []) => {
       ? { userId: -1, canonicalUsername: handle, viaAlias: false }
       : null;
 
-  return { users, authRepo, tokenRepo, calls, runInTransaction, resolveHandle };
+  // Registration also begins the account's onboarding journey. Recorded rather
+  // than ignored, so the account-only claim these tests make stays checkable:
+  // one journey per registration, and nothing else about the account changes.
+  const beginJourney = async (userId: number) => {
+    calls.beginJourney.push({ userId });
+  };
+
+  return { users, authRepo, tokenRepo, calls, runInTransaction, resolveHandle, beginJourney };
 };
 
 describe("auth service — account-only registration (Media-free)", () => {
   it("registers with account fields only and issues a session, with no avatar in the result", async () => {
     const w = makeWorld();
-    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, w.resolveHandle);
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, w.resolveHandle, w.beginJourney);
 
     const result = await svc.register({ ...REG });
 
@@ -82,6 +92,9 @@ describe("auth service — account-only registration (Media-free)", () => {
     expect(w.users[0]!.name).toBeNull(); // register is account-only — name is not set
     expect(w.users[0]!.avatarMediaId).toBeNull();
     expect(w.calls.createRefresh).toEqual([{ userId: w.users[0]!.id }]);
+    // Exactly one journey, for the account just created — registration is the
+    // only thing that ever mints one.
+    expect(w.calls.beginJourney).toEqual([{ userId: w.users[0]!.id }]);
     // Auth is Media-free — the result carries no avatar.
     expect("avatarToken" in result).toBe(false);
     expect("avatar" in result).toBe(false);
@@ -89,7 +102,7 @@ describe("auth service — account-only registration (Media-free)", () => {
 
   it("rejects a duplicate username with 409 before creating anything", async () => {
     const w = makeWorld([REG.username]);
-    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, w.resolveHandle);
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, w.resolveHandle, w.beginJourney);
 
     const err = await svc.register({ ...REG }).catch((e: unknown) => e);
 
@@ -102,7 +115,7 @@ describe("auth service — account-only registration (Media-free)", () => {
     const w = makeWorld();
     // The requested handle is a reserved alias of another account.
     const reservedAlias = async () => ({ userId: 42, canonicalUsername: "someone_else", viaAlias: true });
-    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, reservedAlias);
+    const svc = createAuthService(w.authRepo, w.tokenRepo, w.runInTransaction, reservedAlias, w.beginJourney);
 
     const err = await svc.register({ ...REG }).catch((e: unknown) => e);
 

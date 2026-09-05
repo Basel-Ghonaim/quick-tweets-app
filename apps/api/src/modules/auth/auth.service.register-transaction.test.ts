@@ -30,6 +30,8 @@ interface HarnessOpts {
   createThrowsP2002?: boolean;
   /** Which field the racing row occupies, so re-query attribution can find it. */
   raceField?: "username" | "email" | null;
+  /** beginJourney throws (the onboarding row could not be written). */
+  failJourney?: boolean;
 }
 
 const makeHarness = (opts: HarnessOpts = {}) => {
@@ -38,7 +40,11 @@ const makeHarness = (opts: HarnessOpts = {}) => {
   let nextId = 1;
   let raced = false; // becomes true once a P2002-throwing create has "lost" the race
   const txClient = { __tx: true } as unknown as DbClient; // identity sentinel
-  const seen = { createClients: [] as unknown[], refreshClients: [] as unknown[] };
+  const seen = {
+    createClients: [] as unknown[],
+    refreshClients: [] as unknown[],
+    journeyClients: [] as unknown[],
+  };
 
   const authRepo: IAuthRepository = {
     findByUsername: async (u) =>
@@ -92,7 +98,20 @@ const makeHarness = (opts: HarnessOpts = {}) => {
 
   // The pre-check resolver passes (null) so register proceeds to the INSERT and
   // the P2002 path under test; the DB constraints remain authoritative.
-  const svc = createAuthService(authRepo, tokenRepo, runInTransaction, async () => null);
+  // The journey row joins the same unit: it is written with the tx client, and
+  // a failure here must discard the account exactly as a refresh failure does.
+  const beginJourney = async (_userId: number, client?: DbClient) => {
+    seen.journeyClients.push(client);
+    if (opts.failJourney) throw new Error("journey INSERT failed");
+  };
+
+  const svc = createAuthService(
+    authRepo,
+    tokenRepo,
+    runInTransaction,
+    async () => null,
+    beginJourney,
+  );
   return { svc, committed, seen, txClient };
 };
 
@@ -104,9 +123,22 @@ describe("register — transactional correctness (WI-D)", () => {
 
     expect(result.accessToken).toBeTruthy();
     expect(h.committed).toHaveLength(1);
-    // Both writes ran, and both received the same tx client — one atomic unit.
+    // All three writes ran, and each received the same tx client — one atomic unit.
     expect(h.seen.createClients).toEqual([h.txClient]);
     expect(h.seen.refreshClients).toEqual([h.txClient]);
+    expect(h.seen.journeyClients).toEqual([h.txClient]);
+  });
+
+  /* An account that committed without its journey could never be given one:
+     the row is unique per account and only registration mints it, so the
+     reader would arrive with the onboarding screens permanently shut. */
+  it("rolls the account back when the journey write fails (no shut-out account)", async () => {
+    const h = makeHarness({ failJourney: true });
+
+    const err = await h.svc.register({ ...REG }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    expect(h.committed).toHaveLength(0);
   });
 
   it("rolls the account back when the refresh-session write fails (no orphan)", async () => {

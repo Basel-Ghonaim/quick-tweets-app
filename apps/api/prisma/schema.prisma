@@ -57,6 +57,10 @@ model User {
   // never as a column here (ADR 0009 Decision 6).
   channelVerifications ChannelVerification[]
   passwordResetChallenges PasswordResetChallenge[]
+  // Back-relation only: whether this account's registration journey is still
+  // open lives wholly in onboarding_journeys, and gates nothing the account
+  // may do (ADR 0008 Decision 2, as revised).
+  onboardingJourney OnboardingJourney?
 
   @@map("users")
 }
@@ -125,6 +129,43 @@ model PasswordResetChallenge {
   @@index([userId, createdAt])
   @@index([expiresAt])
   @@map("password_reset_challenges")
+}
+
+// ─── OnboardingJourney ───────────────────────────────────────────────────────
+// The registration journey a client presents after the account exists: profile,
+// then verification. It decides only which screens a reader may reach; nothing
+// the account may do is gated on it (ADR 0008 Decision 2, as revised).
+//
+// There is no phase column. Phase is derived on read from the marks below in a
+// fixed order, so a journey is correct with nobody having written to it — the
+// property channel_verifications already relies on.
+//
+// user_id is unique: a journey is created exactly once per account, ever, by
+// registration alone. Nothing deletes the row and there is no sweep — one row
+// per account is bounded by account count, and the surviving row IS the record
+// that this account's journey happened. That is what makes a closed journey
+// permanently closed rather than merely absent.
+model OnboardingJourney {
+  id     Int  @id @default(autoincrement())
+  userId Int  @unique @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Set-once marks, never cleared. Absence is the earlier phase, so each is
+  // written only over NULL and the record is monotonic by construction.
+  profileSettledAt DateTime? @map("profile_settled_at")
+  codeReachedAt    DateTime? @map("code_reached_at")
+  closedAt         DateTime? @map("closed_at")
+  // The step the reader left when the journey closed: "verify" | "code".
+  // Diagnostic only, never read for a decision — and deliberately not an
+  // outcome, because a reader reaches the same exit by verifying or by
+  // skipping, and which of the two happened is verification's fact, not this
+  // capability's to claim.
+  closedReason     String?   @map("closed_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("onboarding_journeys")
 }
 
 // ─── Tweet ───────────────────────────────────────────────────────────────────

@@ -79,6 +79,9 @@ DELETE /api/v1/follows/:username
 GET    /api/v1/follows/:username/followers
 GET    /api/v1/follows/:username/following
 
+GET    /api/v1/onboarding/journey                       (authenticated)
+POST   /api/v1/onboarding/journey/advance               (authenticated)
+
 POST   /api/v1/channel-verification/challenges          (authenticated)
 POST   /api/v1/channel-verification/challenges/confirm  (authenticated)
 
@@ -1027,6 +1030,75 @@ Resolves the token and streams the bytes under a fixed security envelope. Not ra
 > [`backend/media.md`](../backend/media.md).
 
 ---
+
+## Onboarding Journey
+
+The registration journey a client presents after the account exists: profile, then verification. It decides **only which onboarding screens a reader may reach**; nothing an account may do is gated on it ([ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) Decision 2, as revised). Every endpoint remains open to a reader whose journey is closed or absent.
+
+A journey is created by **`POST /auth/register` alone**, once per account, in the same transaction as the account. Signing in never creates one, which is what makes these screens unreachable to anyone who did not just register. Nothing deletes the row: a closed journey stays closed permanently.
+
+**Phase** is derived at read time and never stored:
+
+| Value | Meaning |
+|---|---|
+| `profile` | registered; the profile step is where the reader belongs |
+| `verify` | the profile step is settled, by saving or by skipping |
+| `code` | the code screen has been reached — terminal, and the reader does not return |
+| `none` | no journey, or a closed one. The two are deliberately indistinguishable |
+
+`none` collapses *closed* and *never had one* because the difference tells a client nothing it can act on — both mean "not in the journey" — and the same uniform-answer posture the verification failure takes.
+
+### `GET /api/v1/onboarding/journey` — Where this reader belongs
+
+**Auth:** Required. **Rate limit:** the general API limiter (100 req / 15 min per IP).
+
+Answers for every authenticated caller and writes nothing. **There is no `404`:** a missing journey is a legitimate answer, so a client never reads a status code to decide where to send a reader.
+
+```jsonc
+// Response 200
+{ "success": true, "data": { "phase": "profile" } }
+
+// Response 401 — no valid Bearer token
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
+```
+
+### `POST /api/v1/onboarding/journey/advance` — Move the journey
+
+**Auth:** Required. **Rate limit:** the general API limiter.
+
+Moves the reader's own journey forward, or refuses. **Answers with the resulting phase either way**, so a client re-syncs from every response rather than from its own guess.
+
+A journey moves forward or not at all. A request to go *backwards* is a **no-op**, not an error — the reader is already past it, and the true phase is returned. Refusal is reserved for a move that would **skip** a step.
+
+```jsonc
+// Request
+{ "to": "verify" | "code" | "completed" }
+
+// Response 200 — the phase after the move (or the unchanged phase, for a no-op)
+{ "success": true, "data": { "phase": "verify" } }
+
+// Response 409 — the move would skip a step, or the account has no journey.
+// Deliberately says no more: a caller learns that it cannot move, never why.
+{ "success": false, "error": { "type": "conflict", "message": "That step is not available." } }
+
+// Response 422 — `to` is not one of the three targets
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "to": ["Choose a step to move to."] } } }
+```
+
+**The transitions, and what each enforces:**
+
+| From | `to` | Result |
+|---|---|---|
+| `profile` | `verify` | `200` `verify` — profile's only exit, whether saved or skipped |
+| `profile` | `code` or `completed` | **`409`** — the profile step cannot be skipped past |
+| `verify` | `code` | `200` `code`, **only if a verification challenge is currently outstanding**; otherwise `409` |
+| `verify` | `completed` | `200` `none` — the reader declined verification |
+| `code` | `completed` | `200` `none` |
+| any | a step already passed | `200` with the current phase, unchanged |
+| `none` | `completed` | `200` `none` — a repeated close is idempotent, so a lost response is safe to retry |
+| `none` | anything else | **`409`** |
+
+> **`verify → code` consults [Channel Verification](#channel-verification).** The code screen is terminal, and it is the one state nothing walks back — so it may not be reached unless there is a live challenge to type into it. The journey reads that fact through the capability's published query and owns none of it.
 
 ## Channel Verification
 

@@ -34,6 +34,8 @@ import {
   type ResolvedHandle,
 } from "../../shared/identity/index.js";
 import { createAuthRepository, createTokenRepository } from "./auth.repository.js";
+import { createJourneyRepository } from "./journey/journey.repository.js";
+import type { BeginJourney } from "./journey/journey.types.js";
 import type {
   AuthResult,
   CreateUserData,
@@ -96,6 +98,7 @@ export const createAuthService = (
   tokenRepo: ITokenRepository = createTokenRepository(),
   runInTransaction: RunInTransaction = defaultRunInTransaction,
   resolveHandle: (handle: string) => Promise<ResolvedHandle | null> = resolveUserByHandle,
+  beginJourney: BeginJourney = createJourneyRepository().create,
 ): IAuthService => ({
   // ─── Register ────────────────────────────────────────────────────────────
 
@@ -141,6 +144,11 @@ export const createAuthService = (
       user = await runInTransaction(async (tx) => {
         const created = await authRepo.create(newUser, tx);
         await tokenRepo.createRefreshToken(created.id, refreshTokenValue, expiresAt, tx);
+        // Inside the transaction because a committed account with no journey
+        // could never be given one: the row is unique per account and only
+        // registration mints it, so the reader would reach the app with the
+        // onboarding screens permanently shut. One local INSERT, no network.
+        await beginJourney(created.id, tx);
         return created;
       });
     } catch (err) {
