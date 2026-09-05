@@ -6,17 +6,9 @@ import { Onboarding } from "./screens/Onboarding";
 import { GuestOnly } from "./navigation";
 import { stepStates } from "./journey";
 
-/**
- * Everything auth contains.
- *
- * The composition root decides whether and where auth is mounted; which screens
- * exist and what they are called is the feature's. That is what keeps a new
- * screen from widening the module's public surface and editing `app/`.
- *
- * The journey is one route, not one per step: a step's URL would be a second
- * copy of a position the server owns, and every rule needed to reconcile them
- * exists only to defeat what a URL grants.
- */
+/** Everything auth contains: the composition root decides whether it is
+ *  mounted, and a new screen never widens this surface. The journey is one
+ *  route, because a step's URL is a second copy of a server-owned position. */
 export const authRoute = (
   <Route path="auth" element={<AuthLayout />}>
     <Route index element={<Navigate to="signin" replace />} />
