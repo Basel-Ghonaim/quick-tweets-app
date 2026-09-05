@@ -1037,7 +1037,9 @@ The registration journey a client presents after the account exists: profile, th
 
 A journey is created by **`POST /auth/register` alone**, once per account, in the same transaction as the account. Signing in never creates one, which is what makes these screens unreachable to anyone who did not just register. Nothing deletes the row: a closed journey stays closed permanently.
 
-**Phase** is derived at read time and never stored:
+**Phase** is derived at read time and never stored. **How a step was left is stored**, because it cannot be derived: saving a profile and skipping it end the same transition and leave indistinguishable data behind, so the reader's own choice is the only witness and the client asserts it.
+
+The phases:
 
 | Value | Meaning |
 |---|---|
@@ -1054,9 +1056,11 @@ A journey is created by **`POST /auth/register` alone**, once per account, in th
 
 Answers for every authenticated caller and writes nothing. **There is no `404`:** a missing journey is a legitimate answer, so a client never reads a status code to decide where to send a reader.
 
+`profileOutcome` is `"saved" | "skipped"` once the profile step has been left, and `null` before it — including for a journey settled before the field existed.
+
 ```jsonc
 // Response 200
-{ "success": true, "data": { "phase": "profile" } }
+{ "success": true, "data": { "phase": "profile", "profileOutcome": null } }
 
 // Response 401 — no valid Bearer token
 { "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
@@ -1066,30 +1070,43 @@ Answers for every authenticated caller and writes nothing. **There is no `404`:*
 
 **Auth:** Required. **Rate limit:** the general API limiter.
 
-Moves the reader's own journey forward, or refuses. **Answers with the resulting phase either way**, so a client re-syncs from every response rather than from its own guess.
+Moves the reader's own journey forward, or refuses. **Answers with the same shape the read does, either way**, so a client re-syncs from every response rather than keeping half the answer from its own request.
 
-A journey moves forward or not at all. A request to go *backwards* is a **no-op**, not an error — the reader is already past it, and the true phase is returned. Refusal is reserved for a move that would **skip** a step.
+A journey moves forward or not at all. A request to go *backwards* is a **no-op**, not an error — the reader is already past it, and the true state is returned. Refusal is reserved for a move that would **skip** a step.
+
+**The body is discriminated on `to`.** Leaving the profile step carries how it was left; **no other move may carry an outcome**, and one sent with `code` or `completed` is refused rather than ignored. The verification step's outcome is not the client's to state — it is derived from the capability that owns it.
 
 ```jsonc
-// Request
-{ "to": "verify" | "code" | "completed" }
+// Request — leaving the profile step, whether saved or skipped
+{ "to": "verify", "outcome": "saved" | "skipped" }
 
-// Response 200 — the phase after the move (or the unchanged phase, for a no-op)
-{ "success": true, "data": { "phase": "verify" } }
+// Request — every other move
+{ "to": "code" }
+{ "to": "completed" }
 
-// Response 409 — the move would skip a step, or the account has no journey.
-// Deliberately says no more: a caller learns that it cannot move, never why.
+// Response 200 — the state after the move (or the unchanged state, for a no-op)
+{ "success": true, "data": { "phase": "verify", "profileOutcome": "saved" } }
+
+// Response 409 — the move would skip a step, or the account has no journey
+// and asked for something other than `completed`. Deliberately says no more:
+// a caller learns that it cannot move, never why.
 { "success": false, "error": { "type": "conflict", "message": "That step is not available." } }
 
 // Response 422 — `to` is not one of the three targets
 { "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "to": ["Choose a step to move to."] } } }
+
+// Response 422 — `to: "verify"` without an outcome, or with one the journey does not know
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "outcome": ["Say whether the profile was saved or skipped."] } } }
+
+// Response 422 — an outcome asserted for a move that does not carry one
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "outcome": ["This step's outcome is not the client's to state."] } } }
 ```
 
 **The transitions, and what each enforces:**
 
 | From | `to` | Result |
 |---|---|---|
-| `profile` | `verify` | `200` `verify` — profile's only exit, whether saved or skipped |
+| `profile` | `verify` | `200` `verify` — profile's only exit, whether saved or skipped, and the move records which |
 | `profile` | `code` or `completed` | **`409`** — the profile step cannot be skipped past |
 | `verify` | `code` | `200` `code`, **only if a verification challenge is currently outstanding**; otherwise `409` |
 | `verify` | `completed` | `200` `none` — the reader declined verification |

@@ -155,11 +155,11 @@ model OnboardingJourney {
   profileSettledAt DateTime? @map("profile_settled_at")
   codeReachedAt    DateTime? @map("code_reached_at")
   closedAt         DateTime? @map("closed_at")
+  // How the profile step was left: "saved" | "skipped". Asserted by the client
+  // because nothing on the server can tell the two apart.
+  profileOutcome   String?   @map("profile_outcome")
   // The step the reader left when the journey closed: "verify" | "code".
-  // Diagnostic only, never read for a decision — and deliberately not an
-  // outcome, because a reader reaches the same exit by verifying or by
-  // skipping, and which of the two happened is verification's fact, not this
-  // capability's to claim.
+  // Diagnostic only, never read for a decision.
   closedReason     String?   @map("closed_reason")
 
   createdAt DateTime @default(now()) @map("created_at")

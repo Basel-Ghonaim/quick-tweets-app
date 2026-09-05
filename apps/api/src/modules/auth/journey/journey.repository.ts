@@ -9,7 +9,11 @@
  */
 
 import { prisma, type DbClient } from "../../../shared/database/index.js";
-import type { IJourneyRepository, JourneyRecord } from "./journey.types.js";
+import type {
+  IJourneyRepository,
+  JourneyRecord,
+  ProfileOutcome,
+} from "./journey.types.js";
 
 type PrismaInstance = typeof prisma;
 
@@ -19,7 +23,13 @@ interface JourneyRow {
   profileSettledAt: Date | null;
   codeReachedAt: Date | null;
   closedAt: Date | null;
+  profileOutcome: string | null;
 }
+
+/* The column is text and the database holds it to the two values; narrowing
+   here is what stops that vocabulary having to be re-checked further up. */
+const toOutcome = (value: string | null): ProfileOutcome | null =>
+  value === "saved" || value === "skipped" ? value : null;
 
 const toRecord = (row: JourneyRow): JourneyRecord => ({
   id: row.id,
@@ -27,6 +37,7 @@ const toRecord = (row: JourneyRow): JourneyRecord => ({
   profileSettledAt: row.profileSettledAt,
   codeReachedAt: row.codeReachedAt,
   closedAt: row.closedAt,
+  profileOutcome: toOutcome(row.profileOutcome),
 });
 
 /**
@@ -52,10 +63,19 @@ export const createJourneyRepository = (
    * monotonic without a lock — the predicate holds the invariant, not the order
    * the callers happened to arrive in.
    */
-  fillMark: async (id, mark, at, client: DbClient = db) => {
+  settleProfile: async (id, at, outcome, client: DbClient = db) => {
     const { count } = await client.onboardingJourney.updateMany({
-      where: { id, [mark]: null },
-      data: { [mark]: at },
+      where: { id, profileSettledAt: null },
+      // One write, so the mark and the outcome cannot come apart.
+      data: { profileSettledAt: at, profileOutcome: outcome },
+    });
+    return count === 1;
+  },
+
+  reachCode: async (id, at, client: DbClient = db) => {
+    const { count } = await client.onboardingJourney.updateMany({
+      where: { id, codeReachedAt: null },
+      data: { codeReachedAt: at },
     });
     return count === 1;
   },

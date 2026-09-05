@@ -77,13 +77,57 @@ describe("a mark is filled once, whoever gets there first", () => {
 
     const wins = await Promise.all(
       Array.from({ length: RACERS }, () =>
-        repo.fillMark(journey.id, "profileSettledAt", new Date()),
+        repo.settleProfile(journey.id, new Date(), "saved"),
       ),
     );
 
     // One writer, and the rest are told they were not it — which is what makes
     // a re-read the truthful answer rather than an optimistic guess.
     expect(wins.filter(Boolean)).toHaveLength(1);
+  });
+
+  /* The mark and the outcome are one write, so no race can leave a settled
+     step without one — the invariant the database also holds itself to. */
+  it("writes the outcome with the mark, never after it", async () => {
+    const userId = await makeUser("outcome");
+    await repo.create(userId);
+    const journey = (await repo.findByUserId(userId))!;
+
+    await Promise.all(
+      Array.from({ length: RACERS }, () =>
+        repo.settleProfile(journey.id, new Date(), "skipped"),
+      ),
+    );
+
+    const row = await prisma.onboardingJourney.findUnique({ where: { userId } });
+    expect(row!.profileSettledAt).not.toBeNull();
+    expect(row!.profileOutcome).toBe("skipped");
+  });
+
+  it("refuses a settled step that carries no outcome", async () => {
+    const userId = await makeUser("outcomeless");
+    await repo.create(userId);
+    const journey = (await repo.findByUserId(userId))!;
+
+    await expect(
+      prisma.onboardingJourney.update({
+        where: { id: journey.id },
+        data: { profileSettledAt: new Date() },
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("refuses an outcome outside the two the journey knows", async () => {
+    const userId = await makeUser("badoutcome");
+    await repo.create(userId);
+    const journey = (await repo.findByUserId(userId))!;
+
+    await expect(
+      prisma.onboardingJourney.update({
+        where: { id: journey.id },
+        data: { profileSettledAt: new Date(), profileOutcome: "abandoned" },
+      }),
+    ).rejects.toThrow();
   });
 
   it("never moves a mark once set", async () => {
@@ -94,8 +138,8 @@ describe("a mark is filled once, whoever gets there first", () => {
     const first = new Date("2026-09-05T10:00:00.000Z");
     const later = new Date("2026-09-05T11:00:00.000Z");
 
-    await repo.fillMark(journey.id, "codeReachedAt", first);
-    const second = await repo.fillMark(journey.id, "codeReachedAt", later);
+    await repo.reachCode(journey.id, first);
+    const second = await repo.reachCode(journey.id, later);
 
     expect(second).toBe(false);
     expect((await repo.findByUserId(userId))!.codeReachedAt).toEqual(first);
