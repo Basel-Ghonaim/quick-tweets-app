@@ -5,6 +5,7 @@
 > **Deciders:** Basel Ghonaim
 > **Supersedes:** [ADR 0007](0007-pre-auth-ingest-upload-grant-model.md)
 > **Amends:** [ADR 0005](0005-media-file-upload-architecture.md) — Decisions 3, 5, 8
+> **Revised:** 2026-09-05 — Decision 2 narrowed to what it was written to protect: the *account* holds no onboarding-completion state, which is distinct from a separately-owned fact that routes a reader between onboarding screens.
 
 ## Context
 
@@ -22,9 +23,13 @@ This ADR records **settled boundaries, ownership, contracts, and invariants**. T
 
 `POST /auth/register` creates the account and issues the normal authenticated session, and **nothing else**. The `avatar` field is removed from the register request and from `RegisterInput`. A successful registration means a **fully valid account** — closing the browser, skipping avatar/profile, or a later upload failure never invalidates it. Steps a client may present as an onboarding wizard (account → avatar → profile) are **independent backend operations**, never one transaction.
 
-### 2. There is no backend onboarding-completion state
+### 2. The account holds no onboarding-completion state
 
-Avatar, bio, and other profile fields are **optional enrichment**. The backend holds no "onboarding complete" flag and gates nothing on it; any such notion is derivable (has-avatar? has-bio?) or frontend-local. The invariant *"an account is complete the instant it is created"* is preserved.
+Avatar, bio, and other profile fields are **optional enrichment**. The **account** holds no "onboarding complete" flag and **nothing an account may do is gated on one**: no capability, no endpoint, and no read of a `User` row consults such a notion to decide what the holder is permitted. The invariant *"an account is complete the instant it is created"* is preserved exactly.
+
+What this decision was written to forbid is **gating the account**. It is not a prohibition on **routing the reader** — a distinction the original wording did not draw because, at the time, nothing needed it. A separately-owned fact recording that a registration journey was begun and finished is admissible, on three conditions: it lives outside `users`, it decides only which client screens a reader may reach, and its absence changes nothing an account can do. A reader with no journey is refused three onboarding screens and nothing else; their account remains complete, and every endpoint remains open to them exactly as before.
+
+That fact cannot be frontend-local, which the original text offered as the alternative. Client-held journey state does not survive a reload, a second tab, or a typed URL — so a route-level guarantee built on it is not a guarantee. It is owned by the onboarding journey capability (`modules/auth/journey/`), which stores it in its own table and publishes nothing to the account.
 
 ### 3. The pre-auth upload grant is retired **completely**
 
