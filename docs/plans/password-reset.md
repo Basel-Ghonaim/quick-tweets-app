@@ -188,7 +188,7 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 
 ## 8. Reconciliation
 
-*Written as this plan approaches `Historical`. It does not reach it here: the manual harness is a completion criterion (§7), it has not been run by a person, and that is the human's act — the same place both sibling plans stand.*
+*Final. Begun as this plan approached `Historical` and completed when the one act it was waiting on — a person running folder 11 — was performed and passed. The two sibling plans still stand where this one used to.*
 
 ### Where the durable facts landed
 
