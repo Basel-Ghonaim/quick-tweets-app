@@ -364,6 +364,12 @@ WHERE table_name = 'password_reset_challenges'
   AND (column_name ILIKE '%status%' OR column_name ILIKE '%state%');
 ```
 
+> **PWR-15 runs last, and after its own restart.** Six requests exhaust the per-IP
+> budget for fifteen minutes and would block everything after them. It starts from
+> a cleared counter deliberately: folder 10's CHV-13 has to document exactly how
+> many attempts precede it and a runner has to get that arithmetic right, and
+> starting fresh removes the need to.
+
 > **PWR-14 is a runbook step, not a request.** The default `RESET_CODE_TTL_MS` is
 > ten minutes, which is not waitable by hand, and shortening it for the whole
 > folder would expire codes before they can be pasted. Restart the API with
@@ -475,7 +481,8 @@ the whole collection at once — the point is to inspect state between steps.
 | 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |
 | 7 — Username rename | 09 | **H** (after USR-01, USR-09, and USR-10) |
 | 8 — Channel verification | 10 | **I** (after CHV-01, CHV-06, and CHV-11). Run in order: CHV-13 **last**, and only after CHV-12's restart has cleared the confirm limiter |
-| 9 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
+| 9 — Password reset | 11 | **J** (after PWR-02, PWR-10, and PWR-14). Run in order: PWR-15 **last**, and only after its own restart has cleared the request limiter |
+| 10 — Invariant sweep | — | **F** — extended for comments; must be all-zero before declaring the phase clean |
 
 A phase is "green" only when its API assertions pass **and** its DB checkpoint
 matches. Record outcomes in [verification-scenarios.md](verification-scenarios.md)
