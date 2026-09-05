@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Outlet, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
@@ -9,6 +9,7 @@ import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { authReducer, authActions } from "../../store";
 import { AUTH_COPY } from "../../config/copy";
+import { stepStates } from "../../journey";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -40,7 +41,9 @@ const withState = (seed?: (dispatch: ReturnType<typeof configureStore>["dispatch
         <MemoryRouter initialEntries={["/auth/signup"]}>
           <Routes>
             <Route path="/auth" element={<AuthLayout />}>
-              <Route element={<JourneyLayout />}>
+              <Route
+                element={<JourneyLayout states={stepStates("account", null)}><Outlet /></JourneyLayout>}
+              >
                 <Route path="signup" element={<SignUp />} />
               </Route>
             </Route>

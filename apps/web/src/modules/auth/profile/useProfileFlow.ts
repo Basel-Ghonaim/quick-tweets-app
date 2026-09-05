@@ -3,6 +3,7 @@ import { useSchemaForm } from "@shared/schema-form";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import { useAuthDispatch, useAuthSelector } from "../store/hooks";
+import type { ProfileOutcome } from "../journey";
 import { restProfile } from "./restProfile";
 import { executeProfileUpdate } from "./executeProfileUpdate";
 import { profileFormSchema } from "./profileFormSchema";
@@ -30,7 +31,10 @@ interface ProfileFlow {
  * Composes the two requests behind one submit: the picture is already uploaded
  * by the time Save runs, so the update carries its reference rather than bytes.
  */
-export const useProfileFlow = (onDone?: () => void, repo = restProfile()): ProfileFlow => {
+export const useProfileFlow = (
+  onSettled?: (outcome: ProfileOutcome) => void,
+  repo = restProfile(),
+): ProfileFlow => {
   const dispatch = useAuthDispatch();
   const requestState = useAuthSelector((state) => state.auth.requests.updateProfile);
   const { isLoading, isError, error: serverError } = useRequestState(requestState);
@@ -41,16 +45,15 @@ export const useProfileFlow = (onDone?: () => void, repo = restProfile()): Profi
       const edits = composeEdits(values, avatar.token);
 
       await executeProfileUpdate(dispatch, () => repo.updateProfile(edits));
-      onDone?.();
+      onSettled?.("saved");
     },
-    [avatar.token, dispatch, onDone, repo],
+    [avatar.token, dispatch, onSettled, repo],
   );
 
   const form = useSchemaForm(profileFormSchema, submit, () => {});
 
-  /** Skipping is the absence of a request: the endpoint refuses a body with no
-   *  field, and there is no draft profile to clear. */
-  const skip = useCallback(() => onDone?.(), [onDone]);
+  /** Skipping is the absence of a request, and the outcome is what says so. */
+  const skip = useCallback(() => onSettled?.("skipped"), [onSettled]);
 
   return {
     values: form.values,

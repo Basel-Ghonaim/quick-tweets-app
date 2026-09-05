@@ -1,23 +1,17 @@
 import { Button, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
-import { useAskFlow, useVerificationStatus, verifyDestination } from "../../verification";
-import { AuthLink, useAuthNavigate } from "../../navigation";
-import { Navigate } from "react-router-dom";
+import { useAskFlow } from "../../verification";
+import { AuthLink } from "../../navigation";
 import styles from "./Verify.module.css";
 
-export const VerifyAsk = () => {
-  const navigate = useAuthNavigate();
-  const read = useVerificationStatus();
-  const { isSending, error, send } = useAskFlow((resendAvailableInSeconds) =>
-    navigate("/auth/verify/code", { state: { resendAvailableInSeconds } }),
-  );
+interface VerifyAskProps {
+  onSent: (resendAvailableInSeconds: number) => void;
+  onLater: () => void;
+}
 
-  if (!read.resolved) return null;
-
-  const destination = verifyDestination(read.status);
-  if (destination === "code") return <Navigate to="/auth/verify/code" replace />;
-  if (destination === "done") return <Navigate to="/feed" replace />;
+export const VerifyAsk = ({ onSent, onLater }: VerifyAskProps) => {
+  const { isSending, error, send } = useAskFlow(onSent);
 
   return (
     <div className={styles.root}>
@@ -47,10 +41,7 @@ export const VerifyAsk = () => {
       </div>
 
       <div className={styles.asides}>
-        <AuthLink href="/auth/profile" tone="muted">
-          {AUTH_COPY.verify.backToProfile}
-        </AuthLink>
-        <AuthLink href="/feed" tone="muted">
+        <AuthLink href="/feed" tone="muted" onClick={onLater}>
           {AUTH_COPY.verify.later}
         </AuthLink>
       </div>

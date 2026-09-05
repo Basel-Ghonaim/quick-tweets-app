@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { MemoryRouter, Route, Routes, Link } from "react-router-dom";
+import { useState } from "react";
 import { ThemeProvider } from "@shared/preferences";
 import { Stepper, type JourneyStepId, type StepState } from "./Stepper";
 import { JourneyLayout } from "../../layout/JourneyLayout";
+import { stepStates, type StepPosition } from "../../journey";
 import { AUTH_COPY } from "../../config/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
@@ -71,35 +72,38 @@ export const NothingHereIsReachable: Story = {
 };
 
 /**
- * The reason the stepper sits in a layout rather than in a screen: the layout's
- * route match does not change as its children do, so the element itself
- * survives the move instead of being replaced.
+ * The journey is one route, so no move can remount the stepper: the element
+ * survives a change of step rather than being replaced by an equal one.
  */
-export const ItSurvivesAMoveBetweenSteps: Story = {
+export const ItSurvivesAChangeOfStep: Story = {
   args: { states: states("current", "optional", "optional") },
-  render: () => (
-    <MemoryRouter initialEntries={["/auth/signup"]}>
-      <Routes>
-        <Route path="/auth" element={<JourneyLayout />}>
-          <Route path="signup" element={<Link to="/auth/profile">onward</Link>} />
-          <Route path="profile" element={<p>profile</p>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>
-  ),
+  render: () => {
+    const Harness = () => {
+      const [at, setAt] = useState<StepPosition>("profile");
+
+      return (
+        <JourneyLayout states={stepStates(at, "skipped")}>
+          <button type="button" onClick={() => setAt("verify")}>
+            onward
+          </button>
+        </JourneyLayout>
+      );
+    };
+
+    return <Harness />;
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     const before = canvas.getByRole("list", { name: AUTH_COPY.journey.label });
     await expect(within(before).getByText(AUTH_COPY.journey.states.current)).toBeVisible();
 
-    await userEvent.click(canvas.getByRole("link", { name: "onward" }));
+    await userEvent.click(canvas.getByRole("button", { name: "onward" }));
 
     // The same element, not an equal one: a remount would replace the node.
-    await waitFor(() => expect(canvas.getByText("profile")).toBeVisible());
+    await waitFor(() =>
+      expect(within(before).getByText(AUTH_COPY.journey.states.skipped)).toBeVisible(),
+    );
     await expect(canvas.getByRole("list", { name: AUTH_COPY.journey.label })).toBe(before);
-
-    // And it moved on with the reader.
-    await expect(within(before).getByText(AUTH_COPY.journey.states.done)).toBeVisible();
   },
 };
