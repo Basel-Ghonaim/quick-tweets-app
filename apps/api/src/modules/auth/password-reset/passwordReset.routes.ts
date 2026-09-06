@@ -27,35 +27,37 @@ import {
   requestResetSchema,
 } from "./passwordReset.validator.js";
 
-export const createPasswordResetRoutes = (proveChannel: ProveChannel): Router => {
-const controller = createPasswordResetController(proveChannel);
+export const createPasswordResetRoutes = (
+  proveChannel: ProveChannel,
+): Router => {
+  const controller = createPasswordResetController(proveChannel);
 
-const passwordResetRoutes = Router();
+  const passwordResetRoutes = Router();
 
-passwordResetRoutes.post(
-  "/",
-  passwordResetRequestLimiter,
-  validate(requestResetSchema),
-  controller.request,
-);
+  passwordResetRoutes.post(
+    "/",
+    passwordResetRequestLimiter,
+    validate(requestResetSchema),
+    controller.request,
+  );
 
-passwordResetRoutes.post(
-  "/confirm",
-  passwordResetConfirmLimiter,
-  validate(confirmResetSchema),
-  controller.confirm,
-);
+  passwordResetRoutes.post(
+    "/confirm",
+    passwordResetConfirmLimiter,
+    validate(confirmResetSchema),
+    controller.confirm,
+  );
 
-/* Reading a position spends nothing and checks no secret, so it earns no
+  /* Reading a position spends nothing and checks no secret, so it earns no
    limiter of its own beyond the prefix it sits behind. */
-passwordResetRoutes.get("/session", controller.position);
+  passwordResetRoutes.get("/session", controller.position);
 
-passwordResetRoutes.post(
-  "/apply",
-  passwordResetApplyLimiter,
-  validate(applyResetSchema),
-  controller.apply,
-);
+  passwordResetRoutes.post(
+    "/apply",
+    passwordResetApplyLimiter,
+    validate(applyResetSchema),
+    controller.apply,
+  );
 
   return passwordResetRoutes;
 };
