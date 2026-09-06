@@ -20,15 +20,17 @@ import {
 } from "../../../middleware/rateLimiter.js";
 import { validate } from "../../../middleware/validate.js";
 import { createPasswordResetController } from "./passwordReset.controller.js";
+import type { ProveChannel } from "./passwordReset.types.js";
 import {
   applyResetSchema,
   confirmResetSchema,
   requestResetSchema,
 } from "./passwordReset.validator.js";
 
-const controller = createPasswordResetController();
+export const createPasswordResetRoutes = (proveChannel: ProveChannel): Router => {
+const controller = createPasswordResetController(proveChannel);
 
-export const passwordResetRoutes = Router();
+const passwordResetRoutes = Router();
 
 passwordResetRoutes.post(
   "/",
@@ -54,3 +56,6 @@ passwordResetRoutes.post(
   validate(applyResetSchema),
   controller.apply,
 );
+
+  return passwordResetRoutes;
+};

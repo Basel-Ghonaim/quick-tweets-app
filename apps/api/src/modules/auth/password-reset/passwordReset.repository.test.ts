@@ -20,6 +20,7 @@ const fakeDb = (over: Partial<Record<string, unknown>> = {}) => ({
       id: 1,
       userId: 7,
       codeHash: "hash",
+      endpoint: "holder@example.test",
       expiresAt: EXPIRES,
       usedAt: null,
       createdAt: NOW,
@@ -72,10 +73,10 @@ describe("creating a challenge", () => {
   it("writes exactly userId, codeHash and expiresAt", async () => {
     const db = fakeDb();
 
-    await repoOver(db).createChallenge({ userId: 7, codeHash: "abc", expiresAt: EXPIRES });
+    await repoOver(db).createChallenge({ userId: 7, codeHash: "abc", endpoint: "holder@example.test", expiresAt: EXPIRES });
 
     expect(db.passwordResetChallenge.create).toHaveBeenCalledWith({
-      data: { userId: 7, codeHash: "abc", expiresAt: EXPIRES },
+      data: { userId: 7, codeHash: "abc", endpoint: "holder@example.test", expiresAt: EXPIRES },
     });
   });
 });
@@ -97,6 +98,7 @@ describe("lookup by digest", () => {
         id: 1,
         userId: 7,
         codeHash: "abc",
+        endpoint: "holder@example.test",
         expiresAt: EXPIRES,
         usedAt: null,
         createdAt: NOW,

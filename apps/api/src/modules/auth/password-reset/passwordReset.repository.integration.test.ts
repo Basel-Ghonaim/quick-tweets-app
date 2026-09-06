@@ -66,7 +66,7 @@ describe("the per-user advisory lock", () => {
         const existing = await repo.findMostRecentForUser(user.id, tx);
         if (existing !== null) return null;
         return repo.createChallenge(
-          { userId: user.id, codeHash: `${Math.random()}`, expiresAt: EXPIRES() },
+          { userId: user.id, codeHash: `${Math.random()}`, endpoint: user.email, expiresAt: EXPIRES() },
           tx,
         );
       });
@@ -84,11 +84,11 @@ describe("the per-user advisory lock", () => {
     const user = await makeUser("sequential");
 
     await repo.createChallenge(
-      { userId: user.id, codeHash: "first", expiresAt: EXPIRES() },
+      { userId: user.id, codeHash: "first", endpoint: user.email, expiresAt: EXPIRES() },
       undefined,
     );
     await repo.createChallenge(
-      { userId: user.id, codeHash: "second", expiresAt: EXPIRES() },
+      { userId: user.id, codeHash: "second", endpoint: user.email, expiresAt: EXPIRES() },
       undefined,
     );
 
@@ -101,7 +101,7 @@ describe("marking a row used under a race", () => {
   it("admits exactly one winner when many callers race to consume the same code", async () => {
     const user = await makeUser("consume");
     const row = await repo.createChallenge(
-      { userId: user.id, codeHash: "shared-code", expiresAt: EXPIRES() },
+      { userId: user.id, codeHash: "shared-code", endpoint: user.email, expiresAt: EXPIRES() },
       undefined,
     );
 
@@ -119,7 +119,7 @@ describe("the digest lookup", () => {
   it("finds a row by its unique code_hash", async () => {
     const user = await makeUser("lookup");
     await repo.createChallenge(
-      { userId: user.id, codeHash: "find-me", expiresAt: EXPIRES() },
+      { userId: user.id, codeHash: "find-me", endpoint: user.email, expiresAt: EXPIRES() },
       undefined,
     );
 

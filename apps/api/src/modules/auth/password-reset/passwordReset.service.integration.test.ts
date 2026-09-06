@@ -61,6 +61,7 @@ const FORMAT = { alphabet: "0123456789ABCDEF", length: 8 };
 
 const serviceWith = (mail: MailAdapter) =>
   createPasswordResetService({
+      proveChannel: async () => {},
     repo: createPasswordResetRepository(),
     authRepo: createAuthRepository(),
     tokenRepo: createTokenRepository(),

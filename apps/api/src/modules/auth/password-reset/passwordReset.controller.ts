@@ -14,7 +14,7 @@ import { AppError } from "../../../shared/errors/index.js";
 import { sendSuccess } from "../../../shared/response/index.js";
 import { PasswordResetError } from "./passwordReset.errors.js";
 import { createPasswordResetService } from "./passwordReset.service.js";
-import type { IPasswordResetService } from "./passwordReset.types.js";
+import type { IPasswordResetService, ProveChannel } from "./passwordReset.types.js";
 
 /**
  * The key addressing a reader's position. `httpOnly` is the whole point — the
@@ -56,7 +56,8 @@ const asHttpError = (err: unknown): unknown => {
 };
 
 export const createPasswordResetController = (
-  service: IPasswordResetService = createPasswordResetService(),
+  proveChannel: ProveChannel,
+  service: IPasswordResetService = createPasswordResetService({ proveChannel }),
 ) => ({
   /**
    * POST /auth/password-reset

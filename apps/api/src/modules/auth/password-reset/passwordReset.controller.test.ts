@@ -37,6 +37,8 @@ const fakeRes = () => {
   return res;
 };
 
+const noProof = async () => {};
+
 const build = (over: Partial<IPasswordResetService> = {}) => {
   const service = {
     request: vi.fn(async () => ({ sessionKey: "key" })),
@@ -47,7 +49,7 @@ const build = (over: Partial<IPasswordResetService> = {}) => {
   };
   return {
     service,
-    controller: createPasswordResetController(service as unknown as IPasswordResetService),
+    controller: createPasswordResetController(noProof, service as unknown as IPasswordResetService),
   };
 };
 

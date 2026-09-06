@@ -32,7 +32,7 @@ const USER = { id: 5, email: "holder@example.test" };
 
 /** An in-memory stand-in for the credential table, honest about ids and timestamps. */
 const fakeWorld = () => {
-  const rows: { id: number; userId: number; codeHash: string; expiresAt: Date; usedAt: Date | null; createdAt: Date }[] = [];
+  const rows: { id: number; userId: number; codeHash: string; endpoint: string; expiresAt: Date; usedAt: Date | null; createdAt: Date }[] = [];
   const sessions: { id: number; tokenHash: string; maskedEndpoint: string; challengeId: number | null; expiresAt: Date }[] = [];
   let nextId = 1;
   let nextSessionId = 1;
@@ -46,8 +46,8 @@ const fakeWorld = () => {
       return { ...latest } as PasswordResetChallenge;
     },
     lockUser: async () => {},
-    createChallenge: async ({ userId, codeHash, expiresAt }) => {
-      const row = { id: nextId++, userId, codeHash, expiresAt, usedAt: null, createdAt: clock };
+    createChallenge: async ({ userId, codeHash, endpoint, expiresAt }) => {
+      const row = { id: nextId++, userId, codeHash, endpoint, expiresAt, usedAt: null, createdAt: clock };
       rows.push(row);
       return { ...row };
     },
@@ -129,6 +129,7 @@ const build = (over: {
   wait?: (ms: number) => Promise<void>;
   /** Overrides layered onto the in-memory repo — for provoking a specific race outcome. */
   repoOverride?: Partial<IPasswordResetRepository>;
+  proveChannel?: (userId: number, endpoint: string) => Promise<void>;
 } = {}) => {
   const world = fakeWorld();
   const repo: IPasswordResetRepository = { ...world.repo, ...over.repoOverride };
@@ -136,7 +137,12 @@ const build = (over: {
   const waits: number[] = [];
   const wait = over.wait ?? (async (ms: number) => { waits.push(ms); });
 
+  /** What the capability reports; where it goes is the composition root's. */
+  const proofs: Array<{ userId: number; endpoint: string }> = [];
+
   const service = createPasswordResetService({
+    proveChannel:
+      over.proveChannel ?? (async (userId, endpoint) => void proofs.push({ userId, endpoint })),
     repo,
     authRepo: over.authRepo ?? fakeAuthRepo(),
     tokenRepo: over.tokenRepo ?? fakeTokenRepo(),
@@ -150,7 +156,7 @@ const build = (over: {
     responseFloorMs: FLOOR,
   });
 
-  return { service, world, mail, waits };
+  return { service, world, mail, waits, proofs };
 };
 
 describe("request — neutrality across all three branches (I5)", () => {
@@ -251,6 +257,67 @@ describe("request — neutrality across all three branches (I5)", () => {
     const outcome = await service.request({ email: USER.email });
 
     await expect(outcome.dispatchSend?.()).resolves.toBeUndefined();
+  });
+});
+
+describe("what a completed reset proves", () => {
+  const complete = async (b: ReturnType<typeof build>) => {
+    const { dispatchSend, sessionKey } = await b.service.request({ email: USER.email });
+    await dispatchSend?.();
+    const [sent] = (b.mail as ReturnType<typeof fakeMail>).sent;
+    const code = sent.body.match(/code is (\w+)/)?.[1] ?? "";
+    await b.service.confirm({ sessionKey, code });
+    return { sessionKey, code };
+  };
+
+  it("reports the address the code was sent to, once the reset lands", async () => {
+    const b = build();
+    const { sessionKey } = await complete(b);
+
+    await b.service.apply({ sessionKey, newPassword: "N3wPassw0rd!" });
+
+    expect(b.proofs).toEqual([{ userId: USER.id, endpoint: USER.email }]);
+  });
+
+  /* Confirming proves control to whoever holds the code; it says nothing about
+     their being the account holder. Only completing the reset makes them one. */
+  it("reports nothing on confirmation alone", async () => {
+    const b = build();
+    await complete(b);
+
+    expect(b.proofs).toEqual([]);
+  });
+
+  /* A consequence must not be able to undo its cause: the password change is
+     what the reader asked for. */
+  it("leaves the reset complete when the report fails", async () => {
+    const authRepo = fakeAuthRepo();
+    const tokenRepo = fakeTokenRepo();
+    const b = build({
+      authRepo,
+      tokenRepo,
+      proveChannel: async () => {
+        throw new Error("the owning capability is unreachable");
+      },
+    });
+    const { sessionKey } = await complete(b);
+
+    await expect(
+      b.service.apply({ sessionKey, newPassword: "N3wPassw0rd!" }),
+    ).resolves.toMatchObject({ userId: USER.id });
+
+    expect(authRepo.updatePasswordHash).toHaveBeenCalled();
+    expect(tokenRepo.deleteAllUserTokens).toHaveBeenCalled();
+  });
+
+  it("reports nothing when the reset itself is refused", async () => {
+    const b = build();
+
+    await expect(
+      b.service.apply({ sessionKey: "no-such-position", newPassword: "N3wPassw0rd!" }),
+    ).rejects.toMatchObject({ code: "not_usable" });
+
+    expect(b.proofs).toEqual([]);
   });
 });
 

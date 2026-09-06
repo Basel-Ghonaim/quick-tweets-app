@@ -22,7 +22,8 @@ import { authGuard } from "../../middleware/authGuard.js";
 import { authLimiter, refreshLimiter } from "../../middleware/rateLimiter.js";
 import { createAuthController } from "./auth.controller.js";
 import { registerSchema, loginSchema } from "./auth.validator.js";
-import { passwordResetRoutes } from "./password-reset/passwordReset.routes.js";
+import { createPasswordResetRoutes } from "./password-reset/passwordReset.routes.js";
+import type { ProveChannel } from "./password-reset/passwordReset.types.js";
 
 const controller = createAuthController();
 
@@ -35,11 +36,18 @@ authRoutes.post("/login", authLimiter, validate(loginSchema), controller.login);
 authRoutes.post("/logout", controller.logout);
 authRoutes.post("/refresh", refreshLimiter, controller.refresh);
 
-// Password reset mounts under Auth's own prefix rather than at the top level:
-// it is an Auth capability, not a platform one (ADR 0016 Decision 3), and
-// nothing outside Auth reads its fact. Its routes carry their own limiters and
-// are deliberately unauthenticated — see the router.
-authRoutes.use("/password-reset", passwordResetRoutes);
+/**
+ * Password reset mounts under Auth's own prefix rather than at the top level:
+ * it is an Auth capability, not a platform one (ADR 0016 Decision 3), and
+ * nothing outside Auth reads its fact. Its routes carry their own limiters and
+ * are deliberately unauthenticated — see the router.
+ *
+ * It takes the one collaboration it needs rather than importing whoever
+ * satisfies it, so the dependency stays visible at the composition root.
+ */
+export const mountPasswordReset = (proveChannel: ProveChannel): void => {
+  authRoutes.use("/password-reset", createPasswordResetRoutes(proveChannel));
+};
 
 // ─── Protected Routes (auth required) ────────────────────────────────────────
 
