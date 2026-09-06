@@ -254,6 +254,58 @@ describe("request — neutrality across all three branches (I5)", () => {
   });
 });
 
+describe("the position, and when it stops answering", () => {
+  it("answers where a reader stands, and the address masked", async () => {
+    const { service } = build();
+    const { sessionKey } = await service.request({ email: USER.email });
+
+    await expect(service.positionOf(sessionKey)).resolves.toEqual({
+      step: "code",
+      maskedEndpoint: "h•••••@example.test",
+    });
+  });
+
+  /* An absent position is a legitimate answer meaning start at the beginning,
+     so a client never reads a status to decide a screen. */
+  it("answers the beginning for no position at all", async () => {
+    const { service } = build();
+
+    await expect(service.positionOf()).resolves.toEqual({
+      step: "request",
+      maskedEndpoint: null,
+    });
+    await expect(service.positionOf("never-issued")).resolves.toEqual({
+      step: "request",
+      maskedEndpoint: null,
+    });
+  });
+
+  /* One clock: a position outliving the credential it holds would be a step a
+     reader could return to and not be able to leave. */
+  it("stops answering once its credential would have lapsed", async () => {
+    let clock = T0;
+    const { service } = build({ now: () => clock });
+    const { sessionKey } = await service.request({ email: USER.email });
+
+    clock = new Date(T0.getTime() + TTL + 1);
+
+    await expect(service.positionOf(sessionKey)).resolves.toEqual({
+      step: "request",
+      maskedEndpoint: null,
+    });
+  });
+
+  it("supersedes the position a second request arrives holding", async () => {
+    const { service } = build();
+    const first = await service.request({ email: USER.email });
+    const second = await service.request({ email: USER.email, sessionKey: first.sessionKey });
+
+    expect(second.sessionKey).not.toBe(first.sessionKey);
+    await expect(service.positionOf(first.sessionKey)).resolves.toMatchObject({ step: "request" });
+    await expect(service.positionOf(second.sessionKey)).resolves.toMatchObject({ step: "code" });
+  });
+});
+
 describe("confirm — read-only", () => {
   it("resolves without throwing for a currently usable code, and writes nothing", async () => {
     const { service, mail } = build();
