@@ -5712,7 +5712,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "// Every earlier session died with the reset, so this is the only live one.",
+                  "pm.environment.set(\"pwrToken\", pm.response.json().data.accessToken);"
                 ]
               }
             }
@@ -5746,6 +5748,52 @@
             },
             "auth": {
               "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "PWR-11a · The completed reset proved the address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"this is the account the folder minted\", () =>",
+                  "  pm.expect(pm.response.json().data.username).to.eql(pm.environment.get(\"pwrUsername\")));",
+                  "// The account registered in setup and never verified. ADR 0009 D2",
+                  "// defines the fact as the *account holder* demonstrating control;",
+                  "// completing the reset is where the bearer becomes the holder, so",
+                  "// it is where the evidence becomes sufficient (ADR 0017 D6).",
+                  "pm.test(\"emailVerification reads proven, written by Channel Verification\", () =>",
+                  "  pm.expect(pm.response.json().data.emailVerification).to.eql(\"proven\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{pwrToken}}",
+                  "type": "string"
+                }
+              ]
             }
           }
         },

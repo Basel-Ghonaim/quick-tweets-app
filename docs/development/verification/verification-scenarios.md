@@ -364,6 +364,9 @@ verifies, in one line each:
 >   confirmed it is the position's; `apply` carries only `{ newPassword }`, and a
 >   body supplying a code is **refused rather than stripped** (PWR-09a). The flow
 >   ends with less exposure than it began with.
+> - **G8 — a completed reset proves the address.** The evidence becomes
+>   sufficient at completion, not at confirmation, and Channel Verification
+>   writes it (PWR-11a). Recovery reports; it never writes the fact.
 >
 > **Self-isolated.** The folder mints its own account with a per-run unique handle,
 > so it never disturbs `verify_alice`/`verify_bob`. The run's identity is
@@ -418,6 +421,7 @@ verifies, in one line each:
 | PWR-10 | PWR-09 | apply with a **compliant** password | **204**, empty body, **no tokens** (**D2**); `Set-Cookie` **clears** the position key with the attributes it was set with | `used_at` set; **`refresh_tokens` for this account empty** (**G4**, Checkpoint J) | via reset | ☐ |
 | PWR-10a | PWR-10 | `GET …/session` | **200**, `{step:"request", maskedEndpoint:null}` — the position did not outlive the reset (**G6**) | **no** session row for this run | — | ☐ |
 | PWR-11 | PWR-10 | `POST /auth/login` with the **new** password | **200** | a single new session row | — | ☐ |
+| PWR-11a | PWR-11 | `GET /users/me` with that session's token | **200**, `emailVerification: "proven"` (**G8**) — the account never verified by hand | a `channel_verifications` row for this endpoint with `proven_at` set | — | ☐ |
 | PWR-12 | PWR-10 | login with the **old** password | **401** `unauthorized`, the generic credential error | unchanged | — | ☐ |
 | PWR-13 | PWR-10 | apply again, the position now cleared | **byte-identical** to PWR-04 — a replay is indistinguishable from a value that never existed (**G2**) | unchanged | — | ☐ |
 | PWR-14 | Restart with a short `RESET_CODE_TTL_MS`; request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
