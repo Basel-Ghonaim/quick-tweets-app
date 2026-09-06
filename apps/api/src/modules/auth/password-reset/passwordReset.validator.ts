@@ -53,6 +53,8 @@ export const confirmResetSchema = z.object({
  * drifts is the one nobody is looking at.
  */
 export const applyResetSchema = z.object({
-  code: submittedCode,
+  /* Refused rather than stripped: the credential is the session's, and a
+     caller able to supply one silently would be a second source for it. */
+  code: z.never({ error: "The code is not the caller's to supply here." }).optional(),
   newPassword: registerSchema.shape.password,
 });

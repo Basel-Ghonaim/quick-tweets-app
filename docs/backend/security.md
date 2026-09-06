@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the backend's **security mechanisms and the reasoning behind them** — authentication and the token model, password handling, the auth cookie, rate limiting, and HTTP hardening. It owns the *how* and the *why*. It does **not** own the wire contract (the auth endpoints, the rate-limit figures, and the auth modes are the [API contract](../api/api-contract.md)'s), the security *principles* it applies ([Engineering Principles §7](../development/engineering-principles.md)), or the **frontend** side of the token model (the in-memory access token and the 401-refresh flow belong to the [frontend API client](../frontend/api-client.md)).
 > **Scope:** Server-side security mechanisms shared across the backend. Per-feature authorization rules live in the feature documents; the request lifecycle in the [system overview](../architecture/system-overview.md).
-> **Version:** 1.2
-> **Last Updated:** 2026-09-01
+> **Version:** 1.3
+> **Last Updated:** 2026-09-06
 > **Owner:** Basel Ghonaim
 
 ## Authentication: the token model
@@ -38,6 +38,19 @@ The refresh token travels only as a cookie, hardened with every relevant flag:
 - a 7-day **`Max-Age`** matching the token's lifetime.
 
 It is set on register/login and cleared on logout **with the same flags it was set with** (kept in sync through a shared base), because a mismatched `clearCookie` silently fails to delete the cookie in production.
+
+## The reset session cookie
+
+A second cookie exists, and it is not part of the token model above. It addresses a reader's position in account recovery and **authorizes nothing on its own** — the credential it stands for is held server-side and never travels ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)).
+
+It carries the same hardening the refresh cookie does — `HttpOnly`, `Secure` in production, `SameSite=Strict`, and a `Path` scoped to the recovery routes so it reaches nothing else — with two differences that follow from what it is:
+
+- **Its lifetime is the reset credential's**, not a session's. A cookie outliving what it authorizes would be a step a reader could return to and not be able to leave.
+- **It is issued for every request alike**, including addresses with no account. Issuing it conditionally would answer, by its presence, the question the whole capability refuses to answer — which is why it is set before the response body is written rather than on a branch.
+
+It is cleared with the attributes it was set with when a reset completes, for the same reason the refresh cookie is: a mismatched clear silently fails to delete it.
+
+The mechanism it belongs to is [Password Reset](password-reset.md)'s; what is here is only its place in the HTTP surface's cookie inventory.
 
 ## Authorization guards
 

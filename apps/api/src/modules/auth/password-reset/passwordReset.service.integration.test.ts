@@ -97,15 +97,15 @@ describe("the reset lifecycle against real Postgres", () => {
       const mail = capturingMail();
       const service = serviceWith(mail.adapter);
 
-      const { dispatchSend } = await service.request({ email });
+      const { dispatchSend, sessionKey } = await service.request({ email });
       expect(dispatchSend).toBeTypeOf("function");
       await dispatchSend?.();
       expect(mail.sent).toHaveLength(1);
       const code = codeIn(mail.sent[0]!);
 
-      await expect(service.confirm({ code })).resolves.toBeUndefined();
+      await expect(service.confirm({ sessionKey, code })).resolves.toBeUndefined();
 
-      const result = await service.apply({ code, newPassword: "N3wPassw0rd!" });
+      const result = await service.apply({ sessionKey, newPassword: "N3wPassw0rd!" });
       expect(result).toEqual({ userId: account.id });
 
       // The new password authenticates through the real login path.
@@ -135,15 +135,16 @@ describe("the reset lifecycle against real Postgres", () => {
 
     const mail = capturingMail();
     const service = serviceWith(mail.adapter);
-    const { dispatchSend } = await service.request({ email });
+    const { dispatchSend, sessionKey } = await service.request({ email });
     await dispatchSend?.();
     const code = codeIn(mail.sent[0]!);
 
-    await service.apply({ code, newPassword: "N3wPassw0rd!" });
+    await service.confirm({ sessionKey, code });
+    await service.apply({ sessionKey, newPassword: "N3wPassw0rd!" });
 
-    await expect(service.confirm({ code })).rejects.toMatchObject({ code: "not_usable" });
+    await expect(service.confirm({ sessionKey, code })).rejects.toMatchObject({ code: "not_usable" });
     await expect(
-      service.apply({ code, newPassword: "AnotherOne1!" }),
+      service.apply({ sessionKey, newPassword: "AnotherOne1!" }),
     ).rejects.toMatchObject({ code: "not_usable" });
   });
 
@@ -159,8 +160,13 @@ describe("the reset lifecycle against real Postgres", () => {
     const unknown = await service.request({ email: emailFor("does-not-exist") });
     const known = await service.request({ email });
 
-    expect(Object.keys(unknown)).toEqual([]);
-    expect(Object.keys(known)).toEqual(["dispatchSend"]);
+    /* A position is opened on both branches — its presence is what must not
+       vary. Only the thing that actually sends differs, and it is invisible to
+       a caller because the boundary never returns it. */
+    expect(unknown.sessionKey).toEqual(expect.any(String));
+    expect(known.sessionKey).toEqual(expect.any(String));
+    expect(unknown.dispatchSend).toBeUndefined();
+    expect(known.dispatchSend).toEqual(expect.any(Function));
   });
 
   it("does not mint a second code inside the cooldown, against real concurrent requests", async () => {

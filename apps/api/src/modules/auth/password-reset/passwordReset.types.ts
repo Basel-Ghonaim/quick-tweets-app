@@ -55,6 +55,31 @@ export interface CreateChallengeInput {
   expiresAt: Date;
 }
 
+// ─── Session ─────────────────────────────────────────────────────────────────
+
+/** Where a reader stands. `request` is also what an absent session answers. */
+export type ResetStep = "request" | "code" | "password";
+
+/** A position, without the digest that addresses it. */
+export interface PasswordResetSession {
+  id: number;
+  maskedEndpoint: string;
+  challengeId: number | null;
+  expiresAt: Date;
+}
+
+export interface CreateSessionInput {
+  tokenHash: string;
+  maskedEndpoint: string;
+  expiresAt: Date;
+}
+
+/** What the position read answers. Nothing else about the address travels. */
+export interface ResetPosition {
+  step: ResetStep;
+  maskedEndpoint: string | null;
+}
+
 /**
  * The module's only data-access path. Every method accepts an optional client
  * so a caller can run it inside an interactive transaction; without one it
@@ -94,12 +119,33 @@ export interface IPasswordResetRepository {
    * this having run.
    */
   deleteBefore(cutoff: Date, client?: DbClient): Promise<number>;
+
+  /** The row a session points at, so `apply` never takes a code from a caller. */
+  findChallengeById(id: number, client?: DbClient): Promise<PasswordResetChallenge | null>;
+
+  createSession(input: CreateSessionInput, client?: DbClient): Promise<void>;
+
+  findSessionByTokenHash(tokenHash: string, client?: DbClient): Promise<PasswordResetSession | null>;
+
+  /** Supersession: a second request from one browser ends the first outright. */
+  deleteSessionByTokenHash(tokenHash: string, client?: DbClient): Promise<void>;
+
+  /**
+   * Binds a confirmed credential to a position, and is the whole of the step
+   * derivation. Refuses if that credential already belongs to another session.
+   */
+  bindSessionToChallenge(id: number, challengeId: number, client?: DbClient): Promise<void>;
+
+  /** Removes sessions expired before `cutoff`; returns how many went. */
+  deleteSessionsBefore(cutoff: Date, client?: DbClient): Promise<number>;
 }
 
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 export interface RequestResetInput {
   email: string;
+  /** The caller's current position, if any. A new request supersedes it. */
+  sessionKey?: string;
 }
 
 /**
@@ -111,14 +157,23 @@ export interface RequestResetInput {
  */
 export interface RequestResetOutcome {
   dispatchSend?: () => Promise<void>;
+  /**
+   * The key addressing the position this request opened. Issued for every
+   * address alike — issuing it only for a real account would answer, by its
+   * presence, the question the capability refuses to answer.
+   */
+  sessionKey: string;
 }
 
 export interface ConfirmResetInput {
   code: string;
+  /** Without a position there is nowhere for a confirmed code to be held. */
+  sessionKey?: string;
 }
 
 export interface ApplyResetInput {
-  code: string;
+  /** The credential is read from the position, never taken from a caller. */
+  sessionKey?: string;
   /** Already validated against registration's strength rules by the HTTP boundary; hashed here, not before. */
   newPassword: string;
 }
@@ -133,8 +188,15 @@ export interface IPasswordResetService {
    */
   request(input: RequestResetInput): Promise<RequestResetOutcome>;
 
-  /** Read-only: reports whether `code` currently identifies a usable row. Consumes nothing. */
+  /**
+   * Reports whether `code` currently identifies a usable row and binds it to
+   * the caller's position. Consumes nothing — the same code confirmed twice
+   * from the same position reports usable both times.
+   */
   confirm(input: ConfirmResetInput): Promise<void>;
+
+  /** Where a reader stands. Writes nothing, and never fails for want of a session. */
+  positionOf(sessionKey?: string): Promise<ResetPosition>;
 
   /**
    * Re-validates `code` and, only if it is still usable, atomically marks it

@@ -29,6 +29,8 @@ The domain is a small social graph: users author tweets, tweets gather comments 
 
 Every relationship deletes with its parent (`onDelete: Cascade`):
 
+- A **`PasswordResetSession`** holds where a reader stands in recovery, addressed by a digest of a key the browser keeps and JavaScript cannot read ([ADR 0017](decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)). It stores **no step**: an absent challenge means the reader is still entering a code, a present one means they may set a password, so the step is correct with nobody having written it. One row per key, created for every request alike — one created only for a real account would answer, by its presence, the question the capability refuses to answer — and the address it carries is stored already masked, so the unmasked value never leaves the boundary. `challenge_id` is unique, so one credential can be held by at most one session, and cascades from the challenge because a session outliving what it authorizes would be a step a reader could reach and not leave.
+
 - deleting a **user** removes their tweets, comments, likes, follows (in both directions), refresh tokens, username aliases, password reset challenges, and their onboarding journey — a user's entire footprint leaves with them (with **one exception**: a user that *owns media objects* is blocked from deletion by the uploader `Restrict` foreign key — see the media note below);
 - deleting a **tweet** removes its comments and likes.
 

@@ -58,6 +58,7 @@ POST   /api/v1/auth/refresh
 POST   /api/v1/auth/password-reset          (unauthenticated)
 POST   /api/v1/auth/password-reset/confirm  (unauthenticated)
 POST   /api/v1/auth/password-reset/apply    (unauthenticated)
+GET    /api/v1/auth/password-reset/session  (unauthenticated)
 
 GET    /api/v1/tweets
 GET    /api/v1/tweets?author=:username
@@ -1224,7 +1225,11 @@ Recovering access to an account whose password its owner no longer has. The capa
 
 **All three endpoints are unauthenticated**, and that is the point rather than an oversight. The actor is whoever holds the code; requiring a session would exclude precisely the people recovery exists for.
 
-The flow is **request → confirm → apply**. `confirm` reports whether a code is currently usable and consumes nothing, so the screen that collects the code can check it before asking for a new password; `apply` re-validates the same code and only then spends it. The client holds the code across the two steps and resubmits it — no second credential bridges them.
+The flow is **request → confirm → apply**, and a **reset session** carries a reader's position across it ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)).
+
+A request opens a session and answers with an `HttpOnly` cookie — **for every address alike**, since one issued only for a real account would answer, by its presence, the question this capability refuses to answer. `confirm` reports whether a code is usable and binds it to the caller's session; `apply` reads the credential **from the session** and never from the request. The client therefore stops holding a password-change credential the moment one is confirmed, and a code sent to `apply` is refused rather than ignored.
+
+The session's lifetime is the credential's, a second request supersedes the first outright, and the cookie is cleared when the reset completes.
 
 ### Why these responses look different from Channel Verification's
 
@@ -1236,6 +1241,7 @@ The two capabilities both mint an emailed code and otherwise share almost nothin
 | `resendAvailableInSeconds` | reported | **absent** — a cooldown exists only for a real account, so reporting one discloses that the account is real |
 | `Retry-After` on a cooldown | sent | **never sent**, for the same reason |
 | A cooldown refusal | a distinct `429` | **indistinguishable** from every other outcome |
+| A session cookie | none | **set on every branch alike**, so its presence says nothing |
 
 Channel Verification can report all of these safely because it is **authenticated**: the caller has already proved who they are, so nothing is disclosed. These endpoints are anonymous, and every one of those fields would answer the single question the capability refuses to answer.
 
@@ -1252,6 +1258,10 @@ Channel Verification can report all of these safely because it is **authenticate
 // Response 202 — always this, whatever happened. It does NOT mean a code was
 // sent; it means the request was accepted and, if an account exists and is
 // eligible, a code is on its way.
+//
+// Set-Cookie: qt_reset=<opaque>; Max-Age=<credential lifetime>; HttpOnly;
+//   SameSite=Strict; Path=/api/v1/auth/password-reset; Secure in production
+// Issued on every branch. A browser already holding one supersedes it.
 { "success": true, "data": null }
 
 // Response 422 — the address is not a well-formed email. A malformed REQUEST,
@@ -1269,7 +1279,9 @@ Channel Verification can report all of these safely because it is **authenticate
 
 **Auth:** None. **Rate limit:** 10 requests / 15 min per IP. Sized for someone retyping from an inbox on a phone rather than for an attacker: a 12-character code drawn from Crockford Base32 is out of brute-force reach whatever this limiter says.
 
-**Read-only.** It reports usability and changes nothing — the same code checked twice reports usable both times. Spending it is `apply`'s.
+**It consumes nothing.** The same code confirmed twice from one session reports usable both times; spending it is `apply`'s. What it does change is the session: a usable code is bound to it, which is what moves the reader to the password step.
+
+**A usable code with no session is refused**, identically to every other failure — a session is where a confirmed credential is held, so without one there is nowhere for a success to go.
 
 **Validation is presence-only**, exactly as Channel Verification's confirm is and for the same reason: rejecting a malformed value with a `422` and field errors would tell a caller something a wrong value does not. An **absent or empty** `code` is a malformed request and returns `422`; every value that is actually present — however malformed — reaches the capability and collapses into the single `400`.
 
@@ -1288,6 +1300,25 @@ Channel Verification can report all of these safely because it is **authenticate
 { "success": false, "error": { "type": "rate_limit", "message": "Too many attempts. Please wait 15 minutes before trying again." } }
 ```
 
+### `GET /auth/password-reset/session` — Where the reader stands
+
+**Auth:** None. **Rate limit:** none of its own; it spends nothing and checks no secret.
+
+Answers the step and the masked address the session holds. **There is no `404`:** an absent or lapsed session is a legitimate answer meaning *start at the beginning*, so a client never reads a status code to decide a screen — the same posture the onboarding journey's read takes.
+
+The address is masked where it is held; the unmasked value never reaches a response.
+
+```jsonc
+// Response 200 — no session, or one that has lapsed
+{ "success": true, "data": { "step": "request", "maskedEndpoint": null } }
+
+// Response 200 — a session with no confirmed code yet
+{ "success": true, "data": { "step": "code", "maskedEndpoint": "h•••••@example.test" } }
+
+// Response 200 — a code has been confirmed into it
+{ "success": true, "data": { "step": "password", "maskedEndpoint": "h•••••@example.test" } }
+```
+
 ### `POST /auth/password-reset/apply` — Set the new password
 
 **Auth:** None. **Rate limit:** 5 requests / 15 min per IP — the tightest of the three, because this endpoint hashes the submitted password before the code is examined, so even a rejected request costs real work.
@@ -1296,9 +1327,14 @@ The new password is held to **exactly** registration's rules; the two share one 
 
 On success the code is spent, the password is written, and **every session for the account is revoked** in one transaction — including the caller's own, if they had one. No tokens are returned and no session is established: the flow ends at Login. A credential change that left old sessions alive would leave whoever it was invoked against still signed in.
 
+**The code is not sent here.** It is read from the session, and a request carrying one is refused with a `422` rather than having it ignored — a caller able to supply one silently would be a second source for a credential the session owns.
+
 ```jsonc
-// Request
-{ "code": "7QK3MNP2XVZB", "newPassword": "N3wPassw0rd!" }
+// Request — the session travels in the cookie
+{ "newPassword": "N3wPassw0rd!" }
+
+// Response 422 — a code was supplied
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "code": ["The code is not the caller's to supply here."] } } }
 
 // Response 204 — the password is changed and every session is gone. No body,
 // no tokens, no cookie. The client goes to Login.
