@@ -1,6 +1,6 @@
 # ADR 0017: Recovery Holds Its Position Server-Side, and a Completed Reset Proves the Address
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-09-06
 > **Deciders:** Basel Ghonaim
 > **Amends:** [ADR 0016](0016-password-reset-credential-change-authority.md) — Decisions 1 and 7 · [ADR 0009](0009-channel-verification-platform-capability.md) — Decision 2
