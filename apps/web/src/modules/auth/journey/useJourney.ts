@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { restJourney } from "./restJourney";
 import { resolveJourney, type JourneyRead } from "./resolveJourney";
 import type { JourneyMove, JourneyRepository, JourneyState } from "./journey.types";
@@ -15,11 +15,20 @@ export interface Journey {
  * The server's answer, held in one place and replaced by every response it
  * gives — never derived, and never remembered across a reload.
  */
-export const useJourney = (repo: JourneyRepository = restJourney()): Journey => {
+/**
+ * @param ready - whether the session has answered. Asking before it has sends a
+ *   request with no token, and its 401 is not an answer about the journey.
+ */
+export const useJourney = (given?: JourneyRepository, ready = true): Journey => {
+  // Held across renders: the effect is keyed on it, and a fresh one each render
+  // would read the journey forever.
+  const repo = useMemo(() => given ?? restJourney(), [given]);
   const [read, setRead] = useState<JourneyRead>({ status: "unresolved" });
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    if (!ready) return;
+
     let live = true;
     void resolveJourney(repo).then((next) => {
       if (live) setRead(next);
@@ -28,7 +37,7 @@ export const useJourney = (repo: JourneyRepository = restJourney()): Journey => 
     return () => {
       live = false;
     };
-  }, [repo, attempt]);
+  }, [repo, attempt, ready]);
 
   const advance = useCallback(
     async (move: JourneyMove) => {

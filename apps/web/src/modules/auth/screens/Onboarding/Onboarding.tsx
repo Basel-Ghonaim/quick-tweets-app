@@ -5,7 +5,8 @@ import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
 import { JourneyLayout } from "../../layout";
 import { useAuthNavigate } from "../../navigation";
-import { destinationFor, stepStates, useJourney } from "../../journey";
+import { useAuthState } from "../../hooks";
+import { destinationFor, stepStates, useJourney, type JourneyRepository } from "../../journey";
 import { Profile } from "../Profile";
 import { VerifyAsk, VerifyCode } from "../Verify";
 import styles from "./Onboarding.module.css";
@@ -14,8 +15,11 @@ import styles from "./Onboarding.module.css";
  * The journey's one route. Which screen renders is the server's answer, so a
  * reload, a second tab and a typed path all resolve the same way.
  */
-export const Onboarding = () => {
-  const { read, state, advance, leave, retry } = useJourney();
+export const Onboarding = ({ repo }: { repo?: JourneyRepository } = {}) => {
+  // The restore does not block the first render, so the journey is asked only
+  // once the session has answered: a 401 from asking early is not an answer.
+  const { sessionSettled } = useAuthState();
+  const { read, state, advance, leave, retry } = useJourney(repo, sessionSettled);
   const [openingWindow, setOpeningWindow] = useState<number>();
   const navigate = useAuthNavigate();
   const destination = destinationFor(read);
