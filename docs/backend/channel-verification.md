@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the **Channel Verification subsystem's mechanisms and their rationale** — the module anatomy and its published surface, where the subject comes from, custody of the fact, how status is derived, the challenge lifecycle, the code and its digest, the single-failure discipline, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
 > It does **not** own: the boundary **decision** itself — recorded in [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared auth-guard and rate-limiting mechanisms (the [Backend Security](security.md)'s); the **outbound mail mechanism** it composes, which is [`mail.md`](mail.md)'s; or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
 > **Scope:** The server-side capability (`apps/api/src/modules/channel-verification/`). How a consumer decides what requires a proven endpoint is that consumer's, and is not decided here.
-> **Version:** 1.2
-> **Last Updated:** 2026-09-02
+> **Version:** 1.3
+> **Last Updated:** 2026-09-06
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -18,11 +18,21 @@ The capability is **policy-free**, and that is observable rather than asserted: 
 
 ## Module anatomy & the published surface
 
-The barrel publishes **only the query surface** — the status interface, its factory, a ready-made singleton for consumers that do not inject, and the two types a caller needs in order to speak about a subject. Everything else is internal: the repository, the service, the challenge code and its digest, the errors, the validator, the controller, the routes and the sweep job.
+The barrel publishes **the query surface and one command** — the status interface, its factory, a ready-made singleton, the two types a caller needs to speak about a subject, and the recorder described below. Everything else is internal: the repository, the service, the challenge code and its digest, the errors, the validator, the controller, the routes and the sweep job.
 
-**The commands are deliberately unpublished.** `issue` and `confirm` have no in-process consumer — the capability drives them from its own HTTP surface — so publishing them would widen the surface ahead of a need. Media publishes no ingest for the same reason. They join the barrel when a consumer genuinely needs them, as a deliberate act rather than by having been reachable all along.
+**`issue` and `confirm` are still unpublished.** They have no in-process consumer — the capability drives them from its own HTTP surface — so publishing them would widen the surface ahead of a need, exactly as Media publishes no ingest. The recorder was the first to earn its place, and it joined as a deliberate act rather than by having been reachable all along.
 
 The capability owns its own HTTP routes rather than a feature owning them. A second consumer would otherwise have to route through the users module to reach a platform capability; Media sets the same precedent by owning its own ingest endpoint.
+
+## A second class of evidence
+
+The fact has one owner and now two ways of being satisfied ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md) Decision 6). Owning a fact does not mean being the only place evidence of it can arise — only deciding what counts and performing the write.
+
+The second class is a **single-use code delivered to the endpoint, produced by someone who became the account holder in the act of producing it**. Account recovery is where that happens: confirming a code proves control to whoever holds it and says nothing about their being the holder, while completing the reset makes them one. The evidence is therefore sufficient at completion and not before, and a caller **reports that it happened** — it never reports that an endpoint is proven.
+
+**The rule for what the class requires lives here**, not in the caller. Recording is idempotent: an endpoint already proven keeps the time it was proven at, because a second demonstration does not make the first one later.
+
+**Nothing about the direction changes.** The capability still imports no feature, and the consumer that produces this evidence imports nothing of it either — it names the report it needs and is handed one at the composition root, the arrangement the onboarding journey already uses for the fact it reads.
 
 ## The subject: supplied, never fetched
 
@@ -102,7 +112,7 @@ Every repository method accepts an **optional client**, so a caller may run it i
 
 ## Responsibility boundary
 
-Channel Verification owns **the fact and its lifecycle**, and is its sole authority — nothing else may move an endpoint into or out of proven. **User owns the endpoint value**, live and mutable, and the capability never reads it. **Delivery is a separate shared mechanism** the capability composes and must never absorb. **Gating policy belongs to the consumer**: whether any action requires a proven endpoint is decided where that action lives, never here — which is why the capability can produce the fact without any feature yet consuming it.
+Channel Verification owns **the fact and its lifecycle**, and is its sole authority — nothing else may move an endpoint into or out of proven, whichever class of evidence produced it. **User owns the endpoint value**, live and mutable, and the capability never reads it. **Delivery is a separate shared mechanism** the capability composes and must never absorb. **Gating policy belongs to the consumer**: whether any action requires a proven endpoint is decided where that action lives, never here — which is why the capability can produce the fact without any feature yet consuming it.
 
 ---
 

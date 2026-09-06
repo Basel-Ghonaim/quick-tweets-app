@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the **Password Reset subsystem's mechanisms and their rationale** — the module anatomy and why it publishes nothing, custody of the credential, the request/confirm/apply lifecycle, how neutrality is achieved and where it is only mitigated, the code and its digest, the single-failure discipline, session revocation, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
 > It does **not** own: the boundary **decision** itself — recorded in [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared password hashing, session model and HTTP-edge rate limiting ([Backend Security](security.md)'s); the **outbound mail mechanism** it composes, which is [`mail.md`](mail.md)'s; or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
 > **Scope:** The server-side capability at `apps/api/src/modules/auth/password-reset/`. Frontend behaviour is not described here; no frontend consumes it yet.
-> **Version:** 1.1
+> **Version:** 1.2
 > **Last Updated:** 2026-09-06
 > **Owner:** Basel Ghonaim
 
@@ -99,6 +99,18 @@ The code's **format is caller-supplied** — alphabet and length arrive as a par
 **Every unusable code collapses into one outcome, and it collapses inside the module.** Never issued, expired, already spent, malformed, and simply wrong all raise the same error; the distinguishing detail stays where it was raised. The boundary has a single branch translating it, so there is no second mapping for a carve-out to be added to later. Why the shape of the submitted code is checked *inside* rather than at the validator — and why a malformed value must not answer differently from a wrong one — is the [API contract](../api/api-contract.md)'s to explain on the wire.
 
 A **configuration** fault is excluded from that collapse on purpose. An unusable code format raises its own error, is not translated at the boundary, and surfaces as an unhandled server error — the correct visibility for an operator fault, and the reason a misconfigured deployment is never diagnosed as a holder mistyping.
+
+## What a completed reset produces
+
+A reader who produces a code delivered to an address has demonstrated control of it, and completing the reset makes them the account holder — which is the whole of the fact [Channel Verification](channel-verification.md) defines ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md) Decision 6).
+
+**At completion, never at confirmation.** Confirming proves control to *whoever holds the code* and says nothing about their being the account holder; the reset is what makes them one.
+
+**This capability writes nothing.** It reports what happened, through a collaboration it names and is handed at the composition root — so it imports nothing of the capability that owns the fact, and the guard asserting that still holds. What the evidence requires is decided there, not here.
+
+**It proves the address the code was sent to**, frozen on the credential at mint. Resolving the account's address at completion would prove one nobody demonstrated, if it changed mid-flow.
+
+**The report cannot undo the reset.** It runs outside the transaction that changes the password, and a failure to record it leaves the password changed and every session revoked. The password change is what the reader asked for; the proof is a consequence, and a consequence must not be able to undo its cause.
 
 ## Delivery
 
