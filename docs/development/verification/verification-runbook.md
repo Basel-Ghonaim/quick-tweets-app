@@ -70,6 +70,52 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
    Postman may ask you to re-select the file — point it at
    `fixtures/sample.png` (Postman stores file paths per machine).
 
+## Running folder 11 from the command line (Newman)
+
+Folder 11 is the one folder with a scripted runner, because it is the one whose
+guarantees are cheap to break and invisible in a body. The other folders stay
+hand-driven: they need pgAdmin beside them, and a green CLI run would say nothing
+about the coordination they exist to check.
+
+**It runs in three legs, and the breaks are not arbitrary.** The first is the
+manual code paste — the code is knowable to nobody by design, so no runner can
+cross it. The second is a restart, because the limiter counter is in memory.
+The subfolders are named for those breaks.
+
+```bash
+# Leg 1 — everything up to the point the code is needed.
+# Exports the environment and the cookie jar that leg 2 depends on.
+npm run verify:reset
+
+# Read the code from the newest file in apps/api/.mail-capture/, then:
+npm run verify:reset:code -- --env-var pwrCode=7QK3MNP2XVZB
+
+# Restart the API, then run the limiter last.
+npm run verify:reset:limiter
+```
+
+Against a server somewhere other than the default, append
+`-- --env-var baseUrl=http://localhost:4300/api/v1` to each.
+
+> **Leg 2 will not work without leg 1's cookie jar**, and it fails in the most
+> misleading way available: every request from PWR-07 answers `400`,
+> indistinguishable from a wrong code — which is exactly what **G2** promises, so
+> the harness cannot tell you which one it was. If leg 2 fails wholesale, suspect
+> the jar before suspecting the capability.
+
+> **Newman is not a dependency of this repository.** The scripts invoke it through
+> `npx` at a pinned version, so nothing is installed and the lockfile is untouched.
+> That is deliberate: newman's tree carries a large number of advisories, and this
+> is a manual harness that never runs in CI. The cost of pulling it in permanently
+> is not worth a runner used by hand.
+
+> **`.newman/` is git-ignored.** The exported environment holds the pasted code and
+> the jar holds the position key it was issued against. Both are live single-use
+> secrets, for the same reason captured mail is ignored.
+
+**PWR-14 has no script**, and cannot: it needs a restart at a short
+`RESET_CODE_TTL_MS` and a wait. It stays a hand-run step — see its note below.
+
 ## How auth is handled
 
 - **Access token** is returned in the response *body*. Register/Login test scripts
@@ -78,6 +124,11 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
 - **Refresh token** and the `qt_session` hint are **httpOnly / normal cookies**,
   handled automatically by Postman's cookie jar. `refresh` and `logout` need no
   body.
+- **`qt_reset`** is a third cookie, and folder 11 depends on it entirely: it
+  addresses the reader's position in the recovery flow, and `apply` reads the
+  credential from it rather than from a request body. It is `httpOnly` and
+  scoped to `/api/v1/auth/password-reset`, so the jar carries it and nothing
+  else needs to know it exists.
 - **Two users, one cookie jar.** On `localhost` both users share Postman's jar, so
   logging in as B overwrites A's refresh cookie. That is why cross-principal tests
   authorize with the **per-user Bearer token**, never the cookie. Do not "fix"

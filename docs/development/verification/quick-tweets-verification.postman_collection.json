@@ -4821,1138 +4821,1156 @@
     },
     {
       "name": "11 · Password reset (PWR)",
-      "description": "Password reset — recovery for an account whose password its owner no longer has. Unauthenticated throughout: the actor is whoever holds the code.\n\n**Setup precondition.** The server must run with `MAIL_MODE=capture`, which writes each message to `.mail-capture/` (relative to the API process's working directory). Without it the code is unobtainable and PWR-07 onward cannot run.\n\n**And the migrations must be applied** — `password_reset_challenges`, `password_reset_sessions` and `mail_send_attempts`. The position lives in the second, and a missing one fails the folder at PWR-00. Every send passes through the mail mechanism's abuse controls, which fail closed when their state cannot be read.\n\n**Self-isolated.** The folder mints its own account per run (`{{pwrUsername}}`), so it never disturbs the fixtures. Paste the captured code into `{{pwrCode}}` before PWR-07.\n\nPWR-14 is a runbook step rather than a request: it needs a restart with a short `RESET_CODE_TTL_MS` and a wait, neither of which a collection can carry.\n\n**The position, and the key that addresses it.** Since ADR 0017 the reader's step is a server record addressed by an `HttpOnly` cookie, so `apply` carries only `{ newPassword }` and the runner must keep the cookie jar. Under Newman the run is necessarily split around the manual code paste, so the first leg needs `--export-cookie-jar` and the second `--cookie-jar`; without them PWR-07 onward fail on a position that is not there.",
+      "description": "Password reset — recovery for an account whose password its owner no longer has. Unauthenticated throughout: the actor is whoever holds the code.\n\n**Setup precondition.** The server must run with `MAIL_MODE=capture`, which writes each message to `.mail-capture/` (relative to the API process's working directory). Without it the code is unobtainable and PWR-07 onward cannot run.\n\n**And the migrations must be applied** — `password_reset_challenges`, `password_reset_sessions` and `mail_send_attempts`. The position lives in the second, and a missing one fails the folder at PWR-00. Every send passes through the mail mechanism's abuse controls, which fail closed when their state cannot be read.\n\n**Self-isolated.** The folder mints its own account per run (`{{pwrUsername}}`), so it never disturbs the fixtures. Paste the captured code into `{{pwrCode}}` before PWR-07.\n\nPWR-14 is a runbook step rather than a request: it needs a restart with a short `RESET_CODE_TTL_MS` and a wait, neither of which a collection can carry.\n\n**The position, and the key that addresses it.** Since ADR 0017 the reader's step is a server record addressed by an `HttpOnly` cookie, so `apply` carries only `{ newPassword }` and the runner must keep the cookie jar. Under Newman the run is necessarily split around the manual code paste, so the first leg needs `--export-cookie-jar` and the second `--cookie-jar`; without them PWR-07 onward fail on a position that is not there.\n\n**Three subfolders, because the folder cannot run in one pass.** The break between 11.1 and 11.2 is the manual code paste; the break before 11.3 is a restart. Both were always constraints — they are now structure, so `--folder` addresses each leg directly instead of a runner having to know where to stop.",
       "item": [
         {
-          "name": "0 · Setup · register this run's account",
-          "event": [
+          "name": "11.1 · Before the code is known",
+          "description": "Everything that can run without a human in the loop. It ends where it must: the next step needs the code, and the code is knowable only by reading it out of `.mail-capture/`.\n\n**Export the cookie jar here.** The position is addressed by an `HttpOnly` key set during PWR-01, and 11.2 cannot reach that position without it.",
+          "item": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// A unique, charset-valid handle so the folder is re-runnable and never",
-                  "// disturbs verify_alice / verify_bob.",
-                  "const uniq = (Date.now() % 1e9).toString(36);",
-                  "pm.environment.set(\"pwrUsername\", \"pwr_\" + uniq);",
-                  "pm.environment.set(\"pwrEmail\", \"pwr_\" + uniq + \"@verify.local\");",
-                  "pm.environment.set(\"pwrUnknownEmail\", \"pwr_none_\" + uniq + \"@verify.local\");",
-                  "pm.environment.unset(\"pwrCode\");",
-                  "pm.environment.unset(\"pwrNeutralBody\");",
-                  "pm.environment.unset(\"pwrOpaqueBody\");",
-                  "pm.environment.unset(\"pwrRequestAttempts\");"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
-                  "const d = pm.response.json().data;",
-                  "pm.environment.set(\"pwrToken\", d.accessToken);",
-                  "pm.environment.set(\"pwrUserId\", d.user.id);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"{{pwrUsername}}\",\n  \"email\": \"{{pwrEmail}}\",\n  \"password\": \"{{userA_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "0b · Setup · a second session, so revocation has something to revoke",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "// Two sessions now exist for this account. PWR-10 must leave none of",
-                  "// them alive (I7) — Checkpoint J counts the rows."
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identifier\": \"{{pwrUsername}}\",\n  \"password\": \"{{userA_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-00 · No position yet · the read never 404s",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "// An absent position is a legitimate answer meaning *start at the",
-                  "// beginning*, not an error. A client reading a status code to decide a",
-                  "// screen would be reading the wrong thing.",
-                  "pm.test(\"no position reads as the request step\", () => {",
-                  "  const d = pm.response.json().data;",
-                  "  pm.expect(d.step).to.eql(\"request\");",
-                  "  pm.expect(d.maskedEndpoint).to.be.null;",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/session",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "session"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-01 · Request for an address no account has",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
-                  "// The reference every later branch is compared against, captured as raw",
-                  "// text rather than parsed: the guarantee is byte-for-byte sameness.",
-                  "pm.environment.set(\"pwrNeutralBody\", pm.response.text());",
-                  "pm.test(\"no Retry-After — a cooldown hint would disclose an account\", () =>",
-                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.false);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{pwrUnknownEmail}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-01a · The unknown address got a position too",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "// The guarantee no response body can show, and the most breakable thing",
-                  "// in the capability. A position opened only for a real account would",
-                  "// answer, by its presence, the question the neutral 202 refuses to.",
-                  "pm.test(\"a position was opened for an address no account has (I5)\", () => {",
-                  "  const d = pm.response.json().data;",
-                  "  pm.expect(d.step).to.eql(\"code\");",
-                  "  pm.expect(d.maskedEndpoint).to.be.a(\"string\");",
-                  "});",
-                  "pm.test(\"and it is masked at the source, not truncated here\", () => {",
-                  "  const m = pm.response.json().data.maskedEndpoint;",
-                  "  pm.expect(m).to.match(/^.•+@/);",
-                  "  pm.expect(m).to.not.eql(pm.environment.get(\"pwrUnknownEmail\"));",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/session",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "session"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-02 · Request for the real address — indistinguishable",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
-                  "pm.test(\"byte-identical to the unknown-address answer (I5)\", () =>",
-                  "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrNeutralBody\")));",
-                  "pm.test(\"no Retry-After\", () =>",
-                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.false);",
-                  "// A code is on its way to .mail-capture/ — read it by hand for PWR-07."
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{pwrEmail}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-02a · The position moved to the real address",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "// Supersession is a deletion, not an overwrite: the second request ended",
-                  "// the first position outright, so the two can never disagree about which",
-                  "// recovery is live.",
-                  "pm.test(\"still the code step, now for the real address\", () => {",
-                  "  const d = pm.response.json().data;",
-                  "  pm.expect(d.step).to.eql(\"code\");",
-                  "  pm.expect(d.maskedEndpoint).to.match(/^.•+@verify\\.local$/);",
-                  "});",
-                  "pm.test(\"the unmasked address never crosses the boundary (D5)\", () =>",
-                  "  pm.expect(pm.response.text()).to.not.include(pm.environment.get(\"pwrEmail\")));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/session",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "session"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-03 · Request again inside the cooldown — still indistinguishable",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
-                  "// The hardest of the three. Channel Verification answers a cooldown with a",
-                  "// distinct 429, which is safe only because it is authenticated. Here the",
-                  "// same answer would disclose that the address belongs to an account.",
-                  "pm.test(\"byte-identical again — the cooldown is silent (I5)\", () =>",
-                  "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrNeutralBody\")));",
-                  "pm.test(\"no second code was sent — check .mail-capture/ has one new file, not two\", () =>",
-                  "  pm.expect(pm.response.code).to.eql(202));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{pwrEmail}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-04 · A wrong code is refused",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 400\", () => pm.response.to.have.status(400));",
-                  "pm.test(\"bad_request, with the single message\", () => {",
-                  "  const e = pm.response.json().error;",
-                  "  pm.expect(e.type).to.eql(\"bad_request\");",
-                  "  pm.expect(e.message).to.eql(\"That reset code is not valid.\");",
-                  "});",
-                  "pm.test(\"no field errors — that would distinguish a cause\", () =>",
-                  "  pm.expect(pm.response.json().error.errors).to.be.undefined);",
-                  "pm.environment.set(\"pwrOpaqueBody\", pm.response.text());"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/confirm",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "confirm"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"ZZZZZZZZZZZZ\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-05 · A malformed code is indistinguishable from a wrong one",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Not a 422. Validation at the boundary is presence-only precisely so that",
-                  "// \"malformed\" cannot answer differently from \"wrong\".",
-                  "pm.test(\"status 400, not 422\", () => pm.response.to.have.status(400));",
-                  "pm.test(\"byte-identical to PWR-04\", () =>",
-                  "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrOpaqueBody\")));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/confirm",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "confirm"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"!!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-06 · An empty code is a malformed request, not a failed reset",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// The one carve-out, and it discloses nothing: the caller knows they sent",
-                  "// nothing. Present-but-invalid values all reach the capability instead.",
-                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
-                  "pm.test(\"validation, with field errors\", () => {",
-                  "  const e = pm.response.json().error;",
-                  "  pm.expect(e.type).to.eql(\"validation\");",
-                  "  pm.expect(e.errors).to.have.property(\"code\");",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/confirm",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "confirm"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-07 · Confirm with the captured code — nothing is consumed",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Paste the code from the newest file in .mail-capture/ into pwrCode first.",
-                  "pm.test(\"status 204\", () => pm.response.to.have.status(204));",
-                  "pm.test(\"no body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/confirm",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "confirm"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"{{pwrCode}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-07a · The step follows the credential, and nothing wrote it",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "// There is no step column. Confirm bound the credential to the position,",
-                  "// and the step is derived from that binding alone (ADR 0017 D1).",
-                  "pm.test(\"the step is now password\", () =>",
-                  "  pm.expect(pm.response.json().data.step).to.eql(\"password\"));",
-                  "pm.test(\"and the address it reports has not changed\", () =>",
-                  "  pm.expect(pm.response.json().data.maskedEndpoint).to.match(/^.•+@verify\\.local$/));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/session",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "session"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-08 · Confirm the same code again — still usable (D6)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// confirm checks; apply consumes. If this returned 400 the two steps would",
-                  "// have collapsed into one and the second screen could never be reached.",
-                  "pm.test(\"status 204 — confirm mutated nothing\", () => pm.response.to.have.status(204));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/confirm",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "confirm"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"{{pwrCode}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-09 · A weak new password is refused before the code is spent",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
-                  "pm.test(\"field errors name the password, per registration's own rules\", () =>",
-                  "  pm.expect(pm.response.json().error.errors).to.have.property(\"newPassword\"));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/apply",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "apply"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"newPassword\": \"weak\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-09a · A code supplied to apply is refused, not ignored",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
-                  "// The credential is the position's. A caller able to supply one",
-                  "// silently would be a second source for a fact the position owns,",
-                  "// so the field is refused rather than stripped (ADR 0017 D2).",
-                  "pm.test(\"a validation failure, not a silent success\", () =>",
-                  "  pm.expect(pm.response.json().error.type).to.eql(\"validation\"));",
-                  "// And it costs nothing: PWR-10 spends the same code immediately",
-                  "// after. Were the refusal ever to consume the credential, PWR-10",
-                  "// would turn 400."
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/apply",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "apply"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"{{pwrCode}}\",\n  \"newPassword\": \"N3wPassw0rd!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-10 · Apply the code — password changes, every session dies",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 204\", () => pm.response.to.have.status(204));",
-                  "pm.test(\"no body, no tokens, no session — the flow ends at Login (D2)\", () =>",
-                  "  pm.expect(pm.response.text()).to.eql(\"\"));",
-                  "// Checkpoint J: refresh_tokens for this account is now empty (I7).",
-                  "// apply no longer merely omits a cookie: it clears the position key, with",
-                  "// the attributes it was set with (ADR 0017 D1).",
-                  "pm.test(\"the reset key is cleared, not merely absent\", () => {",
-                  "  const sc = pm.response.headers.get(\"Set-Cookie\");",
-                  "  pm.expect(sc, \"apply must clear qt_reset\").to.be.a(\"string\");",
-                  "  pm.expect(sc).to.include(\"qt_reset=\");",
-                  "  pm.expect(sc).to.include(\"Path=/api/v1/auth/password-reset\");",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/apply",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "apply"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"newPassword\": \"N3wPassw0rd!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-10a · The position did not outlive the reset",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "// A position outliving what it authorizes would be a step a reader could",
-                  "// return to and not be able to leave (ADR 0017 D4).",
-                  "pm.test(\"back to the request step, with nothing remembered\", () => {",
-                  "  const d = pm.response.json().data;",
-                  "  pm.expect(d.step).to.eql(\"request\");",
-                  "  pm.expect(d.maskedEndpoint).to.be.null;",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/session",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset",
-                "session"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-11 · The new password authenticates",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "// Every earlier session died with the reset, so this is the only live one.",
-                  "pm.environment.set(\"pwrToken\", pm.response.json().data.accessToken);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identifier\": \"{{pwrUsername}}\",\n  \"password\": \"N3wPassw0rd!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
-        },
-        {
-          "name": "PWR-11a · The completed reset proved the address",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"this is the account the folder minted\", () =>",
-                  "  pm.expect(pm.response.json().data.username).to.eql(pm.environment.get(\"pwrUsername\")));",
-                  "// The account registered in setup and never verified. ADR 0009 D2",
-                  "// defines the fact as the *account holder* demonstrating control;",
-                  "// completing the reset is where the bearer becomes the holder, so",
-                  "// it is where the evidence becomes sufficient (ADR 0017 D6).",
-                  "pm.test(\"emailVerification reads proven, written by Channel Verification\", () =>",
-                  "  pm.expect(pm.response.json().data.emailVerification).to.eql(\"proven\"));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/users/me",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "users",
-                "me"
-              ]
-            },
-            "auth": {
-              "type": "bearer",
-              "bearer": [
+              "name": "0 · Setup · register this run's account",
+              "event": [
                 {
-                  "key": "token",
-                  "value": "{{pwrToken}}",
-                  "type": "string"
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// A unique, charset-valid handle so the folder is re-runnable and never",
+                      "// disturbs verify_alice / verify_bob.",
+                      "const uniq = (Date.now() % 1e9).toString(36);",
+                      "pm.environment.set(\"pwrUsername\", \"pwr_\" + uniq);",
+                      "pm.environment.set(\"pwrEmail\", \"pwr_\" + uniq + \"@verify.local\");",
+                      "pm.environment.set(\"pwrUnknownEmail\", \"pwr_none_\" + uniq + \"@verify.local\");",
+                      "pm.environment.unset(\"pwrCode\");",
+                      "pm.environment.unset(\"pwrNeutralBody\");",
+                      "pm.environment.unset(\"pwrOpaqueBody\");",
+                      "pm.environment.unset(\"pwrRequestAttempts\");"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                      "const d = pm.response.json().data;",
+                      "pm.environment.set(\"pwrToken\", d.accessToken);",
+                      "pm.environment.set(\"pwrUserId\", d.user.id);"
+                    ]
+                  }
                 }
-              ]
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/register",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"username\": \"{{pwrUsername}}\",\n  \"email\": \"{{pwrEmail}}\",\n  \"password\": \"{{userA_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "0b · Setup · a second session, so revocation has something to revoke",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "// Two sessions now exist for this account. PWR-10 must leave none of",
+                      "// them alive (I7) — Checkpoint J counts the rows."
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identifier\": \"{{pwrUsername}}\",\n  \"password\": \"{{userA_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-00 · No position yet · the read never 404s",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "// An absent position is a legitimate answer meaning *start at the",
+                      "// beginning*, not an error. A client reading a status code to decide a",
+                      "// screen would be reading the wrong thing.",
+                      "pm.test(\"no position reads as the request step\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d.step).to.eql(\"request\");",
+                      "  pm.expect(d.maskedEndpoint).to.be.null;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/session",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "session"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-01 · Request for an address no account has",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
+                      "// The reference every later branch is compared against, captured as raw",
+                      "// text rather than parsed: the guarantee is byte-for-byte sameness.",
+                      "pm.environment.set(\"pwrNeutralBody\", pm.response.text());",
+                      "pm.test(\"no Retry-After — a cooldown hint would disclose an account\", () =>",
+                      "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.false);"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{pwrUnknownEmail}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-01a · The unknown address got a position too",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "// The guarantee no response body can show, and the most breakable thing",
+                      "// in the capability. A position opened only for a real account would",
+                      "// answer, by its presence, the question the neutral 202 refuses to.",
+                      "pm.test(\"a position was opened for an address no account has (I5)\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d.step).to.eql(\"code\");",
+                      "  pm.expect(d.maskedEndpoint).to.be.a(\"string\");",
+                      "});",
+                      "pm.test(\"and it is masked at the source, not truncated here\", () => {",
+                      "  const m = pm.response.json().data.maskedEndpoint;",
+                      "  pm.expect(m).to.match(/^.•+@/);",
+                      "  pm.expect(m).to.not.eql(pm.environment.get(\"pwrUnknownEmail\"));",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/session",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "session"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-02 · Request for the real address — indistinguishable",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
+                      "pm.test(\"byte-identical to the unknown-address answer (I5)\", () =>",
+                      "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrNeutralBody\")));",
+                      "pm.test(\"no Retry-After\", () =>",
+                      "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.false);",
+                      "// A code is on its way to .mail-capture/ — read it by hand for PWR-07."
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{pwrEmail}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-02a · The position moved to the real address",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "// Supersession is a deletion, not an overwrite: the second request ended",
+                      "// the first position outright, so the two can never disagree about which",
+                      "// recovery is live.",
+                      "pm.test(\"still the code step, now for the real address\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d.step).to.eql(\"code\");",
+                      "  pm.expect(d.maskedEndpoint).to.match(/^.•+@verify\\.local$/);",
+                      "});",
+                      "pm.test(\"the unmasked address never crosses the boundary (D5)\", () =>",
+                      "  pm.expect(pm.response.text()).to.not.include(pm.environment.get(\"pwrEmail\")));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/session",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "session"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-03 · Request again inside the cooldown — still indistinguishable",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
+                      "// The hardest of the three. Channel Verification answers a cooldown with a",
+                      "// distinct 429, which is safe only because it is authenticated. Here the",
+                      "// same answer would disclose that the address belongs to an account.",
+                      "pm.test(\"byte-identical again — the cooldown is silent (I5)\", () =>",
+                      "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrNeutralBody\")));",
+                      "pm.test(\"no second code was sent — check .mail-capture/ has one new file, not two\", () =>",
+                      "  pm.expect(pm.response.code).to.eql(202));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{pwrEmail}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "PWR-12 · The old password does not",
-          "event": [
+          "name": "11.2 · With the code in hand",
+          "description": "Paste the captured code into `{{pwrCode}}` first — under Newman, pass it as `--env-var pwrCode=…`.\n\n**Import the environment and the cookie jar 11.1 exported.** Without the jar every request from PWR-07 answers `400`, indistinguishable from a bad code, because that is exactly what **G2** promises — so a missing jar looks like a broken capability rather than a runner mistake.",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));",
-                  "pm.test(\"the generic credential error — never field-specific\", () =>",
-                  "  pm.expect(pm.response.json().error.type).to.eql(\"unauthorized\"));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
+              "name": "PWR-04 · A wrong code is refused",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"bad_request, with the single message\", () => {",
+                      "  const e = pm.response.json().error;",
+                      "  pm.expect(e.type).to.eql(\"bad_request\");",
+                      "  pm.expect(e.message).to.eql(\"That reset code is not valid.\");",
+                      "});",
+                      "pm.test(\"no field errors — that would distinguish a cause\", () =>",
+                      "  pm.expect(pm.response.json().error.errors).to.be.undefined);",
+                      "pm.environment.set(\"pwrOpaqueBody\", pm.response.text());"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identifier\": \"{{pwrUsername}}\",\n  \"password\": \"{{userA_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "confirm"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"ZZZZZZZZZZZZ\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
                 }
               }
             },
-            "auth": {
-              "type": "noauth"
+            {
+              "name": "PWR-05 · A malformed code is indistinguishable from a wrong one",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Not a 422. Validation at the boundary is presence-only precisely so that",
+                      "// \"malformed\" cannot answer differently from \"wrong\".",
+                      "pm.test(\"status 400, not 422\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"byte-identical to PWR-04\", () =>",
+                      "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrOpaqueBody\")));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "confirm"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"!!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-06 · An empty code is a malformed request, not a failed reset",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// The one carve-out, and it discloses nothing: the caller knows they sent",
+                      "// nothing. Present-but-invalid values all reach the capability instead.",
+                      "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                      "pm.test(\"validation, with field errors\", () => {",
+                      "  const e = pm.response.json().error;",
+                      "  pm.expect(e.type).to.eql(\"validation\");",
+                      "  pm.expect(e.errors).to.have.property(\"code\");",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "confirm"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-07 · Confirm with the captured code — nothing is consumed",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Paste the code from the newest file in .mail-capture/ into pwrCode first.",
+                      "pm.test(\"status 204\", () => pm.response.to.have.status(204));",
+                      "pm.test(\"no body\", () => pm.expect(pm.response.text()).to.eql(\"\"));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "confirm"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{pwrCode}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-07a · The step follows the credential, and nothing wrote it",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "// There is no step column. Confirm bound the credential to the position,",
+                      "// and the step is derived from that binding alone (ADR 0017 D1).",
+                      "pm.test(\"the step is now password\", () =>",
+                      "  pm.expect(pm.response.json().data.step).to.eql(\"password\"));",
+                      "pm.test(\"and the address it reports has not changed\", () =>",
+                      "  pm.expect(pm.response.json().data.maskedEndpoint).to.match(/^.•+@verify\\.local$/));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/session",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "session"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-08 · Confirm the same code again — still usable (D6)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// confirm checks; apply consumes. If this returned 400 the two steps would",
+                      "// have collapsed into one and the second screen could never be reached.",
+                      "pm.test(\"status 204 — confirm mutated nothing\", () => pm.response.to.have.status(204));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/confirm",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "confirm"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{pwrCode}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-09 · A weak new password is refused before the code is spent",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                      "pm.test(\"field errors name the password, per registration's own rules\", () =>",
+                      "  pm.expect(pm.response.json().error.errors).to.have.property(\"newPassword\"));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/apply",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "apply"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"newPassword\": \"weak\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-09a · A code supplied to apply is refused, not ignored",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                      "// The credential is the position's. A caller able to supply one",
+                      "// silently would be a second source for a fact the position owns,",
+                      "// so the field is refused rather than stripped (ADR 0017 D2).",
+                      "pm.test(\"a validation failure, not a silent success\", () =>",
+                      "  pm.expect(pm.response.json().error.type).to.eql(\"validation\"));",
+                      "// And it costs nothing: PWR-10 spends the same code immediately",
+                      "// after. Were the refusal ever to consume the credential, PWR-10",
+                      "// would turn 400."
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/apply",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "apply"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{pwrCode}}\",\n  \"newPassword\": \"N3wPassw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-10 · Apply the code — password changes, every session dies",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 204\", () => pm.response.to.have.status(204));",
+                      "pm.test(\"no body, no tokens, no session — the flow ends at Login (D2)\", () =>",
+                      "  pm.expect(pm.response.text()).to.eql(\"\"));",
+                      "// Checkpoint J: refresh_tokens for this account is now empty (I7).",
+                      "// apply no longer merely omits a cookie: it clears the position key, with",
+                      "// the attributes it was set with (ADR 0017 D1).",
+                      "pm.test(\"the reset key is cleared, not merely absent\", () => {",
+                      "  const sc = pm.response.headers.get(\"Set-Cookie\");",
+                      "  pm.expect(sc, \"apply must clear qt_reset\").to.be.a(\"string\");",
+                      "  pm.expect(sc).to.include(\"qt_reset=\");",
+                      "  pm.expect(sc).to.include(\"Path=/api/v1/auth/password-reset\");",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/apply",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "apply"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"newPassword\": \"N3wPassw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-10a · The position did not outlive the reset",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "// A position outliving what it authorizes would be a step a reader could",
+                      "// return to and not be able to leave (ADR 0017 D4).",
+                      "pm.test(\"back to the request step, with nothing remembered\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d.step).to.eql(\"request\");",
+                      "  pm.expect(d.maskedEndpoint).to.be.null;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/session",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "session"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-11 · The new password authenticates",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "// Every earlier session died with the reset, so this is the only live one.",
+                      "pm.environment.set(\"pwrToken\", pm.response.json().data.accessToken);"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identifier\": \"{{pwrUsername}}\",\n  \"password\": \"N3wPassw0rd!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-11a · The completed reset proved the address",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "pm.test(\"this is the account the folder minted\", () =>",
+                      "  pm.expect(pm.response.json().data.username).to.eql(pm.environment.get(\"pwrUsername\")));",
+                      "// The account registered in setup and never verified. ADR 0009 D2",
+                      "// defines the fact as the *account holder* demonstrating control;",
+                      "// completing the reset is where the bearer becomes the holder, so",
+                      "// it is where the evidence becomes sufficient (ADR 0017 D6).",
+                      "pm.test(\"emailVerification reads proven, written by Channel Verification\", () =>",
+                      "  pm.expect(pm.response.json().data.emailVerification).to.eql(\"proven\"));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/users/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "users",
+                    "me"
+                  ]
+                },
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{pwrToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "PWR-12 · The old password does not",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 401\", () => pm.response.to.have.status(401));",
+                      "pm.test(\"the generic credential error — never field-specific\", () =>",
+                      "  pm.expect(pm.response.json().error.type).to.eql(\"unauthorized\"));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identifier\": \"{{pwrUsername}}\",\n  \"password\": \"{{userA_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-13 · Replaying the spent reset is refused identically",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Single use is decided by the write, not the read. A replay is answered",
+                      "// exactly as a value that never existed.",
+                      "pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"byte-identical to PWR-04\", () =>",
+                      "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrOpaqueBody\")));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/apply",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "apply"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"newPassword\": \"An0therPass!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
             }
-          }
+          ]
         },
         {
-          "name": "PWR-13 · Replaying the spent reset is refused identically",
-          "event": [
+          "name": "11.3 · The per-IP limiter (restart first)",
+          "description": "**Restart the API before this, and run it last.** Six requests exhaust the per-IP budget for fifteen minutes and would block everything above. Run it six times (`-n 6`): attempts 1-5 answer `202`, the sixth is the limiter.\n\nThe counter is in memory, so it starts from a restart rather than from an exact count of every request above it.",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Single use is decided by the write, not the read. A replay is answered",
-                  "// exactly as a value that never existed.",
-                  "pm.test(\"status 400\", () => pm.response.to.have.status(400));",
-                  "pm.test(\"byte-identical to PWR-04\", () =>",
-                  "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrOpaqueBody\")));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset/apply",
-              "host": [
-                "{{baseUrl}}"
+              "name": "PWR-15 · Request is rate-limited (RUN LAST · restart first)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// Send this five times. The budget is 5 per 15 minutes per IP, and the",
+                      "// counter is in memory — so this starts from a restart rather than from an",
+                      "// exact count of everything above it, which is the arithmetic folder 10's",
+                      "// CHV-13 has to document and a runner has to get right.",
+                      "const n = Number(pm.environment.get(\"pwrRequestAttempts\") || 0) + 1;",
+                      "pm.environment.set(\"pwrRequestAttempts\", n);",
+                      "",
+                      "if (n <= 5) {",
+                      "  pm.test(\"attempt \" + n + \" of 6 — still answered neutrally\", () =>",
+                      "    pm.response.to.have.status(202));",
+                      "} else {",
+                      "  pm.test(\"attempt 6 — the per-IP limiter engages\", () =>",
+                      "    pm.response.to.have.status(429));",
+                      "  pm.test(\"and it is the limiter, not a cooldown the capability leaked\", () =>",
+                      "    pm.expect(pm.response.json().error.type).to.eql(\"rate_limit\"));",
+                      "}"
+                    ]
+                  }
+                }
               ],
-              "path": [
-                "auth",
-                "password-reset",
-                "apply"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"newPassword\": \"An0therPass!\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{pwrUnknownEmail}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "auth": {
+                  "type": "noauth"
                 }
               }
-            },
-            "auth": {
-              "type": "noauth"
             }
-          }
-        },
-        {
-          "name": "PWR-15 · Request is rate-limited (RUN LAST · restart first)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "// Send this five times. The budget is 5 per 15 minutes per IP, and the",
-                  "// counter is in memory — so this starts from a restart rather than from an",
-                  "// exact count of everything above it, which is the arithmetic folder 10's",
-                  "// CHV-13 has to document and a runner has to get right.",
-                  "const n = Number(pm.environment.get(\"pwrRequestAttempts\") || 0) + 1;",
-                  "pm.environment.set(\"pwrRequestAttempts\", n);",
-                  "",
-                  "if (n <= 5) {",
-                  "  pm.test(\"attempt \" + n + \" of 6 — still answered neutrally\", () =>",
-                  "    pm.response.to.have.status(202));",
-                  "} else {",
-                  "  pm.test(\"attempt 6 — the per-IP limiter engages\", () =>",
-                  "    pm.response.to.have.status(429));",
-                  "  pm.test(\"and it is the limiter, not a cooldown the capability leaked\", () =>",
-                  "    pm.expect(pm.response.json().error.type).to.eql(\"rate_limit\"));",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/auth/password-reset",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "password-reset"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{pwrUnknownEmail}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          }
+          ]
         }
       ]
     }

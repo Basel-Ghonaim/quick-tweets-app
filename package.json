@@ -15,7 +15,10 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "eslint .",
-    "check:boundaries": "tsc -p checks/tsconfig.json && vitest run checks/boundaries.test.ts"
+    "check:boundaries": "tsc -p checks/tsconfig.json && vitest run checks/boundaries.test.ts",
+    "verify:reset": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"11.1 · Before the code is known\" --export-environment .newman/env.json --export-cookie-jar .newman/jar.json",
+    "verify:reset:code": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e .newman/env.json --cookie-jar .newman/jar.json --folder \"11.2 · With the code in hand\"",
+    "verify:reset:limiter": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e .newman/env.json --folder \"11.3 · The per-IP limiter (restart first)\" -n 6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
