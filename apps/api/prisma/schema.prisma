@@ -118,6 +118,10 @@ model PasswordResetChallenge {
   // Digested at rest, the same reasoning as Channel Verification's own
   // secret_hash: an emailed code is more exposed than an HttpOnly cookie.
   codeHash  String    @unique @map("code_hash")
+  // The address the code was sent to, frozen. A completed reset proves this
+  // endpoint, never the account's address at the time of writing: one that
+  // changed mid-flow was never demonstrated (ADR 0017 Decision 6).
+  endpoint  String
   session   PasswordResetSession?
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")

@@ -36,6 +36,8 @@ export interface ResetCodeFormat {
 export interface PasswordResetChallenge {
   id: number;
   userId: number;
+  /** The address the code was sent to, frozen at mint. What a completed reset proves. */
+  endpoint: string;
   expiresAt: Date;
   usedAt: Date | null;
   createdAt: Date;
@@ -52,6 +54,7 @@ export interface PasswordResetChallengeWithHash extends PasswordResetChallenge {
 export interface CreateChallengeInput {
   userId: number;
   codeHash: string;
+  endpoint: string;
   expiresAt: Date;
 }
 
@@ -59,6 +62,20 @@ export interface CreateChallengeInput {
 
 /** Where a reader stands. `request` is also what an absent session answers. */
 export type ResetStep = "request" | "code" | "password";
+
+/**
+ * Reporting that a code delivered to `endpoint` was produced by someone who,
+ * in producing it, became the holder of `userId`.
+ *
+ * Named as this capability's own need rather than as another module's type: it
+ * depends on this shape, never on whoever satisfies it, so it holds no import
+ * of the subsystem that owns the fact. The composition root supplies one
+ * (`app.ts`), the same arrangement the onboarding journey uses.
+ *
+ * It reports evidence and never reports that an endpoint is proven — deciding
+ * that is the owning capability's, not this one's.
+ */
+export type ProveChannel = (userId: number, endpoint: string) => Promise<void>;
 
 /** A position, without the digest that addresses it. */
 export interface PasswordResetSession {

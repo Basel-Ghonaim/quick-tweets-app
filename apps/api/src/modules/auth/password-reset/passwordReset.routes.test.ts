@@ -17,7 +17,9 @@ import {
   passwordResetConfirmLimiter,
   passwordResetRequestLimiter,
 } from "../../../middleware/rateLimiter.js";
-import { passwordResetRoutes } from "./passwordReset.routes.js";
+import { createPasswordResetRoutes } from "./passwordReset.routes.js";
+
+const passwordResetRoutes = createPasswordResetRoutes(async () => {});
 
 interface Layer {
   route: {

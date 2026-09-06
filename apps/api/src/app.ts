@@ -22,7 +22,7 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
-import { authRoutes } from "./modules/auth/auth.routes.js";
+import { authRoutes, mountPasswordReset } from "./modules/auth/auth.routes.js";
 import { tweetRoutes } from "./modules/tweets/tweet.routes.js";
 import { commentRoutes } from "./modules/comments/comment.routes.js";
 import { userRoutes } from "./modules/users/user.routes.js";
@@ -30,6 +30,7 @@ import { followRoutes } from "./modules/follows/follow.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { channelVerificationRoutes } from "./modules/channel-verification/channelVerification.routes.js";
 import {
+  channelVerificationProof,
   channelVerificationStatus,
   type VerificationStatus,
 } from "./modules/channel-verification/index.js";
@@ -68,6 +69,16 @@ app.get("/health", async (_req, res) => {
 });
 
 // ─── Feature Routes ──────────────────────────────────────────────────────────
+
+/*
+ * Recovery produces evidence that an address is controlled and does not import
+ * the capability that owns the fact. Here is where the two meet: the report
+ * goes to that capability's published command, which decides what the evidence
+ * requires — recovery only says what happened.
+ */
+mountPasswordReset((userId, endpoint) =>
+  channelVerificationProof.fromDeliveredCode(userId, endpoint),
+);
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/tweets", apiLimiter, tweetRoutes);

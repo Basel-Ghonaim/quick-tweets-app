@@ -63,9 +63,15 @@ const codeIn = (message: MailMessage) => message.body.match(/code is (\w+)/)?.[1
 
 const FORMAT = { alphabet: "0123456789ABCDEF", length: 8 };
 
+/** The evidence recorder, recorded rather than performed — this suite proves
+ *  the boundary, and the report's own destination is the composition root's. */
+const proofs: Array<{ userId: number; endpoint: string }> = [];
+
 const controllerWith = (mail: MailAdapter) =>
   createPasswordResetController(
+    async (userId, endpoint) => void proofs.push({ userId, endpoint }),
     createPasswordResetService({
+      proveChannel: async (userId, endpoint) => void proofs.push({ userId, endpoint }),
       repo: createPasswordResetRepository(),
       authRepo: createAuthRepository(),
       tokenRepo: createTokenRepository(),

@@ -5,11 +5,12 @@
  * repository, the challenge lifecycle, the code and its digest, the mail
  * composition, and every other internal are deliberately absent.
  *
- * **Only the query surface is published.** `issue` and `confirm` are commands
- * with no in-process consumer — the capability drives them from its own HTTP
- * surface — and Media publishes no ingest for the same reason. They join this
- * file when a consumer genuinely needs them, as a deliberate act rather than by
- * having been reachable all along.
+ * **The query surface, and one command.** `issue` and `confirm` remain absent:
+ * they have no in-process consumer, since the capability drives them from its
+ * own HTTP surface. What is published beside the query is the one command that
+ * does have one — recording a proof from evidence that arose elsewhere, which
+ * account recovery produces (ADR 0017 Decision 6). It joined this file as a
+ * deliberate act rather than by having been reachable all along.
  */
 
 export {
@@ -17,6 +18,11 @@ export {
   channelVerificationStatus,
 } from "./channelVerification.status.js";
 export type { IChannelVerificationStatus } from "./channelVerification.status.js";
+export {
+  createChannelVerificationProof,
+  channelVerificationProof,
+} from "./channelVerification.proof.js";
+export type { IChannelVerificationProof } from "./channelVerification.proof.js";
 export type {
   VerificationStatus,
   VerificationSubject,

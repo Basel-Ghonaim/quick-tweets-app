@@ -35,6 +35,7 @@ import {
   mintSessionKey,
 } from "./passwordReset.session.js";
 import type {
+  ProveChannel,
   ApplyResetInput,
   ConfirmResetInput,
   IPasswordResetRepository,
@@ -66,6 +67,11 @@ export interface PasswordResetServiceDeps {
   ttlMs?: number;
   cooldownMs?: number;
   responseFloorMs?: number;
+  /**
+   * Required and undefaulted: this capability must not reach for the fact
+   * itself, and a default would be exactly that reach.
+   */
+  proveChannel: ProveChannel;
 }
 
 const composeMessage = (code: ResetCode) => ({
@@ -77,8 +83,9 @@ const realWait = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 export const createPasswordResetService = (
-  deps: PasswordResetServiceDeps = {},
+  deps: PasswordResetServiceDeps,
 ): IPasswordResetService => {
+  const proveChannel = deps.proveChannel;
   const repo = deps.repo ?? createPasswordResetRepository();
   const authRepo = deps.authRepo ?? createAuthRepository();
   const tokenRepo = deps.tokenRepo ?? createTokenRepository();
@@ -205,6 +212,9 @@ export const createPasswordResetService = (
           {
             userId: user.id,
             codeHash: digestResetCode(code),
+            // Frozen at mint: a completed reset proves the address the code
+            // actually went to, not one the account may have moved to since.
+            endpoint: user.email,
             expiresAt: new Date(start.getTime() + ttlMs),
           },
           tx,
@@ -283,7 +293,7 @@ export const createPasswordResetService = (
     // open for the duration.
     const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
-    return runTransaction(async (tx) => {
+    const result = await runTransaction(async (tx) => {
       const row = await usableFromSession(sessionKey);
 
       // Conditional on the row still being unused: single use is decided by
@@ -299,8 +309,19 @@ export const createPasswordResetService = (
       // attacker, in the case this exists for — still signed in.
       await tokenRepo.deleteAllUserTokens(row.userId, tx);
 
-      return { userId: row.userId };
+      return { userId: row.userId, endpoint: row.endpoint };
     });
+
+    /* Reported after the reset has landed and outside its transaction: the
+       password change is what the reader asked for, and a consequence of it
+       must not be able to undo it (ADR 0017 Decision 8). */
+    try {
+      await proveChannel(result.userId, result.endpoint);
+    } catch {
+      // Swallowed deliberately — see above.
+    }
+
+    return { userId: result.userId };
   };
 
   return { request, confirm, positionOf, apply };

@@ -43,10 +43,21 @@ describe("the published surface", () => {
     }
   });
 
+  /* Widened once, deliberately: recovery produces evidence this capability
+     owns the fact for, so the command that records it joined the surface. The
+     two that have no in-process consumer still have not. */
   it("exposes exactly the surface it means to", () => {
     expect(Object.keys(published).sort()).toEqual([
+      "channelVerificationProof",
       "channelVerificationStatus",
+      "createChannelVerificationProof",
       "createChannelVerificationStatus",
     ]);
+  });
+
+  it("records a proof from evidence, and still publishes no challenge command", () => {
+    expect(typeof published.channelVerificationProof.fromDeliveredCode).toBe("function");
+    expect(Object.keys(published)).not.toContain("issue");
+    expect(Object.keys(published)).not.toContain("confirm");
   });
 });

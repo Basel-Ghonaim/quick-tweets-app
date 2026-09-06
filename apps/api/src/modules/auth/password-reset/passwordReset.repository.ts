@@ -30,6 +30,7 @@ const LOCK_NAMESPACE = 0x70727374;
 type PrismaInstance = typeof prisma;
 
 interface ChallengeRow {
+  endpoint: string;
   id: number;
   userId: number;
   expiresAt: Date;
@@ -38,6 +39,7 @@ interface ChallengeRow {
 }
 
 const toChallenge = (row: ChallengeRow): PasswordResetChallenge => ({
+  endpoint: row.endpoint,
   id: row.id,
   userId: row.userId,
   expiresAt: row.expiresAt,
@@ -81,9 +83,9 @@ export const createPasswordResetRepository = (
   },
 
   createChallenge: async (
-    { userId, codeHash, expiresAt }: CreateChallengeInput,
+    { userId, codeHash, endpoint, expiresAt }: CreateChallengeInput,
     client: DbClient = db,
-  ) => toChallenge(await client.passwordResetChallenge.create({ data: { userId, codeHash, expiresAt } })),
+  ) => toChallenge(await client.passwordResetChallenge.create({ data: { userId, codeHash, endpoint, expiresAt } })),
 
   findByCodeHash: async (codeHash, client: DbClient = db) => {
     const row = await client.passwordResetChallenge.findUnique({ where: { codeHash } });
