@@ -2,18 +2,18 @@ import { Button, Input, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
 import { useCodeFlow } from "../../verification";
-import { AuthLink, useAuthNavigate } from "../../navigation";
-import { useLocation } from "react-router-dom";
+import { AuthLink } from "../../navigation";
 import styles from "./Verify.module.css";
 
-export const VerifyCode = () => {
-  const navigate = useAuthNavigate();
+interface VerifyCodeProps {
+  /** Handed over by the ask, which was told it. A reload loses it, and the
+   *  first resend asks the server for it again. */
+  openingWindow?: number;
+  onVerified: () => void;
+  onLater: () => void;
+}
 
-  /* Handed over by the ask, which was told the window and is leaving. A reload
-     loses it, and the first resend asks the server for it again. */
-  const { state } = useLocation();
-  const openingWindow = (state as { resendAvailableInSeconds?: number } | null)
-    ?.resendAvailableInSeconds;
+export const VerifyCode = ({ openingWindow, onVerified, onLater }: VerifyCodeProps) => {
   const {
     code,
     setCode,
@@ -26,7 +26,7 @@ export const VerifyCode = () => {
     resend,
     submit,
   } = useCodeFlow(
-    () => navigate("/feed"),
+    onVerified,
     undefined,
     AUTH_COPY.verify.resendReady,
     openingWindow,
@@ -88,7 +88,7 @@ export const VerifyCode = () => {
       </form>
 
       <p className={styles.aside}>
-        <AuthLink href="/feed" tone="muted">
+        <AuthLink href="/feed" tone="muted" onClick={onLater}>
           {AUTH_COPY.verify.later}
         </AuthLink>
       </p>

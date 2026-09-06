@@ -70,6 +70,11 @@ export const AUTH_COPY = {
     browseAsGuest: "Browse without an account",
   },
 
+  onboarding: {
+    unavailable: "We could not tell where you had got to. Please try again.",
+    retry: "Try again",
+  },
+
   profile: {
     title: "Add a profile",
     subtitle: "Optional — a picture, a name and a line about you.",

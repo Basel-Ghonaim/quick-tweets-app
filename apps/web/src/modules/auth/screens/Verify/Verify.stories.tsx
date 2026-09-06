@@ -8,6 +8,7 @@ import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
+import { stepStates } from "../../journey";
 import { authReducer, authActions } from "../../store";
 import { AUTH_COPY } from "../../config/copy";
 
@@ -19,9 +20,12 @@ const onTheGround = (Story: () => React.ReactElement) => (
   </div>
 );
 
+const noop = () => {};
+
 const meta = {
   title: "Auth/Verify",
   component: VerifyAsk,
+  args: { onSent: noop, onLater: noop },
   parameters: { layout: "fullscreen", a11y: { test: "error" } },
   decorators: [onTheGround],
 } satisfies Meta<typeof VerifyAsk>;
@@ -29,9 +33,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The route is the state, so a story arrives at one rather than seeding it. */
-const at = (
-  entry: string,
+/** The journey has one route, so a story mounts the screen the phase chooses. */
+const showing = (
+  screen: React.ReactElement,
   seed?: (dispatch: ReturnType<typeof configureStore>["dispatch"]) => void,
 ) => {
   const store = configureStore({ reducer: { auth: authReducer } });
@@ -40,15 +44,15 @@ const at = (
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>
       <ThemeProvider>
-        <MemoryRouter initialEntries={[entry]}>
+        <MemoryRouter initialEntries={["/auth/onboarding"]}>
           <Routes>
             <Route path="/auth" element={<AuthLayout />}>
-              <Route element={<JourneyLayout />}>
-                <Route path="verify">
-                  <Route index element={<VerifyAsk />} />
-                  <Route path="code" element={<VerifyCode />} />
-                </Route>
-              </Route>
+              <Route
+                path="onboarding"
+                element={
+                  <JourneyLayout states={stepStates("verify", "saved")}>{screen}</JourneyLayout>
+                }
+              />
             </Route>
             <Route path="/feed" element={<p>the feed</p>} />
             <Route path="*" element={<Story />} />
@@ -59,19 +63,13 @@ const at = (
   );
 };
 
-const ASK = "/auth/verify";
-const CODE = "/auth/verify/code";
-
-/** What the ask hands over when it leaves. */
-const carrying = (seconds: number) => ({
-  pathname: "/auth/verify/code",
-  state: { resendAvailableInSeconds: seconds },
-});
+const ASK = <VerifyAsk onSent={noop} onLater={noop} />;
+const CODE = <VerifyCode onVerified={noop} onLater={noop} />;
 
 /** Nothing is sent until it is asked for: an optional step that mailed everyone
  *  who reached it would be behaving like a mandatory one. */
 export const TheAskComesFirst: Story = {
-  decorators: [at(ASK)],
+  decorators: [showing(ASK)],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -83,22 +81,10 @@ export const TheAskComesFirst: Story = {
   },
 };
 
-/** One step back, and only from here: a code already sent is not something to
- *  walk back from, and the account step is closed for good. */
-export const TheAskLooksBackOneStep: Story = {
-  decorators: [at(ASK)],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const back = await canvas.findByRole("link", { name: AUTH_COPY.verify.backToProfile });
-    await expect(back).toHaveAttribute("href", expect.stringContaining("/auth/profile"));
-  },
-};
-
-/** The code screen stands alone, so a reload keeps the field for a code already
- *  in the reader's inbox. */
-export const TheCodeScreenIsItsOwnRoute: Story = {
-  decorators: [at(CODE)],
+/** The code screen is what the phase chooses, so a reload keeps the field for a
+ *  code already in the reader's inbox — the server says `code`, not the path. */
+export const TheCodeScreenIsWhatThePhaseChooses: Story = {
+  decorators: [showing(CODE)],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -111,7 +97,7 @@ export const TheCodeScreenIsItsOwnRoute: Story = {
 
 /** There is no way back from here, only on or out. */
 export const TheCodeScreenOffersNoWayBack: Story = {
-  decorators: [at(CODE)],
+  decorators: [showing(CODE)],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -124,7 +110,7 @@ export const TheCodeScreenOffersNoWayBack: Story = {
 
 export const SendingIsReportedInPlace: Story = {
   decorators: [
-    at(ASK, (dispatch) => dispatch(authActions.authRequestPending({ requestType: "issueCode" }))),
+    showing(ASK, (dispatch) => dispatch(authActions.authRequestPending({ requestType: "issueCode" }))),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -139,7 +125,7 @@ export const SendingIsReportedInPlace: Story = {
  *  screen says so in its own words rather than a form's. */
 export const TheCooldownRefusalSaysWhatItIs: Story = {
   decorators: [
-    at(ASK, (dispatch) =>
+    showing(ASK, (dispatch) =>
       dispatch(
         authActions.authRequestRejected({
           requestType: "issueCode",
@@ -163,7 +149,7 @@ export const TheCooldownRefusalSaysWhatItIs: Story = {
 
 export const TheClientLimiterSaysSomethingElse: Story = {
   decorators: [
-    at(ASK, (dispatch) =>
+    showing(ASK, (dispatch) =>
       dispatch(
         authActions.authRequestRejected({
           requestType: "issueCode",
@@ -184,7 +170,7 @@ export const TheClientLimiterSaysSomethingElse: Story = {
 /** Typing the code raises it, drops separators, and reads the ambiguous letters
  *  as digits — the server normalises none of that and rejects opaquely. */
 export const TheCodeFieldForgivesWhatIsTyped: Story = {
-  decorators: [at(CODE)],
+  decorators: [showing(CODE)],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -195,9 +181,9 @@ export const TheCodeFieldForgivesWhatIsTyped: Story = {
   },
 };
 
-/** The stepper is the layout's, and both routes belong to the same step. */
-export const BothRoutesAreTheSameStep: Story = {
-  decorators: [at(CODE)],
+/** Both of the step's screens report the same step. */
+export const BothScreensAreTheSameStep: Story = {
+  decorators: [showing(CODE)],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -209,7 +195,7 @@ export const BothRoutesAreTheSameStep: Story = {
 /** The window the ask was told is spent here: without the hand-off the screen
  *  opens with resend enabled and no wait, which is the opposite of the truth. */
 export const TheWaitSurvivesTheHandOver: Story = {
-  decorators: [at(carrying(60) as never)],
+  decorators: [showing(<VerifyCode openingWindow={60} onVerified={noop} onLater={noop} />)],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -223,7 +209,7 @@ export const TheWaitSurvivesTheHandOver: Story = {
 /** Arriving cold — a reload — the wait is unknown, so the control is open and
  *  the first press is what asks the server for it. */
 export const ArrivingColdTheWaitIsUnknown: Story = {
-  decorators: [at(CODE)],
+  decorators: [showing(CODE)],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -234,7 +220,7 @@ export const ArrivingColdTheWaitIsUnknown: Story = {
 };
 
 export const Compact: Story = {
-  decorators: [at(ASK)],
+  decorators: [showing(ASK)],
   globals: { viewport: { value: "phone" } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

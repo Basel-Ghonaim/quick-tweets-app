@@ -9,6 +9,7 @@ import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { authReducer, authActions } from "../../store";
 import { AUTH_COPY } from "../../config/copy";
+import { stepStates } from "../../journey";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -18,9 +19,12 @@ const onTheGround = (Story: () => React.ReactElement) => (
   </div>
 );
 
+const noop = () => {};
+
 const meta = {
   title: "Auth/Profile",
   component: Profile,
+  args: { onSettled: noop },
   parameters: { layout: "fullscreen", a11y: { test: "error" } },
   decorators: [onTheGround],
 } satisfies Meta<typeof Profile>;
@@ -28,19 +32,27 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const withState = (seed?: (dispatch: ReturnType<typeof configureStore>["dispatch"]) => void) => {
+const withState = (
+  seed?: (dispatch: ReturnType<typeof configureStore>["dispatch"]) => void,
+  settled?: (outcome: "saved" | "skipped") => void,
+) => {
   const store = configureStore({ reducer: { auth: authReducer } });
   seed?.(store.dispatch);
 
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>
       <ThemeProvider>
-        <MemoryRouter initialEntries={["/auth/profile"]}>
+        <MemoryRouter initialEntries={["/auth/onboarding"]}>
           <Routes>
             <Route path="/auth" element={<AuthLayout />}>
-              <Route element={<JourneyLayout />}>
-                <Route path="profile" element={<Profile />} />
-              </Route>
+              <Route
+                path="onboarding"
+                element={
+                  <JourneyLayout states={stepStates("profile", null)}>
+                    <Profile onSettled={settled ?? noop} />
+                  </JourneyLayout>
+                }
+              />
             </Route>
             <Route path="*" element={<Story />} />
           </Routes>
