@@ -57,13 +57,14 @@ Beyond authentication, **authorization is re-checked server-side**: mutating end
 
 ## Rate limiting
 
-Five per-IP rate limiters protect different surfaces over a fixed window, each tier sized to its own threat rather than sharing one global cap:
+Eight per-IP rate limiters protect different surfaces over a fixed window, each tier sized to its own threat rather than sharing one global cap:
 
 - **auth** (login/register) — strict, to blunt brute-force password guessing;
 - **refresh** — generous, because the silent refresh is automated and a tight limit would lock out normal browsing;
 - **general API** — a moderate cap against spam and abuse on everything else;
 - **verification issue** — guards outbound spend and sender reputation rather than secrecy; the durable control is the per-address cooldown [Channel Verification](channel-verification.md) enforces, and this limiter is only the cheap outer layer;
-- **verification confirm** — sized for people mistyping rather than for attackers, since a single-use code of that length is out of brute-force reach whatever this limiter says.
+- **verification confirm** — sized for people mistyping rather than for attackers, since a single-use code of that length is out of brute-force reach whatever this limiter says;
+- **the three password-reset tiers** — tighter than the verification pair, and the reason is the actor rather than the operation: those endpoints sit behind the auth guard, so a caller must already hold a session to reach them, while these are anonymous. Requesting and applying are the tightest, since one spends mail to an address the caller chose and the other hashes a password before the code is examined. As with verification, the durable controls sit beneath them — the per-account cooldown [Password Reset](password-reset.md) enforces and the per-recipient cap [Mail Delivery](mail.md) does.
 
 The exact windows, limits, and `429` messages are owned by the [API contract](../api/api-contract.md). The app **trusts one proxy hop** so the limiter keys on the real client IP behind a reverse proxy — otherwise everyone behind the proxy would share a single counter.
 
