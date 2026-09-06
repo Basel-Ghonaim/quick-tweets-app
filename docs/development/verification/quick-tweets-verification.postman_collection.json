@@ -5377,7 +5377,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"{{pwrCode}}\",\n  \"newPassword\": \"weak\"\n}",
+              "raw": "{\n  \"newPassword\": \"weak\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5400,7 +5400,15 @@
                   "pm.test(\"status 204\", () => pm.response.to.have.status(204));",
                   "pm.test(\"no body, no tokens, no session — the flow ends at Login (D2)\", () =>",
                   "  pm.expect(pm.response.text()).to.eql(\"\"));",
-                  "// Checkpoint J: refresh_tokens for this account is now empty (I7)."
+                  "// Checkpoint J: refresh_tokens for this account is now empty (I7).",
+                  "// apply no longer merely omits a cookie: it clears the position key, with",
+                  "// the attributes it was set with (ADR 0017 D1).",
+                  "pm.test(\"the reset key is cleared, not merely absent\", () => {",
+                  "  const sc = pm.response.headers.get(\"Set-Cookie\");",
+                  "  pm.expect(sc, \"apply must clear qt_reset\").to.be.a(\"string\");",
+                  "  pm.expect(sc).to.include(\"qt_reset=\");",
+                  "  pm.expect(sc).to.include(\"Path=/api/v1/auth/password-reset\");",
+                  "});"
                 ]
               }
             }
@@ -5426,7 +5434,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"{{pwrCode}}\",\n  \"newPassword\": \"N3wPassw0rd!\"\n}",
+              "raw": "{\n  \"newPassword\": \"N3wPassw0rd!\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -5531,7 +5539,7 @@
           }
         },
         {
-          "name": "PWR-13 · Replaying the spent code is refused identically",
+          "name": "PWR-13 · Replaying the spent reset is refused identically",
           "event": [
             {
               "listen": "test",
@@ -5568,7 +5576,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"{{pwrCode}}\",\n  \"newPassword\": \"An0therPass!\"\n}",
+              "raw": "{\n  \"newPassword\": \"An0therPass!\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
