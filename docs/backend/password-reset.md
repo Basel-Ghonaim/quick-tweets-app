@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the **Password Reset subsystem's mechanisms and their rationale** — the module anatomy and why it publishes nothing, custody of the credential, the request/confirm/apply lifecycle, how neutrality is achieved and where it is only mitigated, the code and its digest, the single-failure discipline, session revocation, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
 > It does **not** own: the boundary **decision** itself — recorded in [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared password hashing, session model and HTTP-edge rate limiting ([Backend Security](security.md)'s); the **outbound mail mechanism** it composes, which is [`mail.md`](mail.md)'s; or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
 > **Scope:** The server-side capability at `apps/api/src/modules/auth/password-reset/`. Frontend behaviour is not described here; no frontend consumes it yet.
-> **Version:** 1.0
-> **Last Updated:** 2026-09-05
+> **Version:** 1.1
+> **Last Updated:** 2026-09-06
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -58,19 +58,37 @@ Internally the three branches do different work, and that is fine — neutrality
 
 A send that fails is swallowed inside the thunk. There is nothing in it for a caller to learn — the response is long gone — and a fresh request supersedes a lost code.
 
-### `confirm` — checks, and consumes nothing
+### `confirm` — checks, consumes nothing, and binds
 
-`confirm` reports whether a submitted code is currently usable and changes no state: the same code confirms twice. It exists so the screen collecting the code can validate it before asking for a new password, without spending it.
+`confirm` reports whether a submitted code is currently usable and spends nothing: the same code confirms twice from one position. What it does change is the **position** — a usable code is bound to it, and that binding is the whole of the step derivation.
+
+**A usable code with no position is refused**, identically to every other failure. A position is where a confirmed credential is held, so without one a success has nowhere to go.
 
 ### `apply` — re-validates, then consumes
 
-`apply` hashes the new password **before opening any transaction**, mirroring registration's own reasoning: bcrypt at the configured cost must not hold a database connection open for its duration. It then, in one transaction, re-validates the code, marks it used, writes the hash, and revokes every session.
+`apply` takes **no code**. It reads the credential from the caller's position, which is what stops a client holding a password-change credential past the moment one is confirmed; a request carrying a code is refused rather than having it ignored, because a caller able to supply one silently would be a second source for a fact the position owns.
+
+It hashes the new password **before opening any transaction**, mirroring registration's own reasoning: bcrypt at the configured cost must not hold a database connection open for its duration. It then, in one transaction, re-validates the credential the position holds, marks it used, writes the hash, and revokes every session.
 
 The ordering has a consequence worth naming: a submission with an invalid code still pays for a hash. The per-route limiter in front of `apply` is sized accordingly — it is the tightest of the three.
 
 **Single use is decided by the write, not the read.** The update that marks a credential used is conditional on it still being unused and reports how many rows matched; zero means another caller won the race, and the transaction raises **before** any password is written. Two callers racing on one code can never both succeed, and a lost race can never leave a changed password behind.
 
 **Session revocation is unconditional on success**, in the same transaction ([ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md) Decision 8). The flow returns the caller to Login and establishes no session of its own: the sessions being revoked may be the attacker's, and signing anyone in here would defeat the point.
+
+## The position, and what carries it
+
+Recovery is three steps, and where a reader stands is held here rather than by the client ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)). A URL per step would make the position reader-editable, client-readable storage would hold a live credential, and component state does not survive a reload — so the position is a row, addressed by a key the browser keeps and JavaScript cannot read.
+
+**A position is opened for every request alike.** One opened only for a real account would answer, by its presence, the question this capability is shaped around — so it is created before the account is looked up, on every branch, and the key is written to the response before the body is.
+
+**It stores no step.** An absent challenge means the reader is still entering a code; a present one means they may set a password. The step is therefore correct with nobody having written it — the property the credential's own usability already has.
+
+**Its lifetime is the credential's.** One clock: a position outliving what it authorizes would be a step a reader could reach and not leave.
+
+**A second request supersedes the first, by deletion.** The old key stops working immediately rather than merely being overwritten in the browser, which keeps the position and the credential from disagreeing about which recovery is live.
+
+**The address it carries is stored already masked.** The mask is produced where the address is held, so the unmasked value never reaches a response — and a stale key on a shared machine discloses a mask rather than an address.
 
 ## The code, and the single failure
 
@@ -95,6 +113,8 @@ A scheduled job removes credentials whose retention window has passed, running o
 **It is hygiene, not correctness.** Usable is derived, so an expired credential is refused whether or not anything removed it; disabling the job changes no answer the system gives, only how long the diagnostic trail survives.
 
 **That relaxed posture is earned by one guarantee, and it is enforced elsewhere: retention can never fall below the resend cooldown.** Because this capability's cooldown reads the table's *own most recent row*, a sweep that outran the cooldown would delete a row the next request still needs to see, and a resend arriving in that gap would misread as a first-ever request — the cooldown silently defeated by an unrelated setting. The environment schema refuses that configuration at startup rather than clamping it, which is why the job itself never has to defend against it. Channel Verification needs no equivalent guard, because its cooldown lives on a standing record the sweep never touches.
+
+Positions are bounded by their own expiry rather than by retention: one holds no secret worth keeping for a diagnostic trail, and a lapsed one already answers nothing.
 
 ## Concurrency
 
