@@ -14,7 +14,7 @@ Channel Verification is a **platform capability, not a business feature**. It an
 
 The **dependency rule** is one-directional and holds in the code: the capability imports shared platform code, middleware and configuration, and **no feature module**; features consume it **only** through its published barrel, never its routes, service, repository or internals. Two imports of its internals exist outside the module — the app mounts its routes, and the server registers its sweep job. Both are composition-root wiring, which is where a module is assembled, not a feature reaching past the barrier.
 
-The capability is **policy-free**, and that is observable rather than asserted: it holds no gating logic, the single feature that consumes it reads status only in order to present it, and registration's path does not reach it at all — so account creation cannot fail on delivery. That this is by decision rather than by accident, and what it means for a holder whose address is not yet proven, is [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md)'s.
+The capability is **policy-free**, and that is observable rather than asserted: it holds no gating logic of its own. Two consumers read its status — the self-view to present it, and the onboarding journey to decide whether a reader may reach the code step — and in both the decision is the consumer's, taken outside this module. Registration's path does not reach it at all, so account creation cannot fail on delivery. That this is by decision rather than by accident, and what it means for a holder whose address is not yet proven, is [ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md)'s.
 
 ## Module anatomy & the published surface
 

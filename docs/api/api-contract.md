@@ -226,7 +226,7 @@ interface ErrorBody {
 | 500         | `server`                | Unexpected server error                                                |
 | 503         | `service_unavailable`   | Service temporarily unavailable (maintenance)                          |
 
-> **Note:** `429` responses are produced by the rate-limiter middleware, not the `AppError` pipeline, and carry `type: "rate_limit"`. `AppError` also defines an equivalent `too_many_requests` (429) type, but it is not currently thrown by any route.
+> **Note:** two different `429`s exist, and they mean different things. Every per-IP limiter answers through the rate-limiter middleware with `type: "rate_limit"`. `too_many_requests` is Channel Verification's own per-address cooldown, raised through the `AppError` pipeline and carrying `Retry-After`. What conflating them costs a reader is stated under Rate Limiting below.
 
 **Across the stack:** this error contract is *produced* by the backend error model ([backend conventions](../backend/conventions.md)), *normalized on the client* by the [frontend error handling](../frontend/error-handling.md) pipeline, and rests on the one-typed-error principle ([Engineering Principles §4](../development/engineering-principles.md)).
 
@@ -240,7 +240,10 @@ Every limiter below is **per IP**, over a fixed window, and answers with `type: 
 | Refresh | `/auth/refresh` | 30 req / 15 min | "Too many refresh requests. Please wait a few minutes before continuing." |
 | Verification issue | `POST /channel-verification/challenges` | **10 req / 15 min** | "Too many verification requests. Please wait 15 minutes before trying again." |
 | Verification confirm | `POST /channel-verification/challenges/confirm` | **10 req / 15 min** | "Too many confirmation attempts. Please wait 15 minutes before trying again." |
-| API | `/tweets`, `/comments`, `/users`, `/follows`, and `POST /media` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
+| API | `/tweets`, `/comments`, `/users`, `/follows`, `/onboarding`, and `POST /media` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
+| Reset request | `POST /auth/password-reset` | **5 req / 15 min** | "Too many password reset requests. Please wait 15 minutes before trying again." |
+| Reset confirm | `POST /auth/password-reset/confirm` | **10 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
+| Reset apply | `POST /auth/password-reset/apply` | **5 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
 
 > **The verification endpoints return two different `429`s, and they mean different things.** `type: "rate_limit"` is the per-IP limiter above — a fifteen-minute lockout. `type: "too_many_requests"` is Channel Verification's own **per-address cooldown**, measured in seconds and carrying `Retry-After`. The first says *this client is asking too often*; the second says *this address was sent a code moments ago*. A client that conflates them will make a user wait fifteen minutes for a sixty-second throttle.
 
