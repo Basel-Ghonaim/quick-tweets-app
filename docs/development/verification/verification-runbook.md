@@ -316,11 +316,16 @@ after it.
 > alias still owned by the original account.
 
 
-### Checkpoint J — Password reset custody and revocation (folder 11)
+### Checkpoint J — Password reset custody, position and revocation (folder 11)
 ```sql
 -- The credential lives entirely inside Auth, shares nothing with Channel
 -- Verification, and a completed reset leaves no session alive. Substitute
 -- :pwrUserId with the id folder 11's Setup captured.
+--
+-- Queries 6-8 cover the position (ADR 0017). Note they are NOT keyed on
+-- :pwrUserId, and cannot be: a position opened for an address no account has
+-- has no user to key on, which is the point of opening one for every address
+-- alike. Read them against the run's live rows instead.
 
 -- 1. ISOLATION: the reset credential has no foreign key to, and no column
 --    naming, any channel-verification table. MUST return 0 rows.
@@ -362,6 +367,32 @@ SELECT count(*) AS status_columns
 FROM information_schema.columns
 WHERE table_name = 'password_reset_challenges'
   AND (column_name ILIKE '%status%' OR column_name ILIKE '%state%');
+
+-- 6. THE STEP IS DERIVED, AND SO IS THE ACTOR (G6). The position table carries
+--    no step column and no user column. MUST be 0 — a stored step would be a
+--    second copy of something the credential already decides, and a user column
+--    would make the unknown-address position distinguishable in the data.
+SELECT count(*) AS forbidden_columns
+FROM information_schema.columns
+WHERE table_name = 'password_reset_sessions'
+  AND (column_name ILIKE '%step%' OR column_name ILIKE '%status%'
+       OR column_name ILIKE '%state%' OR column_name = 'user_id');
+
+-- 7. THE POSITION ITSELF. After PWR-01a exactly one live row with challenge_id
+--    NULL (the step reads 'code'); after PWR-02a still exactly one, superseded
+--    rather than added to; after PWR-07a that row's challenge_id is set (the
+--    step reads 'password'); after PWR-10a there is none.
+SELECT id, challenge_id, masked_endpoint, expires_at, created_at
+FROM password_reset_sessions
+WHERE expires_at > now()
+ORDER BY created_at DESC;
+
+-- 8. THE MASK IS WHAT IS STORED (D5). Masking happens where the address is
+--    held, so the unmasked value is never written here and cannot leak from a
+--    stale row. MUST be 0.
+SELECT count(*) AS unmasked_rows
+FROM password_reset_sessions
+WHERE masked_endpoint NOT LIKE '%•%';
 ```
 
 > **PWR-15 runs last, and after its own restart.** Six requests exhaust the per-IP
