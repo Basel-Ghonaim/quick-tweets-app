@@ -85,6 +85,10 @@ const recordingRes = () => {
     status: undefined as number | undefined,
     body: undefined as unknown,
     headers: {} as Record<string, unknown>,
+    /** What the browser would be told to keep — the one channel a body cannot show. */
+    cookies: [] as Array<{ name: string; options: Record<string, unknown> }>,
+    cleared: [] as string[],
+    key: undefined as string | undefined,
   };
   const res = {
     status: (code: number) => {
@@ -100,6 +104,15 @@ const recordingRes = () => {
       observed.headers[name] = value;
       return res;
     },
+    cookie: (name: string, value: string, options: Record<string, unknown>) => {
+      observed.cookies.push({ name, options });
+      observed.key = value;
+      return res;
+    },
+    clearCookie: (name: string) => {
+      observed.cleared.push(name);
+      return res;
+    },
     on: (event: string, listener: () => void) => {
       if (event === "finish") finishers.push(listener);
       return res;
@@ -111,10 +124,15 @@ const recordingRes = () => {
 const drive = async (
   handler: (req: Request, res: Response, next: NextFunction) => Promise<void>,
   body: Record<string, unknown>,
+  cookies?: Record<string, string>,
 ) => {
   const { res, observed, flush } = recordingRes();
   const next = vi.fn();
-  await handler({ body } as Request, res as unknown as Response, next as unknown as NextFunction);
+  await handler(
+    { body, cookies: cookies ?? {} } as unknown as Request,
+    res as unknown as Response,
+    next as unknown as NextFunction,
+  );
   return { observed, flush, next };
 };
 
@@ -136,13 +154,36 @@ describe("request answers identically in all three branches (I5)", () => {
     // Branch 3 — the same real account, now inside its resend cooldown.
     const cooling = await drive(controller.request, { email });
 
-    const seen = [unknown, eligible, cooling].map((r) => JSON.stringify(r.observed));
+    /* Everything a caller can observe, except the key's own value — which is
+       random by construction and would be a defect if it were not. */
+    const observable = ({ observed }: typeof unknown) => ({
+      status: observed.status,
+      body: observed.body,
+      headers: observed.headers,
+      cookies: observed.cookies,
+      cleared: observed.cleared,
+    });
+
+    const seen = [unknown, eligible, cooling].map((r) => JSON.stringify(observable(r)));
     expect(new Set(seen).size).toBe(1);
     expect(JSON.parse(seen[0]!)).toEqual({
       status: 202,
       body: { success: true, data: null },
       headers: {},
+      cookies: [
+        {
+          name: "qt_reset",
+          options: expect.objectContaining({ httpOnly: true, sameSite: "strict" }),
+        },
+      ],
+      cleared: [],
     });
+
+    /* A position issued on one branch and not another would be the disclosure
+       the constant body exists to prevent — and no body would show it. */
+    const keys = [unknown, eligible, cooling].map((r) => r.observed.key);
+    expect(keys.every(Boolean)).toBe(true);
+    expect(new Set(keys).size).toBe(3);
 
     // Only the eligible branch has anything to deliver, and it delivered
     // nothing until each response had already been written.
@@ -181,15 +222,29 @@ describe("the flow completes through the handlers", () => {
       requested.flush();
       const code = codeIn(mail.sent[0]!);
 
+      // The position the request opened is what carries the rest of the flow.
+      const held = { qt_reset: requested.observed.key! };
+
+      const position = await drive(controller.position, {}, held);
+      expect(position.observed.body).toMatchObject({
+        data: { step: "code", maskedEndpoint: expect.stringContaining("@") },
+      });
+
       // Confirm consumes nothing: the same code checks out twice (D6).
-      const first = await drive(controller.confirm, { code });
-      const second = await drive(controller.confirm, { code });
+      const first = await drive(controller.confirm, { code }, held);
+      const second = await drive(controller.confirm, { code }, held);
       expect(first.observed.status).toBe(204);
       expect(second.observed.status).toBe(204);
       expect(first.observed.body).toBeUndefined();
 
-      const applied = await drive(controller.apply, { code, newPassword: "N3wPassw0rd!" });
+      // Once a code is confirmed the position knows the step, and the caller
+      // never sends the credential again.
+      const atPassword = await drive(controller.position, {}, held);
+      expect(atPassword.observed.body).toMatchObject({ data: { step: "password" } });
+
+      const applied = await drive(controller.apply, { newPassword: "N3wPassw0rd!" }, held);
       expect(applied.observed.status).toBe(204);
+      expect(applied.observed.cleared).toEqual(["qt_reset"]);
       expect(applied.observed.body).toBeUndefined();
       expect(applied.next).not.toHaveBeenCalled();
 
@@ -205,7 +260,7 @@ describe("the flow completes through the handlers", () => {
       expect(await prisma.refreshToken.count({ where: { userId: account.id } })).toBe(1);
 
       // Single use, decided by the write: the spent code cannot be replayed.
-      const replay = await drive(controller.apply, { code, newPassword: "An0therPass!" });
+      const replay = await drive(controller.apply, { newPassword: "An0therPass!" }, held);
       expect(replay.observed.status).toBeUndefined();
       expect(replay.next.mock.calls[0]?.[0]).toMatchObject({
         statusCode: 400,

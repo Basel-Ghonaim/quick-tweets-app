@@ -12,9 +12,11 @@
 import { prisma, type DbClient } from "../../../shared/database/index.js";
 import type {
   CreateChallengeInput,
+  CreateSessionInput,
   IPasswordResetRepository,
   PasswordResetChallenge,
   PasswordResetChallengeWithHash,
+  PasswordResetSession,
 } from "./passwordReset.types.js";
 
 /**
@@ -41,6 +43,20 @@ const toChallenge = (row: ChallengeRow): PasswordResetChallenge => ({
   expiresAt: row.expiresAt,
   usedAt: row.usedAt,
   createdAt: row.createdAt,
+});
+
+interface SessionRow {
+  id: number;
+  maskedEndpoint: string;
+  challengeId: number | null;
+  expiresAt: Date;
+}
+
+const toSession = (row: SessionRow): PasswordResetSession => ({
+  id: row.id,
+  maskedEndpoint: row.maskedEndpoint,
+  challengeId: row.challengeId,
+  expiresAt: row.expiresAt,
 });
 
 /**
@@ -89,6 +105,35 @@ export const createPasswordResetRepository = (
       where: {
         OR: [{ usedAt: { lt: cutoff } }, { expiresAt: { lt: cutoff } }],
       },
+    });
+    return count;
+  },
+
+  findChallengeById: async (id, client: DbClient = db) => {
+    const row = await client.passwordResetChallenge.findUnique({ where: { id } });
+    return row === null ? null : toChallenge(row);
+  },
+
+  createSession: async (input: CreateSessionInput, client: DbClient = db) => {
+    await client.passwordResetSession.create({ data: input });
+  },
+
+  findSessionByTokenHash: async (tokenHash, client: DbClient = db) => {
+    const row = await client.passwordResetSession.findUnique({ where: { tokenHash } });
+    return row === null ? null : toSession(row);
+  },
+
+  deleteSessionByTokenHash: async (tokenHash, client: DbClient = db) => {
+    await client.passwordResetSession.deleteMany({ where: { tokenHash } });
+  },
+
+  bindSessionToChallenge: async (id, challengeId, client: DbClient = db) => {
+    await client.passwordResetSession.update({ where: { id }, data: { challengeId } });
+  },
+
+  deleteSessionsBefore: async (cutoff, client: DbClient = db) => {
+    const { count } = await client.passwordResetSession.deleteMany({
+      where: { expiresAt: { lt: cutoff } },
     });
     return count;
   },

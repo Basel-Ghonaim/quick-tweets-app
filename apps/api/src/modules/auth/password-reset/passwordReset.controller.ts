@@ -7,13 +7,31 @@
  * response has left (D3).
  */
 
-import type { NextFunction, Request, Response } from "express";
+import type { CookieOptions, NextFunction, Request, Response } from "express";
 
+import { env } from "../../../config/env.js";
 import { AppError } from "../../../shared/errors/index.js";
 import { sendSuccess } from "../../../shared/response/index.js";
 import { PasswordResetError } from "./passwordReset.errors.js";
 import { createPasswordResetService } from "./passwordReset.service.js";
 import type { IPasswordResetService } from "./passwordReset.types.js";
+
+/**
+ * The key addressing a reader's position. `httpOnly` is the whole point — the
+ * client never reads it, so no script can lift the credential it stands for.
+ *
+ * `path` scopes it to this capability, so it is never sent to any other route;
+ * `sameSite: "strict"` keeps it off cross-site requests entirely.
+ */
+export const SESSION_COOKIE = "qt_reset";
+
+const cookieOptions = (maxAgeMs?: number): CookieOptions => ({
+  httpOnly: true,
+  secure: env.NODE_ENV === "production",
+  sameSite: "strict",
+  path: "/api/v1/auth/password-reset",
+  ...(maxAgeMs === undefined ? {} : { maxAge: maxAgeMs }),
+});
 
 /**
  * Translate the capability's transport-agnostic errors, leaving anything else
@@ -51,7 +69,15 @@ export const createPasswordResetController = (
    */
   request: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { dispatchSend } = await service.request({ email: String(req.body.email) });
+      const { dispatchSend, sessionKey } = await service.request({
+        email: String(req.body.email),
+        sessionKey: req.cookies?.[SESSION_COOKIE] as string | undefined,
+      });
+
+      // Set on every branch alike, and before the body is written: a cookie
+      // present for one address and absent for another would be the
+      // disclosure the constant body exists to prevent.
+      res.cookie(SESSION_COOKIE, sessionKey, cookieOptions(env.RESET_CODE_TTL_MS));
 
       if (dispatchSend) {
         // After the response is flushed, never inside it (D3). The send is a
@@ -80,7 +106,10 @@ export const createPasswordResetController = (
    */
   confirm: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await service.confirm({ code: String(req.body.code) });
+      await service.confirm({
+        code: String(req.body.code),
+        sessionKey: req.cookies?.[SESSION_COOKIE] as string | undefined,
+      });
 
       sendSuccess(res, null, 204);
     } catch (err) {
@@ -95,12 +124,34 @@ export const createPasswordResetController = (
    * in one transaction. Returns no session of its own: the flow ends at Login
    * (D2), and the sessions being revoked may be the attacker's.
    */
+  /**
+   * GET /auth/password-reset/session
+   *
+   * Where the reader stands, and the masked address they used. There is no
+   * `404`: an absent or lapsed position is a legitimate answer meaning *start
+   * at the beginning*, so a client never reads a status to decide a screen.
+   */
+  position: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const position = await service.positionOf(
+        req.cookies?.[SESSION_COOKIE] as string | undefined,
+      );
+
+      sendSuccess(res, position);
+    } catch (err) {
+      next(err);
+    }
+  },
+
   apply: async (req: Request, res: Response, next: NextFunction) => {
     try {
       await service.apply({
-        code: String(req.body.code),
+        sessionKey: req.cookies?.[SESSION_COOKIE] as string | undefined,
         newPassword: String(req.body.newPassword),
       });
+
+      // Cleared with the attributes it was set with, or the browser keeps it.
+      res.clearCookie(SESSION_COOKIE, cookieOptions());
 
       sendSuccess(res, null, 204);
     } catch (err) {

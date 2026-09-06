@@ -48,8 +48,14 @@ export const createPasswordResetSweepJob = (
     handler: async () => {
       const cutoff = new Date(now().getTime() - retentionMs);
       const removed = await repo.deleteBefore(cutoff);
+      /* Positions are bounded by their own expiry, not by retention: one holds
+         no secret worth keeping for a diagnostic trail, and a lapsed one
+         already answers nothing. */
+      const positions = await repo.deleteSessionsBefore(now());
       // Every run is logged, no-ops included, so the job stays observable.
-      log(`[jobs] password-reset-sweep removed ${removed} spent credential(s)`);
+      log(
+        `[jobs] password-reset-sweep removed ${removed} spent credential(s) and ${positions} lapsed position(s)`,
+      );
     },
   };
 };

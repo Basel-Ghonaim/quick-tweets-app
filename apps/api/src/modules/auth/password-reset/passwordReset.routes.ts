@@ -44,6 +44,10 @@ passwordResetRoutes.post(
   controller.confirm,
 );
 
+/* Reading a position spends nothing and checks no secret, so it earns no
+   limiter of its own beyond the prefix it sits behind. */
+passwordResetRoutes.get("/session", controller.position);
+
 passwordResetRoutes.post(
   "/apply",
   passwordResetApplyLimiter,

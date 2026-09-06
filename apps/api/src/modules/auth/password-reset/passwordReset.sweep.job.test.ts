@@ -13,6 +13,7 @@ const fakeRepo = (over: Partial<IPasswordResetRepository> = {}): IPasswordResetR
   findByCodeHash: vi.fn(async () => null),
   markUsed: vi.fn(async () => 0),
   deleteBefore: vi.fn(async () => 0),
+  deleteSessionsBefore: vi.fn(async () => 0),
   ...over,
 } as unknown as IPasswordResetRepository);
 
@@ -52,7 +53,7 @@ describe("the cutoff it computes", () => {
     const called = Object.entries(repo)
       .filter(([, value]) => typeof value === "function" && (value as ReturnType<typeof vi.fn>).mock?.calls.length)
       .map(([name]) => name);
-    expect(called).toEqual(["deleteBefore"]);
+    expect(called.sort()).toEqual(["deleteBefore", "deleteSessionsBefore"]);
   });
 });
 
@@ -61,13 +62,13 @@ describe("what it reports", () => {
     const log = vi.fn();
     await build(fakeRepo({ deleteBefore: vi.fn(async () => 12) }), log).handler();
 
-    expect(log).toHaveBeenCalledWith("[jobs] password-reset-sweep removed 12 spent credential(s)");
+    expect(log).toHaveBeenCalledWith("[jobs] password-reset-sweep removed 12 spent credential(s) and 0 lapsed position(s)");
   });
 
   it("logs a no-op run too, so silence never means the job stopped running", async () => {
     const log = vi.fn();
     await build(fakeRepo({ deleteBefore: vi.fn(async () => 0) }), log).handler();
 
-    expect(log).toHaveBeenCalledWith("[jobs] password-reset-sweep removed 0 spent credential(s)");
+    expect(log).toHaveBeenCalledWith("[jobs] password-reset-sweep removed 0 spent credential(s) and 0 lapsed position(s)");
   });
 });

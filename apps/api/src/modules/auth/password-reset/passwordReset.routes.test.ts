@@ -34,15 +34,22 @@ const handlersOf = (path: string) => {
   return layer.route.stack.map((entry) => entry.handle);
 };
 
-describe("the three routes exist, and only those three", () => {
-  it("registers exactly request, confirm and apply, all POST", () => {
+describe("the four routes exist, and only those four", () => {
+  /* The position read is a GET because it changes nothing; the three that move
+     the flow are POSTs. */
+  it("registers exactly request, confirm, apply and the position read", () => {
     const registered = layers().map((l) => `${Object.keys(l.route.methods).join(",")} ${l.route.path}`);
-    expect(registered.sort()).toEqual(["post /", "post /apply", "post /confirm"]);
+    expect(registered.sort()).toEqual([
+      "get /session",
+      "post /",
+      "post /apply",
+      "post /confirm",
+    ]);
   });
 });
 
 describe("no route requires a session (I3)", () => {
-  for (const path of ["/", "/confirm", "/apply"]) {
+  for (const path of ["/", "/confirm", "/apply", "/session"]) {
     it(`${path} carries neither authGuard nor optionalAuth`, () => {
       const handlers = handlersOf(path);
       expect(handlers).not.toContain(authGuard);

@@ -29,6 +29,11 @@ import {
 } from "./passwordReset.codes.js";
 import { PasswordResetError } from "./passwordReset.errors.js";
 import { createPasswordResetRepository } from "./passwordReset.repository.js";
+import {
+  digestSessionKey,
+  maskEndpoint,
+  mintSessionKey,
+} from "./passwordReset.session.js";
 import type {
   ApplyResetInput,
   ConfirmResetInput,
@@ -126,7 +131,53 @@ export const createPasswordResetService = (
     return row;
   };
 
-  const request: IPasswordResetService["request"] = async ({ email }: RequestResetInput) => {
+  /** A position that exists and has not lapsed; anything else is no position. */
+  const liveSession = async (sessionKey?: string) => {
+    if (!sessionKey) return null;
+
+    const session = await repo.findSessionByTokenHash(digestSessionKey(sessionKey));
+    if (session === null) return null;
+
+    return session.expiresAt.getTime() <= now().getTime() ? null : session;
+  };
+
+  /**
+   * The credential a position holds, still usable. Every way this can fail —
+   * no position, a lapsed one, one that reached no code, a spent or expired
+   * row — collapses into the same opaque outcome a submitted code does.
+   */
+  const usableFromSession = async (sessionKey?: string) => {
+    const session = await liveSession(sessionKey);
+    if (session === null || session.challengeId === null) {
+      throw PasswordResetError.notUsable();
+    }
+
+    const row = await repo.findChallengeById(session.challengeId);
+    if (row === null) throw PasswordResetError.notUsable();
+    if (row.usedAt !== null) throw PasswordResetError.notUsable();
+    if (row.expiresAt.getTime() <= now().getTime()) throw PasswordResetError.notUsable();
+
+    return row;
+  };
+
+  const request: IPasswordResetService["request"] = async ({
+    email,
+    sessionKey,
+  }: RequestResetInput) => {
+    /* Supersession is a deletion, not an overwrite: the old key stops working
+       the moment a new request is made, from any branch. */
+    if (sessionKey) await repo.deleteSessionByTokenHash(digestSessionKey(sessionKey));
+
+    /* Opened before the account is looked up and on every branch alike — a
+       position issued only for a real address would answer, by its presence,
+       the question the constant body refuses to answer. */
+    const freshKey = mintSessionKey();
+    await repo.createSession({
+      tokenHash: digestSessionKey(freshKey),
+      maskedEndpoint: maskEndpoint(email),
+      expiresAt: new Date(now().getTime() + ttlMs),
+    });
+
     const start = now();
 
     const user = await authRepo.findByEmail(email);
@@ -187,22 +238,53 @@ export const createPasswordResetService = (
       await wait(responseFloorMs - elapsed);
     }
 
-    const outcome: RequestResetOutcome = dispatchSend ? { dispatchSend } : {};
+    const outcome: RequestResetOutcome = dispatchSend
+      ? { dispatchSend, sessionKey: freshKey }
+      : { sessionKey: freshKey };
     return outcome;
   };
 
-  const confirm: IPasswordResetService["confirm"] = async ({ code }: ConfirmResetInput) => {
-    await findUsable(code);
+  const confirm: IPasswordResetService["confirm"] = async ({
+    code,
+    sessionKey,
+  }: ConfirmResetInput) => {
+    const session = await liveSession(sessionKey);
+    if (session === null) throw PasswordResetError.notUsable();
+
+    const row = await findUsable(code);
+
+    /* Nothing is consumed: the same code confirmed twice from one position
+       binds the same row again and reports usable both times. */
+    if (session.challengeId !== row.id) {
+      await repo.bindSessionToChallenge(session.id, row.id);
+    }
   };
 
-  const apply: IPasswordResetService["apply"] = async ({ code, newPassword }: ApplyResetInput) => {
+  /**
+   * Where a reader stands. Never fails for want of a position — an absent or
+   * lapsed one is a legitimate answer meaning *start at the beginning*.
+   */
+  const positionOf: IPasswordResetService["positionOf"] = async (sessionKey) => {
+    const session = await liveSession(sessionKey);
+    if (session === null) return { step: "request", maskedEndpoint: null };
+
+    return {
+      step: session.challengeId === null ? "code" : "password",
+      maskedEndpoint: session.maskedEndpoint,
+    };
+  };
+
+  const apply: IPasswordResetService["apply"] = async ({
+    sessionKey,
+    newPassword,
+  }: ApplyResetInput) => {
     // Hashed before any transaction opens, mirroring registration's own
     // reasoning: bcrypt is ~250ms and must not hold a database connection
     // open for the duration.
     const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
     return runTransaction(async (tx) => {
-      const row = await findUsable(code);
+      const row = await usableFromSession(sessionKey);
 
       // Conditional on the row still being unused: single use is decided by
       // this write, not by the read above, so two callers racing on one
@@ -221,5 +303,5 @@ export const createPasswordResetService = (
     });
   };
 
-  return { request, confirm, apply };
+  return { request, confirm, positionOf, apply };
 };

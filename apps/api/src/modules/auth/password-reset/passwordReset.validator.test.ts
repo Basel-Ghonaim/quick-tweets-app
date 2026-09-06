@@ -59,14 +59,26 @@ describe("the submitted code — presence only", () => {
 describe("apply — the new password", () => {
   const CODE = "0123456789AB";
 
-  it("accepts a code of any shape together with a compliant password", () => {
-    const input = { code: "whatever-shape", newPassword: "Str0ng!Passw0rd" };
+  it("takes a compliant password and nothing else", () => {
+    const input = { newPassword: "Str0ng!Passw0rd" };
     expect(applyResetSchema.parse(input)).toEqual(input);
+  });
+
+  /* The credential is the position's. A caller able to supply one silently
+     would be a second source for it, so it is refused rather than stripped. */
+  it("refuses a code rather than dropping it", () => {
+    const failure = applyResetSchema.safeParse({
+      code: CODE,
+      newPassword: "Str0ng!Passw0rd",
+    });
+
+    expect(failure.success).toBe(false);
+    expect(failure.error?.issues[0]?.path).toEqual(["code"]);
   });
 
   it("holds the new password to registration's rules", () => {
     for (const weak of ["Sh0rt!", "alllowercase1!", "ALLUPPERCASE1!", "NoDigitsHere!", "NoSymbol1234"]) {
-      expect(() => applyResetSchema.parse({ code: CODE, newPassword: weak })).toThrow();
+      expect(() => applyResetSchema.parse({ newPassword: weak })).toThrow();
     }
   });
 

@@ -15,7 +15,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { MailAdapter, MailMessage } from "../../mail-delivery/index.js";
 import type { IAuthRepository, ITokenRepository } from "../auth.types.js";
-import { PasswordResetError } from "./passwordReset.errors.js";
 import { createPasswordResetService } from "./passwordReset.service.js";
 import type {
   IPasswordResetRepository,
@@ -34,7 +33,9 @@ const USER = { id: 5, email: "holder@example.test" };
 /** An in-memory stand-in for the credential table, honest about ids and timestamps. */
 const fakeWorld = () => {
   const rows: { id: number; userId: number; codeHash: string; expiresAt: Date; usedAt: Date | null; createdAt: Date }[] = [];
+  const sessions: { id: number; tokenHash: string; maskedEndpoint: string; challengeId: number | null; expiresAt: Date }[] = [];
   let nextId = 1;
+  let nextSessionId = 1;
   let clock = T0;
 
   const repo: IPasswordResetRepository = {
@@ -61,9 +62,30 @@ const fakeWorld = () => {
       return 1;
     },
     deleteBefore: async () => 0,
+
+    findChallengeById: async (id) => {
+      const row = rows.find((r) => r.id === id);
+      return row ? { ...row } : null;
+    },
+    createSession: async ({ tokenHash, maskedEndpoint, expiresAt }) => {
+      sessions.push({ id: nextSessionId++, tokenHash, maskedEndpoint, challengeId: null, expiresAt });
+    },
+    findSessionByTokenHash: async (tokenHash) => {
+      const row = sessions.find((sn) => sn.tokenHash === tokenHash);
+      return row ? { ...row } : null;
+    },
+    deleteSessionByTokenHash: async (tokenHash) => {
+      const at = sessions.findIndex((sn) => sn.tokenHash === tokenHash);
+      if (at >= 0) sessions.splice(at, 1);
+    },
+    bindSessionToChallenge: async (id, challengeId) => {
+      const row = sessions.find((sn) => sn.id === id);
+      if (row) row.challengeId = challengeId;
+    },
+    deleteSessionsBefore: async () => 0,
   };
 
-  return { repo, rows, setClock: (d: Date) => (clock = d) };
+  return { repo, rows, sessions, setClock: (d: Date) => (clock = d) };
 };
 
 const fakeAuthRepo = (overrides: Partial<IAuthRepository> = {}): IAuthRepository => ({
@@ -137,7 +159,7 @@ describe("request — neutrality across all three branches (I5)", () => {
 
     const outcome = await service.request({ email: "nobody@example.test" });
 
-    expect(outcome).toEqual({});
+    expect(outcome.dispatchSend).toBeUndefined();
     expect(mail.send).not.toHaveBeenCalled();
   });
 
@@ -172,7 +194,7 @@ describe("request — neutrality across all three branches (I5)", () => {
 
     const second = await service.request({ email: USER.email });
 
-    expect(second).toEqual({});
+    expect(second.dispatchSend).toBeUndefined();
     expect(world.rows).toHaveLength(1); // no second row minted
     expect(mail.send).not.toHaveBeenCalled(); // never called at all in this branch
   });
@@ -235,67 +257,89 @@ describe("request — neutrality across all three branches (I5)", () => {
 describe("confirm — read-only", () => {
   it("resolves without throwing for a currently usable code, and writes nothing", async () => {
     const { service, mail } = build();
-    const { dispatchSend } = await service.request({ email: USER.email });
+    const { dispatchSend, sessionKey: key } = await service.request({ email: USER.email });
     await dispatchSend?.();
     const [sent] = (mail.send as ReturnType<typeof vi.fn>).mock.calls[0] as [MailMessage];
     const code = sent.body.match(/code is (\w+)/)?.[1] ?? "";
 
-    await expect(service.confirm({ code })).resolves.toBeUndefined();
+    await expect(service.confirm({ sessionKey: key, code })).resolves.toBeUndefined();
     // A second check reports the same thing — confirm consumed nothing.
-    await expect(service.confirm({ code })).resolves.toBeUndefined();
+    await expect(service.confirm({ sessionKey: key, code })).resolves.toBeUndefined();
   });
 
   it("reports a never-issued code as not usable", async () => {
     const { service } = build();
-    await expect(service.confirm({ code: "AAAAAAAA" })).rejects.toMatchObject({ code: "not_usable" });
+    const { sessionKey: key } = await service.request({ email: "nobody@example.test" });
+
+    await expect(service.confirm({ sessionKey: key, code: "AAAAAAAA" })).rejects.toMatchObject({ code: "not_usable" });
   });
 
   it("reports a malformed code as not usable, identically", async () => {
     const { service } = build();
-    await expect(service.confirm({ code: "too-short" })).rejects.toMatchObject({ code: "not_usable" });
+    const { sessionKey: key } = await service.request({ email: "nobody@example.test" });
+
+    await expect(service.confirm({ sessionKey: key, code: "too-short" })).rejects.toMatchObject({ code: "not_usable" });
+  });
+
+  /* A position is where a confirmed credential is held, so without one there is
+     nowhere for a success to go — and it is refused the same single way. */
+  it("reports a usable code with no position as not usable, identically", async () => {
+    const b = build();
+    const { dispatchSend } = await b.service.request({ email: USER.email });
+    await dispatchSend?.();
+    const [sent] = (b.mail as ReturnType<typeof fakeMail>).sent;
+    const code = sent.body.match(/code is (\w+)/)?.[1] ?? "";
+
+    await expect(b.service.confirm({ code })).rejects.toMatchObject({ code: "not_usable" });
   });
 
   it("reports an expired code as not usable", async () => {
     let clock = T0;
     const { service, mail } = build({ now: () => clock });
-    const { dispatchSend } = await service.request({ email: USER.email });
+    const { dispatchSend, sessionKey: key } = await service.request({ email: USER.email });
     await dispatchSend?.();
     const [sent] = (mail.send as ReturnType<typeof vi.fn>).mock.calls[0] as [MailMessage];
     const code = sent.body.match(/code is (\w+)/)?.[1] ?? "";
 
     clock = new Date(T0.getTime() + TTL + 1);
 
-    await expect(service.confirm({ code })).rejects.toMatchObject({ code: "not_usable" });
+    await expect(service.confirm({ sessionKey: key, code })).rejects.toMatchObject({ code: "not_usable" });
   });
 
   it("reports an already-used code as not usable", async () => {
     const { service, mail } = build();
-    const { dispatchSend } = await service.request({ email: USER.email });
+    const { dispatchSend, sessionKey: key } = await service.request({ email: USER.email });
     await dispatchSend?.();
     const [sent] = (mail.send as ReturnType<typeof vi.fn>).mock.calls[0] as [MailMessage];
     const code = sent.body.match(/code is (\w+)/)?.[1] ?? "";
 
-    await service.apply({ code, newPassword: "N3wPassw0rd!" });
+    // Spending it now goes through the position, so it is confirmed into one first.
+    await service.confirm({ sessionKey: key, code });
+    await service.apply({ sessionKey: key, newPassword: "N3wPassw0rd!" });
 
-    await expect(service.confirm({ code })).rejects.toMatchObject({ code: "not_usable" });
+    await expect(service.confirm({ sessionKey: key, code })).rejects.toMatchObject({ code: "not_usable" });
   });
 });
 
 describe("apply — re-validates, then consumes", () => {
-  const mintAndSend = async (build_: ReturnType<typeof build>) => {
-    const { dispatchSend } = await build_.service.request({ email: USER.email });
+  /** A position with a confirmed credential in it — what `apply` now spends. */
+  const readyToApply = async (build_: ReturnType<typeof build>) => {
+    const { dispatchSend, sessionKey } = await build_.service.request({ email: USER.email });
     await dispatchSend?.();
     const [sent] = (build_.mail as ReturnType<typeof fakeMail>).sent;
-    return sent.body.match(/code is (\w+)/)?.[1] ?? "";
+    const code = sent.body.match(/code is (\w+)/)?.[1] ?? "";
+
+    await build_.service.confirm({ sessionKey, code });
+    return { code, sessionKey };
   };
 
   it("on success: hashes the new password, writes it, and revokes every session", async () => {
     const authRepo = fakeAuthRepo();
     const tokenRepo = fakeTokenRepo();
     const b = build({ authRepo, tokenRepo });
-    const code = await mintAndSend(b);
+    const { sessionKey: key } = await readyToApply(b);
 
-    const result = await b.service.apply({ code, newPassword: "N3wPassw0rd!" });
+    const result = await b.service.apply({ sessionKey: key, newPassword: "N3wPassw0rd!" });
 
     expect(result).toEqual({ userId: USER.id });
     expect(authRepo.updatePasswordHash).toHaveBeenCalledTimes(1);
@@ -308,12 +352,12 @@ describe("apply — re-validates, then consumes", () => {
   it("consumes the code — a second apply with the same code fails, and writes nothing further", async () => {
     const authRepo = fakeAuthRepo();
     const b = build({ authRepo });
-    const code = await mintAndSend(b);
+    const { sessionKey: key } = await readyToApply(b);
 
-    await b.service.apply({ code, newPassword: "N3wPassw0rd!" });
+    await b.service.apply({ sessionKey: key, newPassword: "N3wPassw0rd!" });
     (authRepo.updatePasswordHash as ReturnType<typeof vi.fn>).mockClear();
 
-    await expect(b.service.apply({ code, newPassword: "AnotherOne1!" })).rejects.toMatchObject({
+    await expect(b.service.apply({ sessionKey: key, newPassword: "AnotherOne1!" })).rejects.toMatchObject({
       code: "not_usable",
     });
     expect(authRepo.updatePasswordHash).not.toHaveBeenCalled();
@@ -325,7 +369,7 @@ describe("apply — re-validates, then consumes", () => {
     const b = build({ authRepo, tokenRepo });
 
     await expect(
-      b.service.apply({ code: "AAAAAAAA", newPassword: "N3wPassw0rd!" }),
+      b.service.apply({ sessionKey: "no-such-position", newPassword: "N3wPassw0rd!" }),
     ).rejects.toMatchObject({ code: "not_usable" });
     expect(authRepo.updatePasswordHash).not.toHaveBeenCalled();
     expect(tokenRepo.deleteAllUserTokens).not.toHaveBeenCalled();
@@ -343,9 +387,9 @@ describe("apply — re-validates, then consumes", () => {
       authRepo,
       repoOverride: { markUsed: async () => 0 },
     });
-    const code = await mintAndSend(b);
+    const { sessionKey: key } = await readyToApply(b);
 
-    await expect(b.service.apply({ code, newPassword: "N3wPassw0rd!" })).rejects.toMatchObject({
+    await expect(b.service.apply({ sessionKey: key, newPassword: "N3wPassw0rd!" })).rejects.toMatchObject({
       code: "not_usable",
     });
     expect(authRepo.updatePasswordHash).not.toHaveBeenCalled();
