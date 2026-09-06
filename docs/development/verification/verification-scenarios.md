@@ -341,6 +341,9 @@ verifies, in one line each:
 >   response (PWR-01/02/03). This is the guarantee the whole capability is shaped
 >   around, and it is the one Channel Verification deliberately does *not* make:
 >   that surface is authenticated, so it can afford to report a cooldown.
+>   **The response body is only half of it** — a position opened only for a real
+>   account would answer the same question by its presence, which is why PWR-01a
+>   reads the position back for an address no account has.
 > - **G2 — one failure shape.** Wrong, malformed, spent and never-issued are
 >   reported identically (PWR-04/05/13). The single carve-out is an **absent**
 >   value, which is a malformed request rather than an answer about a code
@@ -352,17 +355,39 @@ verifies, in one line each:
 >   signing anyone in.
 > - **G5 — spent/expired is derived.** An expired credential is refused with no
 >   sweep having run, and its row is still there (PWR-14, **I8**).
+> - **G6 — the position is server-held, and every part of it is derived.** The
+>   reader's step lives in a server record addressed by an `HttpOnly` key, and
+>   is computed from whether a credential is bound to it — there is no step
+>   column (PWR-00/01a/02a/07a/10a). The read **never `404`s**: no position is a
+>   legitimate answer meaning *start at the beginning*.
+> - **G7 — the client never holds a password-change credential.** Once a code is
+>   confirmed it is the position's; `apply` carries only `{ newPassword }`, and a
+>   body supplying a code is **refused rather than stripped** (PWR-09a). The flow
+>   ends with less exposure than it began with.
+> - **G8 — a completed reset proves the address.** The evidence becomes
+>   sufficient at completion, not at confirmation, and Channel Verification
+>   writes it (PWR-11a). Recovery reports; it never writes the fact.
 >
 > **Self-isolated.** The folder mints its own account with a per-run unique handle,
 > so it never disturbs `verify_alice`/`verify_bob`. The run's identity is
 > `{{pwrUsername}}`; its captured code is `{{pwrCode}}`.
 >
+> **The runner must keep the cookie jar.** Since ADR 0017 the position is
+> addressed by an `HttpOnly` key the server sets, so every request after PWR-01
+> depends on the jar carrying it. Postman does this by itself. **Newman must be
+> told**: the run is necessarily split around the manual code paste, so the first
+> leg needs `--export-cookie-jar` and the second `--cookie-jar` pointed at it.
+> Without them PWR-07 onward fail on a position that is not there — and they fail
+> as a `400`, indistinguishable from a bad code, because that is exactly what
+> **G2** promises.
+>
 > **Setup precondition.** The server must run with `MAIL_MODE=capture`, which
 > writes each message to `.mail-capture/` relative to the API process's working
 > directory. Without it the code is unobtainable and PWR-07 onward cannot run.
 >
-> **And the migrations must be applied**, `password_reset_challenges` and
-> `mail_send_attempts` both. Every send passes through the mail mechanism's abuse
+> **And the migrations must be applied**: `password_reset_challenges`,
+> `password_reset_sessions` and `mail_send_attempts`. The position lives in the
+> second, and a missing one fails the folder at its first row. Every send passes through the mail mechanism's abuse
 > controls, which **fail closed** when their state cannot be read: an unapplied
 > migration turns PWR-02 into a silent no-send produced by a correctly-behaving
 > system. Read that as a missing migration, never as a defect.
@@ -379,19 +404,26 @@ verifies, in one line each:
 
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
 |----|---------------|--------|---------------------|-------------------|---------|----------------|
+| PWR-00 | Setup registered | `GET …/session` before any request | **200**, `{step:"request", maskedEndpoint:null}` — the read **never `404`s** (**G6**) | no `password_reset_sessions` row for this run | — | ☐ |
 | PWR-01 | Setup registered; server in `MAIL_MODE=capture` | `POST /auth/password-reset` for an address **no account has** | **202**; body `{"success":true,"data":null}`; **no `Retry-After`** | no `password_reset_challenges` row (Checkpoint J) | — | ☐ |
+| PWR-01a | PWR-01 | `GET …/session` | **200**, `step:"code"` and a **masked** address — a position was opened for an address **no account has** (**G1**, **G6**) | one `password_reset_sessions` row, `challenge_id` **null** | — | ☐ |
 | PWR-02 | PWR-01 | same request for the **real** address | **202**, **byte-identical** to PWR-01 (**G1**) | one row, `code_hash` a **64-hex digest**, `used_at` null (Checkpoint J) | via reset | ☐ |
+| PWR-02a | PWR-02 | `GET …/session` | **200**, `step:"code"`, the real address masked to its first character; the unmasked value appears **nowhere** in the response (**D5**) | **still one** session row — PWR-01's was superseded, not added to | — | ☐ |
 | PWR-03 | PWR-02, within 60s | same request again | **202**, **byte-identical** again — the cooldown is silent (**G1**) | **still one row** — no second credential minted | — | ☐ |
 | PWR-04 | PWR-02 | `POST …/confirm {code:"ZZZZZZZZZZZZ"}` | **400** `bad_request`, *"That reset code is not valid."*, **no field errors** | row unchanged | — | ☐ |
 | PWR-05 | PWR-02 | confirm `{code:"!!"}` (malformed) | **byte-identical** to PWR-04 — **not** a `422` (**G2**) | unchanged | — | ☐ |
 | PWR-06 | — | confirm `{code:""}` | **422** `validation` with a `code` field error — a malformed *request* (**G2**) | unchanged | — | ☐ |
 | PWR-07 | PWR-02; code read from `.mail-capture/` into `{{pwrCode}}` | confirm with that code | **204**, empty body | row **unchanged** — `used_at` still null (**G3**) | — | ☐ |
+| PWR-07a | PWR-07 | `GET …/session` | **200**, `step:"password"` — derived from the bound credential, and **no step column exists** (**G6**) | the session row's `challenge_id` is now set | — | ☐ |
 | PWR-08 | PWR-07 | confirm with the **same** code again | **204** again — confirm consumed nothing (**G3**) | unchanged | — | ☐ |
-| PWR-09 | PWR-07 | `POST …/apply` with that code and `"weak"` | **422** `validation`, field error on `newPassword` | **row still unspent** — a weak password never costs the code | — | ☐ |
-| PWR-10 | PWR-09 | apply with that code and a compliant password | **204**, empty body, **no tokens and no cookie** (**D2**) | `used_at` set; **`refresh_tokens` for this account empty** (**G4**, Checkpoint J) | via reset | ☐ |
+| PWR-09 | PWR-07 | `POST …/apply` with `{newPassword:"weak"}` — **the code is not the caller's to send** | **422** `validation`, field error on `newPassword` | **row still unspent** — a weak password never costs the code | — | ☐ |
+| PWR-09a | PWR-07 | apply with **a `code` in the body** | **422** `validation` — the field is **refused, not stripped** (**G7**) | **row still unspent**; PWR-10 spends the same code immediately after | — | ☐ |
+| PWR-10 | PWR-09 | apply with a **compliant** password | **204**, empty body, **no tokens** (**D2**); `Set-Cookie` **clears** the position key with the attributes it was set with | `used_at` set; **`refresh_tokens` for this account empty** (**G4**, Checkpoint J) | via reset | ☐ |
+| PWR-10a | PWR-10 | `GET …/session` | **200**, `{step:"request", maskedEndpoint:null}` — the position did not outlive the reset (**G6**) | **no** session row for this run | — | ☐ |
 | PWR-11 | PWR-10 | `POST /auth/login` with the **new** password | **200** | a single new session row | — | ☐ |
+| PWR-11a | PWR-11 | `GET /users/me` with that session's token | **200**, `emailVerification: "proven"` (**G8**) — the account never verified by hand | a `channel_verifications` row for this endpoint with `proven_at` set | — | ☐ |
 | PWR-12 | PWR-10 | login with the **old** password | **401** `unauthorized`, the generic credential error | unchanged | — | ☐ |
-| PWR-13 | PWR-10 | apply with the **same** code again | **byte-identical** to PWR-04 — a replay is indistinguishable from a value that never existed (**G2**) | unchanged | — | ☐ |
+| PWR-13 | PWR-10 | apply again, the position now cleared | **byte-identical** to PWR-04 — a replay is indistinguishable from a value that never existed (**G2**) | unchanged | — | ☐ |
 | PWR-14 | Restart with a short `RESET_CODE_TTL_MS`; request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
 | PWR-15 | **Run last**, after a restart clearing the in-memory counter | six requests in a row | attempts 1–5 → **202**; **attempt 6 → 429** `rate_limit` | unchanged | wait 15 min or restart | ☐ |
 

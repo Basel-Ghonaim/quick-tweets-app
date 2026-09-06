@@ -12,7 +12,7 @@ reclamation) is built.
 |---|---|
 | [verification-scenarios.md](verification-scenarios.md) | **The catalogue** — every scenario with ID, preconditions, action, expected API + DB state, cleanup, result. The source of truth for *what* is verified. |
 | [verification-runbook.md](verification-runbook.md) | **The operations guide** — setup, the pgAdmin/SQL checkpoints, and the phase-by-phase order. *How* to run it. |
-| `quick-tweets-verification.postman_collection.json` | Postman v2.1 collection — the **driver** that produces each state transition. |
+| `quick-tweets-verification.postman_collection.json` | Postman v2.1 collection — the **driver** that produces each state transition. Folder 11 also runs from the command line: `npm run verify:reset`, and see the runbook. |
 | `environment.local.json` | Postman environment (`QuickTweets — Local`) — base URLs, the two test users, and the captured-variable slots. |
 | `fixtures/` | Signature-valid sample images + one deliberately invalid file. |
 

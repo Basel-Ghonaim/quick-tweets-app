@@ -20,6 +20,11 @@ apps/api/src/generated
 # directory, so anchoring it would hold only when the process starts in server/.
 .mail-capture/
 
+# Newman run artefacts. The exported environment holds the pasted reset code
+# and the cookie jar holds the position key it was issued against — both are
+# live single-use secrets, for the same reason .mail-capture/ is ignored above.
+.newman/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -70,6 +70,52 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
    Postman may ask you to re-select the file — point it at
    `fixtures/sample.png` (Postman stores file paths per machine).
 
+## Running folder 11 from the command line (Newman)
+
+Folder 11 is the one folder with a scripted runner, because it is the one whose
+guarantees are cheap to break and invisible in a body. The other folders stay
+hand-driven: they need pgAdmin beside them, and a green CLI run would say nothing
+about the coordination they exist to check.
+
+**It runs in three legs, and the breaks are not arbitrary.** The first is the
+manual code paste — the code is knowable to nobody by design, so no runner can
+cross it. The second is a restart, because the limiter counter is in memory.
+The subfolders are named for those breaks.
+
+```bash
+# Leg 1 — everything up to the point the code is needed.
+# Exports the environment and the cookie jar that leg 2 depends on.
+npm run verify:reset
+
+# Read the code from the newest file in apps/api/.mail-capture/, then:
+npm run verify:reset:code -- --env-var pwrCode=7QK3MNP2XVZB
+
+# Restart the API, then run the limiter last.
+npm run verify:reset:limiter
+```
+
+Against a server somewhere other than the default, append
+`-- --env-var baseUrl=http://localhost:4300/api/v1` to each.
+
+> **Leg 2 will not work without leg 1's cookie jar**, and it fails in the most
+> misleading way available: every request from PWR-07 answers `400`,
+> indistinguishable from a wrong code — which is exactly what **G2** promises, so
+> the harness cannot tell you which one it was. If leg 2 fails wholesale, suspect
+> the jar before suspecting the capability.
+
+> **Newman is not a dependency of this repository.** The scripts invoke it through
+> `npx` at a pinned version, so nothing is installed and the lockfile is untouched.
+> That is deliberate: newman's tree carries a large number of advisories, and this
+> is a manual harness that never runs in CI. The cost of pulling it in permanently
+> is not worth a runner used by hand.
+
+> **`.newman/` is git-ignored.** The exported environment holds the pasted code and
+> the jar holds the position key it was issued against. Both are live single-use
+> secrets, for the same reason captured mail is ignored.
+
+**PWR-14 has no script**, and cannot: it needs a restart at a short
+`RESET_CODE_TTL_MS` and a wait. It stays a hand-run step — see its note below.
+
 ## How auth is handled
 
 - **Access token** is returned in the response *body*. Register/Login test scripts
@@ -78,6 +124,11 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
 - **Refresh token** and the `qt_session` hint are **httpOnly / normal cookies**,
   handled automatically by Postman's cookie jar. `refresh` and `logout` need no
   body.
+- **`qt_reset`** is a third cookie, and folder 11 depends on it entirely: it
+  addresses the reader's position in the recovery flow, and `apply` reads the
+  credential from it rather than from a request body. It is `httpOnly` and
+  scoped to `/api/v1/auth/password-reset`, so the jar carries it and nothing
+  else needs to know it exists.
 - **Two users, one cookie jar.** On `localhost` both users share Postman's jar, so
   logging in as B overwrites A's refresh cookie. That is why cross-principal tests
   authorize with the **per-user Bearer token**, never the cookie. Do not "fix"
@@ -316,11 +367,16 @@ after it.
 > alias still owned by the original account.
 
 
-### Checkpoint J — Password reset custody and revocation (folder 11)
+### Checkpoint J — Password reset custody, position and revocation (folder 11)
 ```sql
 -- The credential lives entirely inside Auth, shares nothing with Channel
 -- Verification, and a completed reset leaves no session alive. Substitute
 -- :pwrUserId with the id folder 11's Setup captured.
+--
+-- Queries 6-8 cover the position (ADR 0017). Note they are NOT keyed on
+-- :pwrUserId, and cannot be: a position opened for an address no account has
+-- has no user to key on, which is the point of opening one for every address
+-- alike. Read them against the run's live rows instead.
 
 -- 1. ISOLATION: the reset credential has no foreign key to, and no column
 --    naming, any channel-verification table. MUST return 0 rows.
@@ -362,6 +418,32 @@ SELECT count(*) AS status_columns
 FROM information_schema.columns
 WHERE table_name = 'password_reset_challenges'
   AND (column_name ILIKE '%status%' OR column_name ILIKE '%state%');
+
+-- 6. THE STEP IS DERIVED, AND SO IS THE ACTOR (G6). The position table carries
+--    no step column and no user column. MUST be 0 — a stored step would be a
+--    second copy of something the credential already decides, and a user column
+--    would make the unknown-address position distinguishable in the data.
+SELECT count(*) AS forbidden_columns
+FROM information_schema.columns
+WHERE table_name = 'password_reset_sessions'
+  AND (column_name ILIKE '%step%' OR column_name ILIKE '%status%'
+       OR column_name ILIKE '%state%' OR column_name = 'user_id');
+
+-- 7. THE POSITION ITSELF. After PWR-01a exactly one live row with challenge_id
+--    NULL (the step reads 'code'); after PWR-02a still exactly one, superseded
+--    rather than added to; after PWR-07a that row's challenge_id is set (the
+--    step reads 'password'); after PWR-10a there is none.
+SELECT id, challenge_id, masked_endpoint, expires_at, created_at
+FROM password_reset_sessions
+WHERE expires_at > now()
+ORDER BY created_at DESC;
+
+-- 8. THE MASK IS WHAT IS STORED (D5). Masking happens where the address is
+--    held, so the unmasked value is never written here and cannot leak from a
+--    stale row. MUST be 0.
+SELECT count(*) AS unmasked_rows
+FROM password_reset_sessions
+WHERE masked_endpoint NOT LIKE '%•%';
 ```
 
 > **PWR-15 runs last, and after its own restart.** Six requests exhaust the per-IP
