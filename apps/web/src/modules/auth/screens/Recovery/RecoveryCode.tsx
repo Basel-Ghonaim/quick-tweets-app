@@ -16,6 +16,9 @@ interface RecoveryCodeProps {
   confirmation?: string;
   onSubmit: (code: string) => Promise<void>;
   onResend: () => Promise<void>;
+  /** Abandons this attempt for a new address. The server still owns the step;
+   *  what moves it is the request the address form then makes. */
+  onRestart: () => void;
 }
 
 export const RecoveryCode = ({
@@ -23,6 +26,7 @@ export const RecoveryCode = ({
   confirmation,
   onSubmit,
   onResend,
+  onRestart,
 }: RecoveryCodeProps) => {
   const { values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
     useRecoveryForm(recoveryFormSchemas.codeFields, ({ code }) =>
@@ -70,21 +74,31 @@ export const RecoveryCode = ({
         />
 
 
-        <p className={styles.resend}>
-          <Button
-            type="button"
-            variant="ghost"
-            size="small"
-            disabled={!position.canResend || !isOpen}
-            onClick={() => void onResend()}
-          >
-            {!position.canResend
-              ? AUTH_COPY.recovery.resendSpent
-              : isOpen
-                ? AUTH_COPY.recovery.resend
-                : AUTH_COPY.recovery.resendIn(secondsLeft)}
+        <div className={styles.secondaries}>
+          {/* Never disabled: a mistyped address must always have a way out, and
+              it is the one action left once the asks are spent. */}
+          <Button type="button" variant="ghost" size="small" onClick={onRestart}>
+            {AUTH_COPY.recovery.startOver}
           </Button>
-        </p>
+
+          {position.canResend && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="small"
+              disabled={!isOpen}
+              onClick={() => void onResend()}
+            >
+              {isOpen ? AUTH_COPY.recovery.resend : AUTH_COPY.recovery.resendIn(secondsLeft)}
+            </Button>
+          )}
+        </div>
+
+        {!position.canResend && (
+          <Typography variant="body-small" tone="muted">
+            {AUTH_COPY.recovery.resendSpent}
+          </Typography>
+        )}
 
         {/* The seconds tick, so they are not spoken; only the moment that
             changes what the reader can do is. */}

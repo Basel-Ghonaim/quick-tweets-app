@@ -18,6 +18,9 @@ import styles from "./Recovery.module.css";
 export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
   const { read, position, request, resend, confirm, apply, retry } = useRecovery(repo);
   const [justAsked, setJustAsked] = useState(false);
+  /* Not a claim about which step the reader is on — the server still owns that.
+     It is a reader abandoning this attempt, and a reload discards it. */
+  const [restarting, setRestarting] = useState(false);
   const navigate = useAuthNavigate();
   const dispatch = useAuthDispatch();
   const screen = screenFor(read);
@@ -50,12 +53,13 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
     );
   }
 
-  if (screen === "request") {
+  if (screen === "request" || restarting) {
     return (
       <RecoveryRequest
-        notice={justAsked ? AUTH_COPY.recovery.lapsed : undefined}
+        notice={justAsked && !restarting ? AUTH_COPY.recovery.lapsed : undefined}
         onSubmit={async (email) => {
           await request(email);
+          setRestarting(false);
           setJustAsked(true);
         }}
       />
@@ -69,6 +73,7 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
         confirmation={justAsked ? AUTH_COPY.recovery.sent : undefined}
         onSubmit={confirm}
         onResend={resend}
+        onRestart={() => setRestarting(true)}
       />
     );
   }

@@ -11,11 +11,13 @@
   margin-block-start: var(--space-6);
 }
 
-/* Right-aligned under the field it belongs to, as the sign-in aside is. */
-.resend {
+/* The way out on one side, the way on on the other, so neither hides. */
+.secondaries {
   display: flex;
-  justify-content: flex-end;
-  margin: 0;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 /* Present for assistive technology only: the countdown beside it is what a

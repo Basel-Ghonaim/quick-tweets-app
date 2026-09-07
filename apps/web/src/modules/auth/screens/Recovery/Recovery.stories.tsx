@@ -249,19 +249,50 @@ export const TheResendWindowIsTheServersOwn: Story = {
   },
 };
 
-/** A spent bound says so and offers a way onward, rather than a control that
- *  would do nothing. */
-export const ASpentBoundSaysStartOver: Story = {
+/**
+ * A spent bound says so in text and leaves the way out enabled. Putting that
+ * sentence on a disabled control would name an action the screen does not
+ * offer, which is the shape this guards against.
+ */
+export const ASpentBoundStillHasAWayOut: Story = {
   render: withRepo(
     repository({ position: async () => at({ step: "code", canResend: false }) }),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const resend = await canvas.findByRole("button", {
-      name: AUTH_COPY.recovery.resendSpent,
-    });
-    await expect(resend).toBeDisabled();
+    await expect(await canvas.findByText(AUTH_COPY.recovery.resendSpent)).toBeVisible();
+    await expect(
+      canvas.getByRole("button", { name: AUTH_COPY.recovery.startOver }),
+    ).toBeEnabled();
+    // No resend control at all, rather than one that cannot be used.
+    await expect(
+      canvas.queryByRole("button", { name: AUTH_COPY.recovery.resend }),
+    ).toBeNull();
+  },
+};
+
+/**
+ * A mistyped address is the likeliest reason a code never arrives, and without
+ * a way back the whole flow is thrown away to fix one character.
+ *
+ * The control does not claim a step: the server still says `code`, and what
+ * moves it is the request the address form then makes.
+ */
+export const AMistypedAddressCanBeCorrected: Story = {
+  render: withRepo(repository({ position: async () => at({ step: "code" }) })),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+    await userEvent.click(
+      canvas.getByRole("button", { name: AUTH_COPY.recovery.startOver }),
+    );
+
+    await expect(
+      await canvas.findByRole("heading", { name: AUTH_COPY.recovery.requestTitle }),
+    ).toBeVisible();
+    await expect(canvas.getByLabelText(AUTH_COPY.recovery.emailLabel)).toBeVisible();
   },
 };
 
