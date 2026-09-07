@@ -3,15 +3,15 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the [frontend error handling](error-handling.md) document), the **RTK Query cache/data layer** (the frontend state-and-data document, deferred), or the **server** side of the token model ([Backend Security](../backend/security.md)).
 > **Scope:** The shared transport mechanisms in `apps/web/src/shared/api/` and `apps/web/src/shared/rtk-query/`. Per-feature data access lives in the feature documents; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
-> **Version:** 1.0
-> **Last Updated:** 2026-08-14
+> **Version:** 1.1
+> **Last Updated:** 2026-09-07
 > **Owner:** Basel Ghonaim
 
 ## Current transport architecture
 
 The frontend reaches the backend through **two transport stacks**, kept in strictly separate folders:
 
-- **Axios** (`apps/web/src/shared/api/`) — used by the **Authentication** feature (login, register, refresh, logout).
+- **Axios** (`apps/web/src/shared/api/`) — used by the **Authentication** feature, and by the platform capabilities it composes.
 - **RTK Query `fetchBaseQuery`** (`apps/web/src/shared/rtk-query/`) — used by **all other features** (tweets, comments, likes, …).
 
 The selection rule is therefore by feature: Authentication is served by the Axios stack; every newer feature is served by RTK Query. This split — Axios for Authentication, RTK Query for everything else — reflects the **current implementation**, not a permanent architectural constraint. Both attach the same access token and rely on the same `HttpOnly` refresh cookie issued by the backend.
@@ -24,16 +24,21 @@ Responsibility transitions by feature: an Authentication call goes through the A
 
 ## The Axios stack
 
-### Two clients
+### Three clients
 
 | Client | Auth header | Credentials | Retry | 401 refresh | Used for |
 |---|---|---|---|---|---|
 | `apiClient` | no | no | yes | no | public endpoints |
+| `publicCredentialedClient` | no | `withCredentials: true` | yes | no | anonymous endpoints the server addresses by a cookie it set |
 | `authClient` | yes | `withCredentials: true` | yes | yes | authenticated endpoints |
+
+**Being authenticated and sending credentials are separate properties**, and the third client exists because they are. An endpoint can require the browser's cookie while requiring no session at all — account recovery is the first, and the emailed-link path it defers would be the second. Attaching a token there would send one where none is read, and arming the refresh replay would drive a session flow on behalf of a signed-out reader.
+
+It is a third client rather than a per-call flag so the properties live in the thing's shape, and rather than a factory because one instance cannot shape what varies ([Engineering Principles §3](../development/engineering-principles.md)). Unlike `authClient` it needs no setup seam: it injects nothing, so the composition root does not wire it.
 
 ### Configuration
 
-`config.ts` is the single source for the Axios base URL and timeout — `API_BASE_URL` (from `VITE_API_URL`, defaulting to `http://localhost:4000/api/v1`) and a 10-second `API_TIMEOUT`. Both clients read from it.
+`config.ts` is the single source for the Axios base URL and timeout — `API_BASE_URL` (from `VITE_API_URL`, defaulting to `http://localhost:4000/api/v1`) and a 10-second `API_TIMEOUT`. All three clients read from it.
 
 ### Interceptor pipeline
 

@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the **Password Reset subsystem's mechanisms and their rationale** — the module anatomy and why it publishes nothing, custody of the credential, the request/resend/confirm/apply lifecycle, how neutrality is achieved and where it is only mitigated, the code and its digest, the single-failure discipline, session revocation, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
 > It does **not** own: the boundary **decision** itself — recorded in [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared password hashing, session model and HTTP-edge rate limiting ([Backend Security](security.md)'s); the **outbound mail mechanism** it composes, which is [`mail.md`](mail.md)'s; or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
-> **Scope:** The server-side capability at `apps/api/src/modules/auth/password-reset/`. Frontend behaviour is not described here; no frontend consumes it yet.
-> **Version:** 1.3
+> **Scope:** The server-side capability at `apps/api/src/modules/auth/password-reset/`. Frontend behaviour is not described here: how the recovery screens compose it is the [authentication feature](../features/authentication/authentication.md)'s.
+> **Version:** 1.4
 > **Last Updated:** 2026-09-07
 > **Owner:** Basel Ghonaim
 

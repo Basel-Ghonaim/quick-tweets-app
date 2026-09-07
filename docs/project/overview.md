@@ -4,8 +4,8 @@
 > **Class:** **Description** for current implementation status; **Commitment** for committed product scope ([Documentation Strategy §3](../architecture/documentation-strategy.md)). Each section says which it is.
 > **Authority:** The authoritative source for the **product's scope** — both what exists today and what the product is committed to. It does not describe *how* the system is built (see the architecture and platform documents) or the API surface (see the [API contract](../api/api-contract.md)).
 > **Scope:** What quick-tweets is, which capabilities exist today, and which the product is committed to. Mechanisms, endpoints, and per-feature internals live in their owning documents and are linked, never restated.
-> **Version:** 1.7
-> **Last Updated:** 2026-09-06
+> **Version:** 1.8
+> **Last Updated:** 2026-09-07
 > **Owner:** Basel Ghonaim
 
 ## What quick-tweets is
@@ -25,7 +25,7 @@ The **backend exposes the full product surface; the frontend currently implement
 
 | Capability | Backend | Frontend |
 |---|---|---|
-| [**Authentication**](../features/authentication/authentication.md) — register, login, logout, logout-all, token refresh, current user (JWT access token + HttpOnly refresh cookie; auth rate limiting) | Implemented | Implemented (sign-in · sign-up · the post-registration journey: profile completion and email verification) |
+| [**Authentication**](../features/authentication/authentication.md) — register, login, logout, logout-all, token refresh, current user (JWT access token + HttpOnly refresh cookie; auth rate limiting) | Implemented | Implemented (sign-in · sign-up · the post-registration journey: profile completion and email verification · account recovery) |
 | **Tweets** — global feed and author timelines (cursor-paginated), single tweet, create, edit own, delete own | Implemented | Not yet |
 | **Likes** — toggle a like on a tweet | Implemented | Not yet |
 | **Comments** — list per tweet (offset-paginated), create, edit own, delete own | Implemented | Not yet |

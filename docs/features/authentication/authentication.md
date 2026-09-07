@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the **authentication feature** — what it does, how its flows work, how it **composes** the platform, and its feature-specific configuration and policies. It owns the feature, **not the mechanisms it composes**: every shared mechanism it touches is owned by a platform document and linked here, never restated.
 > **Scope:** The auth feature module (`apps/web/src/modules/auth/`) and its behavior. The wire contract is the [API contract](../../api/api-contract.md)'s; the server-side security mechanisms are [Backend Security](../../backend/security.md)'s; the transport and the client half of the token model are the [frontend API client](../../frontend/api-client.md)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organization is the current implementation of **this feature only — explicitly not the canonical template for future features** (the template is deliberately deferred by the [frontend architecture](../../frontend/architecture.md) until a second feature validates or reshapes it). Anything not described here is not yet built, not architecturally rejected.
-> **Version:** 1.5
-> **Last Updated:** 2026-09-06
+> **Version:** 1.6
+> **Last Updated:** 2026-09-07
 > **Owner:** Basel Ghonaim
 
 ## What the feature does
@@ -18,6 +18,7 @@ Authentication is the frontend's first — and currently only — fully built fe
 - **The post-registration journey** — profile completion and email verification, presented as one surface whose step is named by the server. The account is complete before any of it and nothing an account may do depends on it ([ADR 0008](../../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) Decision 2, as revised); the journey's own state and transitions are the [API contract](../../api/api-contract.md)'s.
 - **Profile completion** — name, bio and avatar, saved or skipped, with the avatar uploaded when it is chosen rather than at submit. It lives here temporarily: its destination is a User feature that does not exist, and the mechanism that will carry it there is proposed in [#623](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/623).
 - **Email verification** — requesting a code and confirming it, composing the [Channel Verification](../../backend/channel-verification.md) capability. Whether an address is proven is that capability's fact, never this feature's.
+- **Account recovery** — asking for a code, confirming it, and setting a new password, composing the [Password Reset](../../backend/password-reset.md) capability. Where the reader stands is that capability's fact and never this feature's; the flow ends at sign-in rather than in a session ([ADR 0016](../../architecture/decisions/0016-password-reset-credential-change-authority.md) Decision 8).
 
 ## Responsibility boundary
 
@@ -33,7 +34,7 @@ The feature implements almost nothing generic itself — it configures and compo
 
 | The feature needs | It composes | Owned by |
 |---|---|---|
-| Its wire endpoints and payloads | `POST /auth/register · login · logout · refresh` | [API contract](../../api/api-contract.md) |
+| Its wire endpoints and payloads | `POST /auth/register · login · logout · refresh`, and the journey, verification and recovery surfaces | [API contract](../../api/api-contract.md) |
 | Requests with credentials + auth | the authenticated Axios client | [Frontend API Client](../../frontend/api-client.md) |
 | The token model it participates in | in-memory access token, `HttpOnly` refresh cookie | [API client](../../frontend/api-client.md) (client half) · [Backend Security](../../backend/security.md) (server half) |
 | Its forms | schema configs driving the form engine | [Frontend Forms](../../frontend/forms.md) |
@@ -51,6 +52,20 @@ The feature's own contribution is the **choreography** — when and why the plat
 2. **Login / Register.** A schema config defines the form; the form engine validates and hands the typed payload to the feature's injected action, which marks the request pending, calls the repository, and stores the user + access token in the feature's state. Failures arrive as one normalized `AppError`, are passed through the feature's message enrichment, land in the per-request error state, and surface as a form-level alert.
 3. **Ongoing session.** During normal use the transport layer keeps the session alive (attaching the token, silently refreshing on expiry — the mechanism is the [API client](../../frontend/api-client.md)'s). The feature's part is the **expiry behavior** wired on its behalf in the composition root: when a refresh ultimately fails, the callback dispatches the feature's reset action — a clean local sign-out.
 4. **Logout.** Logout calls the server to revoke the session (`POST /auth/logout`), which invalidates the refresh cookie server-side.
+
+## Recovery — one route, and the server names the step
+
+Account recovery is three steps on **one** route. Which of them renders is read from the server, never tracked by the client: a step's URL would be a second, reader-editable copy of a position the capability owns, and that shape was built once for the onboarding journey and rejected. The same conclusion is reached here for a stronger reason — the position *is* a credential, so the client cannot hold it at all ([ADR 0017](../../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)).
+
+Three consequences follow, and they are the feature's own:
+
+- **A reload lands on the step the reader reached, able to finish it.** Nothing is remembered on the client for that to work; the answer is asked for again.
+- **A read that failed is not an answer.** It renders a retry rather than the first screen, because sending a reader back to the beginning would discard a recovery the server still holds.
+- **No number on these screens is the client's.** The resend window and whether one may still be asked for are read from the position, so a countdown never reports something no server said.
+
+Two things the reader can do are actions rather than claims about the step, and the distinction is what keeps the server authoritative. **Leaving** is always available and always safe, since the position outlives the visit. **Starting over** is confined to the code step: it abandons the attempt, and what actually moves the server is the request the address form then makes — which supersedes the position outright. At the password step it is deliberately absent, because a new request would discard control the reader has already proved.
+
+Unlike the journey's read, this one waits for nothing. These endpoints are anonymous, so there is no session whose absence could be mistaken for an answer.
 
 ## Inside the feature — the current implementation (not a template)
 

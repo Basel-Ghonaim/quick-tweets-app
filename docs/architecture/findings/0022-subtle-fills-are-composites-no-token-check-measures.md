@@ -30,14 +30,16 @@ Four of the twelve role/theme combinations miss 4.5:1, and three of them miss it
 
 Three consumers already paired that text with that fill and shared the defect: the auth message region, the current design's form error, and `FileInput`'s rejection state — the last inside the Design System.
 
-**The other three are recorded, not fixed.** They belong to no Work Item that has met them:
+**`info` in light was resolved the same way, and for the same reason.** The recovery screens gave the role its first consumer — a neutral confirmation over its own `-subtle` fill — and the rendered accessibility run reported **4.44** on the page, reproducing this finding's own measurement. `--role-on-surface-info` moved to `--palette-blue-700`, the step named below.
 
-- `warning` and `info` in **light** each need one darker step, and `--palette-amber-800` and `--palette-blue-700` already exist.
+**The other two are recorded, not fixed.** They belong to no Work Item that has met them:
+
+- `warning` in **light** needs one darker step, and `--palette-amber-800` already exists.
 - `primary` in **dark** has no lighter step to move to — `--palette-violet-400` is the lightest violet the scale carries — so resolving it means minting a palette step, which is a design decision rather than a correction. It also sits beside [Finding 0020](0020-named-colour-distinctions-the-values-do-not-make.md)'s record of `--role-on-surface-primary` and `--text-accent` converging in that theme.
 
 ## Why no check closes it here
 
-A check asserting the composite would fail on `main` for those three, so it cannot ship before their values are decided — and deciding them is the design call this finding declines to take on their behalf.
+A check asserting the composite would fail on `main` for those two, so it cannot ship before their values are decided — and deciding them is the design call this finding declines to take on their behalf.
 
 The rendered accessibility run **does** see the composite, and is what caught this: axe reported `4.13` for the exact pair, independently reproducing the arithmetic. But it only sees pairs some story actually renders, and it is promoted to `error` on the auth screens alone — everywhere else it reports and passes.
 
