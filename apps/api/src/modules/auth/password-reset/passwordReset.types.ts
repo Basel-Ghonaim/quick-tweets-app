@@ -193,6 +193,12 @@ export interface RequestResetOutcome {
    * presence, the question the capability refuses to answer.
    */
   sessionKey: string;
+  /**
+   * The position this request opened, so a caller never holds the step from
+   * one answer and the window from another. Identical across every branch for
+   * a given submitted address.
+   */
+  position: ResetPosition;
 }
 
 export interface ConfirmResetInput {

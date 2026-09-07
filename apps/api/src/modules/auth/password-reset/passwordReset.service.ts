@@ -43,6 +43,7 @@ import type {
   RequestResetInput,
   PasswordResetSession,
   RequestResetOutcome,
+  ResetPosition,
   ResetCode,
   ResetCodeFormat,
 } from "./passwordReset.types.js";
@@ -255,9 +256,19 @@ export const createPasswordResetService = (
       await wait(responseFloorMs - elapsed);
     }
 
+    /* Built from what this request just wrote rather than read back: the
+       values are identical on every branch, and a second read would be a
+       second branch-dependent query inside the floor. */
+    const position: ResetPosition = {
+      step: "code",
+      maskedEndpoint: maskEndpoint(email),
+      retryAfterSeconds: Math.ceil(cooldownMs / 1000),
+      canResend: maxResends > 0,
+    };
+
     const outcome: RequestResetOutcome = dispatchSend
-      ? { dispatchSend, sessionKey: freshKey }
-      : { sessionKey: freshKey };
+      ? { dispatchSend, sessionKey: freshKey, position }
+      : { sessionKey: freshKey, position };
     return outcome;
   };
 

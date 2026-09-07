@@ -70,7 +70,7 @@ export const createPasswordResetController = (
    */
   request: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { dispatchSend, sessionKey } = await service.request({
+      const { dispatchSend, sessionKey, position } = await service.request({
         email: String(req.body.email),
         sessionKey: req.cookies?.[SESSION_COOKIE] as string | undefined,
       });
@@ -93,7 +93,7 @@ export const createPasswordResetController = (
         });
       }
 
-      sendSuccess(res, null, 202);
+      sendSuccess(res, position, 202);
     } catch (err) {
       next(asHttpError(err));
     }

@@ -241,6 +241,35 @@ describe("request — neutrality across all three branches (I5)", () => {
     expect(Object.keys(unknown)).toEqual(Object.keys(coolingOutcome));
   });
 
+  /* The body now carries content, so identity is asserted on it rather than
+     inherited from a constant. Same submitted address, opposite account
+     state: eligible and cooling must be indistinguishable outright. */
+  it("answers the same position for an eligible address and one inside its cooldown", async () => {
+    let clock = T0;
+    const { service } = build({ now: () => clock });
+
+    const eligible = await service.request({ email: USER.email });
+    clock = new Date(T0.getTime() + 1000);
+    const cooling = await service.request({ email: USER.email });
+
+    expect(cooling.position).toEqual(eligible.position);
+    expect(eligible.dispatchSend).toBeTypeOf("function");
+    expect(cooling.dispatchSend).toBeUndefined();
+  });
+
+  /* Against a different address only the mask may differ, and it is derived
+     from what the caller typed rather than from what exists. */
+  it("differs from an unknown address only by the mask of what was typed", async () => {
+    const { service } = build();
+
+    const known = await service.request({ email: USER.email });
+    const unknown = await service.request({ email: "nobody@example.test" });
+
+    const withoutMask = ({ maskedEndpoint: _m, ...rest }: typeof known.position) => rest;
+    expect(withoutMask(unknown.position)).toEqual(withoutMask(known.position));
+    expect(unknown.position.maskedEndpoint).toBe("n•••••@example.test");
+  });
+
   it("applies the response floor to the unknown-address branch", async () => {
     const { service, waits } = build();
 

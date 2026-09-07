@@ -1238,7 +1238,7 @@ The two capabilities both mint an emailed code and otherwise share almost nothin
 | | Channel Verification | Password Reset |
 |---|---|---|
 | `delivery` on the `202` | reported | **absent** — reporting it would confirm a send happened, and a send happens only for an address that exists |
-| `resendAvailableInSeconds` | reported | **absent** — a cooldown exists only for a real account, so reporting one discloses that the account is real |
+| `resendAvailableInSeconds` | reported | **absent** — the account's cooldown exists only for a real account, so reporting it discloses that the account is real. The session's own `retryAfterSeconds` is a different number: seeded when the session opens, for every address alike |
 | `Retry-After` on a cooldown | sent | **never sent**, for the same reason |
 | A cooldown refusal | a distinct `429` | **indistinguishable** from every other outcome |
 | A session cookie | none | **set on every branch alike**, so its presence says nothing |
@@ -1249,7 +1249,9 @@ Channel Verification can report all of these safely because it is **authenticate
 
 **Auth:** None. **Rate limit:** 5 requests / 15 min per IP. The durable controls sit beneath it and are the real answer: a per-account resend cooldown (60 seconds by default), and the mail mechanism's per-recipient cap with its reserved recovery floor ([`backend/mail.md`](../backend/mail.md)).
 
-**The response is a constant.** It is byte-for-byte identical whether the address belongs to no account, belongs to an account eligible for a fresh code, or belongs to an account still inside its cooldown. No field, header or status varies, and none is planned to: existence is never revealed, and never by advancing to a further step either.
+**The response is a constant for a given submitted address.** It is byte-for-byte identical whether that address belongs to no account, belongs to an account eligible for a fresh code, or belongs to an account still inside its cooldown. No field, header or status varies with any of that, and none is planned to: existence is never revealed, and never by advancing to a further step either.
+
+**It answers with the session**, in exactly the shape `GET /session` returns — so a client never holds the step from one answer and the window from another. Every field in it is settled before the account is looked up: the mask is derived from what the caller typed, and the window is seeded when the session is opened.
 
 ```jsonc
 // Request
@@ -1262,7 +1264,7 @@ Channel Verification can report all of these safely because it is **authenticate
 // Set-Cookie: qt_reset=<opaque>; Max-Age=<credential lifetime>; HttpOnly;
 //   SameSite=Strict; Path=/api/v1/auth/password-reset; Secure in production
 // Issued on every branch. A browser already holding one supersedes it.
-{ "success": true, "data": null }
+{ "success": true, "data": { "step": "code", "maskedEndpoint": "h•••••@example.test", "retryAfterSeconds": 60, "canResend": true } }
 
 // Response 422 — the address is not a well-formed email. A malformed REQUEST,
 // not an answer about the account, so it is the one case that differs — and it
