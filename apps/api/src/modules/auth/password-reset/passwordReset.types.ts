@@ -100,6 +100,14 @@ export interface CreateSessionInput {
 export interface ResetPosition {
   step: ResetStep;
   maskedEndpoint: string | null;
+  /**
+   * Seconds until this position may ask for another code, `0` when it may now.
+   * Seeded when the position is opened, so it reports that position's own
+   * history and never whether an account holds the address.
+   */
+  retryAfterSeconds: number;
+  /** False once the position has spent its asks, and where there is no position. */
+  canResend: boolean;
 }
 
 /**

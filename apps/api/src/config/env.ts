@@ -195,6 +195,11 @@ const envSchema = z
       .int()
       .positive()
       .default(7 * 24 * 60 * 60 * 1000),
+    // How many times one position may ask for a fresh code. It bounds how far
+    // that position's expiry may be pushed forward, so a held key cannot be
+    // renewed indefinitely; the durable abuse controls remain the per-account
+    // cooldown and Delivery's per-recipient cap.
+    RESET_MAX_RESENDS: z.coerce.number().int().nonnegative().default(3),
   })
   // Selecting a transport without the settings it needs is a misconfiguration,
   // and this project refuses to boot on those rather than failing at first use.
@@ -272,6 +277,20 @@ const envSchema = z
           `RESET_CHALLENGE_RETENTION_MS (${cfg.RESET_CHALLENGE_RETENTION_MS}ms) is shorter than ` +
           `RESET_RESEND_COOLDOWN_MS (${cfg.RESET_RESEND_COOLDOWN_MS}ms). The sweep could remove a ` +
           `row before its own cooldown window closes, and the cooldown would under-enforce silently.`,
+      });
+    }
+
+    // The window now reaches a reader, so a cooldown at or beyond the code's
+    // own lifetime would render a countdown that outlives the position it
+    // belongs to: it would expire before it ever opened.
+    if (cfg.RESET_RESEND_COOLDOWN_MS >= cfg.RESET_CODE_TTL_MS) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["RESET_RESEND_COOLDOWN_MS"],
+        message:
+          `RESET_RESEND_COOLDOWN_MS (${cfg.RESET_RESEND_COOLDOWN_MS}ms) is not shorter than ` +
+          `RESET_CODE_TTL_MS (${cfg.RESET_CODE_TTL_MS}ms). The position would lapse before its ` +
+          `resend window opened, so a reader could never reach the control it reports.`,
       });
     }
   });

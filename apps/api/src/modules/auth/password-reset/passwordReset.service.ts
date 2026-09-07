@@ -41,6 +41,7 @@ import type {
   IPasswordResetRepository,
   IPasswordResetService,
   RequestResetInput,
+  PasswordResetSession,
   RequestResetOutcome,
   ResetCode,
   ResetCodeFormat,
@@ -66,6 +67,7 @@ export interface PasswordResetServiceDeps {
   format?: ResetCodeFormat;
   ttlMs?: number;
   cooldownMs?: number;
+  maxResends?: number;
   responseFloorMs?: number;
   /**
    * Required and undefaulted: this capability must not reach for the fact
@@ -103,6 +105,7 @@ export const createPasswordResetService = (
   };
   const ttlMs = deps.ttlMs ?? env.RESET_CODE_TTL_MS;
   const cooldownMs = deps.cooldownMs ?? env.RESET_RESEND_COOLDOWN_MS;
+  const maxResends = deps.maxResends ?? env.RESET_MAX_RESENDS;
   const responseFloorMs = deps.responseFloorMs ?? DEFAULT_RESPONSE_FLOOR_MS;
 
   /**
@@ -278,13 +281,29 @@ export const createPasswordResetService = (
    * Where a reader stands. Never fails for want of a position — an absent or
    * lapsed one is a legitimate answer meaning *start at the beginning*.
    */
+  /**
+   * Derived on read from when the position last asked, so a window closes with
+   * nobody having written anything. Rounded up: a partial second still has to
+   * be waited out.
+   */
+  const windowOf = (session: PasswordResetSession) => ({
+    retryAfterSeconds: Math.max(
+      0,
+      Math.ceil((session.lastAskedAt.getTime() + cooldownMs - now().getTime()) / 1000),
+    ),
+    canResend: session.resendsUsed < maxResends,
+  });
+
   const positionOf: IPasswordResetService["positionOf"] = async (sessionKey) => {
     const session = await liveSession(sessionKey);
-    if (session === null) return { step: "request", maskedEndpoint: null };
+    if (session === null) {
+      return { step: "request", maskedEndpoint: null, retryAfterSeconds: 0, canResend: false };
+    }
 
     return {
       step: session.challengeId === null ? "code" : "password",
       maskedEndpoint: session.maskedEndpoint,
+      ...windowOf(session),
     };
   };
 

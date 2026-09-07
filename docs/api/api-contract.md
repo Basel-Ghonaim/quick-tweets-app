@@ -1304,19 +1304,25 @@ Channel Verification can report all of these safely because it is **authenticate
 
 **Auth:** None. **Rate limit:** none of its own; it spends nothing and checks no secret.
 
-Answers the step and the masked address the session holds. **There is no `404`:** an absent or lapsed session is a legitimate answer meaning *start at the beginning*, so a client never reads a status code to decide a screen — the same posture the onboarding journey's read takes.
+Answers the step, the masked address, and the session's resend window. **There is no `404`:** an absent or lapsed session is a legitimate answer meaning *start at the beginning*, so a client never reads a status code to decide a screen — the same posture the onboarding journey's read takes.
 
 The address is masked where it is held; the unmasked value never reaches a response.
 
+**`retryAfterSeconds` is the session's own window, not the account's cooldown**, and the distinction is what makes reporting it safe. It is seeded when the session is opened — for every submitted address alike, before any account is looked up — so it counts down from this session's own history and never answers whether an account holds the address. The per-account cooldown beneath it stays silent: inside it, nothing here changes and no message leaves.
+
+The two clocks can therefore disagree, and only in one direction: this window may say *wait* when the account's cooldown would in fact allow a send, never the reverse. A client that waits it out always gets a real send.
+
+**`canResend` is `false` once the session has spent its asks**, and where there is no session at all. A session may ask a bounded number of times, which is what stops a held key being renewed indefinitely; a client that finds it `false` offers *start over* rather than a control that would do nothing.
+
 ```jsonc
 // Response 200 — no session, or one that has lapsed
-{ "success": true, "data": { "step": "request", "maskedEndpoint": null } }
+{ "success": true, "data": { "step": "request", "maskedEndpoint": null, "retryAfterSeconds": 0, "canResend": false } }
 
-// Response 200 — a session with no confirmed code yet
-{ "success": true, "data": { "step": "code", "maskedEndpoint": "h•••••@example.test" } }
+// Response 200 — a session with no confirmed code yet, inside its window
+{ "success": true, "data": { "step": "code", "maskedEndpoint": "h•••••@example.test", "retryAfterSeconds": 42, "canResend": true } }
 
-// Response 200 — a code has been confirmed into it
-{ "success": true, "data": { "step": "password", "maskedEndpoint": "h•••••@example.test" } }
+// Response 200 — a code has been confirmed into it, and its asks are spent
+{ "success": true, "data": { "step": "password", "maskedEndpoint": "h•••••@example.test", "retryAfterSeconds": 0, "canResend": false } }
 ```
 
 ### `POST /auth/password-reset/apply` — Set the new password

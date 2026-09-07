@@ -27,6 +27,7 @@ const FORMAT: ResetCodeFormat = { alphabet: "0123456789ABCDEF", length: 8 };
 const TTL = 10 * 60 * 1000;
 const COOLDOWN = 60 * 1000;
 const FLOOR = 250;
+const MAX_RESENDS = 3;
 const T0 = new Date("2026-01-01T12:00:00.000Z");
 
 const USER = { id: 5, email: "holder@example.test" };
@@ -149,6 +150,7 @@ const build = (over: {
   /** Overrides layered onto the in-memory repo — for provoking a specific race outcome. */
   repoOverride?: Partial<IPasswordResetRepository>;
   proveChannel?: (userId: number, endpoint: string) => Promise<void>;
+  maxResends?: number;
 } = {}) => {
   const world = fakeWorld();
   const repo: IPasswordResetRepository = { ...world.repo, ...over.repoOverride };
@@ -172,6 +174,7 @@ const build = (over: {
     format: FORMAT,
     ttlMs: TTL,
     cooldownMs: COOLDOWN,
+    maxResends: over.maxResends ?? MAX_RESENDS,
     responseFloorMs: FLOOR,
   });
 
@@ -348,6 +351,8 @@ describe("the position, and when it stops answering", () => {
     await expect(service.positionOf(sessionKey)).resolves.toEqual({
       step: "code",
       maskedEndpoint: "h•••••@example.test",
+      retryAfterSeconds: COOLDOWN / 1000,
+      canResend: true,
     });
   });
 
@@ -359,10 +364,14 @@ describe("the position, and when it stops answering", () => {
     await expect(service.positionOf()).resolves.toEqual({
       step: "request",
       maskedEndpoint: null,
+      retryAfterSeconds: 0,
+      canResend: false,
     });
     await expect(service.positionOf("never-issued")).resolves.toEqual({
       step: "request",
       maskedEndpoint: null,
+      retryAfterSeconds: 0,
+      canResend: false,
     });
   });
 
@@ -378,6 +387,38 @@ describe("the position, and when it stops answering", () => {
     await expect(service.positionOf(sessionKey)).resolves.toEqual({
       step: "request",
       maskedEndpoint: null,
+      retryAfterSeconds: 0,
+      canResend: false,
+    });
+  });
+
+  /* Derived from when the position last asked, so a window closes with nobody
+     having written anything — the property the credential's usability has. */
+  it("counts the window down, and opens it with no write", async () => {
+    let clock = T0;
+    const { service } = build({ now: () => clock });
+    const { sessionKey } = await service.request({ email: USER.email });
+
+    clock = new Date(T0.getTime() + COOLDOWN / 2);
+    await expect(service.positionOf(sessionKey)).resolves.toMatchObject({
+      retryAfterSeconds: COOLDOWN / 2000,
+    });
+
+    clock = new Date(T0.getTime() + COOLDOWN);
+    await expect(service.positionOf(sessionKey)).resolves.toMatchObject({
+      retryAfterSeconds: 0,
+      canResend: true,
+    });
+  });
+
+  /* A control a reader cannot use has to say so rather than fail silently. */
+  it("reports a position that has spent its asks as unable to ask again", async () => {
+    const { service } = build({ maxResends: 0 });
+    const { sessionKey } = await service.request({ email: USER.email });
+
+    await expect(service.positionOf(sessionKey)).resolves.toMatchObject({
+      step: "code",
+      canResend: false,
     });
   });
 

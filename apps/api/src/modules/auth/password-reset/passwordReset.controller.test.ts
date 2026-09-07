@@ -192,13 +192,23 @@ describe("confirm and apply — the shapes they answer with", () => {
 
   it("answers where a reader stands without a status to read", async () => {
     const { controller } = build({
-      positionOf: vi.fn(async () => ({ step: "password" as const, maskedEndpoint: "b•••@x.test" })),
+      positionOf: vi.fn(async () => ({
+        step: "password" as const,
+        maskedEndpoint: "b•••@x.test",
+        retryAfterSeconds: 12,
+        canResend: true,
+      })),
     });
     const { res } = await call(controller.position, {});
 
     expect(res.json).toHaveBeenCalledWith({
       success: true,
-      data: { step: "password", maskedEndpoint: "b•••@x.test" },
+      data: {
+        step: "password",
+        maskedEndpoint: "b•••@x.test",
+        retryAfterSeconds: 12,
+        canResend: true,
+      },
     });
   });
 });
