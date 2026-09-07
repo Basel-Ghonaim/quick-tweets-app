@@ -20,6 +20,7 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
   const [justAsked, setJustAsked] = useState(false);
   /* Abandoning an attempt, not a claim about the step — the server owns that. */
   const [restarting, setRestarting] = useState(false);
+  const [lastAsked, setLastAsked] = useState("");
   const navigate = useAuthNavigate();
   const dispatch = useAuthDispatch();
   const screen = screenFor(read);
@@ -55,9 +56,11 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
   if (screen === "request" || restarting) {
     return (
       <RecoveryRequest
+        initialEmail={lastAsked}
         notice={justAsked && !restarting ? AUTH_COPY.recovery.lapsed : undefined}
         onSubmit={async (email) => {
           await request(email);
+          setLastAsked(email);
           setRestarting(false);
           setJustAsked(true);
         }}

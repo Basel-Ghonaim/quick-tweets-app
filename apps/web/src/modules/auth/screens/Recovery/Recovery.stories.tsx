@@ -296,6 +296,28 @@ export const AMistypedAddressCanBeCorrected: Story = {
   },
 };
 
+/** Correcting a typo should cost one character, not the whole address. */
+export const TheAddressComesBackWhenCorrecting: Story = {
+  render: withRepo(
+    repository({
+      position: async () => at({ step: "request" }),
+      request: async () => at({ step: "code" }),
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const typed = "holder@example.test";
+
+    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel), typed);
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.send }));
+    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
+
+    await expect(await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel)).toHaveValue(typed);
+  },
+};
+
 /** Every step offers a way out, and it is a link because sign in has an address. */
 export const EveryStepCanBeLeft: Story = {
   render: withRepo(repository({ position: async () => at({ step: "code" }) })),

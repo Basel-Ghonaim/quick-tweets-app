@@ -11,12 +11,21 @@ const fields = toFieldEntries(recoveryFormSchemas.requestFields);
 interface RecoveryRequestProps {
   /** Shown when a reader arrives here because their reset lapsed. */
   notice?: string;
+  initialEmail?: string;
   onSubmit: (email: string) => Promise<void>;
 }
 
-export const RecoveryRequest = ({ notice, onSubmit }: RecoveryRequestProps) => {
+export const RecoveryRequest = ({
+  notice,
+  initialEmail,
+  onSubmit,
+}: RecoveryRequestProps) => {
   const { values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
-    useRecoveryForm(recoveryFormSchemas.requestFields, ({ email }) => onSubmit(email));
+    useRecoveryForm(
+      recoveryFormSchemas.requestFields,
+      ({ email }) => onSubmit(email),
+      initialEmail ? { email: initialEmail } : undefined,
+    );
 
   return (
     <div className={styles.root}>

@@ -15,6 +15,7 @@ import { recoveryErrorHandler } from "./recoveryErrorHandler";
 export const useRecoveryForm = <TSchema extends Record<string, FormFieldConfig<FormPayload>>>(
   schema: TSchema,
   action: (values: FormValue<TSchema>) => Promise<void>,
+  initialValues?: Partial<FormValue<TSchema>>,
 ) => {
   const [serverError, setServerError] = useState<SerializedAppError | null>(null);
 
@@ -30,7 +31,7 @@ export const useRecoveryForm = <TSchema extends Record<string, FormFieldConfig<F
     setServerError(recoveryErrorHandler(errorNormalizer(error)).toSerialized());
   }, []);
 
-  const form = useSchemaForm(schema, submit, onError);
+  const form = useSchemaForm(schema, submit, onError, initialValues);
 
   return { ...form, serverError };
 };
