@@ -41,7 +41,7 @@ const noProof = async () => {};
 
 const build = (over: Partial<IPasswordResetService> = {}) => {
   const service = {
-    request: vi.fn(async () => ({ sessionKey: "key" })),
+    request: vi.fn(async () => ({ sessionKey: "key", position: POSITION })),
     confirm: vi.fn(async () => {}),
     positionOf: vi.fn(async () => ({ step: "request" as const, maskedEndpoint: null })),
     apply: vi.fn(async () => ({ userId: 1 })),
@@ -67,33 +67,42 @@ const call = async (
   return { res, next };
 };
 
+/* The position every branch answers with. Shared rather than repeated so a
+   fixture cannot make one branch differ from another by accident. */
+const POSITION = {
+  step: "code" as const,
+  maskedEndpoint: "a•••••@example.test",
+  retryAfterSeconds: 60,
+  canResend: true,
+};
+
 describe("request — one answer, whatever happened", () => {
   it("returns 202 with a constant body when a code was minted", async () => {
-    const { controller } = build({ request: vi.fn(async () => ({ dispatchSend: async () => {}, sessionKey: "key" })) });
+    const { controller } = build({ request: vi.fn(async () => ({ dispatchSend: async () => {}, sessionKey: "key", position: POSITION })) });
     const { res } = await call(controller.request, { email: "known@example.test" });
 
     expect(res.status).toHaveBeenCalledWith(202);
-    expect(res.json).toHaveBeenCalledWith({ success: true, data: null });
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: POSITION });
   });
 
   it("returns the identical 202 when no code was minted", async () => {
-    const { controller } = build({ request: vi.fn(async () => ({ sessionKey: "key" })) });
+    const { controller } = build({ request: vi.fn(async () => ({ sessionKey: "key", position: POSITION })) });
     const { res } = await call(controller.request, { email: "unknown@example.test" });
 
     expect(res.status).toHaveBeenCalledWith(202);
-    expect(res.json).toHaveBeenCalledWith({ success: true, data: null });
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: POSITION });
   });
 
   it("sends no Retry-After and no cooldown hint on any branch", async () => {
     for (const outcome of [
-      { sessionKey: "k" },
-      { sessionKey: "k", dispatchSend: async () => {} },
+      { sessionKey: "k", position: POSITION },
+      { sessionKey: "k", dispatchSend: async () => {}, position: POSITION },
     ]) {
       const { controller } = build({ request: vi.fn(async () => outcome) });
       const { res } = await call(controller.request, { email: "a@example.test" });
 
       expect(res.setHeader).not.toHaveBeenCalled();
-      expect(res.json).toHaveBeenCalledWith({ success: true, data: null });
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: POSITION });
     }
   });
 });
@@ -101,7 +110,7 @@ describe("request — one answer, whatever happened", () => {
 describe("request — the send is dispatched after the response, never inside it", () => {
   it("does not call dispatchSend while producing the response", async () => {
     const dispatchSend = vi.fn(async () => {});
-    const { controller } = build({ request: vi.fn(async () => ({ dispatchSend, sessionKey: "key" })) });
+    const { controller } = build({ request: vi.fn(async () => ({ dispatchSend, sessionKey: "key", position: POSITION })) });
 
     const { res } = await call(controller.request, { email: "known@example.test" });
 
@@ -114,7 +123,7 @@ describe("request — the send is dispatched after the response, never inside it
   });
 
   it("registers no finish listener at all when nothing was minted", async () => {
-    const { controller } = build({ request: vi.fn(async () => ({ sessionKey: "key" })) });
+    const { controller } = build({ request: vi.fn(async () => ({ sessionKey: "key", position: POSITION })) });
     const { res } = await call(controller.request, { email: "unknown@example.test" });
 
     expect(res.finishListenerCount()).toBe(0);
@@ -124,11 +133,54 @@ describe("request — the send is dispatched after the response, never inside it
     const dispatchSend = vi.fn(async () => {
       throw new Error("relay unreachable");
     });
-    const { controller } = build({ request: vi.fn(async () => ({ dispatchSend, sessionKey: "key" })) });
+    const { controller } = build({ request: vi.fn(async () => ({ dispatchSend, sessionKey: "key", position: POSITION })) });
 
     const { res, next } = await call(controller.request, { email: "known@example.test" });
     expect(() => res.flush()).not.toThrow();
     expect(next).not.toHaveBeenCalled();
+  });
+});
+
+describe("resend — the same discipline the request path keeps", () => {
+  const resendOutcome = (dispatchSend?: () => Promise<void>) =>
+    vi.fn(async () =>
+      dispatchSend
+        ? { dispatchSend, sessionKey: "k", position: POSITION }
+        : { sessionKey: "k", position: POSITION },
+    );
+
+  it("answers 202 with the position, and holds the send until the response is out", async () => {
+    const dispatchSend = vi.fn(async () => {});
+    const { controller } = build({ resend: resendOutcome(dispatchSend) });
+
+    const { res } = await call(controller.resend, {});
+
+    expect(res.status).toHaveBeenCalledWith(202);
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: POSITION });
+    expect(dispatchSend).not.toHaveBeenCalled();
+
+    res.flush();
+    expect(dispatchSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("registers no finish listener at all when nothing was minted", async () => {
+    const { controller } = build({ resend: resendOutcome() });
+    const { res } = await call(controller.resend, {});
+
+    expect(res.finishListenerCount()).toBe(0);
+  });
+
+  /* The position's expiry moved, so the cookie's has to move with it or the
+     browser drops the key while the position is still live. */
+  it("re-sets the cookie so it outlives the position it addresses", async () => {
+    const { controller } = build({ resend: resendOutcome() });
+    const { res } = await call(controller.resend, {});
+
+    expect(res.cookie).toHaveBeenCalledWith(
+      "qt_reset",
+      "k",
+      expect.objectContaining({ httpOnly: true, sameSite: "strict", maxAge: expect.any(Number) }),
+    );
   });
 });
 
@@ -173,12 +225,12 @@ describe("confirm and apply — the shapes they answer with", () => {
      the constant body exists to prevent, and no body would show it. */
   it("issues a position on every branch alike", async () => {
     const minted = await call(
-      build({ request: vi.fn(async () => ({ dispatchSend: async () => {}, sessionKey: "k" })) })
+      build({ request: vi.fn(async () => ({ dispatchSend: async () => {}, sessionKey: "k", position: POSITION })) })
         .controller.request,
       { email: "real@x.test" },
     );
     const silent = await call(
-      build({ request: vi.fn(async () => ({ sessionKey: "k" })) }).controller.request,
+      build({ request: vi.fn(async () => ({ sessionKey: "k", position: POSITION })) }).controller.request,
       { email: "unknown@x.test" },
     );
 
@@ -192,13 +244,23 @@ describe("confirm and apply — the shapes they answer with", () => {
 
   it("answers where a reader stands without a status to read", async () => {
     const { controller } = build({
-      positionOf: vi.fn(async () => ({ step: "password" as const, maskedEndpoint: "b•••@x.test" })),
+      positionOf: vi.fn(async () => ({
+        step: "password" as const,
+        maskedEndpoint: "b•••@x.test",
+        retryAfterSeconds: 12,
+        canResend: true,
+      })),
     });
     const { res } = await call(controller.position, {});
 
     expect(res.json).toHaveBeenCalledWith({
       success: true,
-      data: { step: "password", maskedEndpoint: "b•••@x.test" },
+      data: {
+        step: "password",
+        maskedEndpoint: "b•••@x.test",
+        retryAfterSeconds: 12,
+        canResend: true,
+      },
     });
   });
 });

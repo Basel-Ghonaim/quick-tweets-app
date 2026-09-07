@@ -1,11 +1,11 @@
 # Password Reset Subsystem
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the **Password Reset subsystem's mechanisms and their rationale** — the module anatomy and why it publishes nothing, custody of the credential, the request/confirm/apply lifecycle, how neutrality is achieved and where it is only mitigated, the code and its digest, the single-failure discipline, session revocation, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
+> **Authority:** The authoritative source for the **Password Reset subsystem's mechanisms and their rationale** — the module anatomy and why it publishes nothing, custody of the credential, the request/resend/confirm/apply lifecycle, how neutrality is achieved and where it is only mitigated, the code and its digest, the single-failure discipline, session revocation, the sweep, and the concurrency invariants. It owns the *how* and the *why*.
 > It does **not** own: the boundary **decision** itself — recorded in [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md), which this document implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)); the wire contract (endpoints, payloads, status codes, error shapes — the [API contract](../api/api-contract.md)'s); the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship, cascade and indexing rationale (the [data model](../architecture/data-model.md)'s); the shared password hashing, session model and HTTP-edge rate limiting ([Backend Security](security.md)'s); the **outbound mail mechanism** it composes, which is [`mail.md`](mail.md)'s; or hand-verification, which belongs to the [verification harness](../development/verification/README.md).
 > **Scope:** The server-side capability at `apps/api/src/modules/auth/password-reset/`. Frontend behaviour is not described here; no frontend consumes it yet.
-> **Version:** 1.2
-> **Last Updated:** 2026-09-06
+> **Version:** 1.3
+> **Last Updated:** 2026-09-07
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -58,6 +58,18 @@ Internally the three branches do different work, and that is fine — neutrality
 
 A send that fails is swallowed inside the thunk. There is nothing in it for a caller to learn — the response is long gone — and a fresh request supersedes a lost code.
 
+### `resend` — asks again from a position already held
+
+A reader who reloads keeps their position and loses the address they typed, and the position holds only a mask. `resend` closes that: the account is recorded on the position when it is opened, so a fresh code needs nothing from the client but its key. A supplied address is refused rather than ignored, for the reason `apply` refuses a code and with a sharper edge — one accepted here would be a mint path behind a limiter sized for a different act.
+
+**The ask is recorded before the account is read.** The position's window and its bound move on the attempt, never on the send; ones that moved only when mail left would report whether mail left, which is the single thing the capability refuses to answer. The record is conditional on the bound, so single-use reasoning applies to it too: two simultaneous asks against the last remaining one cannot both pass.
+
+**The account's own cooldown is untouched and still silent.** Inside it nothing is minted and nothing observable differs — the same branch the request path already has, reached from a different door.
+
+**A resend does not rotate what came before.** Nothing closes an earlier credential, so two codes can be live at once and either works. Channel Verification's resend supersedes; this one does not, and the difference is in the writes rather than in a decision to keep them apart.
+
+**Refusal is uniform.** No position, a position past the step that asks, and a position out of asks all raise the single opaque failure — each a fact about the caller's browser rather than about any account.
+
 ### `confirm` — checks, consumes nothing, and binds
 
 `confirm` reports whether a submitted code is currently usable and spends nothing: the same code confirms twice from one position. What it does change is the **position** — a usable code is bound to it, and that binding is the whole of the step derivation.
@@ -84,11 +96,13 @@ Recovery is three steps, and where a reader stands is held here rather than by t
 
 **It stores no step.** An absent challenge means the reader is still entering a code; a present one means they may set a password. The step is therefore correct with nobody having written it — the property the credential's own usability already has.
 
-**Its lifetime is the credential's.** One clock: a position outliving what it authorizes would be a step a reader could reach and not leave.
+**Its lifetime is the credential's.** One clock: a position outliving what it authorizes would be a step a reader could reach and not leave. A resend moves that clock forward to whatever it now authorizes, **bounded by a count of asks** — a ceiling on the position's life would instead have to clamp the last credential's own lifetime to it, minting a code that expires sooner than a code should ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md) Decision 4).
 
 **A second request supersedes the first, by deletion.** The old key stops working immediately rather than merely being overwritten in the browser, which keeps the position and the credential from disagreeing about which recovery is live.
 
-**The address it carries is stored already masked.** The mask is produced where the address is held, so the unmasked value never reaches a response — and a stale key on a shared machine discloses a mask rather than an address.
+**The address it carries is stored already masked.** The mask is produced where the address is held, so the unmasked value never reaches a response — and a stale key on a shared machine discloses a mask rather than an address. What the position does carry is the **account**, resolved when it is opened and null for an address none holds: a resend needs a destination, and recording which account beats retaining the string anyone typed.
+
+**It reports its own resend window, and that window is not the account's cooldown.** Seeded when the position opens, for every submitted address alike, so it counts down from this position's history and answers nothing about the account. The two clocks may disagree only in the safe direction — the visible one can say *wait* where the silent one would in fact allow a send, never the reverse — so a reader who waits it out always gets a real send.
 
 ## The code, and the single failure
 
@@ -140,7 +154,7 @@ Every repository method accepts an optional client, so the service composes mult
 
 **Sending requires a delivering mail mode.** With the default non-delivering backend the flow works end to end and nothing reaches an inbox, which is correct for development and useless for verification — the code exists only as a digest, so nobody can recover it. Hand-verification therefore runs under the capture backend, and the [verification harness](../development/verification/README.md) owns that procedure: folder 11, scenarios `PWR-01…PWR-15`, and Checkpoint J.
 
-**The abuse posture is layered, and the durable controls are not the limiters.** Three per-route per-IP limiters sit at the edge; beneath them are the per-account resend cooldown this capability enforces and the per-recipient cap with its reserved floor that Mail Delivery enforces. The limiters are in-memory and per-IP, so they cannot stop one address being targeted from rotating IPs — which is precisely why they are the outer layer rather than the control the posture rests on. The limiter figures are the [API contract](../api/api-contract.md)'s; the edge mechanism is [Backend Security](security.md)'s.
+**The abuse posture is layered, and the durable controls are not the limiters.** Three per-IP limiters sit at the edge across four routes — request and resend share one, because minting from either is the same act and separate budgets would make the real ceiling their sum; beneath them are the per-account resend cooldown this capability enforces and the per-recipient cap with its reserved floor that Mail Delivery enforces. The limiters are in-memory and per-IP, so they cannot stop one address being targeted from rotating IPs — which is precisely why they are the outer layer rather than the control the posture rests on. The limiter figures are the [API contract](../api/api-contract.md)'s; the edge mechanism is [Backend Security](security.md)'s.
 
 ## Responsibility boundary
 

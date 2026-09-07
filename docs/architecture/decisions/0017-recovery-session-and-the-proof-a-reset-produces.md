@@ -4,6 +4,7 @@
 > **Date:** 2026-09-06
 > **Deciders:** Basel Ghonaim
 > **Amends:** [ADR 0016](0016-password-reset-credential-change-authority.md) — Decisions 1 and 7 · [ADR 0009](0009-channel-verification-platform-capability.md) — Decision 2
+> **Revised:** 2026-09-06 — Decision 4 admits that a resend moves the position's clock forward, bounded; Decision 5 admits the resend window and whether the position may still ask. Both decisions stand.
 
 ## Context
 
@@ -39,9 +40,17 @@ Concurrent sessions would need a per-tab key, and every place to put one is excl
 
 One clock. A session that outlived what it authorizes would be a position a reader could return to and not be able to leave.
 
-### 5. The session discloses the step and a masked address, and nothing else
+**A resend moves that clock forward rather than opening a second one.** The credential a position holds may be replaced while the position stands, and the position then expires with whatever it now authorizes — so the two can never disagree about how long the reader has.
+
+**Extension is bounded, and the bound is a count of asks rather than a ceiling on the position's life.** A ceiling would have to clamp the last credential's own lifetime to it, minting a code that expires sooner than a code should; a count leaves every credential its full life and still denies a holder a key they can renew indefinitely.
+
+### 5. The session discloses the step, a masked address, and when it may ask again — and nothing else
 
 Masking happens where the address is held; the unmasked value never crosses the boundary. The step is the answer the client needs, and the mask is what lets a returning reader recognise which address they used without the key becoming a way to read one.
+
+**The window is disclosed for the same reason the step is: the client cannot derive it.** One the client invented would be the only number on a recovery screen no server had said, and a reader who reloads would lose it altogether. It is seeded when the position is opened, before any account is looked up, so it reports that position's own history and never anything about the account. Whether the position may still ask is disclosed beside it, because a control a reader cannot use must say so rather than fail silently.
+
+**What stays undisclosed is unchanged**: not whether an address belongs to an account, not whether a message was sent, and not how far the account's own cooldown has left to run.
 
 ### 6. A completed reset proves the address, and Channel Verification writes it
 

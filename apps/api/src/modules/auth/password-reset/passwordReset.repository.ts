@@ -51,6 +51,9 @@ interface SessionRow {
   id: number;
   maskedEndpoint: string;
   challengeId: number | null;
+  userId: number | null;
+  lastAskedAt: Date;
+  resendsUsed: number;
   expiresAt: Date;
 }
 
@@ -58,6 +61,9 @@ const toSession = (row: SessionRow): PasswordResetSession => ({
   id: row.id,
   maskedEndpoint: row.maskedEndpoint,
   challengeId: row.challengeId,
+  userId: row.userId,
+  lastAskedAt: row.lastAskedAt,
+  resendsUsed: row.resendsUsed,
   expiresAt: row.expiresAt,
 });
 
@@ -127,6 +133,14 @@ export const createPasswordResetRepository = (
 
   deleteSessionByTokenHash: async (tokenHash, client: DbClient = db) => {
     await client.passwordResetSession.deleteMany({ where: { tokenHash } });
+  },
+
+  recordResend: async (id, askedAt, expiresAt, maxResends, client: DbClient = db) => {
+    const { count } = await client.passwordResetSession.updateMany({
+      where: { id, resendsUsed: { lt: maxResends } },
+      data: { lastAskedAt: askedAt, expiresAt, resendsUsed: { increment: 1 } },
+    });
+    return count;
   },
 
   bindSessionToChallenge: async (id, challengeId, client: DbClient = db) => {

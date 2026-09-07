@@ -70,7 +70,7 @@ export const createPasswordResetController = (
    */
   request: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { dispatchSend, sessionKey } = await service.request({
+      const { dispatchSend, sessionKey, position } = await service.request({
         email: String(req.body.email),
         sessionKey: req.cookies?.[SESSION_COOKIE] as string | undefined,
       });
@@ -93,7 +93,35 @@ export const createPasswordResetController = (
         });
       }
 
-      sendSuccess(res, null, 202);
+      sendSuccess(res, position, 202);
+    } catch (err) {
+      next(asHttpError(err));
+    }
+  },
+
+  /**
+   * POST /auth/password-reset/resend
+   *
+   * A fresh code for the position the caller holds. The cookie is re-set with
+   * the position's new expiry, or the browser would drop it first.
+   */
+  resend: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { dispatchSend, sessionKey, position } = await service.resend({
+        sessionKey: req.cookies?.[SESSION_COOKIE] as string | undefined,
+      });
+
+      res.cookie(SESSION_COOKIE, sessionKey, cookieOptions(env.RESET_CODE_TTL_MS));
+
+      // After the response is flushed, never inside it — the same reasoning the
+      // request path applies, against the same asymmetry.
+      if (dispatchSend) {
+        res.on("finish", () => {
+          void dispatchSend();
+        });
+      }
+
+      sendSuccess(res, position, 202);
     } catch (err) {
       next(asHttpError(err));
     }

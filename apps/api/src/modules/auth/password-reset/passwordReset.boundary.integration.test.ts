@@ -18,6 +18,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
+import { env } from "../../../config/env.js";
 import { prisma, runInTransaction } from "../../../shared/database/index.js";
 import type { MailAdapter, MailMessage } from "../../mail-delivery/index.js";
 import { createAuthRepository, createTokenRepository } from "../auth.repository.js";
@@ -25,6 +26,7 @@ import { createAuthService } from "../auth.service.js";
 import { createPasswordResetController } from "./passwordReset.controller.js";
 import { createPasswordResetRepository } from "./passwordReset.repository.js";
 import { createPasswordResetService } from "./passwordReset.service.js";
+import { maskEndpoint } from "./passwordReset.session.js";
 
 const base = `itpwhttp${process.pid}x${Math.floor(process.hrtime()[1])}`;
 const usernameFor = (suffix: string) => `${base}_${suffix}`;
@@ -170,11 +172,35 @@ describe("request answers identically in all three branches (I5)", () => {
       cleared: observed.cleared,
     });
 
-    const seen = [unknown, eligible, cooling].map((r) => JSON.stringify(observable(r)));
-    expect(new Set(seen).size).toBe(1);
-    expect(JSON.parse(seen[0]!)).toEqual({
+    /* The sharpest comparison, and the one that carries the guarantee: the
+       SAME submitted address, eligible on one branch and inside its cooldown
+       on the other. Everything observable must match byte for byte, the
+       position's own body included. */
+    const sameAddress = [eligible, cooling].map((r) => JSON.stringify(observable(r)));
+    expect(new Set(sameAddress).size).toBe(1);
+
+    /* Against a different submitted address only the mask may differ, and it
+       is a function of what the caller typed rather than of what exists. */
+    const withoutMask = (r: typeof unknown) => {
+      const o = observable(r);
+      const body = o.body as { success: boolean; data: Record<string, unknown> };
+      const data = { ...body.data };
+      delete data.maskedEndpoint;
+      return JSON.stringify({ ...o, body: { success: body.success, data } });
+    };
+    expect(new Set([unknown, eligible, cooling].map(withoutMask)).size).toBe(1);
+
+    expect(JSON.parse(sameAddress[0]!)).toEqual({
       status: 202,
-      body: { success: true, data: null },
+      body: {
+        success: true,
+        data: {
+          step: "code",
+          maskedEndpoint: maskEndpoint(email),
+          retryAfterSeconds: Math.ceil(env.RESET_RESEND_COOLDOWN_MS / 1000),
+          canResend: true,
+        },
+      },
       headers: {},
       cookies: [
         {
@@ -184,6 +210,10 @@ describe("request answers identically in all three branches (I5)", () => {
       ],
       cleared: [],
     });
+
+    // The unknown branch masks what was typed, never something about an account.
+    expect((unknown.observed.body as { data: { maskedEndpoint: string } }).data.maskedEndpoint)
+      .toBe(maskEndpoint(emailFor("nobody")));
 
     /* A position issued on one branch and not another would be the disclosure
        the constant body exists to prevent — and no body would show it. */

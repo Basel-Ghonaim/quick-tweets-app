@@ -162,12 +162,17 @@ export const verificationConfirmLimiter = rateLimit({
  * being targeted from rotating IPs, which is precisely why it is not what the
  * abuse posture rests on.
  *
- * Applied to: POST /auth/password-reset
- * Limit: 5 requests per 15 minutes per IP
+ * Shared with the resend route, because minting from either is the same act and
+ * two budgets would make the real ceiling their sum. Sized for the whole flow
+ * rather than for one call: a request plus its resends, and room for the reader
+ * who mistyped an address and has to start again.
+ *
+ * Applied to: POST /auth/password-reset and POST /auth/password-reset/resend
+ * Limit: 10 requests per 15 minutes per IP, across both
  */
 export const passwordResetRequestLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 5,
+  limit: 10,
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: {

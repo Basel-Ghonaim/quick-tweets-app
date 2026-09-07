@@ -25,6 +25,7 @@ import {
   applyResetSchema,
   confirmResetSchema,
   requestResetSchema,
+  resendResetSchema,
 } from "./passwordReset.validator.js";
 
 export const createPasswordResetRoutes = (
@@ -39,6 +40,15 @@ export const createPasswordResetRoutes = (
     passwordResetRequestLimiter,
     validate(requestResetSchema),
     controller.request,
+  );
+
+  /* The request limiter, not one of its own: minting from here is the same act
+     it performs, and a second budget would make the real ceiling the sum. */
+  passwordResetRoutes.post(
+    "/resend",
+    passwordResetRequestLimiter,
+    validate(resendResetSchema),
+    controller.resend,
   );
 
   passwordResetRoutes.post(

@@ -419,21 +419,41 @@ FROM information_schema.columns
 WHERE table_name = 'password_reset_challenges'
   AND (column_name ILIKE '%status%' OR column_name ILIKE '%state%');
 
--- 6. THE STEP IS DERIVED, AND SO IS THE ACTOR (G6). The position table carries
---    no step column and no user column. MUST be 0 — a stored step would be a
---    second copy of something the credential already decides, and a user column
---    would make the unknown-address position distinguishable in the data.
+-- 6. THE STEP IS DERIVED (G6). The position table carries no step column. MUST
+--    be 0 — a stored step would be a second copy of something the credential
+--    already decides.
+--
+--    `user_id` was on this list and is deliberately no longer: the resend route
+--    reads the account from the position, and the column is NULL for an address
+--    no account holds, so the row stays identical in KIND on every branch.
+--    Neutrality is a property of what a caller can observe, and this table is
+--    not observable — the challenges table has carried a user_id since the
+--    capability was built, so a reader of the database could already tell.
 SELECT count(*) AS forbidden_columns
 FROM information_schema.columns
 WHERE table_name = 'password_reset_sessions'
   AND (column_name ILIKE '%step%' OR column_name ILIKE '%status%'
-       OR column_name ILIKE '%state%' OR column_name = 'user_id');
+       OR column_name ILIKE '%state%');
+
+-- 6a. AND THE ACCOUNT COLUMN IS NULLABLE (G1). MUST be 'YES'. A NOT NULL here
+--     would mean a position could not be opened for an address no account
+--     holds, which is the disclosure the constant 202 exists to prevent.
+SELECT is_nullable
+FROM information_schema.columns
+WHERE table_name = 'password_reset_sessions' AND column_name = 'user_id';
 
 -- 7. THE POSITION ITSELF. After PWR-01a exactly one live row with challenge_id
---    NULL (the step reads 'code'); after PWR-02a still exactly one, superseded
---    rather than added to; after PWR-07a that row's challenge_id is set (the
---    step reads 'password'); after PWR-10a there is none.
-SELECT id, challenge_id, masked_endpoint, expires_at, created_at
+--    NULL (the step reads 'code') and user_id NULL (no account holds that
+--    address); after PWR-02a still exactly one, superseded rather than added
+--    to, now with user_id set; after PWR-03c resends_used is 1 and
+--    last_asked_at has moved FOR A RESEND THAT SENT NOTHING; after PWR-07a
+--    that row's challenge_id is set (the step reads 'password').
+--
+--    After PWR-10a the row SURVIVES. `apply` clears the cookie and deletes
+--    nothing, so the read answers 'request' because the key is gone, not
+--    because the row is. Expect to find it here.
+SELECT id, challenge_id, user_id, resends_used, masked_endpoint,
+       last_asked_at, expires_at, created_at
 FROM password_reset_sessions
 WHERE expires_at > now()
 ORDER BY created_at DESC;
@@ -446,11 +466,19 @@ FROM password_reset_sessions
 WHERE masked_endpoint NOT LIKE '%•%';
 ```
 
-> **PWR-15 runs last, and after its own restart.** Six requests exhaust the per-IP
-> budget for fifteen minutes and would block everything after them. It starts from
+> **PWR-15 runs last, and after its own restart.** Eleven requests exhaust the
+> per-IP mint budget — ten per fifteen minutes, **shared with the resend route** —
+> and would block everything after them. It starts from
 > a cleared counter deliberately: folder 10's CHV-13 has to document exactly how
 > many attempts precede it and a runner has to get that arithmetic right, and
 > starting fresh removes the need to.
+
+> **PWR-14a and PWR-14b are runbook steps too**, and share one restart. Start the
+> API with `RESET_MAX_RESENDS=1` (and a cooldown short enough to wait out —
+> `RESET_RESEND_COOLDOWN_MS=1000` against the default TTL). Request a code, wait
+> the window out, resend once: the answer already reads `canResend: false`.
+> Resend again and the answer is the same `400` as PWR-04, with query 7 showing
+> `resends_used` still 1 and `expires_at` unmoved — a refused ask extends nothing.
 
 > **PWR-14 is a runbook step, not a request.** The default `RESET_CODE_TTL_MS` is
 > ten minutes, which is not waitable by hand, and shortening it for the whole

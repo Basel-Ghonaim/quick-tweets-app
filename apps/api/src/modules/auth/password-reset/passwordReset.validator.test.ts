@@ -4,6 +4,7 @@ import {
   applyResetSchema,
   confirmResetSchema,
   requestResetSchema,
+  resendResetSchema,
 } from "./passwordReset.validator.js";
 
 describe("request — the address", () => {
@@ -85,5 +86,34 @@ describe("apply — the new password", () => {
   it("reuses registration's rules rather than restating them — the two cannot drift", async () => {
     const { registerSchema } = await import("../auth.validator.js");
     expect(applyResetSchema.shape.newPassword).toBe(registerSchema.shape.password);
+  });
+});
+
+describe("resend — the position's, not the caller's", () => {
+  it("accepts an empty body, which is the whole of the request", () => {
+    expect(resendResetSchema.parse({})).toEqual({});
+  });
+
+  /* A caller able to supply an address would be a mint path behind the wrong
+     limiter, and a second source for a fact the position owns. */
+  it("refuses a supplied address rather than stripping it", () => {
+    const failure = resendResetSchema.safeParse({ email: "someone@example.test" });
+
+    expect(failure.success).toBe(false);
+    expect(failure.error?.issues[0]?.path).toEqual(["email"]);
+  });
+
+  it("refuses a supplied code the same way", () => {
+    const failure = resendResetSchema.safeParse({ code: "0123456789AB" });
+
+    expect(failure.success).toBe(false);
+    expect(failure.error?.issues[0]?.path).toEqual(["code"]);
+  });
+
+  /* The schema is also what keeps a cross-site simple POST out: this is the
+     one reset body with no field, so without it no JSON content type is
+     needed and nothing would preflight for CORS to refuse. */
+  it("refuses a body that never parsed as JSON", () => {
+    expect(resendResetSchema.safeParse(undefined).success).toBe(false);
   });
 });

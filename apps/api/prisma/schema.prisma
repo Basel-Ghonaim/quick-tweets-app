@@ -57,6 +57,7 @@ model User {
   // never as a column here (ADR 0009 Decision 6).
   channelVerifications ChannelVerification[]
   passwordResetChallenges PasswordResetChallenge[]
+  passwordResetSessions   PasswordResetSession[]
   // Back-relation only: whether this account's registration journey is still
   // open lives wholly in onboarding_journeys, and gates nothing the account
   // may do (ADR 0008 Decision 2, as revised).
@@ -152,10 +153,21 @@ model PasswordResetSession {
   // password. Nothing stores a step.
   challengeId Int?                    @unique @map("challenge_id")
   challenge   PasswordResetChallenge? @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  // NULL for an address no account holds, which is what keeps the row identical
+  // in kind on every branch. SetNull: a lost account stops a send, not a reader.
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // When this position last asked for a code; opening it counts as the first
+  // ask. The window a reader sees is derived from this on read, never stored.
+  lastAskedAt DateTime @default(now()) @map("last_asked_at")
+  // Counts asks, not sends, so it cannot report whether mail left. It bounds
+  // how far expires_at may be pushed forward (ADR 0017 Decision 4).
+  resendsUsed Int @default(0) @map("resends_used")
 
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([userId])
   @@map("password_reset_sessions")
 }
 
