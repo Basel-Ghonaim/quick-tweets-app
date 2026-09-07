@@ -164,15 +164,10 @@ export const AUTH_COPY = {
     submittingPassword: "Resetting…",
     backToLogin: "Back to login",
 
-    resend: "Send a new code",
-    resendIn: (seconds: number) => `Send a new code in ${seconds}s`,
+    resend: "Resend code",
+    resendIn: (seconds: number) => `Resend in ${seconds}s`,
     resendReady: "You can ask for a new code now.",
-    /* Said beside the way onward, never as the label of a control that cannot
-       be used: naming an action the screen does not offer is worse than none. */
     resendSpent: "You have asked for a new code as often as this attempt allows.",
-    /* Always available. A mistyped address is the likeliest reason a code never
-       arrives, and without this the whole flow is thrown away to fix one
-       character. Submitting the form supersedes the position server-side. */
     startOver: "Wrong address? Start over",
 
     /* One message for every refusal, because the server gives one: naming a
