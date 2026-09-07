@@ -9,3 +9,9 @@
   color: var(--role-on-surface-error);
   background: var(--role-fill-error-subtle);
 }
+
+.info {
+  border-color: var(--role-fill-info);
+  color: var(--role-on-surface-info);
+  background: var(--role-fill-info-subtle);
+}
