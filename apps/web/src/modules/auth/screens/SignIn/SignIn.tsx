@@ -1,3 +1,4 @@
+import { useLocation } from "react-router-dom";
 import { Button, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { useLoginFlow } from "../../hooks";
@@ -11,6 +12,7 @@ const fields = toFieldEntries(authFormSchemas.loginFields);
 
 export const SignIn = () => {
   const navigate = useAuthNavigate();
+  const { notice } = (useLocation().state ?? {}) as { notice?: string };
 
   const {
     values,
@@ -35,6 +37,7 @@ export const SignIn = () => {
         {isError && serverError && (
           <MessageRegion tone="error">{serverError.message}</MessageRegion>
         )}
+        {!isError && notice && <MessageRegion tone="info">{notice}</MessageRegion>}
 
         {fields.map((field, index) => (
           <SchemaField
@@ -61,7 +64,7 @@ export const SignIn = () => {
         </Button>
 
         <p className={styles.aside}>
-          <AuthLink href="/auth/forgot" tone="muted">
+          <AuthLink href="/auth/recovery" tone="muted">
             {AUTH_COPY.signIn.forgotPassword}
           </AuthLink>
         </p>

@@ -20,9 +20,11 @@ export const useSchemaForm = <
   schema: TSchema,
   onSubmitAction: (values: FormValue<TSchema>) => Promise<void>,
   onError?: (err: unknown) => void,
+  /** Read once, at mount: a form the caller opens with something already in it. */
+  initialValues?: Partial<FormValue<TSchema>>,
 ) => {
   const [state, setState] = useState<FormState<TSchema>>(() =>
-    buildInitialFormState(schema),
+    buildInitialFormState(schema, initialValues),
   );
   const latestValues = useLatest(state.values);
   const latestOnSubmit = useLatest(onSubmitAction);

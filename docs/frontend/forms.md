@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the frontend's **schema-driven form engine** (`apps/web/src/shared/schema-form`) — the architecture by which a single schema describes a form and the engine derives its state, validation, typing, and control binding. It owns the **engine**. It does **not** own the presentation controls the engine binds to (the [design system](design-system/README.md)), the mechanism by which a submission is *executed* or how its failures are *handled* — the engine delegates both, and normalization of those failures is owned by [error handling](error-handling.md) — the application layout (the [frontend architecture](architecture.md)), per-feature form usage (the feature documents), or the design principles it applies ([Engineering Principles](../development/engineering-principles.md)).
 > **Scope:** The shared engine in `apps/web/src/shared/schema-form/`. How a specific feature uses it lives in that feature's document; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Maturity:** This document describes the **currently implemented** engine. It will grow as the engine gains capabilities; anything not described here is not yet built, not architecturally rejected.
-> **Version:** 1.0
-> **Last Updated:** 2026-08-14
+> **Version:** 1.1
+> **Last Updated:** 2026-09-07
 > **Owner:** Basel Ghonaim
 
 ## Why the engine exists
@@ -28,7 +28,7 @@ Because these three roles share one declaration, configuration, behavior, and ty
 
 From that single source the engine derives, in turn:
 
-- **State.** The initial value map (each value shaped by its field type), a per-field error map, and a submission flag are built once from the schema.
+- **State.** The initial value map (each value shaped by its field type), a per-field error map, and a submission flag are built once from the schema. A caller may **seed** that map where it already holds a value — read once at mount and partial, so a field the seed does not name keeps the empty value its type decides. The schema still decides the shape; the seed only fills it.
 - **Validation.** Each field carries an ordered list of validators; the engine runs them as the field changes (first failure wins) and sweeps every field once more before submitting.
 - **Binding.** The field's declared type drives how its value is read from the DOM and which presentation control renders it.
 

@@ -35,7 +35,9 @@
   --role-on-surface-success: var(--palette-green-700);
   --role-on-surface-warning: var(--palette-amber-700);
   --role-on-surface-error: var(--palette-red-700);
-  --role-on-surface-info: var(--palette-blue-600);
+  /* One step darker than the ramp would suggest: over its own -subtle fill this
+     role composites to 4.44:1, under the 4.5 floor (Finding 0022). */
+  --role-on-surface-info: var(--palette-blue-700);
 }
 
 /* The role as a filled background or border, kept distinct from on-surface text

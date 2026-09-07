@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.8
-> **Last Updated:** 2026-09-02
+> **Version:** 1.9
+> **Last Updated:** 2026-09-07
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
@@ -95,15 +95,17 @@ Descending emphasis: title (`--text-primary`) → supporting copy (`--text-secon
 | Registration | "Create account" | "Back to login" · "Browse without an account" |
 | Phase 2 · Profile | "Save" / "Continue" | **"Skip"** |
 | Phase 3 · Verify | "Verify" | **"Later"** · "Resend" (visible cooldown) |
-| Forgot password | "Send code" | "Back to login" |
-| Reset password | "Reset password" | — |
+| Recovery · address | "Send code" | "Back to login" |
+| Recovery · code | "Verify code" | "Resend code" (visible window) · "Wrong address? Start over" · "Back to login" |
+| Recovery · new password | "Reset password" | "Back to login" |
 
 - **One filled button per screen.** Everything else is `Button variant="ghost" size="small"`. **Cross-screen navigation is the exception and binds `Link`**, which carries the anchor semantics a button cannot (§15).
 - **A CTA names what its own action does, not where the reader is in a sequence.** Registration's button reads "Create account" because the account exists the moment it succeeds — the journey continues afterwards, and every step of it is optional, so a label borrowed from the sequence would understate what the reader just did.
 - **Leaving without an account is offered wherever an account is being asked for**, which is registration as well as login (`D9`). A reader who arrives at the form and decides against one should not have to go back a screen to read.
 - **Skip and Later must be unmissable but never visually co-equal with the primary action.** The research identified this as the most important CTA question: the target is *obviously available, not obviously recommended*.
 - **Skip is one tap.** No confirmation, no disguised sub-flow. Real products fail exactly here, and it destroys trust in the escape hatch.
-- **Resend is never hidden while cooling down** — visible, disabled, with its countdown legible.
+- **Resend is never hidden while cooling down** — visible, disabled, with its countdown legible. Where a bound on asking is reached rather than a window closing, the control is *absent* and the reason is said in text: a disabled control labelled with an instruction names an action the screen does not offer.
+- **Every recovery step offers a way out**, because leaving is always safe there — the position outlives the visit. **Starting over is not the same act and is confined to the code step**: it abandons the attempt, and at the new-password step it would discard control the reader has already proved. Leaving binds `Link` because sign-in has an address; starting over does not, because it changes the step in place and the one URL it could carry would resolve to a different screen.
 
 ---
 

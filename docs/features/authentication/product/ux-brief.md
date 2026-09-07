@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for the **ratified product and UX decisions** governing the authentication experience — which flows exist, what states each must support, and the post-registration journey. It owns **decisions**, never their visual expression and never their component mapping.
 > **Scope:** The auth experience as a product: Login, Registration, Profile Completion, Email Verification, Forgot Password, Reset Password, and the unverified in-app state. Feature behaviour as currently implemented is the [authentication feature document](../authentication.md)'s; the wire contract is the [API contract](../../../api/api-contract.md)'s.
-> **Version:** 1.4
-> **Last Updated:** 2026-09-03
+> **Version:** 1.5
+> **Last Updated:** 2026-09-07
 > **Owner:** Basel Ghonaim
 
 `D1`–`D5`, `D9`, and the post-registration journey (Phases 1–3) are **settled product direction and are not reopened downstream.** `D6` and `D7` are **deferred**, and no later phase may foreclose them. `D8` was deferred *to* visual design and has since been decided there.
@@ -19,8 +19,8 @@ These decisions were subsequently tested against how real products behave; what 
 | Tier | Contents |
 |---|---|
 | **Live now (backend live, UI buildable today)** | Register (username · email · password) · login by neutral identifier (username or email) · logout · logout-all · silent refresh · `/users/me` · rate limiting · generic `401` · editable username · **`PATCH /users/me` for name, bio and avatar** · **authenticated media upload (`POST /media`)** |
-| **Built in the backend, not wired to the product** | Channel Verification: issue/confirm, single-use time-limited codes, replay refusal — email is its first channel. Mail delivery is a port with a delivering backend and its own abuse controls; **which backend runs is configuration**, and the non-delivering ones are what a developer runs against ([`backend/mail.md`](../../../backend/mail.md)) |
-| **Future, required by direction** | Email Verification as a product flow · **Forgot/Reset Password** (needs a reset credential and an endpoint that do not exist yet; the only fixed constraints are expiry and single use) · the authenticated shell to land on |
+| **Built in the backend** | Channel Verification: issue/confirm, single-use time-limited codes, replay refusal — email is its first channel, and the verification step now consumes it. Mail delivery is a port with a delivering backend and its own abuse controls; **which backend runs is configuration**, and the non-delivering ones are what a developer runs against ([`backend/mail.md`](../../../backend/mail.md)) |
+| **Future, required by direction** | The authenticated shell to land on. *Email Verification and Forgot/Reset Password were here and are now built end to end — the credential, the endpoints and the screens all exist. What each is remains this document's; that they exist is the [overview](../../../project/overview.md)'s.* |
 
 > **Core note:** Profile Completion (Phase 2) is the **only stage of the entire auth experience buildable today with zero new backend work** — the endpoint is live and every component it needs already exists.
 
