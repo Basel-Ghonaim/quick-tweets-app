@@ -3,6 +3,7 @@ import { AuthLayout, JourneyLayout } from "./layout";
 import { SignIn } from "./screens/SignIn";
 import { SignUp } from "./screens/SignUp";
 import { Onboarding } from "./screens/Onboarding";
+import { Recovery } from "./screens/Recovery";
 import { GuestOnly } from "./navigation";
 import { stepStates } from "./journey";
 
@@ -24,5 +25,7 @@ export const authRoute = (
       }
     />
     <Route path="onboarding" element={<Onboarding />} />
+    {/* One route for all three steps, for the reason above. */}
+    <Route path="recovery" element={<Recovery />} />
   </Route>
 );
