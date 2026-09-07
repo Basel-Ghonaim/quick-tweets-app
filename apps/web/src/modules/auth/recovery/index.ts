@@ -5,6 +5,7 @@ export { useRecovery } from "./useRecovery";
 export { recoveryFormSchemas } from "./recoveryFormSchemas";
 export { recoveryErrorHandler } from "./recoveryErrorHandler";
 export { useRecoveryForm } from "./useRecoveryForm";
+export { useResendWindow } from "./useResendWindow";
 export type { RecoveryRead } from "./resolveRecovery";
 export type { RecoveryScreen } from "./screenFor";
 export type { Recovery } from "./useRecovery";
