@@ -18,8 +18,7 @@ import styles from "./Recovery.module.css";
 export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
   const { read, position, request, resend, confirm, apply, retry } = useRecovery(repo);
   const [justAsked, setJustAsked] = useState(false);
-  /* Not a claim about which step the reader is on — the server still owns that.
-     It is a reader abandoning this attempt, and a reload discards it. */
+  /* Abandoning an attempt, not a claim about the step — the server owns that. */
   const [restarting, setRestarting] = useState(false);
   const navigate = useAuthNavigate();
   const dispatch = useAuthDispatch();
@@ -78,5 +77,5 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
     );
   }
 
-  return <RecoveryPassword position={position!} onSubmit={finish} />;
+  return <RecoveryPassword onSubmit={finish} />;
 };

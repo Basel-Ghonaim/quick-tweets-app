@@ -296,6 +296,47 @@ export const AMistypedAddressCanBeCorrected: Story = {
   },
 };
 
+/** Every step offers a way out, and it is a link because sign in has an address. */
+export const EveryStepCanBeLeft: Story = {
+  render: withRepo(repository({ position: async () => at({ step: "code" }) })),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+    await expect(
+      canvas.getByRole("link", { name: AUTH_COPY.recovery.backToLogin }),
+    ).toHaveAttribute("href", "/auth/signin");
+  },
+};
+
+/** Including the last one, where leaving is safe and starting over is not. */
+export const ThePasswordStepCanBeLeftButNotRestarted: Story = {
+  render: withRepo(repository({ position: async () => at({ step: "password" }) })),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle });
+    await expect(
+      canvas.getByRole("link", { name: AUTH_COPY.recovery.backToLogin }),
+    ).toBeVisible();
+    await expect(
+      canvas.queryByRole("button", { name: AUTH_COPY.recovery.startOver }),
+    ).toBeNull();
+  },
+};
+
+/** The position's mask belongs to the step that asks for a code, not the one
+ *  that sets a password. */
+export const ThePasswordStepShowsNoAddress: Story = {
+  render: withRepo(repository({ position: async () => at({ step: "password" }) })),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle });
+    await expect(canvas.queryByText(/•/)).toBeNull();
+  },
+};
+
 /** The position is asked for once, not once per render — a repository rebuilt
  *  each time would key the read effect afresh and never settle. */
 export const ThePositionIsAskedForOnce: Story = {

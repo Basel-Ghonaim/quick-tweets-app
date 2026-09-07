@@ -1,6 +1,7 @@
 import { Button, Input, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
+import { AuthLink } from "../../navigation";
 import { normaliseChallengeCode } from "../../verification/challengeCode";
 import {
   recoveryFormSchemas,
@@ -75,8 +76,6 @@ export const RecoveryCode = ({
 
 
         <div className={styles.secondaries}>
-          {/* Never disabled: a mistyped address must always have a way out, and
-              it is the one action left once the asks are spent. */}
           <Button type="button" variant="ghost" size="small" onClick={onRestart}>
             {AUTH_COPY.recovery.startOver}
           </Button>
@@ -115,6 +114,11 @@ export const RecoveryCode = ({
           {AUTH_COPY.recovery.submitCode}
         </Button>
       </form>
+      <p className={styles.aside}>
+        <AuthLink href="/auth/signin" tone="muted">
+          {AUTH_COPY.recovery.backToLogin}
+        </AuthLink>
+      </p>
     </div>
   );
 };
