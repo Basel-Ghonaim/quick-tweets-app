@@ -243,7 +243,7 @@ Every limiter below is **per IP**, over a fixed window, and answers with `type: 
 | Verification issue | `POST /channel-verification/challenges` | **10 req / 15 min** | "Too many verification requests. Please wait 15 minutes before trying again." |
 | Verification confirm | `POST /channel-verification/challenges/confirm` | **10 req / 15 min** | "Too many confirmation attempts. Please wait 15 minutes before trying again." |
 | API | `/tweets`, `/comments`, `/users`, `/follows`, `/onboarding`, and `POST /media` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
-| Reset request | `POST /auth/password-reset` **and** `POST /auth/password-reset/resend` | **5 req / 15 min, shared** | "Too many password reset requests. Please wait 15 minutes before trying again." |
+| Reset request | `POST /auth/password-reset` **and** `POST /auth/password-reset/resend` | **10 req / 15 min, shared** | "Too many password reset requests. Please wait 15 minutes before trying again." |
 | Reset confirm | `POST /auth/password-reset/confirm` | **10 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
 | Reset apply | `POST /auth/password-reset/apply` | **5 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
 
@@ -1248,7 +1248,7 @@ Channel Verification can report all of these safely because it is **authenticate
 
 ### `POST /auth/password-reset` — Request a code
 
-**Auth:** None. **Rate limit:** 5 requests / 15 min per IP. The durable controls sit beneath it and are the real answer: a per-account resend cooldown (60 seconds by default), and the mail mechanism's per-recipient cap with its reserved recovery floor ([`backend/mail.md`](../backend/mail.md)).
+**Auth:** None. **Rate limit:** 10 requests / 15 min per IP, **shared with `POST /auth/password-reset/resend`** and sized for a whole recovery rather than one call. The durable controls sit beneath it and are the real answer: a per-account resend cooldown (60 seconds by default), and the mail mechanism's per-recipient cap with its reserved recovery floor ([`backend/mail.md`](../backend/mail.md)).
 
 **The response is a constant for a given submitted address.** It is byte-for-byte identical whether that address belongs to no account, belongs to an account eligible for a fresh code, or belongs to an account still inside its cooldown. No field, header or status varies with any of that, and none is planned to: existence is never revealed, and never by advancing to a further step either.
 
@@ -1281,7 +1281,7 @@ Channel Verification can report all of these safely because it is **authenticate
 
 ### `POST /auth/password-reset/resend` — Ask the session for another code
 
-**Auth:** None. **Rate limit:** the **request limiter, shared** — 5 requests / 15 min per IP across this endpoint and `POST /auth/password-reset` together. Minting from here is the same act, and a second budget would make the real ceiling the sum of the two rather than either figure.
+**Auth:** None. **Rate limit:** the **request limiter, shared** — 10 requests / 15 min per IP across this endpoint and `POST /auth/password-reset` together. Minting from here is the same act, and a second budget would make the real ceiling the sum of the two rather than either figure. The figure covers a whole recovery: one request, its resends, and a correction if the address was mistyped.
 
 **The body is empty, and that is the whole request.** The address is read from the session, so a reader who reloaded — and therefore holds a mask rather than an address — can still ask. **A supplied `email` is refused with a `422`**, not ignored: a caller able to supply one would be a second source for a fact the session owns, and a mint path behind the wrong limiter.
 
