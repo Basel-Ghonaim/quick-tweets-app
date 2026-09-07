@@ -51,6 +51,9 @@ interface SessionRow {
   id: number;
   maskedEndpoint: string;
   challengeId: number | null;
+  userId: number | null;
+  lastAskedAt: Date;
+  resendsUsed: number;
   expiresAt: Date;
 }
 
@@ -58,6 +61,9 @@ const toSession = (row: SessionRow): PasswordResetSession => ({
   id: row.id,
   maskedEndpoint: row.maskedEndpoint,
   challengeId: row.challengeId,
+  userId: row.userId,
+  lastAskedAt: row.lastAskedAt,
+  resendsUsed: row.resendsUsed,
   expiresAt: row.expiresAt,
 });
 

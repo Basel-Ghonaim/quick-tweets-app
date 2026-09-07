@@ -171,23 +171,27 @@ export const createPasswordResetService = (
     email,
     sessionKey,
   }: RequestResetInput) => {
+    /* Every branch's work is inside the floor, the lookup included: a hit and
+       a miss on the accounts index do not cost the same. */
+    const start = now();
+
     /* Supersession is a deletion, not an overwrite: the old key stops working
        the moment a new request is made, from any branch. */
     if (sessionKey) await repo.deleteSessionByTokenHash(digestSessionKey(sessionKey));
 
-    /* Opened before the account is looked up and on every branch alike — a
-       position issued only for a real address would answer, by its presence,
-       the question the constant body refuses to answer. */
+    const user = await authRepo.findByEmail(email);
+
+    /* Opened on every branch alike — a position issued only for a real address
+       would answer, by its presence, the question the constant body refuses to
+       answer. The account it carries is null when none holds the address, so
+       one unconditional write serves both. */
     const freshKey = mintSessionKey();
     await repo.createSession({
       tokenHash: digestSessionKey(freshKey),
       maskedEndpoint: maskEndpoint(email),
-      expiresAt: new Date(now().getTime() + ttlMs),
+      userId: user?.id ?? null,
+      expiresAt: new Date(start.getTime() + ttlMs),
     });
-
-    const start = now();
-
-    const user = await authRepo.findByEmail(email);
 
     let dispatchSend: (() => Promise<void>) | undefined;
 

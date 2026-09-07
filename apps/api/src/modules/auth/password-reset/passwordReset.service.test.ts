@@ -16,6 +16,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { MailAdapter, MailMessage } from "../../mail-delivery/index.js";
 import type { IAuthRepository, ITokenRepository } from "../auth.types.js";
 import { createPasswordResetService } from "./passwordReset.service.js";
+import { digestSessionKey } from "./passwordReset.session.js";
 import type {
   IPasswordResetRepository,
   PasswordResetChallenge,
@@ -33,7 +34,16 @@ const USER = { id: 5, email: "holder@example.test" };
 /** An in-memory stand-in for the credential table, honest about ids and timestamps. */
 const fakeWorld = () => {
   const rows: { id: number; userId: number; codeHash: string; endpoint: string; expiresAt: Date; usedAt: Date | null; createdAt: Date }[] = [];
-  const sessions: { id: number; tokenHash: string; maskedEndpoint: string; challengeId: number | null; expiresAt: Date }[] = [];
+  const sessions: {
+    id: number;
+    tokenHash: string;
+    maskedEndpoint: string;
+    challengeId: number | null;
+    userId: number | null;
+    lastAskedAt: Date;
+    resendsUsed: number;
+    expiresAt: Date;
+  }[] = [];
   let nextId = 1;
   let nextSessionId = 1;
   let clock = T0;
@@ -67,8 +77,17 @@ const fakeWorld = () => {
       const row = rows.find((r) => r.id === id);
       return row ? { ...row } : null;
     },
-    createSession: async ({ tokenHash, maskedEndpoint, expiresAt }) => {
-      sessions.push({ id: nextSessionId++, tokenHash, maskedEndpoint, challengeId: null, expiresAt });
+    createSession: async ({ tokenHash, maskedEndpoint, userId, expiresAt }) => {
+      sessions.push({
+        id: nextSessionId++,
+        tokenHash,
+        maskedEndpoint,
+        challengeId: null,
+        userId,
+        lastAskedAt: clock,
+        resendsUsed: 0,
+        expiresAt,
+      });
     },
     findSessionByTokenHash: async (tokenHash) => {
       const row = sessions.find((sn) => sn.tokenHash === tokenHash);
@@ -360,6 +379,22 @@ describe("the position, and when it stops answering", () => {
       step: "request",
       maskedEndpoint: null,
     });
+  });
+
+  /* A resend must reach the address the position was opened for, and the
+     position holds only a mask. Null for an address no account holds is what
+     keeps one unconditional write serving both branches. */
+  it("records the account it was opened for, and null when none holds the address", async () => {
+    const { service, world } = build();
+
+    const known = await service.request({ email: USER.email });
+    const unknown = await service.request({ email: "nobody@example.test" });
+
+    const held = (key?: string) =>
+      world.sessions.find((sn) => sn.tokenHash === digestSessionKey(key ?? ""));
+
+    expect(held(known.sessionKey)?.userId).toBe(USER.id);
+    expect(held(unknown.sessionKey)?.userId).toBeNull();
   });
 
   it("supersedes the position a second request arrives holding", async () => {

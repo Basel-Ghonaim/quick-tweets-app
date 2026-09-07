@@ -82,12 +82,17 @@ export interface PasswordResetSession {
   id: number;
   maskedEndpoint: string;
   challengeId: number | null;
+  /** The account this position was opened for, or `null` for an address none holds. */
+  userId: number | null;
+  lastAskedAt: Date;
+  resendsUsed: number;
   expiresAt: Date;
 }
 
 export interface CreateSessionInput {
   tokenHash: string;
   maskedEndpoint: string;
+  userId: number | null;
   expiresAt: Date;
 }
 
