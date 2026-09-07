@@ -48,6 +48,15 @@ export const confirmResetSchema = z.object({
 });
 
 /**
+ * Empty by design, and validated anyway: the address is the position's, so a
+ * caller able to supply one would be a mint path behind the wrong limiter.
+ */
+export const resendResetSchema = z.object({
+  email: z.never({ error: "The address is not the caller's to supply here." }).optional(),
+  code: z.never({ error: "The code is not the caller's to supply here." }).optional(),
+});
+
+/**
  * The new password is held to registration's rules by **reusing them**, not
  * by restating them: two copies of a password policy drift, and the copy that
  * drifts is the one nobody is looking at.

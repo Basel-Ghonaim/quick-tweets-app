@@ -24,6 +24,7 @@ const EXPIRES = () => new Date(Date.now() + 10 * 60 * 1000);
 const RACERS = 12;
 
 const removeThisRun = async () => {
+  await prisma.passwordResetSession.deleteMany({ where: { tokenHash: { startsWith: TAG } } });
   await prisma.passwordResetChallenge.deleteMany({
     where: { user: { username: { startsWith: TAG } } },
   });
@@ -126,5 +127,59 @@ describe("the digest lookup", () => {
     const found = await repo.findByCodeHash("find-me");
 
     expect(found?.userId).toBe(user.id);
+  });
+});
+
+/**
+ * The bound lives in this conditional write and nowhere above it, so the unit
+ * lane — driving a fake that enforces its own copy — cannot see it at all.
+ */
+describe("recording an ask against a position", () => {
+  const makeSession = async (name: string, resendsUsed = 0) =>
+    prisma.passwordResetSession.create({
+      data: {
+        tokenHash: `${TAG}-${name}`,
+        maskedEndpoint: "h•••••@example.test",
+        resendsUsed,
+        expiresAt: EXPIRES(),
+      },
+    });
+
+  it("stamps the ask, extends the position and increments the count", async () => {
+    const session = await makeSession("ask");
+    const askedAt = new Date();
+    const expiresAt = new Date(askedAt.getTime() + 60_000);
+
+    const count = await repo.recordResend(session.id, askedAt, expiresAt, 3);
+
+    const after = await prisma.passwordResetSession.findUnique({ where: { id: session.id } });
+    expect(count).toBe(1);
+    expect(after?.resendsUsed).toBe(1);
+    expect(after?.lastAskedAt).toEqual(askedAt);
+    expect(after?.expiresAt).toEqual(expiresAt);
+  });
+
+  it("refuses once the bound is reached, and leaves the position exactly as it stands", async () => {
+    const session = await makeSession("spent", 3);
+    const before = await prisma.passwordResetSession.findUnique({ where: { id: session.id } });
+
+    const count = await repo.recordResend(session.id, new Date(), EXPIRES(), 3);
+
+    const after = await prisma.passwordResetSession.findUnique({ where: { id: session.id } });
+    expect(count).toBe(0);
+    expect(after).toEqual(before);
+  });
+
+  /* Decided by the write, not by a read above it: simultaneous asks against
+     the last remaining one cannot both pass. */
+  it("admits exactly one winner when many callers race for the last ask", async () => {
+    const session = await makeSession("race", 2);
+
+    const results = await Promise.all(
+      Array.from({ length: RACERS }, () => repo.recordResend(session.id, new Date(), EXPIRES(), 3)),
+    );
+
+    expect(results.filter((count) => count === 1)).toHaveLength(1);
+    expect(results.filter((count) => count === 0)).toHaveLength(RACERS - 1);
   });
 });

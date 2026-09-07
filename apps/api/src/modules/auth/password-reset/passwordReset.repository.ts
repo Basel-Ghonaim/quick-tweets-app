@@ -135,6 +135,14 @@ export const createPasswordResetRepository = (
     await client.passwordResetSession.deleteMany({ where: { tokenHash } });
   },
 
+  recordResend: async (id, askedAt, expiresAt, maxResends, client: DbClient = db) => {
+    const { count } = await client.passwordResetSession.updateMany({
+      where: { id, resendsUsed: { lt: maxResends } },
+      data: { lastAskedAt: askedAt, expiresAt, resendsUsed: { increment: 1 } },
+    });
+    return count;
+  },
+
   bindSessionToChallenge: async (id, challengeId, client: DbClient = db) => {
     await client.passwordResetSession.update({ where: { id }, data: { challengeId } });
   },

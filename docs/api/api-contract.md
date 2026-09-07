@@ -56,6 +56,7 @@ POST   /api/v1/auth/logout
 POST   /api/v1/auth/logout-all
 POST   /api/v1/auth/refresh
 POST   /api/v1/auth/password-reset          (unauthenticated)
+POST   /api/v1/auth/password-reset/resend   (unauthenticated)
 POST   /api/v1/auth/password-reset/confirm  (unauthenticated)
 POST   /api/v1/auth/password-reset/apply    (unauthenticated)
 GET    /api/v1/auth/password-reset/session  (unauthenticated)
@@ -242,7 +243,7 @@ Every limiter below is **per IP**, over a fixed window, and answers with `type: 
 | Verification issue | `POST /channel-verification/challenges` | **10 req / 15 min** | "Too many verification requests. Please wait 15 minutes before trying again." |
 | Verification confirm | `POST /channel-verification/challenges/confirm` | **10 req / 15 min** | "Too many confirmation attempts. Please wait 15 minutes before trying again." |
 | API | `/tweets`, `/comments`, `/users`, `/follows`, `/onboarding`, and `POST /media` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
-| Reset request | `POST /auth/password-reset` | **5 req / 15 min** | "Too many password reset requests. Please wait 15 minutes before trying again." |
+| Reset request | `POST /auth/password-reset` **and** `POST /auth/password-reset/resend` | **5 req / 15 min, shared** | "Too many password reset requests. Please wait 15 minutes before trying again." |
 | Reset confirm | `POST /auth/password-reset/confirm` | **10 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
 | Reset apply | `POST /auth/password-reset/apply` | **5 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
 
@@ -1223,9 +1224,9 @@ The presence check itself still applies, and it is the one case that answers dif
 
 Recovering access to an account whose password its owner no longer has. The capability owns one fact — that the bearer of a code is currently authorized to set a new password — and it is **not** Channel Verification: different subject, different actor, different lifetime, different consequence. Governing decision: [ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md).
 
-**All three endpoints are unauthenticated**, and that is the point rather than an oversight. The actor is whoever holds the code; requiring a session would exclude precisely the people recovery exists for.
+**Every endpoint here is unauthenticated**, and that is the point rather than an oversight. The actor is whoever holds the code; requiring a session would exclude precisely the people recovery exists for.
 
-The flow is **request → confirm → apply**, and a **reset session** carries a reader's position across it ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)).
+The flow is **request → confirm → apply**, with **resend** available from the code step, and a **reset session** carries a reader's position across it ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)).
 
 A request opens a session and answers with an `HttpOnly` cookie — **for every address alike**, since one issued only for a real account would answer, by its presence, the question this capability refuses to answer. `confirm` reports whether a code is usable and binds it to the caller's session; `apply` reads the credential **from the session** and never from the request. The client therefore stops holding a password-change credential the moment one is confirmed, and a code sent to `apply` is refused rather than ignored.
 
@@ -1239,7 +1240,7 @@ The two capabilities both mint an emailed code and otherwise share almost nothin
 |---|---|---|
 | `delivery` on the `202` | reported | **absent** — reporting it would confirm a send happened, and a send happens only for an address that exists |
 | `resendAvailableInSeconds` | reported | **absent** — the account's cooldown exists only for a real account, so reporting it discloses that the account is real. The session's own `retryAfterSeconds` is a different number: seeded when the session opens, for every address alike |
-| `Retry-After` on a cooldown | sent | **never sent**, for the same reason |
+| `Retry-After` on a cooldown | sent | **never** — a cooldown produces no refusal to carry one. The per-IP limiter's own `429` does send one, and it reports that limiter's window, not the account's |
 | A cooldown refusal | a distinct `429` | **indistinguishable** from every other outcome |
 | A session cookie | none | **set on every branch alike**, so its presence says nothing |
 
@@ -1271,11 +1272,45 @@ Channel Verification can report all of these safely because it is **authenticate
 // discloses nothing, since the caller knows what they typed.
 { "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "email": ["Invalid email format"] } } }
 
-// Response 429 — too many requests from this IP. No Retry-After: see above.
+// Response 429 — too many requests from this IP. Retry-After IS sent here, by
+// the limiter, and reports the IP window rather than anything about the account.
 { "success": false, "error": { "type": "rate_limit", "message": "Too many password reset requests. Please wait 15 minutes before trying again." } }
 ```
 
 > **The mail is dispatched after this response is written**, never before it. Only one of the three branches has a message to send, so awaiting the send would put a measurable duration where the constant body denies one. A send that fails is not reported: there is nothing in it for a caller to learn, and a fresh request supersedes a lost code.
+
+### `POST /auth/password-reset/resend` — Ask the session for another code
+
+**Auth:** None. **Rate limit:** the **request limiter, shared** — 5 requests / 15 min per IP across this endpoint and `POST /auth/password-reset` together. Minting from here is the same act, and a second budget would make the real ceiling the sum of the two rather than either figure.
+
+**The body is empty, and that is the whole request.** The address is read from the session, so a reader who reloaded — and therefore holds a mask rather than an address — can still ask. **A supplied `email` is refused with a `422`**, not ignored: a caller able to supply one would be a second source for a fact the session owns, and a mint path behind the wrong limiter.
+
+**The ask is recorded before anything about the account is read**, so the window and the bound move whether or not a message follows. One that moved only when mail left would report whether mail left.
+
+**The per-account cooldown beneath it stays silent**, exactly as on the request path: inside it nothing is minted, nothing is sent, and nothing in this response differs.
+
+**A session may ask a bounded number of times.** Past the bound the endpoint refuses, and `canResend` on the session read has already said so — a client should not have called. Refused identically, too, for no session at all and for a session that has already confirmed a code: each is a fact about the caller's own browser rather than about any account.
+
+**A successful ask does not rotate the previous code.** Earlier codes stay usable until they expire or are spent, so a reader holding two of them may use either. This differs from Channel Verification, whose resend supersedes.
+
+```jsonc
+// Request — no body. The session travels in the cookie.
+{}
+
+// Response 202 — always this, whatever happened, and the session cookie is
+// re-set to the position's new expiry.
+{ "success": true, "data": { "step": "code", "maskedEndpoint": "h•••••@example.test", "retryAfterSeconds": 60, "canResend": true } }
+
+// Response 400 — no session, a session past the code step, or one whose asks
+// are spent. The same single failure every unusable code produces.
+{ "success": false, "error": { "type": "bad_request", "message": "That reset code is not valid." } }
+
+// Response 422 — an address or a code was supplied
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "email": ["The address is not the caller's to supply here."] } } }
+
+// Response 429 — too many requests from this IP, against the shared budget.
+{ "success": false, "error": { "type": "rate_limit", "message": "Too many password reset requests. Please wait 15 minutes before trying again." } }
+```
 
 ### `POST /auth/password-reset/confirm` — Check a code
 

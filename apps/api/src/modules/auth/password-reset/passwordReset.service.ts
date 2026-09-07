@@ -43,6 +43,7 @@ import type {
   RequestResetInput,
   PasswordResetSession,
   RequestResetOutcome,
+  ResendResetInput,
   ResetPosition,
   ResetCode,
   ResetCodeFormat,
@@ -185,10 +186,8 @@ export const createPasswordResetService = (
 
     const user = await authRepo.findByEmail(email);
 
-    /* Opened on every branch alike — a position issued only for a real address
-       would answer, by its presence, the question the constant body refuses to
-       answer. The account it carries is null when none holds the address, so
-       one unconditional write serves both. */
+    /* Opened on every branch alike: one issued only for a real address would
+       answer, by its presence, what the constant body refuses to answer. */
     const freshKey = mintSessionKey();
     await repo.createSession({
       tokenHash: digestSessionKey(freshKey),
@@ -256,9 +255,8 @@ export const createPasswordResetService = (
       await wait(responseFloorMs - elapsed);
     }
 
-    /* Built from what this request just wrote rather than read back: the
-       values are identical on every branch, and a second read would be a
-       second branch-dependent query inside the floor. */
+    /* Built from what was just written rather than read back: a second read
+       would be a second branch-dependent query inside the floor. */
     const position: ResetPosition = {
       step: "code",
       maskedEndpoint: maskEndpoint(email),
@@ -270,6 +268,93 @@ export const createPasswordResetService = (
       ? { dispatchSend, sessionKey: freshKey, position }
       : { sessionKey: freshKey, position };
     return outcome;
+  };
+
+  /**
+   * A fresh code for the position the caller already holds, so nothing about
+   * the address has to come back from the client.
+   */
+  const resend: IPasswordResetService["resend"] = async ({
+    sessionKey,
+  }: ResendResetInput) => {
+    const start = now();
+
+    /* No key, no position, or one past the step that asks — refused
+       identically. Each is a fact about this browser, never about an account. */
+    if (!sessionKey) throw PasswordResetError.notUsable();
+
+    const session = await liveSession(sessionKey);
+    if (session === null || session.challengeId !== null) {
+      throw PasswordResetError.notUsable();
+    }
+
+    /* Before anything account-shaped is read, so the window and the bound move
+       on the ask: ones that moved on the send would report that mail left. */
+    const recorded = await repo.recordResend(
+      session.id,
+      start,
+      new Date(start.getTime() + ttlMs),
+      maxResends,
+    );
+    if (recorded === 0) throw PasswordResetError.notUsable();
+
+    let dispatchSend: (() => Promise<void>) | undefined;
+
+    const user = session.userId === null ? null : await authRepo.findById(session.userId);
+
+    if (user !== null) {
+      const minted = await runTransaction(async (tx) => {
+        await repo.lockUser(user.id, tx);
+        const mostRecent = await repo.findMostRecentForUser(user.id, tx);
+
+        // The account's own cooldown, still silent and a different clock from
+        // the position's window above.
+        if (
+          mostRecent !== null &&
+          start.getTime() - mostRecent.createdAt.getTime() < cooldownMs
+        ) {
+          return null;
+        }
+
+        const code = mintResetCode(format);
+        await repo.createChallenge(
+          {
+            userId: user.id,
+            codeHash: digestResetCode(code),
+            endpoint: user.email,
+            expiresAt: new Date(start.getTime() + ttlMs),
+          },
+          tx,
+        );
+        return code;
+      });
+
+      if (minted !== null) {
+        dispatchSend = async () => {
+          try {
+            await mail.send({ to: user.email, ...composeMessage(minted) });
+          } catch {
+            // Swallowed for the same reason the request path swallows one.
+          }
+        };
+      }
+    }
+
+    const elapsed = now().getTime() - start.getTime();
+    if (elapsed < responseFloorMs) {
+      await wait(responseFloorMs - elapsed);
+    }
+
+    const position: ResetPosition = {
+      step: "code",
+      maskedEndpoint: session.maskedEndpoint,
+      retryAfterSeconds: Math.ceil(cooldownMs / 1000),
+      canResend: session.resendsUsed + 1 < maxResends,
+    };
+
+    return dispatchSend
+      ? { dispatchSend, sessionKey, position }
+      : { sessionKey, position };
   };
 
   const confirm: IPasswordResetService["confirm"] = async ({
@@ -293,9 +378,7 @@ export const createPasswordResetService = (
    * lapsed one is a legitimate answer meaning *start at the beginning*.
    */
   /**
-   * Derived on read from when the position last asked, so a window closes with
-   * nobody having written anything. Rounded up: a partial second still has to
-   * be waited out.
+   * Derived on read, so a window closes with nobody having written anything.
    */
   const windowOf = (session: PasswordResetSession) => ({
     retryAfterSeconds: Math.max(
@@ -358,5 +441,5 @@ export const createPasswordResetService = (
     return { userId: result.userId };
   };
 
-  return { request, confirm, positionOf, apply };
+  return { request, resend, confirm, positionOf, apply };
 };

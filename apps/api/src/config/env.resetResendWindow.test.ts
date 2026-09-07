@@ -1,11 +1,6 @@
 /**
- * The resend window now reaches a reader, which gives the cooldown a second
- * setting it has to agree with.
- *
- * A cooldown at or beyond the code's own lifetime would render a countdown
- * that outlives the position it belongs to: the position lapses before the
- * window opens, so the control it reports could never be reached. Nothing
- * needed to catch that while the window was invisible.
+ * A cooldown at or beyond the code's lifetime names a moment the position has
+ * already lapsed past, so the control it reports could never be reached.
  *
  * The schema is re-imported per case because it validates at module load,
  * which is the whole point: the failure has to reach a boot.

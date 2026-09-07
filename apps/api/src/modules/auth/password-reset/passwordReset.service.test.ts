@@ -98,6 +98,14 @@ const fakeWorld = () => {
       const at = sessions.findIndex((sn) => sn.tokenHash === tokenHash);
       if (at >= 0) sessions.splice(at, 1);
     },
+    recordResend: async (id, askedAt, expiresAt, maxResends) => {
+      const row = sessions.find((sn) => sn.id === id && sn.resendsUsed < maxResends);
+      if (!row) return 0;
+      row.lastAskedAt = askedAt;
+      row.expiresAt = expiresAt;
+      row.resendsUsed += 1;
+      return 1;
+    },
     bindSessionToChallenge: async (id, challengeId) => {
       const row = sessions.find((sn) => sn.id === id);
       if (row) row.challengeId = challengeId;
@@ -111,7 +119,8 @@ const fakeWorld = () => {
 const fakeAuthRepo = (overrides: Partial<IAuthRepository> = {}): IAuthRepository => ({
   findByUsername: async () => null,
   findByEmail: async (email) => (email === USER.email ? (USER as never) : null),
-  findById: async () => null,
+  // Resolved by id too: the resend path reads the account from the position.
+  findById: async (id) => (id === USER.id ? (USER as never) : null),
   create: async () => ({}) as never,
   updatePasswordHash: vi.fn(async () => {}),
   ...overrides,
@@ -265,7 +274,11 @@ describe("request — neutrality across all three branches (I5)", () => {
     const known = await service.request({ email: USER.email });
     const unknown = await service.request({ email: "nobody@example.test" });
 
-    const withoutMask = ({ maskedEndpoint: _m, ...rest }: typeof known.position) => rest;
+    const withoutMask = (p: typeof known.position) => ({
+      step: p.step,
+      retryAfterSeconds: p.retryAfterSeconds,
+      canResend: p.canResend,
+    });
     expect(withoutMask(unknown.position)).toEqual(withoutMask(known.position));
     expect(unknown.position.maskedEndpoint).toBe("n•••••@example.test");
   });
@@ -475,6 +488,114 @@ describe("the position, and when it stops answering", () => {
     expect(second.sessionKey).not.toBe(first.sessionKey);
     await expect(service.positionOf(first.sessionKey)).resolves.toMatchObject({ step: "request" });
     await expect(service.positionOf(second.sessionKey)).resolves.toMatchObject({ step: "code" });
+  });
+});
+
+describe("resend — asking again from a position the caller already holds", () => {
+  const askFrom = async (email: string, over = {}) => {
+    const built = build(over);
+    const { sessionKey } = await built.service.request({ email });
+    return { ...built, sessionKey };
+  };
+
+  it("mints and dispatches for an eligible account, reading the address from the position", async () => {
+    let clock = T0;
+    const { service, mail, sessionKey } = await askFrom(USER.email, { now: () => clock });
+
+    clock = new Date(T0.getTime() + COOLDOWN);
+    const outcome = await service.resend({ sessionKey });
+    await outcome.dispatchSend?.();
+
+    expect(mail.send).toHaveBeenCalledWith(expect.objectContaining({ to: USER.email }));
+  });
+
+  /* The window and the bound move on the ask, not on the send: ones that moved
+     only when mail left would report whether mail left. */
+  it("moves the window and the bound on a resend that sent nothing", async () => {
+    const cooling = await askFrom(USER.email);
+    const unknown = await askFrom("nobody@example.test");
+
+    for (const { service, sessionKey, world, mail } of [cooling, unknown]) {
+      const before = world.sessions.find((sn) => sn.tokenHash === digestSessionKey(sessionKey))!;
+      expect(before.resendsUsed).toBe(0);
+
+      const outcome = await service.resend({ sessionKey });
+
+      expect(outcome.dispatchSend).toBeUndefined();
+      expect(mail.send).not.toHaveBeenCalled();
+      expect(before.resendsUsed).toBe(1);
+      expect(before.lastAskedAt).toEqual(T0);
+    }
+  });
+
+  it("answers the same position for a cooling account and one no account holds", async () => {
+    const cooling = await askFrom(USER.email);
+    const unknown = await askFrom("hidden@example.test");
+
+    const a = await cooling.service.resend({ sessionKey: cooling.sessionKey });
+    const b = await unknown.service.resend({ sessionKey: unknown.sessionKey });
+
+    expect(b.position).toEqual(a.position);
+  });
+
+  /* One clock: the position expires with whatever it now authorizes. */
+  it("extends the position to the credential it may now hold", async () => {
+    let clock = T0;
+    const { service, world, sessionKey } = await askFrom(USER.email, { now: () => clock });
+    const held = () => world.sessions.find((sn) => sn.tokenHash === digestSessionKey(sessionKey))!;
+    expect(held().expiresAt).toEqual(new Date(T0.getTime() + TTL));
+
+    clock = new Date(T0.getTime() + COOLDOWN);
+    await service.resend({ sessionKey });
+
+    expect(held().expiresAt).toEqual(new Date(clock.getTime() + TTL));
+  });
+
+  it("stops extending once the bound is spent, and says so before it does", async () => {
+    const { service, world, sessionKey } = await askFrom(USER.email, { maxResends: 2 });
+    const held = () => world.sessions.find((sn) => sn.tokenHash === digestSessionKey(sessionKey))!;
+
+    const first = await service.resend({ sessionKey });
+    expect(first.position.canResend).toBe(true);
+    const second = await service.resend({ sessionKey });
+    expect(second.position.canResend).toBe(false);
+
+    const spentAt = held().expiresAt;
+    await expect(service.resend({ sessionKey })).rejects.toMatchObject({ code: "not_usable" });
+    expect(held().resendsUsed).toBe(2);
+    expect(held().expiresAt).toEqual(spentAt);
+  });
+
+  /* Each refusal is a fact about this browser rather than about an account, so
+     one opaque outcome discloses nothing. */
+  it("refuses a position that does not exist, and one past the step that asks", async () => {
+    const { service } = build();
+    await expect(service.resend({})).rejects.toMatchObject({ code: "not_usable" });
+    await expect(service.resend({ sessionKey: "never-issued" })).rejects.toMatchObject({
+      code: "not_usable",
+    });
+
+    const confirmed = build();
+    const { dispatchSend, sessionKey } = await confirmed.service.request({ email: USER.email });
+    await dispatchSend?.();
+    const [sent] = (confirmed.mail.send as ReturnType<typeof vi.fn>).mock.calls[0] as [MailMessage];
+    await confirmed.service.confirm({
+      sessionKey,
+      code: sent.body.match(/code is (\w+)/)?.[1] ?? "",
+    });
+
+    await expect(confirmed.service.resend({ sessionKey })).rejects.toMatchObject({
+      code: "not_usable",
+    });
+  });
+
+  it("applies the response floor to a resend that sent nothing", async () => {
+    const { service, waits, sessionKey } = await askFrom("nobody@example.test");
+    waits.length = 0;
+
+    await service.resend({ sessionKey });
+
+    expect(waits).toEqual([FLOOR]);
   });
 });
 

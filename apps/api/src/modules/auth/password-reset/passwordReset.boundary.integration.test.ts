@@ -184,8 +184,9 @@ describe("request answers identically in all three branches (I5)", () => {
     const withoutMask = (r: typeof unknown) => {
       const o = observable(r);
       const body = o.body as { success: boolean; data: Record<string, unknown> };
-      const { maskedEndpoint: _mask, ...rest } = body.data;
-      return JSON.stringify({ ...o, body: { success: body.success, data: rest } });
+      const data = { ...body.data };
+      delete data.maskedEndpoint;
+      return JSON.stringify({ ...o, body: { success: body.success, data } });
     };
     expect(new Set([unknown, eligible, cooling].map(withoutMask)).size).toBe(1);
 

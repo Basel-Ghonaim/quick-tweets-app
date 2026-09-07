@@ -101,9 +101,8 @@ export interface ResetPosition {
   step: ResetStep;
   maskedEndpoint: string | null;
   /**
-   * Seconds until this position may ask for another code, `0` when it may now.
-   * Seeded when the position is opened, so it reports that position's own
-   * history and never whether an account holds the address.
+   * Seconds until this position may ask again, `0` when it may now. Seeded when
+   * the position opens, so it never reports whether an account holds the address.
    */
   retryAfterSeconds: number;
   /** False once the position has spent its asks, and where there is no position. */
@@ -164,6 +163,18 @@ export interface IPasswordResetRepository {
    * Binds a confirmed credential to a position, and is the whole of the step
    * derivation. Refuses if that credential already belongs to another session.
    */
+  /**
+   * Stamps the ask, extends the position and increments its count — **only
+   * while that count is below `maxResends`**, reporting how many rows matched.
+   */
+  recordResend(
+    id: number,
+    askedAt: Date,
+    expiresAt: Date,
+    maxResends: number,
+    client?: DbClient,
+  ): Promise<number>;
+
   bindSessionToChallenge(id: number, challengeId: number, client?: DbClient): Promise<void>;
 
   /** Removes sessions expired before `cutoff`; returns how many went. */
@@ -194,10 +205,25 @@ export interface RequestResetOutcome {
    */
   sessionKey: string;
   /**
-   * The position this request opened, so a caller never holds the step from
-   * one answer and the window from another. Identical across every branch for
-   * a given submitted address.
+   * The position this request opened, identical across every branch for a given
+   * submitted address, so a caller never holds one fact from two answers.
    */
+  position: ResetPosition;
+}
+
+export interface ResendResetInput {
+  /** The position to ask from. Without one there is nothing to ask for. */
+  sessionKey?: string;
+}
+
+/**
+ * What `resend` hands back. `dispatchSend` is present only when a code was
+ * minted, so a cooling account and one that does not exist look alike.
+ */
+export interface ResendResetOutcome {
+  dispatchSend?: () => Promise<void>;
+  /** The key that was asked from, so the boundary re-sets it to the new expiry. */
+  sessionKey: string;
   position: ResetPosition;
 }
 
@@ -223,6 +249,12 @@ export interface IPasswordResetService {
    * floor before resolving, regardless of which branch ran.
    */
   request(input: RequestResetInput): Promise<RequestResetOutcome>;
+
+  /**
+   * A fresh code for the account the position was opened for, with the ask
+   * recorded before the account is read. Every refusal is the single outcome.
+   */
+  resend(input: ResendResetInput): Promise<ResendResetOutcome>;
 
   /**
    * Reports whether `code` currently identifies a usable row and binds it to

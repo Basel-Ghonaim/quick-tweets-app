@@ -36,22 +36,23 @@ const handlersOf = (path: string) => {
   return layer.route.stack.map((entry) => entry.handle);
 };
 
-describe("the four routes exist, and only those four", () => {
+describe("the five routes exist, and only those five", () => {
   /* The position read is a GET because it changes nothing; the three that move
      the flow are POSTs. */
-  it("registers exactly request, confirm, apply and the position read", () => {
+  it("registers exactly request, resend, confirm, apply and the position read", () => {
     const registered = layers().map((l) => `${Object.keys(l.route.methods).join(",")} ${l.route.path}`);
     expect(registered.sort()).toEqual([
       "get /session",
       "post /",
       "post /apply",
       "post /confirm",
+      "post /resend",
     ]);
   });
 });
 
 describe("no route requires a session (I3)", () => {
-  for (const path of ["/", "/confirm", "/apply", "/session"]) {
+  for (const path of ["/", "/resend", "/confirm", "/apply", "/session"]) {
     it(`${path} carries neither authGuard nor optionalAuth`, () => {
       const handlers = handlersOf(path);
       expect(handlers).not.toContain(authGuard);
@@ -63,6 +64,9 @@ describe("no route requires a session (I3)", () => {
 describe("every route is rate limited, with its own limiter", () => {
   const expected = [
     ["/", passwordResetRequestLimiter],
+    // Deliberately the request limiter: minting from /resend is the same act,
+    // and a second budget would make the real ceiling the sum of the two.
+    ["/resend", passwordResetRequestLimiter],
     ["/confirm", passwordResetConfirmLimiter],
     ["/apply", passwordResetApplyLimiter],
   ] as const;
@@ -77,14 +81,20 @@ describe("every route is rate limited, with its own limiter", () => {
     });
   }
 
-  it("gives each route a distinct limiter, so one route cannot exhaust another's budget", () => {
-    const used = new Set(expected.map(([, limiter]) => limiter));
-    expect(used.size).toBe(3);
+  /* Asserted per pair rather than by a count, which would pass on any
+     regrouping that happened to keep the number. */
+  it("separates the budgets that must not mix, and shares the one that must", () => {
+    const limiterFor = (path: string) => expected.find(([p]) => p === path)?.[1];
+
+    expect(limiterFor("/resend")).toBe(limiterFor("/"));
+    expect(limiterFor("/confirm")).not.toBe(limiterFor("/"));
+    expect(limiterFor("/apply")).not.toBe(limiterFor("/"));
+    expect(limiterFor("/apply")).not.toBe(limiterFor("/confirm"));
   });
 });
 
 describe("every route validates before it reaches the controller", () => {
-  for (const path of ["/", "/confirm", "/apply"]) {
+  for (const path of ["/", "/resend", "/confirm", "/apply"]) {
     it(`${path} runs limiter → validate → controller`, () => {
       // Three handlers exactly: anything else means something was inserted
       // into the chain without this test being reconsidered.

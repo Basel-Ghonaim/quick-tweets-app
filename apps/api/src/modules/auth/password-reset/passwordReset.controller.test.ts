@@ -141,6 +141,49 @@ describe("request — the send is dispatched after the response, never inside it
   });
 });
 
+describe("resend — the same discipline the request path keeps", () => {
+  const resendOutcome = (dispatchSend?: () => Promise<void>) =>
+    vi.fn(async () =>
+      dispatchSend
+        ? { dispatchSend, sessionKey: "k", position: POSITION }
+        : { sessionKey: "k", position: POSITION },
+    );
+
+  it("answers 202 with the position, and holds the send until the response is out", async () => {
+    const dispatchSend = vi.fn(async () => {});
+    const { controller } = build({ resend: resendOutcome(dispatchSend) });
+
+    const { res } = await call(controller.resend, {});
+
+    expect(res.status).toHaveBeenCalledWith(202);
+    expect(res.json).toHaveBeenCalledWith({ success: true, data: POSITION });
+    expect(dispatchSend).not.toHaveBeenCalled();
+
+    res.flush();
+    expect(dispatchSend).toHaveBeenCalledTimes(1);
+  });
+
+  it("registers no finish listener at all when nothing was minted", async () => {
+    const { controller } = build({ resend: resendOutcome() });
+    const { res } = await call(controller.resend, {});
+
+    expect(res.finishListenerCount()).toBe(0);
+  });
+
+  /* The position's expiry moved, so the cookie's has to move with it or the
+     browser drops the key while the position is still live. */
+  it("re-sets the cookie so it outlives the position it addresses", async () => {
+    const { controller } = build({ resend: resendOutcome() });
+    const { res } = await call(controller.resend, {});
+
+    expect(res.cookie).toHaveBeenCalledWith(
+      "qt_reset",
+      "k",
+      expect.objectContaining({ httpOnly: true, sameSite: "strict", maxAge: expect.any(Number) }),
+    );
+  });
+});
+
 describe("confirm and apply — the shapes they answer with", () => {
   it("confirm reports usability with 204 and no body", async () => {
     const { controller, service } = build();
