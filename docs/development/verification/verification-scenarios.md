@@ -368,6 +368,11 @@ verifies, in one line each:
 >   sufficient at completion, not at confirmation, and Channel Verification
 >   writes it (PWR-11a). Recovery reports; it never writes the fact.
 >
+> - **G9 — a reader may ask again without retyping.** The address is read from
+>   the position, never from the request; one supplied is refused (PWR-03a). The
+>   window and the bound move on the **ask**, not on the send (PWR-03c) — ones
+>   that moved on the send would report that mail left.
+>
 > **Self-isolated.** The folder mints its own account with a per-run unique handle,
 > so it never disturbs `verify_alice`/`verify_bob`. The run's identity is
 > `{{pwrUsername}}`; its captured code is `{{pwrCode}}`.
@@ -396,35 +401,44 @@ verifies, in one line each:
 > **PWR-14 needs a restart** with a short `RESET_CODE_TTL_MS`, because the default
 > ten minutes is not waitable by hand and shortening it for the whole folder would
 > expire codes before they can be pasted. **PWR-15 must run last, and after its
-> own restart** — it exhausts the per-IP request budget for fifteen minutes and
-> would block everything after it. It starts from a cleared counter deliberately,
+> own restart** — it exhausts the per-IP mint budget for fifteen minutes and
+> would block everything after it. That budget is **shared between requesting a
+> code and resending one**, and this folder spends seven of its ten before
+> PWR-15 begins, which is why the restart is what makes the count reliable. It starts from a cleared counter deliberately,
 > rather than from an exact count of every request above it: folder 10's CHV-13
 > documents that arithmetic and a runner has to get it right, and this avoids
 > needing to.
 
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
 |----|---------------|--------|---------------------|-------------------|---------|----------------|
-| PWR-00 | Setup registered | `GET …/session` before any request | **200**, `{step:"request", maskedEndpoint:null}` — the read **never `404`s** (**G6**) | no `password_reset_sessions` row for this run | — | ☐ |
-| PWR-01 | Setup registered; server in `MAIL_MODE=capture` | `POST /auth/password-reset` for an address **no account has** | **202**; body `{"success":true,"data":null}`; **no `Retry-After`** | no `password_reset_challenges` row (Checkpoint J) | — | ☐ |
+| PWR-00 | Setup registered | `GET …/session` before any request | **200**, `{step:"request", maskedEndpoint:null, retryAfterSeconds:0, canResend:false}` — the read **never `404`s** (**G6**) | no `password_reset_sessions` row for this run | — | ☐ |
+| PWR-01 | Setup registered; server in `MAIL_MODE=capture` | `POST /auth/password-reset` for an address **no account has** | **202**; body is the **position** — `step:"code"`, the typed address masked, `retryAfterSeconds`, `canResend` (**G9**); **no `Retry-After`** | no `password_reset_challenges` row (Checkpoint J) | — | ☐ |
 | PWR-01a | PWR-01 | `GET …/session` | **200**, `step:"code"` and a **masked** address — a position was opened for an address **no account has** (**G1**, **G6**) | one `password_reset_sessions` row, `challenge_id` **null** | — | ☐ |
-| PWR-02 | PWR-01 | same request for the **real** address | **202**, **byte-identical** to PWR-01 (**G1**) | one row, `code_hash` a **64-hex digest**, `used_at` null (Checkpoint J) | via reset | ☐ |
+| PWR-02 | PWR-01 | same request for the **real** address | **202**, identical to PWR-01 **except the mask**, which is a function of what was typed rather than of what exists (**G1**) | one row, `code_hash` a **64-hex digest**, `used_at` null (Checkpoint J) | via reset | ☐ |
 | PWR-02a | PWR-02 | `GET …/session` | **200**, `step:"code"`, the real address masked to its first character; the unmasked value appears **nowhere** in the response (**D5**) | **still one** session row — PWR-01's was superseded, not added to | — | ☐ |
-| PWR-03 | PWR-02, within 60s | same request again | **202**, **byte-identical** again — the cooldown is silent (**G1**) | **still one row** — no second credential minted | — | ☐ |
+| PWR-03 | PWR-02, within 60s | same request again | **202**, **byte-identical to PWR-02** — the same submitted address, eligible then and cooling now, and the sharpest comparison in the folder (**G1**) | **still one row** — no second credential minted | — | ☐ |
+| PWR-03a | PWR-03 | `POST …/resend` with an `email` in the body | **422** `validation`, field error on `email` — **refused, not stripped** (**G9**) | unchanged | — | ☐ |
+| PWR-03b | PWR-03 | `POST …/resend` with an **empty** body, still inside the cooldown | **202**, **byte-identical to PWR-02**; the position key is **re-set**, not replaced | **still one credential row** — nothing was minted | — | ☐ |
+| PWR-03c | PWR-03b | `GET …/session` | **200**, still `step:"code"` and `canResend:true` | the session's `resends_used` is **1** and `last_asked_at` has moved — **for a resend that sent nothing** (**G9**) | — | ☐ |
 | PWR-04 | PWR-02 | `POST …/confirm {code:"ZZZZZZZZZZZZ"}` | **400** `bad_request`, *"That reset code is not valid."*, **no field errors** | row unchanged | — | ☐ |
 | PWR-05 | PWR-02 | confirm `{code:"!!"}` (malformed) | **byte-identical** to PWR-04 — **not** a `422` (**G2**) | unchanged | — | ☐ |
 | PWR-06 | — | confirm `{code:""}` | **422** `validation` with a `code` field error — a malformed *request* (**G2**) | unchanged | — | ☐ |
 | PWR-07 | PWR-02; code read from `.mail-capture/` into `{{pwrCode}}` | confirm with that code | **204**, empty body | row **unchanged** — `used_at` still null (**G3**) | — | ☐ |
 | PWR-07a | PWR-07 | `GET …/session` | **200**, `step:"password"` — derived from the bound credential, and **no step column exists** (**G6**) | the session row's `challenge_id` is now set | — | ☐ |
+| PWR-07b | PWR-07 | `POST …/resend` once the code is confirmed | **400**, identical to PWR-04 — the position has moved past the step that asks (**G2**, **G9**) | unchanged | — | ☐ |
 | PWR-08 | PWR-07 | confirm with the **same** code again | **204** again — confirm consumed nothing (**G3**) | unchanged | — | ☐ |
 | PWR-09 | PWR-07 | `POST …/apply` with `{newPassword:"weak"}` — **the code is not the caller's to send** | **422** `validation`, field error on `newPassword` | **row still unspent** — a weak password never costs the code | — | ☐ |
 | PWR-09a | PWR-07 | apply with **a `code` in the body** | **422** `validation` — the field is **refused, not stripped** (**G7**) | **row still unspent**; PWR-10 spends the same code immediately after | — | ☐ |
 | PWR-10 | PWR-09 | apply with a **compliant** password | **204**, empty body, **no tokens** (**D2**); `Set-Cookie` **clears** the position key with the attributes it was set with | `used_at` set; **`refresh_tokens` for this account empty** (**G4**, Checkpoint J) | via reset | ☐ |
-| PWR-10a | PWR-10 | `GET …/session` | **200**, `{step:"request", maskedEndpoint:null}` — the position did not outlive the reset (**G6**) | **no** session row for this run | — | ☐ |
+| PWR-10a | PWR-10 | `GET …/session` | **200**, `{step:"request", maskedEndpoint:null, retryAfterSeconds:0, canResend:false}` — the cleared key is what produces this (**G6**) | the session row **survives** until its own expiry; `apply` clears the cookie and deletes nothing. A runner reading Checkpoint J should expect the row, not its absence | — | ☐ |
 | PWR-11 | PWR-10 | `POST /auth/login` with the **new** password | **200** | a single new session row | — | ☐ |
 | PWR-11a | PWR-11 | `GET /users/me` with that session's token | **200**, `emailVerification: "proven"` (**G8**) — the account never verified by hand | a `channel_verifications` row for this endpoint with `proven_at` set | — | ☐ |
 | PWR-12 | PWR-10 | login with the **old** password | **401** `unauthorized`, the generic credential error | unchanged | — | ☐ |
 | PWR-13 | PWR-10 | apply again, the position now cleared | **byte-identical** to PWR-04 — a replay is indistinguishable from a value that never existed (**G2**) | unchanged | — | ☐ |
+| PWR-13a | PWR-10 | `POST …/resend` with the position cleared | **byte-identical** to PWR-04 — no position, past the step, and out of asks are one outcome (**G2**) | unchanged | — | ☐ |
 | PWR-14 | Restart with a short `RESET_CODE_TTL_MS`; request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
+| PWR-14a | Restart with `RESET_MAX_RESENDS=1`; request a fresh code | resend once, then read the session | first resend **202**; the read then shows **`canResend:false`** | `resends_used` is **1** | — | ☐ |
+| PWR-14b | PWR-14a | resend again | **400**, identical to PWR-04 — the bound is spent, and the read had already said so | `resends_used` **unchanged at 1**, and `expires_at` **stops moving** | restart | ☐ |
 | PWR-15 | **Run last**, after a restart clearing the in-memory counter | six requests in a row | attempts 1–5 → **202**; **attempt 6 → 429** `rate_limit` | unchanged | wait 15 min or restart | ☐ |
 
 > **Why there is no `429` here that the capability itself produced.** Folder 10 has

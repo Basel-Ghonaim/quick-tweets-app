@@ -4842,7 +4842,8 @@
                       "pm.environment.set(\"pwrEmail\", \"pwr_\" + uniq + \"@verify.local\");",
                       "pm.environment.set(\"pwrUnknownEmail\", \"pwr_none_\" + uniq + \"@verify.local\");",
                       "pm.environment.unset(\"pwrCode\");",
-                      "pm.environment.unset(\"pwrNeutralBody\");",
+                      "pm.environment.unset(\"pwrNeutralNoMask\");",
+                      "pm.environment.unset(\"pwrSameAddressBody\");",
                       "pm.environment.unset(\"pwrOpaqueBody\");",
                       "pm.environment.unset(\"pwrRequestAttempts\");"
                     ]
@@ -4989,9 +4990,18 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
-                      "// The reference every later branch is compared against, captured as raw",
-                      "// text rather than parsed: the guarantee is byte-for-byte sameness.",
-                      "pm.environment.set(\"pwrNeutralBody\", pm.response.text());",
+                      "// Two references, because the body now carries content. Across DIFFERENT",
+                      "// addresses only the mask may differ, so the cross-address reference drops",
+                      "// it; the same-address comparison keeps everything (PWR-03).",
+                      "const d = pm.response.json().data;",
+                      "pm.environment.set(\"pwrNeutralNoMask\", JSON.stringify({",
+                      "  step: d.step, retryAfterSeconds: d.retryAfterSeconds, canResend: d.canResend,",
+                      "}));",
+                      "pm.test(\"the answer carries the position it opened\", () => {",
+                      "  pm.expect(d.step).to.eql(\"code\");",
+                      "  pm.expect(d.retryAfterSeconds).to.be.a(\"number\");",
+                      "  pm.expect(d.canResend).to.be.true;",
+                      "});",
                       "pm.test(\"no Retry-After — a cooldown hint would disclose an account\", () =>",
                       "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.false);"
                     ]
@@ -5051,6 +5061,11 @@
                       "  const m = pm.response.json().data.maskedEndpoint;",
                       "  pm.expect(m).to.match(/^.•+@/);",
                       "  pm.expect(m).to.not.eql(pm.environment.get(\"pwrUnknownEmail\"));",
+                      "});",
+                      "pm.test(\"and it reports its own window, not the account's cooldown\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d.retryAfterSeconds).to.be.a(\"number\");",
+                      "  pm.expect(d.canResend).to.be.true;",
                       "});"
                     ]
                   }
@@ -5084,8 +5099,15 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
-                      "pm.test(\"byte-identical to the unknown-address answer (I5)\", () =>",
-                      "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrNeutralBody\")));",
+                      "// The mask is a function of what the caller typed, so it is the one field",
+                      "// that may differ from PWR-01. Everything else must not.",
+                      "const d = pm.response.json().data;",
+                      "pm.test(\"identical to the unknown-address answer except the mask (I5)\", () =>",
+                      "  pm.expect(JSON.stringify({",
+                      "    step: d.step, retryAfterSeconds: d.retryAfterSeconds, canResend: d.canResend,",
+                      "  })).to.eql(pm.environment.get(\"pwrNeutralNoMask\")));",
+                      "// The sharper reference: the SAME address, and PWR-03 asks again for it.",
+                      "pm.environment.set(\"pwrSameAddressBody\", pm.response.text());",
                       "pm.test(\"no Retry-After\", () =>",
                       "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.false);",
                       "// A code is on its way to .mail-capture/ — read it by hand for PWR-07."
@@ -5143,7 +5165,12 @@
                       "  pm.expect(d.maskedEndpoint).to.match(/^.•+@verify\\.local$/);",
                       "});",
                       "pm.test(\"the unmasked address never crosses the boundary (D5)\", () =>",
-                      "  pm.expect(pm.response.text()).to.not.include(pm.environment.get(\"pwrEmail\")));"
+                      "  pm.expect(pm.response.text()).to.not.include(pm.environment.get(\"pwrEmail\")));",
+                      "pm.test(\"and it reports its own window, not the account's cooldown\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d.retryAfterSeconds).to.be.a(\"number\");",
+                      "  pm.expect(d.canResend).to.be.true;",
+                      "});"
                     ]
                   }
                 }
@@ -5176,12 +5203,11 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
-                      "// The hardest of the three. Channel Verification answers a cooldown with a",
-                      "// distinct 429, which is safe only because it is authenticated. Here the",
-                      "// same answer would disclose that the address belongs to an account.",
-                      "pm.test(\"byte-identical again — the cooldown is silent (I5)\", () =>",
-                      "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrNeutralBody\")));",
-                      "pm.test(\"no second code was sent — check .mail-capture/ has one new file, not two\", () =>",
+                      "// The hardest of the three, and now the sharpest: the SAME submitted address,",
+                      "// eligible a moment ago and cooling now, must be indistinguishable outright.",
+                      "pm.test(\"byte-identical to the eligible answer — the cooldown is silent (I5)\", () =>",
+                      "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrSameAddressBody\")));",
+                      "pm.test(\"no second code was sent — .mail-capture/ has one new file, not two\", () =>",
                       "  pm.expect(pm.response.code).to.eql(202));"
                     ]
                   }
@@ -5213,6 +5239,159 @@
                       "language": "json"
                     }
                   }
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-03a — A supplied address is refused, not stripped",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                      "// Accepted, it would be a mint path behind a limiter sized for another act",
+                      "// — and a second source for a fact the position owns.",
+                      "pm.test(\"the field is named, and it is the address\", () =>",
+                      "  pm.expect(pm.response.json().error.errors).to.have.property(\"email\"));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/resend",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "resend"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{pwrEmail}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "PWR-03b — Resend inside the cooldown is indistinguishable",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
+                      "// The ask is recorded before the account is read, so this answers exactly",
+                      "// as the request did — while sending nothing at all.",
+                      "pm.test(\"byte-identical to the request that opened it (I5)\", () =>",
+                      "  pm.expect(pm.response.text()).to.eql(pm.environment.get(\"pwrSameAddressBody\")));",
+                      "pm.test(\"the position key is re-set, never replaced\", () => {",
+                      "  const set = pm.response.headers.get(\"Set-Cookie\") || \"\";",
+                      "  pm.expect(set).to.include(\"qt_reset=\");",
+                      "  pm.expect(set).to.include(\"HttpOnly\");",
+                      "});",
+                      "pm.test(\"still no second code — .mail-capture/ is unchanged\", () =>",
+                      "  pm.expect(pm.response.code).to.eql(202));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/resend",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "resend"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "PWR-03c — The ask was recorded though nothing was sent",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                      "// A window or a bound that moved only when mail left would report that",
+                      "// mail left, which is the one thing the capability refuses to answer.",
+                      "pm.test(\"the position still answers the code step, for the same address\", () => {",
+                      "  const d = pm.response.json().data;",
+                      "  pm.expect(d.step).to.eql(\"code\");",
+                      "  pm.expect(d.canResend).to.be.true;",
+                      "});",
+                      "// Checkpoint J: resends_used is 1 and last_asked_at moved, for a resend",
+                      "// that minted nothing."
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/session",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "session"
+                  ]
                 },
                 "auth": {
                   "type": "noauth"
@@ -5465,6 +5644,59 @@
                 },
                 "auth": {
                   "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "PWR-07b — A confirmed position has moved past asking",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+                      "// One outcome for every refusal: no position, a position past this step,",
+                      "// and one out of asks are each a fact about this browser, not an account.",
+                      "pm.test(\"the single failure, with no field errors (G2)\", () => {",
+                      "  const e = pm.response.json().error;",
+                      "  pm.expect(e.type).to.eql(\"bad_request\");",
+                      "  pm.expect(e).to.not.have.property(\"errors\");",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/resend",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "resend"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
                 }
               }
             },
@@ -5903,6 +6135,54 @@
                   "type": "noauth"
                 }
               }
+            },
+            {
+              "name": "PWR-13a — Asking again with no position is refused identically",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"status 400\", () => pm.response.to.have.status(400));",
+                      "pm.test(\"indistinguishable from every other refusal (G2)\", () =>",
+                      "  pm.expect(pm.response.json().error.message).to.eql(\"That reset code is not valid.\"));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/password-reset/resend",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "password-reset",
+                    "resend"
+                  ]
+                },
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
             }
           ]
         },
@@ -5918,18 +6198,19 @@
                   "script": {
                     "type": "text/javascript",
                     "exec": [
-                      "// Send this five times. The budget is 5 per 15 minutes per IP, and the",
-                      "// counter is in memory — so this starts from a restart rather than from an",
+                      "// Send this eleven times. The budget is 10 per 15 minutes per IP and is",
+                      "// SHARED with the resend route — minting from either is the same act. The",
+                      "// counter is in memory, so this starts from a restart rather than from an",
                       "// exact count of everything above it, which is the arithmetic folder 10's",
                       "// CHV-13 has to document and a runner has to get right.",
                       "const n = Number(pm.environment.get(\"pwrRequestAttempts\") || 0) + 1;",
                       "pm.environment.set(\"pwrRequestAttempts\", n);",
                       "",
-                      "if (n <= 5) {",
-                      "  pm.test(\"attempt \" + n + \" of 6 — still answered neutrally\", () =>",
+                      "if (n <= 10) {",
+                      "  pm.test(\"attempt \" + n + \" of 11 — still answered neutrally\", () =>",
                       "    pm.response.to.have.status(202));",
                       "} else {",
-                      "  pm.test(\"attempt 6 — the per-IP limiter engages\", () =>",
+                      "  pm.test(\"attempt 11 — the per-IP limiter engages\", () =>",
                       "    pm.response.to.have.status(429));",
                       "  pm.test(\"and it is the limiter, not a cooldown the capability leaked\", () =>",
                       "    pm.expect(pm.response.json().error.type).to.eql(\"rate_limit\"));",
