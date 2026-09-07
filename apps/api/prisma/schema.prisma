@@ -153,10 +153,8 @@ model PasswordResetSession {
   // password. Nothing stores a step.
   challengeId Int?                    @unique @map("challenge_id")
   challenge   PasswordResetChallenge? @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  // Resolved when the position is opened and NULL for an address no account
-  // holds, so a resend needs no address from the client. Nullable is what keeps
-  // the row identical in kind on every branch; SetNull because a position whose
-  // account has gone should stop being able to send, not disappear mid-flow.
+  // NULL for an address no account holds, which is what keeps the row identical
+  // in kind on every branch. SetNull: a lost account stops a send, not a reader.
   userId Int?  @map("user_id")
   user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
   // When this position last asked for a code; opening it counts as the first

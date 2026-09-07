@@ -195,10 +195,8 @@ const envSchema = z
       .int()
       .positive()
       .default(7 * 24 * 60 * 60 * 1000),
-    // How many times one position may ask for a fresh code. It bounds how far
-    // that position's expiry may be pushed forward, so a held key cannot be
-    // renewed indefinitely; the durable abuse controls remain the per-account
-    // cooldown and Delivery's per-recipient cap.
+    // Bounds how far one position's expiry may be pushed forward, so a held key
+    // cannot be renewed indefinitely. Not an abuse control; those sit beneath.
     RESET_MAX_RESENDS: z.coerce.number().int().nonnegative().default(3),
   })
   // Selecting a transport without the settings it needs is a misconfiguration,
@@ -280,9 +278,8 @@ const envSchema = z
       });
     }
 
-    // The window now reaches a reader, so a cooldown at or beyond the code's
-    // own lifetime would render a countdown that outlives the position it
-    // belongs to: it would expire before it ever opened.
+    // The window now reaches a reader: a cooldown at or beyond the code's own
+    // lifetime would name a moment the position has already lapsed past.
     if (cfg.RESET_RESEND_COOLDOWN_MS >= cfg.RESET_CODE_TTL_MS) {
       ctx.addIssue({
         code: "custom",
