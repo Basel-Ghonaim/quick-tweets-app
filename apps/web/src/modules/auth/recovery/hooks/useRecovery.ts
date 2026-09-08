@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { restRecovery } from "../repository";
-import { resolveRecovery, type RecoveryRead } from "../services";
+import { completeReset, resolveRecovery, type RecoveryRead } from "../services";
+import { useAuthDispatch } from "../../store/hooks";
 import type { RecoveryPosition } from "../entity";
 import type { RecoveryRepository } from "../repository";
 
@@ -25,6 +26,7 @@ export const useRecovery = (given?: RecoveryRepository): Recovery => {
   const repo = useMemo(() => given ?? restRecovery(), [given]);
   const [read, setRead] = useState<RecoveryRead>({ status: "unresolved" });
   const [attempt, setAttempt] = useState(0);
+  const dispatch = useAuthDispatch();
 
   useEffect(() => {
     let live = true;
@@ -60,8 +62,8 @@ export const useRecovery = (given?: RecoveryRepository): Recovery => {
   );
 
   const apply = useCallback(
-    (newPassword: string) => repo.apply(newPassword),
-    [repo],
+    (newPassword: string) => completeReset(dispatch, () => repo.apply(newPassword)),
+    [dispatch, repo],
   );
 
   const retry = useCallback(() => {

@@ -3,8 +3,6 @@ import { Button, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
 import { useAuthNavigate } from "../../navigation";
-import { useAuthDispatch } from "../../store/hooks";
-import { authActions } from "../../store";
 import { screenFor } from "../services";
 import { useRecovery } from "../hooks";
 import type { RecoveryRepository } from "../repository";
@@ -22,15 +20,10 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
   const [restarting, setRestarting] = useState(false);
   const [lastAsked, setLastAsked] = useState("");
   const navigate = useAuthNavigate();
-  const dispatch = useAuthDispatch();
   const screen = screenFor(read, restarting);
 
   const finish = async (newPassword: string) => {
     await apply(newPassword);
-    // Every session for the account is gone server-side, including this
-    // browser's: keeping a token would earn a 401 bounce instead of a
-    // confirmation.
-    dispatch(authActions.authLogout());
     navigate("/auth/signin", { state: { notice: AUTH_COPY.recovery.done } });
   };
 
