@@ -4,8 +4,8 @@ import { useRequestState } from "@shared/hooks";
 import { useAuthDispatch, useAuthSelector } from "../store/hooks";
 import { restVerification } from "./restVerification";
 import { executeVerification } from "./executeVerification";
-import { normaliseChallengeCode } from "./challengeCode";
-import { canResend, resendCooldownInitial, resendCooldownReducer } from "./resendCooldown";
+import { normaliseCode } from "@shared/one-time-code";
+import { canResend, resendCooldownInitial, resendCooldownReducer } from "@shared/one-time-code";
 
 interface CodeFlow {
   code: string;
@@ -79,7 +79,7 @@ export const useCodeFlow = (
 
   return {
     code,
-    setCode: (raw) => setCodeRaw(normaliseChallengeCode(raw)),
+    setCode: (raw) => setCodeRaw(normaliseCode(raw)),
     isSubmitting: confirm.isLoading,
     isResending: issue.isLoading,
     error: confirm.error ?? issue.error,
