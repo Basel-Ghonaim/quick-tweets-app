@@ -1,6 +1,6 @@
 import { useAuthDispatch } from "../../store/hooks";
 
-import { restAuth } from "../repository/restAuth";
+import { restAuth } from "../repository";
 import { executeAuthFlow, executeLogout } from "../services";
 import type { LoginCredentials, RegisterCredentials } from "../session.types";
 

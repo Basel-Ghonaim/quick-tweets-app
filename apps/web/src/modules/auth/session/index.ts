@@ -1,6 +1,6 @@
 export { SignIn } from "./screens/SignIn";
 export { SignUp } from "./screens/SignUp";
-export { refreshSession } from "./repository/refreshSession";
+export { refreshSession } from "./repository";
 /** The guard and the journey ask whether a reader is signed in; neither may
  *  reach past this barrel to find out. */
 export { useSessionRestore, useAuthState } from "./hooks";
