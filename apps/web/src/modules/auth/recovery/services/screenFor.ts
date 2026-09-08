@@ -7,10 +7,13 @@ export type RecoveryScreen = "pending" | "retry" | RecoveryStep;
 /**
  * A read that failed is not an answer of `request`: treating it as one would
  * send a reader back to the beginning of a recovery the server still holds.
+ *
+ * `restarting` is the only thing a client may say about the step, and it says
+ * the reader abandoned an attempt rather than that the server moved.
  */
-export const screenFor = (read: RecoveryRead): RecoveryScreen => {
+export const screenFor = (read: RecoveryRead, restarting = false): RecoveryScreen => {
   if (read.status === "unresolved") return "pending";
   if (read.status === "failed") return "retry";
 
-  return read.position.step;
+  return restarting ? "request" : read.position.step;
 };

@@ -8,9 +8,7 @@ import { authActions } from "../../store";
 import { screenFor } from "../services";
 import { useRecovery } from "../hooks";
 import type { RecoveryRepository } from "../repository";
-import { RecoveryRequest } from "./steps/RecoveryRequest";
-import { RecoveryCode } from "./steps/RecoveryCode";
-import { RecoveryPassword } from "./steps/RecoveryPassword";
+import { RecoveryCode, RecoveryPassword, RecoveryRequest } from "./steps";
 import styles from "./Recovery.module.css";
 
 /**
@@ -25,7 +23,7 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
   const [lastAsked, setLastAsked] = useState("");
   const navigate = useAuthNavigate();
   const dispatch = useAuthDispatch();
-  const screen = screenFor(read);
+  const screen = screenFor(read, restarting);
 
   const finish = async (newPassword: string) => {
     await apply(newPassword);
@@ -55,7 +53,7 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
     );
   }
 
-  if (screen === "request" || restarting) {
+  if (screen === "request") {
     return (
       <RecoveryRequest
         initialEmail={lastAsked}

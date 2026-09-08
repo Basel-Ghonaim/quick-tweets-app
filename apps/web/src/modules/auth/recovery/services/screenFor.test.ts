@@ -28,3 +28,14 @@ describe("a failed read is not an answer", () => {
     expect(screenFor({ status: "failed" })).toBe("retry");
   });
 });
+
+describe("a reader correcting their address", () => {
+  /* The one client-side override, and it is an abandoned attempt rather than a
+     claim that the server moved: the position still says `code`. */
+  it("reaches the address form while the position still reports a later step", () => {
+    const read = { status: "resolved", position: at("code") } as const;
+
+    expect(screenFor(read)).toBe("code");
+    expect(screenFor(read, true)).toBe("request");
+  });
+});
