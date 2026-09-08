@@ -8,7 +8,7 @@ import { ThemeProvider } from "@shared/preferences";
 import { createAppError } from "@shared/errors";
 import { Onboarding } from "./Onboarding";
 import { AuthLayout } from "../../layout";
-import { authActions, authReducer } from "../../store";
+import { authActions, authReducer } from "../../session";
 import { AUTH_COPY } from "../../config/copy";
 import type { JourneyMove, JourneyRepository, JourneyState } from "../../journey";
 

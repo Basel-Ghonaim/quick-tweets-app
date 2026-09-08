@@ -9,7 +9,7 @@ import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { createAppError } from "@shared/errors";
 import type { ProfileRepository } from "../../profile";
-import { authReducer } from "../../store";
+import { authReducer } from "../../session";
 import { AUTH_COPY } from "../../config/copy";
 import { stepStates } from "../../journey";
 

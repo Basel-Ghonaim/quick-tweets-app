@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { restRecovery } from "../repository";
 import { completeReset, resolveRecovery, type RecoveryRead } from "../services";
-import { useAuthDispatch } from "../../store/hooks";
+import { useAuthDispatch } from "../../session";
 import type { RecoveryPosition } from "../entity";
 import type { RecoveryRepository } from "../repository";
 
