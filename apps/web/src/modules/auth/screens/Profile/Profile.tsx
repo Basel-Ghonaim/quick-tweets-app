@@ -3,6 +3,7 @@ import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
 import { useProfileFlow, profileFormSchema, BIO_MAX } from "../../profile";
+import type { ProfileRepository } from "../../profile";
 import type { ProfileOutcome } from "../../journey";
 import styles from "./Profile.module.css";
 
@@ -13,9 +14,10 @@ const AVATAR_MAX_BYTES = 1024 * 1024;
 
 interface ProfileProps {
   onSettled: (outcome: ProfileOutcome) => void;
+  repo?: ProfileRepository;
 }
 
-export const Profile = ({ onSettled }: ProfileProps) => {
+export const Profile = ({ onSettled, repo }: ProfileProps) => {
   const {
     values,
     errors,
@@ -26,7 +28,7 @@ export const Profile = ({ onSettled }: ProfileProps) => {
     handleChange,
     handleSubmit,
     skip,
-  } = useProfileFlow(onSettled);
+  } = useProfileFlow(onSettled, repo);
 
   const uploadMessage = AUTH_COPY.profile[
     avatar.status === "uploading"

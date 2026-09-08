@@ -15,5 +15,4 @@ interface AuthRequests {
   login: RequestState;
   register: RequestState;
   logout: RequestState;
-  updateProfile: RequestState;
 }

@@ -1,8 +1,8 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useSchemaForm } from "@shared/schema-form";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
-import { useAuthDispatch, useAuthSelector } from "../store/hooks";
+import type { RequestState } from "@shared/types";
 import type { ProfileOutcome } from "../journey";
 import { restProfile } from "./restProfile";
 import { executeProfileUpdate } from "./executeProfileUpdate";
@@ -35,19 +35,18 @@ export const useProfileFlow = (
   onSettled?: (outcome: ProfileOutcome) => void,
   repo = restProfile(),
 ): ProfileFlow => {
-  const dispatch = useAuthDispatch();
-  const requestState = useAuthSelector((state) => state.auth.requests.updateProfile);
-  const { isLoading, isError, error: serverError } = useRequestState(requestState);
+  const [request, setRequest] = useState<RequestState>({ status: "idle", error: null });
+  const { isLoading, isError, error: serverError } = useRequestState(request);
   const avatar = useAvatarUpload();
 
   const submit = useCallback(
     async (values: { name: string; bio: string }) => {
       const edits = composeEdits(values, avatar.token);
 
-      await executeProfileUpdate(dispatch, () => repo.updateProfile(edits));
+      await executeProfileUpdate(setRequest, () => repo.updateProfile(edits));
       onSettled?.("saved");
     },
-    [avatar.token, dispatch, onSettled, repo],
+    [avatar.token, onSettled, repo],
   );
 
   const form = useSchemaForm(profileFormSchema, submit, () => {});

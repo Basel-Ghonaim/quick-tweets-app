@@ -7,7 +7,9 @@ import { ThemeProvider } from "@shared/preferences";
 import { Profile } from "./Profile";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
-import { authReducer, authActions } from "../../store";
+import { createAppError } from "@shared/errors";
+import type { ProfileRepository } from "../../profile";
+import { authReducer } from "../../store";
 import { AUTH_COPY } from "../../config/copy";
 import { stepStates } from "../../journey";
 
@@ -33,11 +35,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const withState = (
-  seed?: (dispatch: ReturnType<typeof configureStore>["dispatch"]) => void,
+  repo?: ProfileRepository,
   settled?: (outcome: "saved" | "skipped") => void,
 ) => {
   const store = configureStore({ reducer: { auth: authReducer } });
-  seed?.(store.dispatch);
 
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>
@@ -49,7 +50,7 @@ const withState = (
                 path="onboarding"
                 element={
                   <JourneyLayout states={stepStates("profile", null)}>
-                    <Profile onSettled={settled ?? noop} />
+                    <Profile onSettled={settled ?? noop} repo={repo} />
                   </JourneyLayout>
                 }
               />
@@ -114,39 +115,34 @@ export const TheBioCountTracksWhatIsTyped: Story = {
 
 export const AServerErrorIsAnnounced: Story = {
   decorators: [
-    withState((dispatch) =>
-      dispatch(
-        authActions.authRequestRejected({
-          requestType: "updateProfile",
-          error: {
-            type: "validation",
-            message: "Avatar does not meet the requirements",
-            status: 422,
-          },
-        }),
-      ),
-    ),
+    withState({
+      updateProfile: async () => {
+        throw createAppError("validation", "raw");
+      },
+    }),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByRole("alert")).toHaveTextContent(
-      "Avatar does not meet the requirements",
-    );
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.profile.submit }));
+
+    const alert = await canvas.findByRole("alert");
+    await expect(alert).toBeVisible();
+    await expect(alert).not.toHaveTextContent("raw");
   },
 };
 
 export const SavingIsReportedInPlace: Story = {
   decorators: [
-    withState((dispatch) =>
-      dispatch(authActions.authRequestPending({ requestType: "updateProfile" })),
-    ),
+    withState({ updateProfile: () => new Promise(() => {}) }),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.profile.submit }));
+
     await expect(
-      canvas.getByRole("button", { name: AUTH_COPY.profile.submitting }),
+      await canvas.findByRole("button", { name: AUTH_COPY.profile.submitting }),
     ).toBeVisible();
   },
 };

@@ -1,41 +1,44 @@
 import { describe, expect, it, vi } from "vitest";
-import { configureStore } from "@reduxjs/toolkit";
-import { authReducer } from "../store";
-import { executeProfileUpdate } from "./executeProfileUpdate";
 import { createAppError } from "@shared/errors";
+import type { RequestState } from "@shared/types";
+import { executeProfileUpdate } from "./executeProfileUpdate";
 
-const store = () => configureStore({ reducer: { auth: authReducer } });
 const profile = { username: "ada", name: "Ada", bio: "hello" };
 
+const track = () => {
+  const seen: RequestState[] = [];
+  return { seen, set: vi.fn((next: RequestState) => seen.push(next)) };
+};
+
 describe("executeProfileUpdate", () => {
-  it("reports the request through its own state, leaving the others alone", async () => {
-    const s = store();
+  it("reports the attempt through the state it was handed, and nothing else", async () => {
+    const { seen, set } = track();
 
-    await executeProfileUpdate(s.dispatch, async () => profile);
+    await executeProfileUpdate(set, async () => profile);
 
-    expect(s.getState().auth.requests.updateProfile.status).toBe("success");
-    expect(s.getState().auth.requests.login.status).toBe("idle");
+    expect(seen.map((s) => s.status)).toEqual(["loading", "success"]);
   });
 
-  it("commits no identity — a profile update is not a session change", async () => {
-    const s = store();
-
-    await executeProfileUpdate(s.dispatch, async () => profile);
-
-    expect(s.getState().auth.user).toBeNull();
-    expect(s.getState().auth.accessToken).toBeNull();
-  });
-
-  it("surfaces a failure as the feature's own wording and re-raises it", async () => {
-    const s = store();
+  it("leaves the state at the failure rather than at rest, and re-raises", async () => {
+    const { seen, set } = track();
     const failing = vi.fn(async () => {
       throw createAppError("conflict", "raw");
     });
 
-    await expect(executeProfileUpdate(s.dispatch, failing)).rejects.toThrow();
+    await expect(executeProfileUpdate(set, failing)).rejects.toThrow();
 
-    const request = s.getState().auth.requests.updateProfile;
-    expect(request.status).toBe("error");
-    expect(request.error?.message).not.toBe("raw");
+    expect(seen.map((s) => s.status)).toEqual(["loading", "error"]);
+  });
+
+  it("surfaces a failure as wording rather than the raw message", async () => {
+    const { seen, set } = track();
+
+    await expect(
+      executeProfileUpdate(set, async () => {
+        throw createAppError("conflict", "raw");
+      }),
+    ).rejects.toThrow();
+
+    expect(seen.at(-1)?.error?.message).not.toBe("raw");
   });
 });
