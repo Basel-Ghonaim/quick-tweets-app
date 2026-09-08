@@ -9,7 +9,9 @@ import { VerifyCode } from "./VerifyCode";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { stepStates } from "../../journey";
-import { authReducer, authActions } from "../../store";
+import { createAppError } from "@shared/errors";
+import type { VerificationRepository } from "@shared/channel-verification";
+import { authReducer } from "../../store";
 import { AUTH_COPY } from "../../config/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
@@ -34,12 +36,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The journey has one route, so a story mounts the screen the phase chooses. */
-const showing = (
-  screen: React.ReactElement,
-  seed?: (dispatch: ReturnType<typeof configureStore>["dispatch"]) => void,
-) => {
+const showing = (screen: React.ReactElement) => {
   const store = configureStore({ reducer: { auth: authReducer } });
-  seed?.(store.dispatch);
 
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>
@@ -65,6 +63,15 @@ const showing = (
 
 const ASK = <VerifyAsk onSent={noop} onLater={noop} />;
 const CODE = <VerifyCode onVerified={noop} onLater={noop} />;
+
+/* A refusal the reader can reach only by asking, so the story exercises the
+   translation rather than asserting a message it planted itself. */
+const refusing = (type: "too_many_requests" | "rate_limit"): VerificationRepository => ({
+  issue: async () => {
+    throw createAppError(type, "raw");
+  },
+  confirm: async () => {},
+});
 
 /** Nothing is sent until it is asked for: an optional step that mailed everyone
  *  who reached it would be behaving like a mandatory one. */
@@ -110,10 +117,18 @@ export const TheCodeScreenOffersNoWayBack: Story = {
 
 export const SendingIsReportedInPlace: Story = {
   decorators: [
-    showing(ASK, (dispatch) => dispatch(authActions.authRequestPending({ requestType: "issueCode" }))),
+    showing(
+      <VerifyAsk
+        onSent={noop}
+        onLater={noop}
+        repo={{ issue: () => new Promise(() => {}), confirm: async () => {} }}
+      />,
+    ),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
 
     await expect(
       await canvas.findByRole("button", { name: AUTH_COPY.verify.sending }),
@@ -125,21 +140,12 @@ export const SendingIsReportedInPlace: Story = {
  *  screen says so in its own words rather than a form's. */
 export const TheCooldownRefusalSaysWhatItIs: Story = {
   decorators: [
-    showing(ASK, (dispatch) =>
-      dispatch(
-        authActions.authRequestRejected({
-          requestType: "issueCode",
-          error: {
-            type: "too_many_requests",
-            message: AUTH_COPY.verify.cooldownRefused,
-            status: 429,
-          },
-        }),
-      ),
-    ),
+    showing(<VerifyAsk onSent={noop} onLater={noop} repo={refusing("too_many_requests")} />),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
 
     await expect(await canvas.findByRole("alert")).toHaveTextContent(
       AUTH_COPY.verify.cooldownRefused,
@@ -149,17 +155,12 @@ export const TheCooldownRefusalSaysWhatItIs: Story = {
 
 export const TheClientLimiterSaysSomethingElse: Story = {
   decorators: [
-    showing(ASK, (dispatch) =>
-      dispatch(
-        authActions.authRequestRejected({
-          requestType: "issueCode",
-          error: { type: "rate_limit", message: AUTH_COPY.verify.rateLimited, status: 429 },
-        }),
-      ),
-    ),
+    showing(<VerifyAsk onSent={noop} onLater={noop} repo={refusing("rate_limit")} />),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
 
     const alert = await canvas.findByRole("alert");
     await expect(alert).toHaveTextContent(AUTH_COPY.verify.rateLimited);
