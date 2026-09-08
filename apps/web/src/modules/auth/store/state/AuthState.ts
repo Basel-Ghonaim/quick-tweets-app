@@ -16,6 +16,4 @@ interface AuthRequests {
   register: RequestState;
   logout: RequestState;
   updateProfile: RequestState;
-  issueCode: RequestState;
-  confirmCode: RequestState;
 }
