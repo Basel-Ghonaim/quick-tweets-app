@@ -17,7 +17,7 @@ export const authRoute = (
     <Route
       path="signup"
       element={
-        <GuestOnly>
+        <GuestOnly signedInTo="/feed">
           <JourneyLayout states={stepStates("account", null)}>
             <SignUp />
           </JourneyLayout>
@@ -25,7 +25,15 @@ export const authRoute = (
       }
     />
     <Route path="onboarding" element={<Onboarding />} />
-    {/* One route for all three steps, for the reason above. */}
-    <Route path="recovery" element={<Recovery />} />
+    {/* One route for all three steps, for the reason above. A reader who is
+        signed in has a better path to the same end, so they are sent to it. */}
+    <Route
+      path="recovery"
+      element={
+        <GuestOnly signedInTo="/settings/security">
+          <Recovery />
+        </GuestOnly>
+      }
+    />
   </Route>
 );

@@ -10,52 +10,59 @@ const meta = {
   title: "Auth/Guest only",
   component: GuestOnly,
   /* Every story supplies the real subject through its decorator; this only
-     satisfies the required prop. */
-  args: { children: <p>the account form</p> },
+     satisfies the required props. */
+  args: { children: <p>the account form</p>, signedInTo: "/feed" },
 } satisfies Meta<typeof GuestOnly>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const at = (signedIn: boolean) => (Story: () => React.ReactElement) => {
-  const store = configureStore({ reducer: { auth: authReducer } });
-  // The guard waits for the restore to answer before it decides anything.
-  store.dispatch(authActions.sessionSettled());
+/* Both destinations are always mounted, so a story that lands on the wrong one
+   says so rather than rendering nothing. */
+const guarded = (signedInTo: string, Story: () => React.ReactElement) => (
+  <MemoryRouter initialEntries={["/auth/signup"]}>
+    <Routes>
+      <Route
+        path="/auth/signup"
+        element={
+          <GuestOnly signedInTo={signedInTo}>
+            <p>the account form</p>
+          </GuestOnly>
+        }
+      />
+      <Route path="/feed" element={<p>the feed</p>} />
+      <Route path="/settings/security" element={<p>account security</p>} />
+      <Route path="*" element={<Story />} />
+    </Routes>
+  </MemoryRouter>
+);
 
-  if (signedIn) {
-    store.dispatch(
-      authActions.authRequestFulfilled({
-        requestType: "login",
-        user: { id: 1, username: "ada" },
-        accessToken: "a-token",
-      }),
-    );
-  }
+const at =
+  (signedIn: boolean, signedInTo = "/feed") =>
+  (Story: () => React.ReactElement) => {
+    const store = configureStore({ reducer: { auth: authReducer } });
+    // The guard waits for the restore to answer before it decides anything.
+    store.dispatch(authActions.sessionSettled());
 
-  return (
-    <Provider store={store}>
-      <MemoryRouter initialEntries={["/auth/signup"]}>
-        <Routes>
-          <Route
-            path="/auth/signup"
-            element={
-              <GuestOnly>
-                <p>the account form</p>
-              </GuestOnly>
-            }
-          />
-          <Route path="/feed" element={<p>the feed</p>} />
-          <Route path="*" element={<Story />} />
-        </Routes>
-      </MemoryRouter>
-    </Provider>
-  );
-};
+    if (signedIn) {
+      store.dispatch(
+        authActions.authRequestFulfilled({
+          requestType: "login",
+          user: { id: 1, username: "ada" },
+          accessToken: "a-token",
+        }),
+      );
+    }
+
+    return <Provider store={store}>{guarded(signedInTo, Story)}</Provider>;
+  };
 
 export const AGuestReachesTheForm: Story = {
   decorators: [at(false)],
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText("the account form")).toBeVisible();
+    await expect(
+      within(canvasElement).getByText("the account form"),
+    ).toBeVisible();
   },
 };
 
@@ -66,8 +73,24 @@ export const AnAccountHolderIsSentOn: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.queryByText("the account form")).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText("the account form"),
+    ).not.toBeInTheDocument();
     await expect(canvas.getByText("the feed")).toBeVisible();
+  },
+};
+
+/**
+ * Recovery's case: a signed-in reader has not lost their way in, so the feed is
+ * the wrong answer — they are sent to where the same end is served for them.
+ */
+export const AnAccountHolderIsSentWhereTheirEquivalentIs: Story = {
+  decorators: [at(true, "/settings/security")],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText("account security")).toBeVisible();
+    await expect(canvas.queryByText("the feed")).not.toBeInTheDocument();
   },
 };
 
@@ -82,30 +105,15 @@ export const NothingIsShownBeforeTheAnswer: Story = {
     (Story: () => React.ReactElement) => {
       const store = configureStore({ reducer: { auth: authReducer } });
 
-      return (
-        <Provider store={store}>
-          <MemoryRouter initialEntries={["/auth/signup"]}>
-            <Routes>
-              <Route
-                path="/auth/signup"
-                element={
-                  <GuestOnly>
-                    <p>the account form</p>
-                  </GuestOnly>
-                }
-              />
-              <Route path="/feed" element={<p>the feed</p>} />
-              <Route path="*" element={<Story />} />
-            </Routes>
-          </MemoryRouter>
-        </Provider>
-      );
+      return <Provider store={store}>{guarded("/feed", Story)}</Provider>;
     },
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.queryByText("the account form")).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText("the account form"),
+    ).not.toBeInTheDocument();
     await expect(canvas.queryByText("the feed")).not.toBeInTheDocument();
   },
 };
