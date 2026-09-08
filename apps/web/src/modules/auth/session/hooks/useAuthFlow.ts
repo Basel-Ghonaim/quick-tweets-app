@@ -1,4 +1,4 @@
-import { useAuthSelector } from "../store/hooks";
+import { useAuthSelector } from "../../store/hooks";
 import { useRequestState } from "@shared/hooks";
 import type { SerializedAppError } from "@shared/errors";
 import {
@@ -10,10 +10,10 @@ import {
   type FormSubmitHandler,
 } from "@shared/schema-form";
 import { useAuthActions } from "./useAuthActions";
-import { authFormSchemas } from "../config/authFormSchemas";
+import { authFormSchemas } from "../../config/authFormSchemas";
 import { afterSuccess } from "../services";
 
-import type { AuthRequestType } from "../store";
+import type { AuthRequestType } from "../../store";
 
 type AuthFlowType = Extract<AuthRequestType, "login" | "register">;
 

@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { Button, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
-import { useLoginFlow } from "../../hooks";
+import { useLoginFlow } from "../../session/hooks";
 import { authFormSchemas } from "../../config/authFormSchemas";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";

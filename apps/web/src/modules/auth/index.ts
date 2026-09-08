@@ -1,4 +1,4 @@
 export { authRoute } from "./authRoutes";
-export { useSessionRestore } from "./hooks";
-export { refreshSession } from "./repository/refreshSession";
+export { useSessionRestore } from "./session/hooks";
+export { refreshSession } from "./session/repository/refreshSession";
 export { authReducer, authActions } from "./store";

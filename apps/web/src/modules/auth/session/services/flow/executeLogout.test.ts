@@ -8,7 +8,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer, authActions } from "../../store";
+import { authReducer, authActions } from "../../../store";
 import { executeLogout } from "./executeLogout";
 import { createAppError } from "@shared/errors";
 import type { AuthUser } from "@shared/types";

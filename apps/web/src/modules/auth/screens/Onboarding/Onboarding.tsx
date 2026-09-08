@@ -5,7 +5,7 @@ import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
 import { JourneyLayout } from "../../layout";
 import { useAuthNavigate } from "../../navigation";
-import { useAuthState } from "../../hooks";
+import { useAuthState } from "../../session/hooks";
 import { destinationFor, stepStates, useJourney, type JourneyRepository } from "../../journey";
 import { Profile } from "../Profile";
 import { VerifyAsk, VerifyCode } from "../Verify";

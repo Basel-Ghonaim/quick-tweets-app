@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuthState } from "../hooks";
+import { useAuthState } from "../session/hooks";
 
 /**
  * A screen that asks for an account is not for a reader who has one, however
