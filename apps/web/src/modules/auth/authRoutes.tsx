@@ -1,7 +1,6 @@
 import { Navigate, Route } from "react-router-dom";
 import { AuthLayout, JourneyLayout } from "./layout";
-import { SignIn } from "./session/screens/SignIn";
-import { SignUp } from "./session/screens/SignUp";
+import { SignIn, SignUp } from "./session";
 import { Onboarding } from "./screens/Onboarding";
 import { Recovery } from "./screens/Recovery";
 import { GuestOnly } from "./GuestOnly";

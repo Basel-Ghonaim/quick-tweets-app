@@ -1,7 +1,7 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import type { AppError } from "@shared/errors";
 import { authActions } from "../store";
-import { authErrorHandler } from "../session/services";
+import { authErrorHandler } from "../session";
 import type { UpdatedProfile } from "./profile.types";
 
 /**

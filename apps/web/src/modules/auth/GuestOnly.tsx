@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuthState } from "./session/hooks";
+import { useAuthState } from "./session";
 
 interface GuestOnlyProps {
   children: ReactElement;
