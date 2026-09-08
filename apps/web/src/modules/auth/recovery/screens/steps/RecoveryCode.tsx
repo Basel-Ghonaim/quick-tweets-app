@@ -6,7 +6,7 @@ import { normaliseChallengeCode } from "../../../verification/challengeCode";
 import { recoveryFormSchemas } from "../../recoveryFormSchemas";
 import { useRecoveryForm, useResendWindow } from "../../hooks";
 import type { RecoveryPosition } from "../../entity";
-import styles from "./Recovery.module.css";
+import styles from "../Recovery.module.css";
 
 interface RecoveryCodeProps {
   position: RecoveryPosition;

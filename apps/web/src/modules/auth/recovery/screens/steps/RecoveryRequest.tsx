@@ -5,7 +5,7 @@ import { MessageRegion } from "../../../components/MessageRegion";
 import { AuthLink } from "../../../navigation";
 import { recoveryFormSchemas } from "../../recoveryFormSchemas";
 import { useRecoveryForm } from "../../hooks";
-import styles from "./Recovery.module.css";
+import styles from "../Recovery.module.css";
 
 const fields = toFieldEntries(recoveryFormSchemas.requestFields);
 

@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { Button, Spinner } from "@shared/design-system";
-import { AUTH_COPY } from "../../../config/copy";
-import { MessageRegion } from "../../../components/MessageRegion";
-import { useAuthNavigate } from "../../../navigation";
-import { useAuthDispatch } from "../../../store/hooks";
-import { authActions } from "../../../store";
-import { screenFor } from "../../services";
-import { useRecovery } from "../../hooks";
-import type { RecoveryRepository } from "../../repository";
-import { RecoveryRequest } from "./RecoveryRequest";
-import { RecoveryCode } from "./RecoveryCode";
-import { RecoveryPassword } from "./RecoveryPassword";
+import { AUTH_COPY } from "../../config/copy";
+import { MessageRegion } from "../../components/MessageRegion";
+import { useAuthNavigate } from "../../navigation";
+import { useAuthDispatch } from "../../store/hooks";
+import { authActions } from "../../store";
+import { screenFor } from "../services";
+import { useRecovery } from "../hooks";
+import type { RecoveryRepository } from "../repository";
+import { RecoveryRequest } from "./steps/RecoveryRequest";
+import { RecoveryCode } from "./steps/RecoveryCode";
+import { RecoveryPassword } from "./steps/RecoveryPassword";
 import styles from "./Recovery.module.css";
 
 /**

@@ -1,1 +1,1 @@
-export { Recovery } from "./screens/Recovery";
+export { Recovery } from "./screens";
