@@ -2,7 +2,7 @@ import { Navigate, Route } from "react-router-dom";
 import { AuthLayout, JourneyLayout } from "./layout";
 import { SignIn, SignUp } from "./session";
 import { Onboarding } from "./screens/Onboarding";
-import { Recovery } from "./screens/Recovery";
+import { Recovery } from "./recovery";
 import { GuestOnly } from "./GuestOnly";
 import { stepStates } from "./journey";
 

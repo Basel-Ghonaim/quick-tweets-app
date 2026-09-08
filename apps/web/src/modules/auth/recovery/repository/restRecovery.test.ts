@@ -7,18 +7,26 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AxiosInstance } from "axios";
 import { restRecovery } from "./restRecovery";
-import type { RecoveryPosition } from "./recovery.types";
+import type { RecoveryPositionDto } from "../dto";
+import type { RecoveryPosition } from "../entity";
 
-const POSITION: RecoveryPosition = {
+const ANSWER: RecoveryPositionDto = {
   step: "code",
   maskedEndpoint: "h•••••@example.test",
   retryAfterSeconds: 60,
   canResend: true,
 };
 
+const POSITION: RecoveryPosition = {
+  step: "code",
+  maskedAddress: "h•••••@example.test",
+  resendAvailableIn: 60,
+  canResend: true,
+};
+
 const stub = () => {
-  const get = vi.fn().mockResolvedValue({ data: { success: true, data: POSITION } });
-  const post = vi.fn().mockResolvedValue({ data: { success: true, data: POSITION } });
+  const get = vi.fn().mockResolvedValue({ data: { success: true, data: ANSWER } });
+  const post = vi.fn().mockResolvedValue({ data: { success: true, data: ANSWER } });
   return { client: { get, post } as unknown as AxiosInstance, get, post };
 };
 

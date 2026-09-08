@@ -1,11 +1,11 @@
 import { useEffect, useReducer } from "react";
-import { AUTH_COPY } from "../config/copy";
+import { AUTH_COPY } from "../../config/copy";
 import {
   canResend as windowIsOpen,
   resendCooldownInitial,
   resendCooldownReducer,
-} from "../verification/resendCooldown";
-import type { RecoveryPosition } from "./recovery.types";
+} from "../../verification/resendCooldown";
+import type { RecoveryPosition } from "../entity";
 
 /**
  * The seconds tick here; the number they start from is always the server's.
@@ -16,7 +16,7 @@ export const useResendWindow = (position: RecoveryPosition) => {
   const [state, tick] = useReducer(resendCooldownReducer, resendCooldownInitial);
 
   useEffect(() => {
-    tick({ type: "started", seconds: position.retryAfterSeconds });
+    tick({ type: "started", seconds: position.resendAvailableIn });
   }, [position]);
 
   const counting = state.secondsLeft > 0;

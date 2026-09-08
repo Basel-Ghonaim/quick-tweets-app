@@ -1,5 +1,5 @@
 import type { Dispatch } from "@reduxjs/toolkit";
-import { restAuth } from "../../repository/restAuth";
+import { restAuth } from "../../repository";
 import { authActions } from "../../../store";
 import type { AuthResponse } from "../../entity";
 import { hasSessionHint, clearSessionHint } from "./sessionHint";

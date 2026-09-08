@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { screenFor } from "./screenFor";
-import type { RecoveryPosition } from "./recovery.types";
+import type { RecoveryPosition } from "../entity";
 
 const at = (step: RecoveryPosition["step"]): RecoveryPosition => ({
   step,
-  maskedEndpoint: step === "request" ? null : "h•••••@example.test",
-  retryAfterSeconds: 0,
+  maskedAddress: step === "request" ? null : "h•••••@example.test",
+  resendAvailableIn: 0,
   canResend: true,
 });
 
@@ -26,5 +26,16 @@ describe("a failed read is not an answer", () => {
      a recovery the server still holds, losing a code already in their inbox. */
   it("offers a retry, never the first screen", () => {
     expect(screenFor({ status: "failed" })).toBe("retry");
+  });
+});
+
+describe("a reader correcting their address", () => {
+  /* The one client-side override, and it is an abandoned attempt rather than a
+     claim that the server moved: the position still says `code`. */
+  it("reaches the address form while the position still reports a later step", () => {
+    const read = { status: "resolved", position: at("code") } as const;
+
+    expect(screenFor(read)).toBe("code");
+    expect(screenFor(read, true)).toBe("request");
   });
 });

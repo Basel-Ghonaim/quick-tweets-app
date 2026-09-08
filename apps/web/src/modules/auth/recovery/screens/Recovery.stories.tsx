@@ -10,7 +10,8 @@ import { Recovery } from "./Recovery";
 import { AuthLayout } from "../../layout";
 import { authReducer } from "../../store";
 import { AUTH_COPY } from "../../config/copy";
-import type { RecoveryPosition, RecoveryRepository } from "../../recovery";
+import type { RecoveryPosition } from "../entity";
+import type { RecoveryRepository } from "../repository";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -32,8 +33,8 @@ type Story = StoryObj<typeof meta>;
 
 const at = (over: Partial<RecoveryPosition> = {}): RecoveryPosition => ({
   step: "code",
-  maskedEndpoint: "h•••••@example.test",
-  retryAfterSeconds: 0,
+  maskedAddress: "h•••••@example.test",
+  resendAvailableIn: 0,
   canResend: true,
   ...over,
 });
@@ -237,7 +238,7 @@ export const AFailedReadOffersARetry: Story = {
  *  the seconds shown are the ones it reported. */
 export const TheResendWindowIsTheServersOwn: Story = {
   render: withRepo(
-    repository({ position: async () => at({ step: "code", retryAfterSeconds: 42 }) }),
+    repository({ position: async () => at({ step: "code", resendAvailableIn: 42 }) }),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -315,6 +316,35 @@ export const TheAddressComesBackWhenCorrecting: Story = {
     await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
 
     await expect(await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel)).toHaveValue(typed);
+  },
+};
+
+/** Correcting an address abandons an attempt rather than moving a step, so
+ *  submitting the corrected one returns the reader to where the server says. */
+export const ACorrectedAddressReturnsToTheCode: Story = {
+  render: withRepo(
+    repository({
+      position: async () => at({ step: "request" }),
+      request: async () => at({ step: "code" }),
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(
+      await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel),
+      "holder@example.test",
+    );
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.send }));
+    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
+    await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel);
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.send }));
+
+    await expect(
+      await canvas.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle }),
+    ).toBeVisible();
   },
 };
 
