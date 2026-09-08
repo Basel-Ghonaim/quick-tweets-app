@@ -1,10 +1,10 @@
 import { Navigate, Route } from "react-router-dom";
 import { AuthLayout, JourneyLayout } from "./layout";
-import { SignIn } from "./screens/SignIn";
-import { SignUp } from "./screens/SignUp";
+import { SignIn } from "./session/screens/SignIn";
+import { SignUp } from "./session/screens/SignUp";
 import { Onboarding } from "./screens/Onboarding";
 import { Recovery } from "./screens/Recovery";
-import { GuestOnly } from "./navigation";
+import { GuestOnly } from "./session/GuestOnly";
 import { stepStates } from "./journey";
 
 /** Everything auth contains: the composition root decides whether it is

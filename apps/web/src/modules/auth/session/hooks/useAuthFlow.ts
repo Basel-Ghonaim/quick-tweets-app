@@ -10,7 +10,7 @@ import {
   type FormSubmitHandler,
 } from "@shared/schema-form";
 import { useAuthActions } from "./useAuthActions";
-import { authFormSchemas } from "../../config/authFormSchemas";
+import { authFormSchemas } from "../authFormSchemas";
 import { afterSuccess } from "../services";
 
 import type { AuthRequestType } from "../../store";

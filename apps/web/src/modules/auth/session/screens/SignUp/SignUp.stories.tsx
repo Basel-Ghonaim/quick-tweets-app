@@ -5,11 +5,11 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { SignUp } from "./SignUp";
-import { AuthLayout } from "../../layout";
-import { JourneyLayout } from "../../layout/JourneyLayout";
-import { authReducer, authActions } from "../../store";
-import { AUTH_COPY } from "../../config/copy";
-import { stepStates } from "../../journey";
+import { AuthLayout } from "../../../layout";
+import { JourneyLayout } from "../../../layout/JourneyLayout";
+import { authReducer, authActions } from "../../../store";
+import { AUTH_COPY } from "../../../config/copy";
+import { stepStates } from "../../../journey";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */

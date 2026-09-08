@@ -5,9 +5,9 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { SignIn } from "./SignIn";
-import { AuthLayout } from "../../layout";
-import { authReducer, authActions } from "../../store";
-import { AUTH_COPY } from "../../config/copy";
+import { AuthLayout } from "../../../layout";
+import { authReducer, authActions } from "../../../store";
+import { AUTH_COPY } from "../../../config/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */

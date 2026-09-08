@@ -7,8 +7,8 @@ import {
   isMatch,
   matchesPattern,
 } from "@shared/schema-form";
-import { VALIDATION_MESSAGES } from "./validationMessages";
-import { newPasswordPolicy, usernameRules } from "./authValidationRules";
+import { VALIDATION_MESSAGES } from "../config/validationMessages";
+import { newPasswordPolicy, usernameRules } from "../config/authValidationRules";
 
 // ─── Login: identity check only ──────────────────────────────────────────────
 // Presence only — login checks an existing credential and must not apply the
