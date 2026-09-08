@@ -4,7 +4,7 @@ import { SignIn } from "./session/screens/SignIn";
 import { SignUp } from "./session/screens/SignUp";
 import { Onboarding } from "./screens/Onboarding";
 import { Recovery } from "./screens/Recovery";
-import { GuestOnly } from "./session/GuestOnly";
+import { GuestOnly } from "./GuestOnly";
 import { stepStates } from "./journey";
 
 /** Everything auth contains: the composition root decides whether it is
