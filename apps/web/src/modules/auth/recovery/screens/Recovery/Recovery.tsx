@@ -7,7 +7,7 @@ import { useAuthDispatch } from "../../../store/hooks";
 import { authActions } from "../../../store";
 import { screenFor } from "../../services";
 import { useRecovery } from "../../hooks";
-import type { RecoveryRepository } from "../../recovery.types";
+import type { RecoveryRepository } from "../../repository";
 import { RecoveryRequest } from "./RecoveryRequest";
 import { RecoveryCode } from "./RecoveryCode";
 import { RecoveryPassword } from "./RecoveryPassword";

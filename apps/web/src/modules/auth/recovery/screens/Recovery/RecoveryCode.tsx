@@ -5,7 +5,7 @@ import { AuthLink } from "../../../navigation";
 import { normaliseChallengeCode } from "../../../verification/challengeCode";
 import { recoveryFormSchemas } from "../../recoveryFormSchemas";
 import { useRecoveryForm, useResendWindow } from "../../hooks";
-import type { RecoveryPosition } from "../../recovery.types";
+import type { RecoveryPosition } from "../../entity";
 import styles from "./Recovery.module.css";
 
 interface RecoveryCodeProps {
@@ -41,7 +41,7 @@ export const RecoveryCode = ({
         {AUTH_COPY.recovery.codeTitle}
       </Typography>
       <Typography variant="body-medium" tone="secondary">
-        {AUTH_COPY.recovery.codeSubtitle(position.maskedEndpoint ?? "")}
+        {AUTH_COPY.recovery.codeSubtitle(position.maskedAddress ?? "")}
       </Typography>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>

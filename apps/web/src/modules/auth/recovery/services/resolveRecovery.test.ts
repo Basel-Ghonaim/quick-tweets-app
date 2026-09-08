@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { resolveRecovery } from "./resolveRecovery";
-import type { RecoveryPosition, RecoveryRepository } from "../recovery.types";
+import type { RecoveryPosition } from "../entity";
+import type { RecoveryRepository } from "../repository";
 
 const POSITION: RecoveryPosition = {
   step: "password",
-  maskedEndpoint: "h•••••@example.test",
-  retryAfterSeconds: 0,
+  maskedAddress: "h•••••@example.test",
+  resendAvailableIn: 0,
   canResend: false,
 };
 

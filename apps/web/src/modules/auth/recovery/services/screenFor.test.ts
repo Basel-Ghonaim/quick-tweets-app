@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { screenFor } from "./screenFor";
-import type { RecoveryPosition } from "../recovery.types";
+import type { RecoveryPosition } from "../entity";
 
 const at = (step: RecoveryPosition["step"]): RecoveryPosition => ({
   step,
-  maskedEndpoint: step === "request" ? null : "h•••••@example.test",
-  retryAfterSeconds: 0,
+  maskedAddress: step === "request" ? null : "h•••••@example.test",
+  resendAvailableIn: 0,
   canResend: true,
 });
 

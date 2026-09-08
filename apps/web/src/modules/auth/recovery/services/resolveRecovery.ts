@@ -1,4 +1,5 @@
-import type { RecoveryPosition, RecoveryRepository } from "../recovery.types";
+import type { RecoveryPosition } from "../entity";
+import type { RecoveryRepository } from "../repository";
 
 export type RecoveryRead =
   | { status: "unresolved" }

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { restRecovery } from "../repository";
 import { resolveRecovery, type RecoveryRead } from "../services";
-import type { RecoveryPosition, RecoveryRepository } from "../recovery.types";
+import type { RecoveryPosition } from "../entity";
+import type { RecoveryRepository } from "../repository";
 
 export interface Recovery {
   read: RecoveryRead;

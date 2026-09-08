@@ -10,7 +10,8 @@ import { Recovery } from "./Recovery";
 import { AuthLayout } from "../../../layout";
 import { authReducer } from "../../../store";
 import { AUTH_COPY } from "../../../config/copy";
-import type { RecoveryPosition, RecoveryRepository } from "../../recovery.types";
+import type { RecoveryPosition } from "../../entity";
+import type { RecoveryRepository } from "../../repository";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -32,8 +33,8 @@ type Story = StoryObj<typeof meta>;
 
 const at = (over: Partial<RecoveryPosition> = {}): RecoveryPosition => ({
   step: "code",
-  maskedEndpoint: "h•••••@example.test",
-  retryAfterSeconds: 0,
+  maskedAddress: "h•••••@example.test",
+  resendAvailableIn: 0,
   canResend: true,
   ...over,
 });
@@ -237,7 +238,7 @@ export const AFailedReadOffersARetry: Story = {
  *  the seconds shown are the ones it reported. */
 export const TheResendWindowIsTheServersOwn: Story = {
   render: withRepo(
-    repository({ position: async () => at({ step: "code", retryAfterSeconds: 42 }) }),
+    repository({ position: async () => at({ step: "code", resendAvailableIn: 42 }) }),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
