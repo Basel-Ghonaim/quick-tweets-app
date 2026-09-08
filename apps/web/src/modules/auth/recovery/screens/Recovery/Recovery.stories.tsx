@@ -7,10 +7,10 @@ import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { createAppError } from "@shared/errors";
 import { Recovery } from "./Recovery";
-import { AuthLayout } from "../../layout";
-import { authReducer } from "../../store";
-import { AUTH_COPY } from "../../config/copy";
-import type { RecoveryPosition, RecoveryRepository } from "../../recovery";
+import { AuthLayout } from "../../../layout";
+import { authReducer } from "../../../store";
+import { AUTH_COPY } from "../../../config/copy";
+import type { RecoveryPosition, RecoveryRepository } from "../../recovery.types";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */

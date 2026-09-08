@@ -1,14 +1,11 @@
 import { Button, Input, Typography } from "@shared/design-system";
-import { AUTH_COPY } from "../../config/copy";
-import { MessageRegion } from "../../components/MessageRegion";
-import { AuthLink } from "../../navigation";
-import { normaliseChallengeCode } from "../../verification/challengeCode";
-import {
-  recoveryFormSchemas,
-  useRecoveryForm,
-  useResendWindow,
-  type RecoveryPosition,
-} from "../../recovery";
+import { AUTH_COPY } from "../../../config/copy";
+import { MessageRegion } from "../../../components/MessageRegion";
+import { AuthLink } from "../../../navigation";
+import { normaliseChallengeCode } from "../../../verification/challengeCode";
+import { recoveryFormSchemas } from "../../recoveryFormSchemas";
+import { useRecoveryForm, useResendWindow } from "../../hooks";
+import type { RecoveryPosition } from "../../recovery.types";
 import styles from "./Recovery.module.css";
 
 interface RecoveryCodeProps {

@@ -1,9 +1,10 @@
 import { Button, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
-import { AUTH_COPY } from "../../config/copy";
-import { MessageRegion } from "../../components/MessageRegion";
-import { AuthLink } from "../../navigation";
-import { recoveryFormSchemas, useRecoveryForm } from "../../recovery";
+import { AUTH_COPY } from "../../../config/copy";
+import { MessageRegion } from "../../../components/MessageRegion";
+import { AuthLink } from "../../../navigation";
+import { recoveryFormSchemas } from "../../recoveryFormSchemas";
+import { useRecoveryForm } from "../../hooks";
 import styles from "./Recovery.module.css";
 
 const fields = toFieldEntries(recoveryFormSchemas.requestFields);

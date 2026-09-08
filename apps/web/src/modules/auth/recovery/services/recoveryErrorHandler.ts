@@ -1,5 +1,5 @@
 import { AppError, createAppError } from "@shared/errors";
-import { AUTH_COPY } from "../config/copy";
+import { AUTH_COPY } from "../../config/copy";
 
 /**
  * Every refusal the capability makes is one opaque `400` — never issued,

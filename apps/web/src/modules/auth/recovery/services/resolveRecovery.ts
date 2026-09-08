@@ -1,4 +1,4 @@
-import type { RecoveryPosition, RecoveryRepository } from "./recovery.types";
+import type { RecoveryPosition, RecoveryRepository } from "../recovery.types";
 
 export type RecoveryRead =
   | { status: "unresolved" }

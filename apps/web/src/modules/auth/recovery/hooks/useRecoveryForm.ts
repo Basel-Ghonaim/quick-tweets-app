@@ -6,7 +6,7 @@ import {
   type FormPayload,
   type FormValue,
 } from "@shared/schema-form";
-import { recoveryErrorHandler } from "./recoveryErrorHandler";
+import { recoveryErrorHandler } from "../services";
 
 /**
  * The three screens meet the same two refusals in the same way, so the wiring

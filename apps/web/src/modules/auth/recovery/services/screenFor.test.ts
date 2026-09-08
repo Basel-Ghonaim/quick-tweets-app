@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { screenFor } from "./screenFor";
-import type { RecoveryPosition } from "./recovery.types";
+import type { RecoveryPosition } from "../recovery.types";
 
 const at = (step: RecoveryPosition["step"]): RecoveryPosition => ({
   step,

@@ -1,11 +1,11 @@
 import { useEffect, useReducer } from "react";
-import { AUTH_COPY } from "../config/copy";
+import { AUTH_COPY } from "../../config/copy";
 import {
   canResend as windowIsOpen,
   resendCooldownInitial,
   resendCooldownReducer,
-} from "../verification/resendCooldown";
-import type { RecoveryPosition } from "./recovery.types";
+} from "../../verification/resendCooldown";
+import type { RecoveryPosition } from "../recovery.types";
 
 /**
  * The seconds tick here; the number they start from is always the server's.

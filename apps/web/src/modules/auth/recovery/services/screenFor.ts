@@ -1,4 +1,4 @@
-import type { RecoveryStep } from "./recovery.types";
+import type { RecoveryStep } from "../recovery.types";
 import type { RecoveryRead } from "./resolveRecovery";
 
 /** What the recovery route shows. Every value is the server's or a wait for it. */
