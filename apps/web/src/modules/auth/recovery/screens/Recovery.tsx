@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { Button, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
 import { useAuthNavigate } from "../../navigation";
-import { screenFor } from "../services";
-import { useRecovery } from "../hooks";
+import { useRecoveryFlow } from "../hooks";
 import type { RecoveryRepository } from "../repository";
 import { RecoveryCode, RecoveryPassword, RecoveryRequest } from "./steps";
 import styles from "./Recovery.module.css";
@@ -14,18 +12,23 @@ import styles from "./Recovery.module.css";
  * a second tab and a typed path all resolve the same way.
  */
 export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
-  const { read, position, request, resend, confirm, apply, retry } = useRecovery(repo);
-  const [justAsked, setJustAsked] = useState(false);
-  /* Abandoning an attempt, not a claim about the step — the server owns that. */
-  const [restarting, setRestarting] = useState(false);
-  const [lastAsked, setLastAsked] = useState("");
   const navigate = useAuthNavigate();
-  const screen = screenFor(read, restarting);
 
-  const finish = async (newPassword: string) => {
-    await apply(newPassword);
-    navigate("/auth/signin", { state: { notice: AUTH_COPY.recovery.done } });
-  };
+  const {
+    screen,
+    position,
+    notice,
+    confirmation,
+    initialEmail,
+    ask,
+    restart,
+    confirm,
+    resend,
+    apply,
+    retry,
+  } = useRecoveryFlow(repo, () =>
+    navigate("/auth/signin", { state: { notice: AUTH_COPY.recovery.done } }),
+  );
 
   if (screen === "pending") {
     return (
@@ -47,31 +50,20 @@ export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
   }
 
   if (screen === "request") {
-    return (
-      <RecoveryRequest
-        initialEmail={lastAsked}
-        notice={justAsked && !restarting ? AUTH_COPY.recovery.lapsed : undefined}
-        onSubmit={async (email) => {
-          await request(email);
-          setLastAsked(email);
-          setRestarting(false);
-          setJustAsked(true);
-        }}
-      />
-    );
+    return <RecoveryRequest initialEmail={initialEmail} notice={notice} onSubmit={ask} />;
   }
 
   if (screen === "code") {
     return (
       <RecoveryCode
         position={position!}
-        confirmation={justAsked ? AUTH_COPY.recovery.sent : undefined}
+        confirmation={confirmation}
         onSubmit={confirm}
         onResend={resend}
-        onRestart={() => setRestarting(true)}
+        onRestart={restart}
       />
     );
   }
 
-  return <RecoveryPassword onSubmit={finish} />;
+  return <RecoveryPassword onSubmit={apply} />;
 };

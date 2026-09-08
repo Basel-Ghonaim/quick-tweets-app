@@ -319,6 +319,35 @@ export const TheAddressComesBackWhenCorrecting: Story = {
   },
 };
 
+/** Correcting an address abandons an attempt rather than moving a step, so
+ *  submitting the corrected one returns the reader to where the server says. */
+export const ACorrectedAddressReturnsToTheCode: Story = {
+  render: withRepo(
+    repository({
+      position: async () => at({ step: "request" }),
+      request: async () => at({ step: "code" }),
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(
+      await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel),
+      "holder@example.test",
+    );
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.send }));
+    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
+    await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel);
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.send }));
+
+    await expect(
+      await canvas.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle }),
+    ).toBeVisible();
+  },
+};
+
 /** Every step offers a way out, and it is a link because sign in has an address. */
 export const EveryStepCanBeLeft: Story = {
   render: withRepo(repository({ position: async () => at({ step: "code" }) })),
