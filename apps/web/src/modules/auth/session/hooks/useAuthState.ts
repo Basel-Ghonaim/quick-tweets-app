@@ -1,4 +1,4 @@
-import { useAuthSelector } from "../store/hooks";
+import { useAuthSelector } from "../../store/hooks";
 
 export const useAuthState = () => {
   const user = useAuthSelector((state) => state.auth.user);

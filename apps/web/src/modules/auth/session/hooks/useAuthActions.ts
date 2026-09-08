@@ -1,8 +1,8 @@
-import { useAuthDispatch } from "../store/hooks";
+import { useAuthDispatch } from "../../store/hooks";
 
 import { restAuth } from "../repository/restAuth";
 import { executeAuthFlow, executeLogout } from "../services";
-import type { LoginCredentials, RegisterCredentials } from "../types";
+import type { LoginCredentials, RegisterCredentials } from "../session.types";
 
 export const useAuthActions = () => {
   const dispatch = useAuthDispatch();

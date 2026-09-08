@@ -1,6 +1,6 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import type { AppError } from "@shared/errors";
-import { authActions } from "../../store";
+import { authActions } from "../../../store";
 import { authErrorHandler } from "../authErrorHandler";
 
 

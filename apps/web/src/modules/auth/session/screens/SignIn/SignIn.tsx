@@ -1,16 +1,18 @@
+import { useLocation } from "react-router-dom";
 import { Button, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
-import { useRegisterFlow } from "../../hooks";
-import { authFormSchemas } from "../../config/authFormSchemas";
-import { AUTH_COPY } from "../../config/copy";
-import { MessageRegion } from "../../components/MessageRegion";
-import { AuthLink, useAuthNavigate } from "../../navigation";
-import styles from "./SignUp.module.css";
+import { useLoginFlow } from "../../hooks";
+import { authFormSchemas } from "../../authFormSchemas";
+import { AUTH_COPY } from "../../../config/copy";
+import { MessageRegion } from "../../../components/MessageRegion";
+import { AuthLink, useAuthNavigate } from "../../../navigation";
+import styles from "./SignIn.module.css";
 
-const fields = toFieldEntries(authFormSchemas.registerFields);
+const fields = toFieldEntries(authFormSchemas.loginFields);
 
-export const SignUp = () => {
+export const SignIn = () => {
   const navigate = useAuthNavigate();
+  const { notice } = (useLocation().state ?? {}) as { notice?: string };
 
   const {
     values,
@@ -20,21 +22,22 @@ export const SignUp = () => {
     serverError,
     handleChange,
     handleSubmit,
-  } = useRegisterFlow(() => navigate("/auth/onboarding"));
+  } = useLoginFlow(() => navigate("/feed"));
 
   return (
     <div className={styles.root}>
       <Typography variant="heading-large" as="h1">
-        {AUTH_COPY.signUp.title}
+        {AUTH_COPY.signIn.title}
       </Typography>
       <Typography variant="body-medium" tone="secondary">
-        {AUTH_COPY.signUp.subtitle}
+        {AUTH_COPY.signIn.subtitle}
       </Typography>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         {isError && serverError && (
           <MessageRegion tone="error">{serverError.message}</MessageRegion>
         )}
+        {!isError && notice && <MessageRegion tone="info">{notice}</MessageRegion>}
 
         {fields.map((field, index) => (
           <SchemaField
@@ -55,23 +58,31 @@ export const SignUp = () => {
           type="submit"
           fullWidth
           isLoading={isSubmitting}
-          loadingText={AUTH_COPY.signUp.submitting}
+          loadingText={AUTH_COPY.signIn.submitting}
         >
-          {AUTH_COPY.signUp.submit}
+          {AUTH_COPY.signIn.submit}
         </Button>
+
+        <p className={styles.aside}>
+          <AuthLink href="/auth/recovery" tone="muted">
+            {AUTH_COPY.signIn.forgotPassword}
+          </AuthLink>
+        </p>
       </form>
 
-      {/* Below the rule is for people who should not be creating an account:
-          they already have one, or they only came to read. */}
+      {/* Below the rule is for people who cannot sign in because they have no
+          account: make one, or read without one. */}
       <div className={styles.alternatives}>
         <Typography variant="body-small" tone="muted" className={styles.altLabel}>
-          {AUTH_COPY.signUp.altLabel}
+          {AUTH_COPY.signIn.altLabel}
         </Typography>
 
-        <AuthLink href="/auth/signin">{AUTH_COPY.signUp.backToLogin}</AuthLink>
+        <AuthLink href="/auth/signup">
+          {AUTH_COPY.signIn.createAccount}
+        </AuthLink>
 
         <AuthLink href="/feed" tone="muted">
-          {AUTH_COPY.signUp.browseAsGuest}
+          {AUTH_COPY.signIn.browseAsGuest}
         </AuthLink>
       </div>
     </div>

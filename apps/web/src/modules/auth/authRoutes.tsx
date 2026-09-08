@@ -1,10 +1,9 @@
 import { Navigate, Route } from "react-router-dom";
 import { AuthLayout, JourneyLayout } from "./layout";
-import { SignIn } from "./screens/SignIn";
-import { SignUp } from "./screens/SignUp";
+import { SignIn, SignUp } from "./session";
 import { Onboarding } from "./screens/Onboarding";
 import { Recovery } from "./screens/Recovery";
-import { GuestOnly } from "./navigation";
+import { GuestOnly } from "./GuestOnly";
 import { stepStates } from "./journey";
 
 /** Everything auth contains: the composition root decides whether it is
@@ -13,11 +12,18 @@ import { stepStates } from "./journey";
 export const authRoute = (
   <Route path="auth" element={<AuthLayout />}>
     <Route index element={<Navigate to="signin" replace />} />
-    <Route path="signin" element={<SignIn />} />
+    <Route
+      path="signin"
+      element={
+        <GuestOnly signedInTo="/feed">
+          <SignIn />
+        </GuestOnly>
+      }
+    />
     <Route
       path="signup"
       element={
-        <GuestOnly>
+        <GuestOnly signedInTo="/feed">
           <JourneyLayout states={stepStates("account", null)}>
             <SignUp />
           </JourneyLayout>
@@ -25,7 +31,15 @@ export const authRoute = (
       }
     />
     <Route path="onboarding" element={<Onboarding />} />
-    {/* One route for all three steps, for the reason above. */}
-    <Route path="recovery" element={<Recovery />} />
+    {/* One route for all three steps, for the reason above. A reader who is
+        signed in has a better path to the same end, so they are sent to it. */}
+    <Route
+      path="recovery"
+      element={
+        <GuestOnly signedInTo="/settings/security">
+          <Recovery />
+        </GuestOnly>
+      }
+    />
   </Route>
 );

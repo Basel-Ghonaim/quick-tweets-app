@@ -1,4 +1,4 @@
-import type { LoginCredentials, RegisterCredentials } from "../types";
+import type { LoginCredentials, RegisterCredentials } from "../session.types";
 import type {
   LoginRequestDto,
   RegisterRequestDto,
