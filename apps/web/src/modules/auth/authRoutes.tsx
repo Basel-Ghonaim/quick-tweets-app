@@ -13,7 +13,14 @@ import { stepStates } from "./journey";
 export const authRoute = (
   <Route path="auth" element={<AuthLayout />}>
     <Route index element={<Navigate to="signin" replace />} />
-    <Route path="signin" element={<SignIn />} />
+    <Route
+      path="signin"
+      element={
+        <GuestOnly signedInTo="/feed">
+          <SignIn />
+        </GuestOnly>
+      }
+    />
     <Route
       path="signup"
       element={
