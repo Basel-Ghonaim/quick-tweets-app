@@ -4,7 +4,7 @@ import {
   canResend as windowIsOpen,
   resendCooldownInitial,
   resendCooldownReducer,
-} from "../../verification/resendCooldown";
+} from "@shared/one-time-code";
 import type { RecoveryPosition } from "../entity";
 
 /**

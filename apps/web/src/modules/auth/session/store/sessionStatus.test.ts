@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 
 import { authReducer, authActions } from "./authSlice";
-import { restoreSession } from "../session/services/session/restoreSession";
+import { restoreSession } from "../services/session/restoreSession";
 
 const makeStore = () => configureStore({ reducer: { auth: authReducer } });
 const statusOf = (store: ReturnType<typeof makeStore>) => store.getState().auth.session;

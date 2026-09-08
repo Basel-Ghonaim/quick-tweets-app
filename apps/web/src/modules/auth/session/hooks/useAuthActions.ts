@@ -1,4 +1,4 @@
-import { useAuthDispatch } from "../../store/hooks";
+import { useAuthDispatch } from "../store/hooks";
 
 import { restAuth } from "../repository";
 import { executeAuthFlow, executeLogout } from "../services";

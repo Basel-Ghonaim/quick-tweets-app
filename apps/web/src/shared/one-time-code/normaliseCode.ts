@@ -10,7 +10,7 @@ const CONFUSABLE: Record<string, string> = { I: "1", L: "1", O: "0" };
  * The server normalises nothing and every rejection is the same message, so a
  * code typed in lower case would come back indistinguishable from a wrong one.
  */
-export const normaliseChallengeCode = (raw: string): string =>
+export const normaliseCode = (raw: string): string =>
   [...raw.toUpperCase()]
     .map((character) => CONFUSABLE[character] ?? character)
     .filter((character) => ALPHABET.includes(character))

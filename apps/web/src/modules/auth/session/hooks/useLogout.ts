@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAuthSelector } from "../../store/hooks";
+import { useAuthSelector } from "../store/hooks";
 import { useRequestState } from "@shared/hooks";
 import { useAuthActions } from "./useAuthActions";
 

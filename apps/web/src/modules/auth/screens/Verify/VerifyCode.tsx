@@ -1,7 +1,8 @@
 import { Button, Input, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { MessageRegion } from "../../components/MessageRegion";
-import { useCodeFlow } from "../../verification";
+import { useCodeFlow } from "@shared/channel-verification";
+import { VERIFICATION_MESSAGES } from "./messages";
 import { AuthLink } from "../../navigation";
 import styles from "./Verify.module.css";
 
@@ -25,12 +26,12 @@ export const VerifyCode = ({ openingWindow, onVerified, onLater }: VerifyCodePro
     announcement,
     resend,
     submit,
-  } = useCodeFlow(
+  } = useCodeFlow({
     onVerified,
-    undefined,
-    AUTH_COPY.verify.resendReady,
+    messages: VERIFICATION_MESSAGES,
+    resendReadyMessage: AUTH_COPY.verify.resendReady,
     openingWindow,
-  );
+  });
 
   return (
     <div className={styles.root}>

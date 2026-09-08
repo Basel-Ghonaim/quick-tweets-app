@@ -10,8 +10,5 @@ export const initialState: AuthState = {
     login: { status: "idle", error: null },
     register: { status: "idle", error: null },
     logout: { status: "idle", error: null },
-    updateProfile: { status: "idle", error: null },
-    issueCode: { status: "idle", error: null },
-    confirmCode: { status: "idle", error: null },
   },
 };

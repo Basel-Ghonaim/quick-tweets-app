@@ -3,7 +3,7 @@ import { AUTH_COPY } from "../../../config/copy";
 import { StepLayout } from "./StepLayout";
 import styles from "./RecoveryCode.module.css";
 import { MessageRegion } from "../../../components/MessageRegion";
-import { normaliseChallengeCode } from "../../../verification/challengeCode";
+import { normaliseCode } from "@shared/one-time-code";
 import { recoveryFormSchemas } from "../../recoveryFormSchemas";
 import { useRecoveryForm, useResendWindow } from "../../hooks";
 import type { RecoveryPosition } from "../../entity";
@@ -30,7 +30,7 @@ export const RecoveryCode = ({
     useRecoveryForm(recoveryFormSchemas.codeFields, ({ code }) =>
       // Normalised before it travels: the server normalises nothing and answers
       // every rejection alike, so a lowercase code would look like a wrong one.
-      onSubmit(normaliseChallengeCode(code)),
+      onSubmit(normaliseCode(code)),
     );
 
   const { secondsLeft, isOpen, announcement } = useResendWindow(position);

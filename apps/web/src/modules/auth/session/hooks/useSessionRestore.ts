@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAuthDispatch } from "../../store/hooks";
+import { useAuthDispatch } from "../store/hooks";
 import { restoreSession } from "../services";
 
 // Non-blocking, hint-gated identity restore on mount — never gates render.
