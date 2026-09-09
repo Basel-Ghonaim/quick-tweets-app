@@ -1,10 +1,9 @@
 import { useLocation } from "react-router-dom";
-import { Button, Typography } from "@shared/design-system";
+import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { useLoginFlow } from "../../hooks";
 import { authFormSchemas } from "../../authFormSchemas";
 import { AUTH_COPY } from "../../../config/copy";
-import { MessageRegion } from "../../../components/MessageRegion";
 import { AuthLink, useAuthNavigate } from "../../../navigation";
 import styles from "./SignIn.module.css";
 

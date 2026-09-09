@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Button, Spinner } from "@shared/design-system";
+import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
-import { MessageRegion } from "../../components/MessageRegion";
 import { JourneyLayout } from "../../layout";
 import { useAuthNavigate } from "../../navigation";
 import { useAuthState } from "../../session";

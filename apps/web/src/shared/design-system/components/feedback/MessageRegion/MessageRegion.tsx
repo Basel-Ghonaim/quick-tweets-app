@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Typography } from "@shared/design-system";
+import { Typography } from "../../display/Typography";
 import styles from "./MessageRegion.module.css";
 
 /** Widens as screens need it; these two are today's interruptions, not a
