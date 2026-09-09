@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { JourneyLayout } from "../../layout";
-import { useAuthNavigate } from "@shared/routing";
+import { useRouteNavigate } from "@shared/routing";
 import { useAuthState } from "../../session";
 import { destinationFor, stepStates, useJourney, type JourneyRepository } from "../../journey";
 import { Profile } from "../Profile";
@@ -20,7 +20,7 @@ export const Onboarding = ({ repo }: { repo?: JourneyRepository } = {}) => {
   const { sessionSettled } = useAuthState();
   const { read, state, advance, leave, retry } = useJourney(repo, sessionSettled);
   const [openingWindow, setOpeningWindow] = useState<number>();
-  const navigate = useAuthNavigate();
+  const navigate = useRouteNavigate();
   const destination = destinationFor(read);
 
   // Verifying has no link to carry it, so it navigates — and never waits on the

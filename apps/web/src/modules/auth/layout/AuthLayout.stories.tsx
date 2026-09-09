@@ -6,7 +6,7 @@ import { ThemeProvider } from "@shared/preferences";
 import { configureStore } from "@reduxjs/toolkit";
 import { authReducer } from "../session";
 import { AuthLayout } from "./AuthLayout";
-import { useAuthNavigate } from "@shared/routing";
+import { useRouteNavigate } from "@shared/routing";
 import { AUTH_COPY } from "../config/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint the
@@ -29,7 +29,7 @@ type Story = StoryObj<typeof meta>;
 
 /** A body that reports where it is, so a navigation is observable. */
 const Body = () => {
-  const navigate = useAuthNavigate();
+  const navigate = useRouteNavigate();
   const { pathname, search } = useLocation();
 
   return (

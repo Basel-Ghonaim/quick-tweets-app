@@ -1,6 +1,6 @@
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
-import { useAuthNavigate } from "@shared/routing";
+import { useRouteNavigate } from "@shared/routing";
 import { useRecoveryFlow } from "../hooks";
 import type { RecoveryRepository } from "../repository";
 import { RecoveryCode, RecoveryPassword, RecoveryRequest } from "./steps";
@@ -11,7 +11,7 @@ import styles from "./Recovery.module.css";
  * a second tab and a typed path all resolve the same way.
  */
 export const Recovery = ({ repo }: { repo?: RecoveryRepository } = {}) => {
-  const navigate = useAuthNavigate();
+  const navigate = useRouteNavigate();
 
   const {
     screen,

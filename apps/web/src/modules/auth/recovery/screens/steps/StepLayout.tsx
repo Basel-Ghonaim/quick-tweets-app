@@ -1,7 +1,7 @@
 import type { FormEventHandler, ReactNode } from "react";
 import { Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../../config/copy";
-import { AuthLink } from "@shared/routing";
+import { RouteLink } from "@shared/routing";
 import styles from "./StepLayout.module.css";
 
 interface StepLayoutProps {
@@ -25,9 +25,9 @@ export const StepLayout = ({ title, subtitle, onSubmit, children }: StepLayoutPr
     </form>
 
     <p className={styles.aside}>
-      <AuthLink href="/auth/signin" tone="muted">
+      <RouteLink href="/auth/signin" tone="muted">
         {AUTH_COPY.recovery.backToLogin}
-      </AuthLink>
+      </RouteLink>
     </p>
   </div>
 );

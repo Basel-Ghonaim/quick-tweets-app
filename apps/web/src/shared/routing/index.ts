@@ -1,4 +1,4 @@
-export { useAuthNavigate } from "./useAuthNavigate";
-export { AuthLink } from "./AuthLink";
+export { useRouteNavigate } from "./useRouteNavigate";
+export { RouteLink } from "./RouteLink";
 export { PreservedSearchParams } from "./preservedSearchParams";
 export { carrySearchParams } from "./carrySearchParams";
