@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { matchesPattern } from "@shared/schema-form";
 import { usernameRules } from "./authValidationRules";
-import { VALIDATION_MESSAGES } from "./validationMessages";
+import { VALIDATION_MESSAGES } from "@shared/copy";
 
 // Lowercase-only username rule (WI-B, #388). Exercises the exact validator the
 // register form composes — matchesPattern(usernameRules.charset, message) — so

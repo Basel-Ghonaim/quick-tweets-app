@@ -6,8 +6,8 @@ import {
   isRequired,
   matchesPattern,
 } from "@shared/schema-form";
-import { newPasswordPolicy } from "../config/authValidationRules";
-import { VALIDATION_MESSAGES } from "../config/validationMessages";
+import { newPasswordPolicy } from "@shared/validation";
+import { VALIDATION_MESSAGES } from "@shared/copy";
 import { AUTH_COPY } from "../config/copy";
 
 export interface RecoveryRequestValues {
