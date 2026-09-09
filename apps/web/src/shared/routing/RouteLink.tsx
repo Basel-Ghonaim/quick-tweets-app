@@ -5,7 +5,7 @@ import { carrySearchParams } from "./carrySearchParams";
 import { PreservedSearchParams } from "./preservedSearchParams";
 
 /** The Design System's link takes the navigating element rather than importing
- *  a router; this is the element auth supplies. */
+ *  a router; this is the element this mechanism supplies. */
 const RouterAnchor = forwardRef<
   HTMLAnchorElement,
   ComponentProps<"a"> & { href: string }
@@ -13,9 +13,9 @@ const RouterAnchor = forwardRef<
 
 RouterAnchor.displayName = "RouterAnchor";
 
-/** Every cross-screen link in auth, so a destination carries what decides the
- *  page for the same reason `useAuthNavigate` does. */
-export const AuthLink = ({ href, ...rest }: LinkProps) => {
+/** Every navigating link, so a destination carries what decides the page for
+ *  the same reason `useRouteNavigate` does. */
+export const RouteLink = ({ href, ...rest }: LinkProps) => {
   const [searchParams] = useSearchParams();
   const preserved = useContext(PreservedSearchParams);
 

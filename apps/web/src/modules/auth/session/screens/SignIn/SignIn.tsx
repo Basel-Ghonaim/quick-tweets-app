@@ -4,13 +4,13 @@ import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { useLoginFlow } from "../../hooks";
 import { authFormSchemas } from "../../authFormSchemas";
 import { AUTH_COPY } from "../../../config/copy";
-import { AuthLink, useAuthNavigate } from "../../../navigation";
+import { RouteLink, useRouteNavigate } from "@shared/routing";
 import styles from "./SignIn.module.css";
 
 const fields = toFieldEntries(authFormSchemas.loginFields);
 
 export const SignIn = () => {
-  const navigate = useAuthNavigate();
+  const navigate = useRouteNavigate();
   const { notice } = (useLocation().state ?? {}) as { notice?: string };
 
   const {
@@ -63,9 +63,9 @@ export const SignIn = () => {
         </Button>
 
         <p className={styles.aside}>
-          <AuthLink href="/auth/recovery" tone="muted">
+          <RouteLink href="/auth/recovery" tone="muted">
             {AUTH_COPY.signIn.forgotPassword}
-          </AuthLink>
+          </RouteLink>
         </p>
       </form>
 
@@ -76,13 +76,13 @@ export const SignIn = () => {
           {AUTH_COPY.signIn.altLabel}
         </Typography>
 
-        <AuthLink href="/auth/signup">
+        <RouteLink href="/auth/signup">
           {AUTH_COPY.signIn.createAccount}
-        </AuthLink>
+        </RouteLink>
 
-        <AuthLink href="/feed" tone="muted">
+        <RouteLink href="/feed" tone="muted">
           {AUTH_COPY.signIn.browseAsGuest}
-        </AuthLink>
+        </RouteLink>
       </div>
     </div>
   );

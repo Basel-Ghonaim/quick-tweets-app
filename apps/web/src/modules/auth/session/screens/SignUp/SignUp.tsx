@@ -3,13 +3,13 @@ import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { useRegisterFlow } from "../../hooks";
 import { authFormSchemas } from "../../authFormSchemas";
 import { AUTH_COPY } from "../../../config/copy";
-import { AuthLink, useAuthNavigate } from "../../../navigation";
+import { RouteLink, useRouteNavigate } from "@shared/routing";
 import styles from "./SignUp.module.css";
 
 const fields = toFieldEntries(authFormSchemas.registerFields);
 
 export const SignUp = () => {
-  const navigate = useAuthNavigate();
+  const navigate = useRouteNavigate();
 
   const {
     values,
@@ -67,11 +67,11 @@ export const SignUp = () => {
           {AUTH_COPY.signUp.altLabel}
         </Typography>
 
-        <AuthLink href="/auth/signin">{AUTH_COPY.signUp.backToLogin}</AuthLink>
+        <RouteLink href="/auth/signin">{AUTH_COPY.signUp.backToLogin}</RouteLink>
 
-        <AuthLink href="/feed" tone="muted">
+        <RouteLink href="/feed" tone="muted">
           {AUTH_COPY.signUp.browseAsGuest}
-        </AuthLink>
+        </RouteLink>
       </div>
     </div>
   );

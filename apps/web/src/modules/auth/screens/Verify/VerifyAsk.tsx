@@ -2,7 +2,7 @@ import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { useAskFlow, type VerificationRepository } from "@shared/channel-verification";
 import { VERIFICATION_MESSAGES } from "./messages";
-import { AuthLink } from "../../navigation";
+import { RouteLink } from "@shared/routing";
 import styles from "./Verify.module.css";
 
 interface VerifyAskProps {
@@ -46,9 +46,9 @@ export const VerifyAsk = ({ onSent, onLater, repo }: VerifyAskProps) => {
       </div>
 
       <div className={styles.asides}>
-        <AuthLink href="/feed" tone="muted" onClick={onLater}>
+        <RouteLink href="/feed" tone="muted" onClick={onLater}>
           {AUTH_COPY.verify.later}
-        </AuthLink>
+        </RouteLink>
       </div>
     </div>
   );

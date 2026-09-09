@@ -4,6 +4,7 @@
 > **Date:** 2026-09-09
 > **Deciders:** Basel Ghonaim
 > **Amends:** [Frontend Architecture](../../frontend/architecture.md) — the zones, the dependency rule, and the module contract
+> **Revised:** 2026-09-09 — Decision 1's sibling rule is stated not to reach `shared/`, whose parts compose one another within the boundary Decision 5 already sets. The decision itself is unchanged.
 
 ## Context
 
@@ -22,6 +23,8 @@ Two further inputs bear on the answer. The frontend will run **RTK Query** along
 ### 1. Four zones, one direction
 
 `app → pages → features → shared`. Each zone may import the zones below it and never a zone above. **A slice never imports a sibling in its own zone** — one feature never imports another, and one page group never imports another.
+
+**The sibling rule does not reach `shared/`.** That zone is divided by mechanism rather than by domain, so its parts compose one another freely and always have. What bounds them instead is Decision 5: a part of `shared/` may use another only within what this zone admits, and never by depending on a feature. The rule exists to stop two peers coupling around a business fact, and a zone that may hold none has no such coupling to prevent.
 
 ### 2. The route subtree belongs to a page group, not to a feature
 
