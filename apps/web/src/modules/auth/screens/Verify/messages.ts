@@ -1,5 +1,5 @@
 import type { VerificationMessages } from "@shared/channel-verification";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 
 /** Held as a module constant so the hooks that key callbacks on it stay stable. */
 export const VERIFICATION_MESSAGES: VerificationMessages = {

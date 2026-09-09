@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from "react";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import {
   canResend as windowIsOpen,
   resendCooldownInitial,

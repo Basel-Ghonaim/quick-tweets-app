@@ -8,7 +8,7 @@ import {
 } from "@shared/schema-form";
 import { newPasswordPolicy } from "@shared/validation";
 import { VALIDATION_MESSAGES } from "@shared/copy";
-import { AUTH_COPY } from "../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 
 export interface RecoveryRequestValues {
   email: string;

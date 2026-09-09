@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import { screenFor, type RecoveryScreen } from "../services";
 import { useRecovery } from "./useRecovery";
 import type { RecoveryPosition } from "../entity";

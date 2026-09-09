@@ -1,5 +1,5 @@
 import { Button, Input, MessageRegion, Typography } from "@shared/design-system";
-import { AUTH_COPY } from "../../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
 import styles from "./RecoveryCode.module.css";
 import { normaliseCode } from "@shared/one-time-code";

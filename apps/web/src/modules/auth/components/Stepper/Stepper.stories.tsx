@@ -5,7 +5,7 @@ import { ThemeProvider } from "@shared/preferences";
 import { Stepper, type JourneyStepId, type StepState } from "./Stepper";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { stepStates, type StepPosition } from "../../journey";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */

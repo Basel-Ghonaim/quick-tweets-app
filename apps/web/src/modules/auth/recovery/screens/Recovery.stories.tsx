@@ -9,7 +9,7 @@ import { createAppError } from "@shared/errors";
 import { Recovery } from "./Recovery";
 import { AuthLayout } from "../../layout";
 import { authReducer } from "../../session";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import type { RecoveryPosition } from "../entity";
 import type { RecoveryRepository } from "../repository";
 

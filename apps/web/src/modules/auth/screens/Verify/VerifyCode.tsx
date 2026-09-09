@@ -1,5 +1,5 @@
 import { Button, Input, MessageRegion, Typography } from "@shared/design-system";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import { useCodeFlow } from "@shared/channel-verification";
 import { VERIFICATION_MESSAGES } from "./messages";
 import { RouteLink } from "@shared/routing";
