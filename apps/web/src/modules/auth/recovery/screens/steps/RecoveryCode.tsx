@@ -1,8 +1,7 @@
-import { Button, Input, Typography } from "@shared/design-system";
+import { Button, Input, MessageRegion, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../../config/copy";
 import { StepLayout } from "./StepLayout";
 import styles from "./RecoveryCode.module.css";
-import { MessageRegion } from "../../../components/MessageRegion";
 import { normaliseCode } from "@shared/one-time-code";
 import { recoveryFormSchemas } from "../../recoveryFormSchemas";
 import { useRecoveryForm, useResendWindow } from "../../hooks";

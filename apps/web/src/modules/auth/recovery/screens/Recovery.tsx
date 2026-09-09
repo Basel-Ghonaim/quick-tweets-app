@@ -1,6 +1,5 @@
-import { Button, Spinner } from "@shared/design-system";
+import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
-import { MessageRegion } from "../../components/MessageRegion";
 import { useAuthNavigate } from "../../navigation";
 import { useRecoveryFlow } from "../hooks";
 import type { RecoveryRepository } from "../repository";

@@ -1,8 +1,7 @@
-import { Button } from "@shared/design-system";
+import { Button, MessageRegion } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { AUTH_COPY } from "../../../config/copy";
 import { StepLayout } from "./StepLayout";
-import { MessageRegion } from "../../../components/MessageRegion";
 import { recoveryFormSchemas } from "../../recoveryFormSchemas";
 import { useRecoveryForm } from "../../hooks";
 

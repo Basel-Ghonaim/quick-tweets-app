@@ -1,6 +1,5 @@
-import { Button, Input, Typography } from "@shared/design-system";
+import { Button, Input, MessageRegion, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
-import { MessageRegion } from "../../components/MessageRegion";
 import { useCodeFlow } from "@shared/channel-verification";
 import { VERIFICATION_MESSAGES } from "./messages";
 import { AuthLink } from "../../navigation";
