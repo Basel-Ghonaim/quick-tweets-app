@@ -1,13 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { matchesPattern } from "@shared/schema-form";
-import { usernameRules } from "./authValidationRules";
-import { VALIDATION_MESSAGES } from "./validationMessages";
+import { usernameRules } from "./credentialRules";
+import { VALIDATION_MESSAGES } from "@shared/copy";
 
-// Lowercase-only username rule (WI-B, #388). Exercises the exact validator the
-// register form composes — matchesPattern(usernameRules.charset, message) — so
-// this proves the field behaviour, not just a bare regex constant. Mirrors the
-// backend registerSchema; login is presence-only and untouched here (WI-E).
-describe("username charset rule — lowercase-only (WI-B)", () => {
+// Exercises the exact validator the register form composes —
+// matchesPattern(usernameRules.charset, message) — so this proves the field's
+// behaviour rather than a bare regex constant.
+describe("username charset rule — lowercase-only", () => {
   const validate = matchesPattern(usernameRules.charset, VALIDATION_MESSAGES.usernameCharset);
 
   it("accepts lowercase letters, digits, and underscores", () => {
