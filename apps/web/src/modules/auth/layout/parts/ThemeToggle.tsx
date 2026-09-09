@@ -1,6 +1,6 @@
 import { ToggleButton } from "@shared/design-system";
 import { useTheme } from "@shared/preferences";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 
 export const ThemeToggle = () => {
   const { theme, setTheme } = useTheme();

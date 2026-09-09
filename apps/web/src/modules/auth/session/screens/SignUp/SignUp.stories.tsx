@@ -8,7 +8,7 @@ import { SignUp } from "./SignUp";
 import { AuthLayout } from "../../../layout";
 import { JourneyLayout } from "../../../layout/JourneyLayout";
 import { authReducer, authActions } from "../../store";
-import { AUTH_COPY } from "../../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "../../../journey";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint

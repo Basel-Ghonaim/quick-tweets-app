@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Typography } from "@shared/design-system";
 import { BrandMark } from "@shared/brand";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import styles from "./AuthCard.module.css";
 
 /**

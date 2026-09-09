@@ -1,4 +1,4 @@
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import styles from "./FeedTexture.module.css";
 
 /** Texture, not content: blurred past reading, announced to nobody, and behind

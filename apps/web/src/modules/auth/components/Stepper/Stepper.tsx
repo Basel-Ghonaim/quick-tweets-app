@@ -4,7 +4,7 @@ import {
   PencilIcon,
   UserIcon,
 } from "@shared/design-system";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import styles from "./Stepper.module.css";
 
 export type StepState = "done" | "current" | "optional" | "skipped";

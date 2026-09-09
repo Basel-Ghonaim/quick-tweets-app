@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { BrandMark } from "@shared/brand";
-import { AUTH_COPY } from "../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import { AuthBackdrop } from "./parts/AuthBackdrop";
 import { BrandPanel } from "./parts/BrandPanel";
 import { AuthCard } from "./parts/AuthCard";

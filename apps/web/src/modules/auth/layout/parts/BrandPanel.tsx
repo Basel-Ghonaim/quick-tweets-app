@@ -1,5 +1,5 @@
 import { Typography } from "@shared/design-system";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import styles from "./BrandPanel.module.css";
 
 /**

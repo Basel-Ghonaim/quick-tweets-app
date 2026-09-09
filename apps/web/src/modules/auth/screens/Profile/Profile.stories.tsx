@@ -10,7 +10,7 @@ import { JourneyLayout } from "../../layout/JourneyLayout";
 import { createAppError } from "@shared/errors";
 import type { ProfileRepository } from "../../profile";
 import { authReducer } from "../../session";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "../../journey";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint

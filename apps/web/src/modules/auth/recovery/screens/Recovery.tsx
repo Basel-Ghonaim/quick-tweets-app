@@ -1,5 +1,5 @@
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
-import { AUTH_COPY } from "../../config/copy";
+import { AUTH_COPY } from "@shared/copy";
 import { useRouteNavigate } from "@shared/routing";
 import { useRecoveryFlow } from "../hooks";
 import type { RecoveryRepository } from "../repository";
