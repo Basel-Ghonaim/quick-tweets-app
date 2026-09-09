@@ -3,7 +3,7 @@ import { Navigate } from "react-router-dom";
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { JourneyLayout } from "../../layout";
-import { useAuthNavigate } from "../../navigation";
+import { useAuthNavigate } from "@shared/routing";
 import { useAuthState } from "../../session";
 import { destinationFor, stepStates, useJourney, type JourneyRepository } from "../../journey";
 import { Profile } from "../Profile";

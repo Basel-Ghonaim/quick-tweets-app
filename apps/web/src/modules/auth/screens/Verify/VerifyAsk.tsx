@@ -2,7 +2,7 @@ import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
 import { useAskFlow, type VerificationRepository } from "@shared/channel-verification";
 import { VERIFICATION_MESSAGES } from "./messages";
-import { AuthLink } from "../../navigation";
+import { AuthLink } from "@shared/routing";
 import styles from "./Verify.module.css";
 
 interface VerifyAskProps {

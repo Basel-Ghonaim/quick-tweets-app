@@ -1,7 +1,7 @@
 import type { FormEventHandler, ReactNode } from "react";
 import { Typography } from "@shared/design-system";
 import { AUTH_COPY } from "../../../config/copy";
-import { AuthLink } from "../../../navigation";
+import { AuthLink } from "@shared/routing";
 import styles from "./StepLayout.module.css";
 
 interface StepLayoutProps {

@@ -1,6 +1,6 @@
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "../../config/copy";
-import { useAuthNavigate } from "../../navigation";
+import { useAuthNavigate } from "@shared/routing";
 import { useRecoveryFlow } from "../hooks";
 import type { RecoveryRepository } from "../repository";
 import { RecoveryCode, RecoveryPassword, RecoveryRequest } from "./steps";

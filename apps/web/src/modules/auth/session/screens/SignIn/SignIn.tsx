@@ -4,7 +4,7 @@ import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { useLoginFlow } from "../../hooks";
 import { authFormSchemas } from "../../authFormSchemas";
 import { AUTH_COPY } from "../../../config/copy";
-import { AuthLink, useAuthNavigate } from "../../../navigation";
+import { AuthLink, useAuthNavigate } from "@shared/routing";
 import styles from "./SignIn.module.css";
 
 const fields = toFieldEntries(authFormSchemas.loginFields);
