@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { matchesPattern } from "@shared/schema-form";
-import { usernameRules } from "./authValidationRules";
+import { usernameRules } from "./credentialRules";
 import { VALIDATION_MESSAGES } from "@shared/copy";
 
 // Lowercase-only username rule (WI-B, #388). Exercises the exact validator the
