@@ -5,7 +5,7 @@ import { sessionActions } from "../state/sessionSlice";
 
 // The logout flow — the **server is the source of truth** for ending a session.
 
-export const executeLogout = async (
+export const executeSignOut = async (
   dispatch: Dispatch,
   logout: () => Promise<void>,
 ): Promise<void> => {

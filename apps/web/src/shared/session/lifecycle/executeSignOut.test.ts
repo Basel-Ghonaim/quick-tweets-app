@@ -6,7 +6,7 @@
 import { describe, it, expect } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 import { sessionReducer, sessionActions } from "../state/sessionSlice";
-import { executeLogout } from "./executeLogout";
+import { executeSignOut } from "./executeSignOut";
 import { createAppError } from "@shared/errors";
 import type { AuthUser } from "@shared/types";
 
@@ -17,12 +17,12 @@ const user: AuthUser = { id: 1, username: "ada" };
 const signIn = (store: ReturnType<typeof makeStore>) =>
   store.dispatch(sessionActions.sessionEstablished({ user, accessToken: "tok" }));
 
-describe("executeLogout — local sign-out only after the server confirms", () => {
+describe("executeSignOut — local sign-out only after the server confirms", () => {
   it("clears the local session when the server logout succeeds", async () => {
     const store = makeStore();
     signIn(store);
 
-    await executeLogout(store.dispatch, () => Promise.resolve());
+    await executeSignOut(store.dispatch, () => Promise.resolve());
 
     const { session } = store.getState();
     expect(session.user).toBeNull();
@@ -35,7 +35,7 @@ describe("executeLogout — local sign-out only after the server confirms", () =
     signIn(store);
     const serverError = createAppError("network", "offline");
 
-    await executeLogout(store.dispatch, () => Promise.reject(serverError));
+    await executeSignOut(store.dispatch, () => Promise.reject(serverError));
 
     const { session } = store.getState();
     expect(session.user).toEqual(user);
@@ -49,7 +49,7 @@ describe("executeLogout — local sign-out only after the server confirms", () =
     const store = makeStore();
     signIn(store);
 
-    await executeLogout(store.dispatch, () =>
+    await executeSignOut(store.dispatch, () =>
       Promise.reject(createAppError("unauthorized", "session already gone")),
     );
 
@@ -62,12 +62,12 @@ describe("executeLogout — local sign-out only after the server confirms", () =
   it("signs out on a user retry after a prior failure", async () => {
     const store = makeStore();
     signIn(store);
-    await executeLogout(store.dispatch, () =>
+    await executeSignOut(store.dispatch, () =>
       Promise.reject(createAppError("network", "offline")),
     );
     expect(store.getState().session.requests.signOut.status).toBe("error");
 
-    await executeLogout(store.dispatch, () => Promise.resolve());
+    await executeSignOut(store.dispatch, () => Promise.resolve());
 
     const { session } = store.getState();
     expect(session.user).toBeNull();

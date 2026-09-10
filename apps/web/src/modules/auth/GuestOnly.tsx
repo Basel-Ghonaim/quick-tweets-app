@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuthState } from "@shared/session";
+import { useSession } from "@shared/session";
 
 interface GuestOnlyProps {
   children: ReactElement;
@@ -15,7 +15,7 @@ interface GuestOnlyProps {
  * correcting itself, so an account holder never sees the form.
  */
 export const GuestOnly = ({ children, signedInTo }: GuestOnlyProps) => {
-  const { isLoggedIn, sessionSettled } = useAuthState();
+  const { isLoggedIn, sessionSettled } = useSession();
 
   if (!sessionSettled) return null;
 

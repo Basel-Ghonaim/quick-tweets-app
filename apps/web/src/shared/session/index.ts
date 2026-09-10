@@ -8,11 +8,11 @@ export {
 export type { WithSession } from "./state/selectors";
 export type { SessionState, SessionStatus } from "./state/sessionState";
 
-export { useAuthState } from "./hooks/useAuthState";
+export { useSession } from "./hooks/useSession";
 export { useSessionRestore } from "./hooks/useSessionRestore";
-export { useLogout } from "./hooks/useLogout";
+export { useSignOut } from "./hooks/useSignOut";
 
-export { executeLogout } from "./lifecycle/executeLogout";
+export { executeSignOut } from "./lifecycle/executeSignOut";
 export { refreshSession } from "./transport/refreshSession";
 
 export type { AuthResponse } from "./transport/AuthResponse";

@@ -4,7 +4,7 @@ import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
 import { JourneyLayout } from "../../layout";
 import { useRouteNavigate } from "@shared/routing";
-import { useAuthState } from "@shared/session";
+import { useSession } from "@shared/session";
 import { destinationFor, stepStates, useJourney, type JourneyRepository } from "../../journey";
 import { Profile } from "../Profile";
 import { VerifyAsk, VerifyCode } from "../Verify";
@@ -17,7 +17,7 @@ import styles from "./Onboarding.module.css";
 export const Onboarding = ({ repo }: { repo?: JourneyRepository } = {}) => {
   // The restore does not block the first render, so the journey is asked only
   // once the session has answered: a 401 from asking early is not an answer.
-  const { sessionSettled } = useAuthState();
+  const { sessionSettled } = useSession();
   const { read, state, advance, leave, retry } = useJourney(repo, sessionSettled);
   const [openingWindow, setOpeningWindow] = useState<number>();
   const navigate = useRouteNavigate();
