@@ -5,25 +5,23 @@ import {
 } from "@reduxjs/toolkit/query/react";
 import { AppError } from "../errors/AppError";
 import { errorNormalizer } from "../errors/errorNormalizer";
+import { selectAccessToken, type WithSession } from "../session";
 
-// The raw RTK query base with dynamic token injection
+export const attachSessionBearer = (headers: Headers, getState: () => unknown): Headers => {
+  const token = selectAccessToken(getState() as WithSession);
+  if (token) {
+    headers.set("authorization", `Bearer ${token}`);
+  }
+  return headers;
+};
+
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: "/api/v1",
-  prepareHeaders: (headers, { getState }) => {
-    // Strictly prevent circular dependencies by casting the state inline
-    const token = (getState() as { auth: { token: string | null } }).auth?.token;
-    if (token) {
-      headers.set("authorization", `Bearer ${token}`);
-    }
-    return headers;
-  },
+  prepareHeaders: (headers, { getState }) => attachSessionBearer(headers, getState),
 });
 
-/**
- * A custom BaseQuery that wraps fetchBaseQuery.
- * It intercepts RTK Query's FetchBaseQueryError and normalizes it into our standard AppError
- * so that UI components remain completely agnostic of the underlying data-fetching technology.
- */
+/** Every fetchBaseQuery failure becomes an AppError before a hook sees it, so
+ *  components stay agnostic of the transport. */
 export const unifiedBaseQuery: BaseQueryFn<
   string | FetchArgs,
   unknown,
