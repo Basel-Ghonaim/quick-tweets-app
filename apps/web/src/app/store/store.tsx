@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { sessionReducer, authenticationReducer } from "@modules/auth";
+import { sessionReducer } from "@shared/session";
+import { authenticationReducer } from "@features/authentication";
 import { baseApi } from "@shared/rtk-query";
 import { setupListeners } from "@reduxjs/toolkit/query/react";
 
