@@ -57,6 +57,22 @@ describe("executeLogout — local sign-out only after the server confirms (#294)
     expect(auth.requests.logout.error).not.toBeInstanceOf(Error); // stored as a plain DTO
   });
 
+  it("keeps the server's own message rather than wording the failure", async () => {
+    const store = makeStore();
+    signIn(store);
+
+    await executeLogout(store.dispatch, () =>
+      Promise.reject(createAppError("unauthorized", "session already gone")),
+    );
+
+    // Authentication words an `unauthorized` as a wrong password; a sign-out
+    // that failed is not that, so the message must arrive untouched.
+    expect(store.getState().auth.requests.logout.error).toMatchObject({
+      type: "unauthorized",
+      message: "session already gone",
+    });
+  });
+
   it("signs out on a user retry after a prior failure", async () => {
     const store = makeStore();
     signIn(store);

@@ -1,7 +1,6 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import type { AppError } from "@shared/errors";
 import { authActions } from "../../store";
-import { authErrorHandler } from "../authErrorHandler";
 
 
 // The logout flow — the **server is the source of truth** for ending a session.
@@ -22,8 +21,8 @@ export const executeLogout = async (
     dispatch(
       authActions.authRequestRejected({
         requestType: "logout",
-        // Store the plain, serializable projection — never the AppError instance.
-        error: authErrorHandler(error as AppError).toSerialized(),
+        // Worded by nobody: what a reader is told belongs to whoever renders it.
+        error: (error as AppError).toSerialized(),
       }),
     );
   }
