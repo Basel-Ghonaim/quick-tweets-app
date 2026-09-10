@@ -4,7 +4,7 @@ import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
 import { JourneyLayout } from "../../layout";
 import { useRouteNavigate } from "@shared/routing";
-import { useAuthState } from "../../session";
+import { useAuthState } from "@features/session";
 import { destinationFor, stepStates, useJourney, type JourneyRepository } from "../../journey";
 import { Profile } from "../Profile";
 import { VerifyAsk, VerifyCode } from "../Verify";

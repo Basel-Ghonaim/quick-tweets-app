@@ -10,4 +10,3 @@ export { authErrorHandler } from "./services";
 /** The slice is the session's, and the composition root and every test store
  *  reach it through here rather than past it. */
 export { authReducer, authActions } from "./store";
-export { useAuthDispatch } from "./store/hooks";

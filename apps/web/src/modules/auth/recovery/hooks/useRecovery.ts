@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 import { restRecovery } from "../repository";
 import { completeReset, resolveRecovery, type RecoveryRead } from "../services";
-import { useAuthDispatch } from "../../session";
 import type { RecoveryPosition } from "../entity";
 import type { RecoveryRepository } from "../repository";
 
@@ -26,7 +26,7 @@ export const useRecovery = (given?: RecoveryRepository): Recovery => {
   const repo = useMemo(() => given ?? restRecovery(), [given]);
   const [read, setRead] = useState<RecoveryRead>({ status: "unresolved" });
   const [attempt, setAttempt] = useState(0);
-  const dispatch = useAuthDispatch();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     let live = true;

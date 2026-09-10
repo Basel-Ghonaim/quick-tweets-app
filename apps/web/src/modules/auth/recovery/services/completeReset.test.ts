@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { completeReset } from "./completeReset";
-import { authActions } from "../../session";
+import { authActions } from "@features/session";
 
 describe("completing a reset", () => {
   it("clears the local session once the password is written", async () => {

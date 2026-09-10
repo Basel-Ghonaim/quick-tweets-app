@@ -5,7 +5,7 @@ import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { SignIn } from "./SignIn";
-import { AuthLayout } from "../../../layout";
+import { AuthLayout } from "@modules/auth/layout";
 import { authReducer, authActions } from "../../store";
 import { AUTH_COPY } from "@shared/copy";
 

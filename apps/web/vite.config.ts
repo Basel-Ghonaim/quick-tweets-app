@@ -20,6 +20,7 @@ export default defineConfig({
     alias: {
       '@shared': path.resolve(__dirname, './src/shared'),
       '@modules': path.resolve(__dirname, './src/modules'),
+      '@features': path.resolve(__dirname, './src/features'),
       '@app': path.resolve(__dirname, './src/app')
     }
   },
