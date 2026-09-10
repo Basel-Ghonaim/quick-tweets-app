@@ -1,5 +1,5 @@
 import type { FormFieldConfig } from "@shared/schema-form";
-import type { LoginCredentials, RegisterCredentials } from "./session.types";
+import type { LoginCredentials, RegisterCredentials } from "./credentials";
 import {
   isRequired,
   isEmailFormat,

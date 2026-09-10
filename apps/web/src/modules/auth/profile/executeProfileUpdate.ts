@@ -1,6 +1,6 @@
 import type { AppError } from "@shared/errors";
 import type { RequestState } from "@shared/types";
-import { authErrorHandler } from "@features/session";
+import { authErrorHandler } from "@features/authentication";
 import type { UpdatedProfile } from "./profile.types";
 
 /**

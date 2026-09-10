@@ -1,4 +1,4 @@
-import type { LoginCredentials, RegisterCredentials } from "../session.types";
+import type { LoginCredentials, RegisterCredentials } from "../credentials";
 import type { LoginRequestDto, RegisterRequestDto } from "../dto";
 
 export interface AuthMapper {

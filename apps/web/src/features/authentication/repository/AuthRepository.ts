@@ -1,5 +1,5 @@
 import type { AuthResponse } from "@shared/session";
-import type { LoginCredentials, RegisterCredentials } from "../session.types";
+import type { LoginCredentials, RegisterCredentials } from "../credentials";
 
 export interface AuthRepository {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
