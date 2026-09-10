@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the [frontend error handling](error-handling.md) document), the **RTK Query cache/data layer** (the frontend state-and-data document, deferred), or the **server** side of the token model ([Backend Security](../backend/security.md)).
 > **Scope:** The shared transport mechanisms in `apps/web/src/shared/api/` and `apps/web/src/shared/rtk-query/`. Per-feature data access lives in the feature documents; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
-> **Version:** 1.1
-> **Last Updated:** 2026-09-07
+> **Version:** 1.2
+> **Last Updated:** 2026-09-10
 > **Owner:** Basel Ghonaim
 
 ## Current transport architecture
@@ -79,7 +79,7 @@ They therefore make different deployment assumptions (absolute origin vs. same-o
 
 This is the **client** half of the hybrid storage model whose server half — issuing, rotation, and cookie flags — is owned by [Backend Security](../backend/security.md):
 
-- **Access token** — held **in memory** (the Redux auth slice), never persisted to storage, and attached as a bearer header. Its short life keeps memory exposure low-risk.
+- **Access token** — held **in memory** (the session slice, `shared/session`), never persisted to storage, and attached as a bearer header. Its short life keeps memory exposure low-risk.
 - **Refresh token** — never visible to JavaScript: it travels only as the backend's `HttpOnly` cookie, which `authClient` returns on the refresh call via `withCredentials`. The frontend neither reads nor stores it.
 
 ## Principles applied

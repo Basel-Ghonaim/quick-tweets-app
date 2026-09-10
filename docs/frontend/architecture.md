@@ -6,8 +6,8 @@
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, and where features meet the platform.
 > **Maturity:** This document describes the **intended and settled** outer architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The **internal structure of a feature module is deliberately not canonized here**: authentication is the only fully-built feature, and a canonical feature template will be documented only once a second feature validates — or diverges from — its structure ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
 > **Superseded in part:** the **outer architecture** this document states — the three zones, the dependency rule, and the module contract — is superseded by [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md), which decides four zones (`app` · `pages` · `features` · `shared`) and moves the route-subtree rule from the feature to the page group. **Where this document and that ADR disagree, the ADR governs.** What is written below describes the architecture the code was built to, not the one it is moving to; it is restated in its new operative form as the structure lands ([ADR 0012](../architecture/decisions/0012-foundation-contract-independent-of-consumer-adoption.md) Decision 5). The composition root, the platform index and the thin-utility rule are unaffected.
-> **Version:** 1.9
-> **Last Updated:** 2026-09-09
+> **Version:** 2.0
+> **Last Updated:** 2026-09-10
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -89,6 +89,7 @@ Each platform subsystem is owned by its own document — this index is the map, 
 | `schema-form/` | the schema-driven form engine | [Frontend Forms](forms.md) |
 | `design-system/` | tokens, theming, component conventions | [Frontend Design System](design-system/README.md) |
 | `preferences/` | which resolution of the design language is active — theme selection and the document's direction | this document, until it has a stable core |
+| `session/` | the session — who is signed in, with what token, whether that is settled, and its restore, refresh and ending ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) | [Frontend API Client](api-client.md) for the token's residence; the lifecycle awaits its own document |
 | `rtk-query/` (cache/data layer) | the RTK Query cache and data layer | the frontend state-and-data document *(deferred until the data layer matures)* |
 
 ### Thin utilities (owned here)
