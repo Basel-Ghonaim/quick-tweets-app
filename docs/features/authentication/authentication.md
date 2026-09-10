@@ -4,8 +4,9 @@
 > **Authority:** The authoritative source for the **authentication feature** — what it does, how its flows work, how it **composes** the platform, and its feature-specific configuration and policies. It owns the feature, **not the mechanisms it composes**: every shared mechanism it touches is owned by a platform document and linked here, never restated.
 > **Scope:** The auth feature module (`apps/web/src/modules/auth/`) and its behavior. The wire contract is the [API contract](../../api/api-contract.md)'s; the server-side security mechanisms are [Backend Security](../../backend/security.md)'s; the transport and the client half of the token model are the [frontend API client](../../frontend/api-client.md)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organization is the current implementation of **this feature only — explicitly not the canonical template for future features** (the template is deliberately deferred by the [frontend architecture](../../frontend/architecture.md) until a second feature validates or reshapes it). Anything not described here is not yet built, not architecturally rejected.
-> **Version:** 1.6
-> **Last Updated:** 2026-09-07
+> **Superseded in part:** this document states that the feature owns **session orchestration** — restore, establishment, and ending. [ADR 0019](../../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) decides otherwise: the session is a platform capability, and this feature owns the act of authenticating — signing in and registering — which commits a session and does not own it. **Where this document and that ADR disagree on ownership, the ADR governs.** What is written below describes the feature as it was built, fused; it is restated when the implementation separates them.
+> **Version:** 1.7
+> **Last Updated:** 2026-09-10
 > **Owner:** Basel Ghonaim
 
 ## What the feature does
