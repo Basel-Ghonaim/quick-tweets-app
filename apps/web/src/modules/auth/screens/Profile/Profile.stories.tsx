@@ -9,7 +9,7 @@ import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { createAppError } from "@shared/errors";
 import type { ProfileRepository } from "../../profile";
-import { authReducer } from "@features/session";
+import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "../../journey";
 
@@ -38,7 +38,7 @@ const withState = (
   repo?: ProfileRepository,
   settled?: (outcome: "saved" | "skipped") => void,
 ) => {
-  const store = configureStore({ reducer: { auth: authReducer } });
+  const store = configureStore({ reducer: { session: sessionReducer } });
 
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>

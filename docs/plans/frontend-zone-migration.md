@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Migration
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-09
+> **Last Updated:** 2026-09-10
 > **Parent Issue:** [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678)
 > **Supersedes:** —
 
@@ -19,7 +19,7 @@ Adopt the four zones [ADR 0018](../architecture/decisions/0018-composition-has-a
 
 **Delivers:** the zones exist and hold what the ADR says each holds; capabilities are separated from composition; the zone direction and the two rules a page must not break are checkable rather than reviewed.
 
-**Does not deliver:** any change to behaviour. No new capability, no new endpoint, no fix to a recorded defect, no `shared/` refactor, no answer to the Users question. **A reader must not be able to tell this happened.**
+**Does not deliver:** any change to behaviour. No new capability, no new endpoint, no fix to a recorded defect, no `shared/` refactor beyond the one exception below, no answer to the Users question. **A reader must not be able to tell this happened.**
 
 **Owns the structure only.** It waits on no backend and proposes none.
 
@@ -75,7 +75,7 @@ Four ordering invariants. These are the part of the plan that is genuinely fixed
 
 ### Phase 1 — Capabilities
 
-**Intent:** each capability inside the current auth module becomes a feature in its own right — the session, account recovery, the onboarding journey, and profile (the last temporary, pending the Users decision).
+**Intent:** each capability inside the current auth module becomes a feature in its own right — account recovery, the onboarding journey, and profile (the last temporary, pending the Users decision). The session is not among them: [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) made it platform and authentication a feature, and a Work Item outside this plan placed both at `shared/session` and `features/authentication` before this phase's extractions. Recovery's dependency on the session is therefore a legal import, not an edge this phase must resolve.
 
 Expected: roughly one Work Item per capability. Largest phase, and the most mechanical.
 
@@ -148,8 +148,8 @@ It carries three things beyond its own scope, which is why it is called out here
 
 Named so no Work Item has to decide whether they belong:
 
-- The base query's token read, the outstanding lint errors, and every other recorded defect — **known, deliberately untouched**.
-- The `shared/` refactor, acknowledged as future work on its own terms.
+- The outstanding lint errors and every other recorded defect — **known, deliberately untouched**. (The base query's token read was one of them; it closed as a consequence of ADR 0019, outside this plan.)
+- The `shared/` refactor, acknowledged as future work on its own terms — with one scoped exception already taken: the session, decided by ADR 0019 and placed by a Work Item outside this plan.
 - The Users capability, and where profile behaviour finally lives.
 - A domain layer, and any composition layer beyond the page group — both deferred by ADR 0018 with conditions stated.
 - The cross-feature contract mechanism, which ADR 0018 narrows rather than closes.

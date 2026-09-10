@@ -2,22 +2,22 @@
 
 import { setupAuthClient } from "@shared/api";
 import { reduxStore } from "./store/store";
-import { authActions, refreshSession } from "@modules/auth";
+import { sessionActions, refreshSession, selectAccessToken } from "@shared/session";
 
 export const bootstrap = () => {
   setupAuthClient(
-    () => reduxStore.getState().auth.accessToken,
+    () => selectAccessToken(reduxStore.getState()),
     {
       refreshToken: refreshSession,
       onTokenRefreshed: (newAccessToken) => {
         reduxStore.dispatch(
-          authActions.sessionHydrated({
+          sessionActions.sessionEstablished({
             accessToken: newAccessToken,
           }),
         );
       },
       onSessionExpired: () => {
-        reduxStore.dispatch(authActions.authLogout());
+        reduxStore.dispatch(sessionActions.sessionEnded());
       },
     },
   );

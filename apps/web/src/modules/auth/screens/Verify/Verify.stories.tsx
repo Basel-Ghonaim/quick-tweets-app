@@ -11,7 +11,7 @@ import { JourneyLayout } from "../../layout/JourneyLayout";
 import { stepStates } from "../../journey";
 import { createAppError } from "@shared/errors";
 import type { VerificationRepository } from "@shared/channel-verification";
-import { authReducer } from "@features/session";
+import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
@@ -37,7 +37,7 @@ type Story = StoryObj<typeof meta>;
 
 /** The journey has one route, so a story mounts the screen the phase chooses. */
 const showing = (screen: React.ReactElement) => {
-  const store = configureStore({ reducer: { auth: authReducer } });
+  const store = configureStore({ reducer: { session: sessionReducer } });
 
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>
