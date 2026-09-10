@@ -6,7 +6,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { SignIn } from "./SignIn";
 import { AuthLayout } from "@modules/auth/layout";
-import { sessionReducer, authenticationReducer, authenticationActions } from "../../store";
+import { sessionReducer } from "@shared/session";
+import { authenticationReducer, authenticationActions } from "../../store";
 import { AUTH_COPY } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint

@@ -1,9 +1,7 @@
-import type { AuthResponse } from "../entity";
+import type { AuthResponse } from "@shared/session";
 import type { LoginCredentials, RegisterCredentials } from "../session.types";
 
 export interface AuthRepository {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   register: (credentials: RegisterCredentials) => Promise<AuthResponse>;
-  logout: () => Promise<void>;
-  refresh: () => Promise<AuthResponse>;
 }

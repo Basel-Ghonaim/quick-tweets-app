@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { GuestOnly } from "./GuestOnly";
-import { sessionReducer, sessionActions } from "@features/session";
+import { sessionReducer, sessionActions } from "@shared/session";
 
 const meta = {
   title: "Auth/Guest only",

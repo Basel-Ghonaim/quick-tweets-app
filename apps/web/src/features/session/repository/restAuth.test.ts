@@ -1,34 +1,11 @@
 /**
- * Characterization of the auth repository's refresh contract.
- *
- * `restAuth.refresh` POSTs to `/auth/refresh` and returns the session
- * ({ user: { id, username }, accessToken }) — the source Session Restore uses,
- * with no local persistence. Locked via the repository's injectable client — no
- * DOM, no network.
+ * The authentication repository's wire contract, locked via its injectable
+ * client — no DOM, no network.
  */
-import type { AuthUser } from "@shared/types";
 import { describe, expect, it, vi } from "vitest";
 import { restAuth } from "./restAuth";
 
 const userDto = { id: 1, username: "ada" };
-const expectedUser: AuthUser = { ...userDto };
-
-describe("restAuth.refresh — returns the session", () => {
-  it("POSTs to /auth/refresh (no body) and returns { user, accessToken }", async () => {
-    const post = vi.fn().mockResolvedValue({
-      data: { success: true, data: { user: userDto, accessToken: "tok-abc" } },
-    });
-    const repo = restAuth({ post } as unknown as Parameters<
-      typeof restAuth
-    >[0]);
-
-    const session = await repo.refresh();
-
-    expect(post).toHaveBeenCalledWith("/auth/refresh");
-    expect(session.accessToken).toBe("tok-abc");
-    expect(session.user).toEqual(expectedUser);
-  });
-});
 
 describe("restAuth.register — account creation only (auth-first, ADR 0008)", () => {
   const creds = {

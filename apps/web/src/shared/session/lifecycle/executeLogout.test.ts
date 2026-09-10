@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
-import { sessionReducer, sessionActions } from "../../store";
+import { sessionReducer, sessionActions } from "../state/sessionSlice";
 import { executeLogout } from "./executeLogout";
 import { createAppError } from "@shared/errors";
 import type { AuthUser } from "@shared/types";

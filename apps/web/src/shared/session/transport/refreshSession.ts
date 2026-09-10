@@ -1,4 +1,4 @@
-import { restAuth } from "./restAuth";
+import { restSession } from "./restSession";
 
 /**
  * Public session-refresh capability for external consumers — e.g. the app's
@@ -10,4 +10,4 @@ import { restAuth } from "./restAuth";
  * depending on the repository's full surface.
  */
 export const refreshSession = async (): Promise<string> =>
-  (await restAuth().refresh()).accessToken;
+  (await restSession().refresh()).accessToken;

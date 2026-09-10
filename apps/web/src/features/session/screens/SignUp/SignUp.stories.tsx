@@ -7,7 +7,8 @@ import { ThemeProvider } from "@shared/preferences";
 import { SignUp } from "./SignUp";
 import { AuthLayout } from "@modules/auth/layout";
 import { JourneyLayout } from "@modules/auth/layout/JourneyLayout";
-import { sessionReducer, authenticationReducer, authenticationActions } from "../../store";
+import { sessionReducer } from "@shared/session";
+import { authenticationReducer, authenticationActions } from "../../store";
 import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "@modules/auth/journey";
 

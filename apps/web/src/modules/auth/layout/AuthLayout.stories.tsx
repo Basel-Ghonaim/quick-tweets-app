@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Provider } from "react-redux";
 import { ThemeProvider } from "@shared/preferences";
 import { configureStore } from "@reduxjs/toolkit";
-import { sessionReducer } from "@features/session";
+import { sessionReducer } from "@shared/session";
 import { AuthLayout } from "./AuthLayout";
 import { useRouteNavigate } from "@shared/routing";
 import { AUTH_COPY } from "@shared/copy";

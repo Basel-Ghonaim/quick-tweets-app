@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
-import { sessionReducer, sessionActions } from "./sessionSlice";
+import { sessionReducer, sessionActions } from "@shared/session";
 import { authenticationReducer, authenticationActions } from "./authenticationSlice";
 import { createAppError } from "@shared/errors";
 import type { AuthUser } from "@shared/types";
@@ -95,5 +95,21 @@ describe("a session established any other way", () => {
     expect(session.accessToken).toBe("tok-2");
     expect(session.user).toEqual(user);
     expect(authentication.login).toEqual({ status: "idle", error: null });
+  });
+});
+
+describe("authentication reacts to the session ending", () => {
+  it("clears every request slot of its own", () => {
+    const store = makeStore();
+    store.dispatch(
+      authenticationActions.requestRejected({
+        requestType: "login",
+        error: { type: "unauthorized", message: "no", status: 401 },
+      }),
+    );
+
+    store.dispatch(sessionActions.sessionEnded());
+
+    expect(store.getState().authentication.login).toEqual({ status: "idle", error: null });
   });
 });

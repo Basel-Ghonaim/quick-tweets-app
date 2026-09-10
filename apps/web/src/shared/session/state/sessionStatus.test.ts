@@ -2,11 +2,10 @@ import { describe, expect, it } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 
 import { sessionReducer, sessionActions } from "./sessionSlice";
-import { authenticationReducer, authenticationActions } from "./authenticationSlice";
-import { restoreSession } from "../services/session/restoreSession";
+import { restoreSession } from "../lifecycle/restoreSession";
 
 const makeStore = () =>
-  configureStore({ reducer: { session: sessionReducer, authentication: authenticationReducer } });
+  configureStore({ reducer: { session: sessionReducer } });
 const statusOf = (store: ReturnType<typeof makeStore>) => store.getState().session.status;
 
 const USER = { id: 1, username: "ada" };
@@ -97,19 +96,5 @@ describe("a session ending answers rather than forgets", () => {
     store.dispatch(sessionActions.sessionEnded());
 
     expect(store.getState().session.requests.signOut).toEqual({ status: "idle", error: null });
-  });
-
-  it("is reacted to by authentication, which clears every request slot of its own", () => {
-    const store = makeStore();
-    store.dispatch(
-      authenticationActions.requestRejected({
-        requestType: "login",
-        error: { type: "unauthorized", message: "no", status: 401 },
-      }),
-    );
-
-    store.dispatch(sessionActions.sessionEnded());
-
-    expect(store.getState().authentication.login).toEqual({ status: "idle", error: null });
   });
 });

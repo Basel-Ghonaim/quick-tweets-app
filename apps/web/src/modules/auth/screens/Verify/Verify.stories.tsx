@@ -11,7 +11,7 @@ import { JourneyLayout } from "../../layout/JourneyLayout";
 import { stepStates } from "../../journey";
 import { createAppError } from "@shared/errors";
 import type { VerificationRepository } from "@shared/channel-verification";
-import { sessionReducer } from "@features/session";
+import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint

@@ -1,6 +1,6 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import type { AppError } from "@shared/errors";
-import { sessionActions } from "../../store";
+import { sessionActions } from "../state/sessionSlice";
 
 
 // The logout flow — the **server is the source of truth** for ending a session.

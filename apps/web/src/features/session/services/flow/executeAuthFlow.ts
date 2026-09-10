@@ -1,7 +1,7 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import type { AppError } from "@shared/errors";
-import { authenticationActions, sessionActions, type AuthRequestType } from "../../store";
-import type { AuthResponse } from "../../entity";
+import { sessionActions, type AuthResponse } from "@shared/session";
+import { authenticationActions, type AuthRequestType } from "../../store";
 import { authErrorHandler } from "../authErrorHandler";
 
 /** The one flow login and register share. Success is the server's answer alone;

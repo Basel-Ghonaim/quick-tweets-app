@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { initialAuthenticationState } from "./state/authenticationState";
-import { sessionActions } from "./sessionSlice";
+import { sessionActions } from "@shared/session";
 import type {
   AuthRequestPayload,
   AuthRequestRejectedPayload,

@@ -1,5 +1,5 @@
-import { useSessionSelector } from "../store/hooks";
-import { selectAccessToken, selectSessionStatus, selectSessionUser } from "../store";
+import { useSessionSelector } from "./useSessionSelector";
+import { selectAccessToken, selectSessionStatus, selectSessionUser } from "../state/selectors";
 
 export const useAuthState = () => {
   const user = useSessionSelector(selectSessionUser);

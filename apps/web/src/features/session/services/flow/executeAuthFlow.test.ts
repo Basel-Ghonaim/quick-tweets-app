@@ -4,11 +4,11 @@
  */
 import { describe, it, expect } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
-import { sessionReducer, authenticationReducer } from "../../store";
+import { sessionReducer, type AuthResponse } from "@shared/session";
+import { authenticationReducer } from "../../store";
 import { executeAuthFlow } from "./executeAuthFlow";
 import { createAppError } from "@shared/errors";
 import type { AuthUser } from "@shared/types";
-import type { AuthResponse } from "../../entity";
 
 const makeStore = () =>
   configureStore({

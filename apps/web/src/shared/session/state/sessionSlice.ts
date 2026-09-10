@@ -1,9 +1,9 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { initialSessionState } from "./state/sessionState";
+import { initialSessionState } from "./sessionState";
 import type {
   SessionEstablishedPayload,
   SignOutRejectedPayload,
-} from "./types/sessionPayloads";
+} from "./sessionPayloads";
 
 export const SESSION_SLICE_KEY = "session";
 

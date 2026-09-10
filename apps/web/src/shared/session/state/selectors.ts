@@ -1,4 +1,4 @@
-import type { SessionState } from "./state/sessionState";
+import type { SessionState } from "./sessionState";
 import { SESSION_SLICE_KEY } from "./sessionSlice";
 
 export type WithSession = { [SESSION_SLICE_KEY]: SessionState };

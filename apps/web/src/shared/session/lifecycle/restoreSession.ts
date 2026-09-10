@@ -1,7 +1,7 @@
 import type { Dispatch } from "@reduxjs/toolkit";
-import { restAuth } from "../../repository";
-import { sessionActions } from "../../store";
-import type { AuthResponse } from "../../entity";
+import { restSession } from "../transport/restSession";
+import { sessionActions } from "../state/sessionSlice";
+import type { AuthResponse } from "../transport/AuthResponse";
 import { hasSessionHint, clearSessionHint } from "./sessionHint";
 
 // Injectable seams so the policy is unit-testable in Node (no DOM/network).
@@ -13,7 +13,7 @@ export interface RestoreSessionDeps {
 
 const defaultDeps = (): RestoreSessionDeps => ({
   hasHint: hasSessionHint,
-  refresh: () => restAuth().refresh(),
+  refresh: () => restSession().refresh(),
   clearHint: clearSessionHint,
 });
 

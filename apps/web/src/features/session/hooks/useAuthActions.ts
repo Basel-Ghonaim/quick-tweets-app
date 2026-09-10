@@ -1,7 +1,6 @@
 import { useDispatch } from "react-redux";
-
 import { restAuth } from "../repository";
-import { executeAuthFlow, executeLogout } from "../services";
+import { executeAuthFlow } from "../services";
 import type { LoginCredentials, RegisterCredentials } from "../session.types";
 
 export const useAuthActions = () => {
@@ -13,6 +12,5 @@ export const useAuthActions = () => {
       executeAuthFlow(dispatch, () => repo.login(credentials), "login"),
     register: (credentials: RegisterCredentials) =>
       executeAuthFlow(dispatch, () => repo.register(credentials), "register"),
-    logout: () => executeLogout(dispatch, () => repo.logout()),
   };
 };
