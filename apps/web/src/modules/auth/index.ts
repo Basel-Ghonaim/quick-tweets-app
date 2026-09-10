@@ -1,3 +1,3 @@
 export { authRoute } from "./authRoutes";
-export { useSessionRestore, refreshSession } from "./session";
-export { authReducer, authActions } from "./session";
+export { useSessionRestore, refreshSession } from "@features/session";
+export { authReducer, authActions } from "@features/session";

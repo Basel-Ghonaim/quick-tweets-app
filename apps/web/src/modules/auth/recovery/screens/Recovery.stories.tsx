@@ -8,7 +8,7 @@ import { ThemeProvider } from "@shared/preferences";
 import { createAppError } from "@shared/errors";
 import { Recovery } from "./Recovery";
 import { AuthLayout } from "../../layout";
-import { authReducer } from "../../session";
+import { authReducer } from "@features/session";
 import { AUTH_COPY } from "@shared/copy";
 import type { RecoveryPosition } from "../entity";
 import type { RecoveryRepository } from "../repository";
