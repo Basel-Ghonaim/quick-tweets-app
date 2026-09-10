@@ -1,6 +1,6 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import { restAuth } from "../../repository";
-import { authActions } from "../../store";
+import { sessionActions } from "../../store";
 import type { AuthResponse } from "../../entity";
 import { hasSessionHint, clearSessionHint } from "./sessionHint";
 
@@ -24,15 +24,15 @@ export const restoreSession = async (
 ): Promise<void> => {
   // No hint is an answer, not the absence of one: this reader is a guest.
   if (!deps.hasHint()) {
-    dispatch(authActions.sessionSettled());
+    dispatch(sessionActions.sessionSettled());
     return;
   }
 
   try {
     const { user, accessToken } = await deps.refresh();
-    dispatch(authActions.sessionHydrated({ user, accessToken }));
+    dispatch(sessionActions.sessionEstablished({ user, accessToken }));
   } catch {
     deps.clearHint();
-    dispatch(authActions.authLogout());
+    dispatch(sessionActions.sessionEnded());
   }
 };

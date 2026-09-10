@@ -1,5 +1,5 @@
 import type { Dispatch } from "@reduxjs/toolkit";
-import { authActions } from "@features/session";
+import { sessionActions } from "@features/session";
 
 /** The reset revokes every session for the account, this browser's included, so
  *  the local one is cleared rather than left to earn a 401 on the next call. */
@@ -8,5 +8,5 @@ export const completeReset = async (
   apply: () => Promise<void>,
 ): Promise<void> => {
   await apply();
-  dispatch(authActions.authLogout());
+  dispatch(sessionActions.sessionEnded());
 };

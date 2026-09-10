@@ -1,11 +1,11 @@
-import { useAuthDispatch } from "../store/hooks";
+import { useDispatch } from "react-redux";
 
 import { restAuth } from "../repository";
 import { executeAuthFlow, executeLogout } from "../services";
 import type { LoginCredentials, RegisterCredentials } from "../session.types";
 
 export const useAuthActions = () => {
-  const dispatch = useAuthDispatch();
+  const dispatch = useDispatch();
   const repo = restAuth();
 
   return {

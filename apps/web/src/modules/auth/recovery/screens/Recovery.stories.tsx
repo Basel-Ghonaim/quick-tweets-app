@@ -8,7 +8,7 @@ import { ThemeProvider } from "@shared/preferences";
 import { createAppError } from "@shared/errors";
 import { Recovery } from "./Recovery";
 import { AuthLayout } from "../../layout";
-import { authReducer } from "@features/session";
+import { sessionReducer } from "@features/session";
 import { AUTH_COPY } from "@shared/copy";
 import type { RecoveryPosition } from "../entity";
 import type { RecoveryRepository } from "../repository";
@@ -49,7 +49,7 @@ const repository = (over: Partial<RecoveryRepository> = {}): RecoveryRepository 
 });
 
 const withRepo = (repo: RecoveryRepository) => {
-  const store = configureStore({ reducer: { auth: authReducer } });
+  const store = configureStore({ reducer: { session: sessionReducer } });
 
   return () => (
     <Provider store={store}>
@@ -113,7 +113,7 @@ export const AReloadAtThePasswordStepCanStillFinish: Story = {
 /* Without the shell: the comparison is about the screen's own output, and two
    layouts in one document would be two banner landmarks. */
 const bare = (repo: RecoveryRepository) => {
-  const store = configureStore({ reducer: { auth: authReducer } });
+  const store = configureStore({ reducer: { session: sessionReducer } });
 
   return () => (
     <Provider store={store}>

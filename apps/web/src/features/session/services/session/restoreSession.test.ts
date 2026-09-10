@@ -2,11 +2,11 @@
 import { describe, it, expect, vi } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 
-import { authReducer, authActions } from "../../store";
+import { sessionReducer, sessionActions } from "../../store";
 import { restoreSession } from "./restoreSession";
 import type { AuthUser } from "@shared/types";
 
-const makeStore = () => configureStore({ reducer: { auth: authReducer } });
+const makeStore = () => configureStore({ reducer: { session: sessionReducer } });
 
 const user: AuthUser = { id: 1, username: "ada" };
 
@@ -22,11 +22,11 @@ describe("restoreSession", () => {
     });
 
     expect(refresh).not.toHaveBeenCalled();
-    expect(store.getState().auth.user).toBeNull();
-    expect(store.getState().auth.accessToken).toBeNull();
+    expect(store.getState().session.user).toBeNull();
+    expect(store.getState().session.accessToken).toBeNull();
   });
 
-  it("hydrates the session when the hint is present and refresh succeeds", async () => {
+  it("establishes the session when the hint is present and refresh succeeds", async () => {
     const store = makeStore();
     const refresh = vi.fn().mockResolvedValue({ user, accessToken: "tok" });
 
@@ -37,14 +37,14 @@ describe("restoreSession", () => {
     });
 
     expect(refresh).toHaveBeenCalledOnce();
-    const { auth } = store.getState();
-    expect(auth.user).toEqual(user);
-    expect(auth.accessToken).toBe("tok");
+    const { session } = store.getState();
+    expect(session.user).toEqual(user);
+    expect(session.accessToken).toBe("tok");
   });
 
   it("clears the stale hint and resets to logged-out when refresh fails", async () => {
     const store = makeStore();
-    store.dispatch(authActions.sessionHydrated({ user, accessToken: "old" }));
+    store.dispatch(sessionActions.sessionEstablished({ user, accessToken: "old" }));
     const clearHint = vi.fn();
 
     await restoreSession(store.dispatch, {
@@ -54,8 +54,8 @@ describe("restoreSession", () => {
     });
 
     expect(clearHint).toHaveBeenCalledOnce();
-    const { auth } = store.getState();
-    expect(auth.user).toBeNull();
-    expect(auth.accessToken).toBeNull();
+    const { session } = store.getState();
+    expect(session.user).toBeNull();
+    expect(session.accessToken).toBeNull();
   });
 });

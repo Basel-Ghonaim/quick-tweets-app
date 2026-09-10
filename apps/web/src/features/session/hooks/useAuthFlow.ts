@@ -1,4 +1,4 @@
-import { useAuthSelector } from "../store/hooks";
+import { useAuthenticationSelector } from "../store/hooks";
 import { useRequestState } from "@shared/hooks";
 import type { SerializedAppError } from "@shared/errors";
 import {
@@ -15,7 +15,7 @@ import { afterSuccess } from "../services";
 
 import type { AuthRequestType } from "../store";
 
-type AuthFlowType = Extract<AuthRequestType, "login" | "register">;
+type AuthFlowType = AuthRequestType;
 
 export interface AuthFlowReturn<
   TSchema extends Record<string, FormFieldConfig<FormPayload>>,
@@ -37,8 +37,8 @@ const useAuthFormBase = <
   action: (values: FormValue<TSchema>) => Promise<void>,
   requestType: AuthFlowType,
 ): AuthFlowReturn<TSchema> => {
-  const requestState = useAuthSelector(
-    (state) => state.auth.requests[requestType],
+  const requestState = useAuthenticationSelector(
+    (state) => state.authentication[requestType],
   );
   const {
     isLoading: isServerLoading,

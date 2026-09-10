@@ -8,7 +8,7 @@ import { ThemeProvider } from "@shared/preferences";
 import { createAppError } from "@shared/errors";
 import { Onboarding } from "./Onboarding";
 import { AuthLayout } from "../../layout";
-import { authActions, authReducer } from "@features/session";
+import { sessionActions, sessionReducer } from "@features/session";
 import { AUTH_COPY } from "@shared/copy";
 import type { JourneyMove, JourneyRepository, JourneyState } from "../../journey";
 
@@ -39,8 +39,8 @@ const state = (over: Partial<JourneyState> = {}): JourneyState => ({
 const never = () => new Promise<never>(() => {});
 
 const withRepo = (repo: JourneyRepository, settled = true) => {
-  const store = configureStore({ reducer: { auth: authReducer } });
-  if (settled) store.dispatch(authActions.sessionSettled());
+  const store = configureStore({ reducer: { session: sessionReducer } });
+  if (settled) store.dispatch(sessionActions.sessionSettled());
 
   return () => (
     <Provider store={store}>

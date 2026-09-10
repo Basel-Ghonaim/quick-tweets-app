@@ -1,11 +1,9 @@
-import { useDispatch, useSelector } from "react-redux";
-import type { TypedUseSelectorHook } from "react-redux";
-import type { AuthState } from "./state/AuthState";
+import { useSelector, type TypedUseSelectorHook } from "react-redux";
+import type { WithSession } from "./selectors";
+import type { AuthenticationState } from "./state/authenticationState";
+import { AUTHENTICATION_SLICE_KEY } from "./authenticationSlice";
 
-// Typed store hooks scoped to the auth slice the module owns.
+export const useSessionSelector: TypedUseSelectorHook<WithSession> = useSelector;
 
-type AuthSliceState = { auth: AuthState };
-
-export const useAuthSelector: TypedUseSelectorHook<AuthSliceState> = useSelector;
-
-export const useAuthDispatch = () => useDispatch();
+export type WithAuthentication = { [AUTHENTICATION_SLICE_KEY]: AuthenticationState };
+export const useAuthenticationSelector: TypedUseSelectorHook<WithAuthentication> = useSelector;

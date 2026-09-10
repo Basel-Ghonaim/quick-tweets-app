@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { completeReset } from "./completeReset";
-import { authActions } from "@features/session";
+import { sessionActions } from "@features/session";
 
 describe("completing a reset", () => {
   it("clears the local session once the password is written", async () => {
@@ -8,7 +8,7 @@ describe("completing a reset", () => {
 
     await completeReset(dispatch, async () => {});
 
-    expect(dispatch).toHaveBeenCalledWith(authActions.authLogout());
+    expect(dispatch).toHaveBeenCalledWith(sessionActions.sessionEnded());
   });
 
   /* A failed apply leaves the reader signed in and on the screen that can

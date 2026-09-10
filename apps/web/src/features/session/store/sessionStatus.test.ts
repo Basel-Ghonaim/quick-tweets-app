@@ -1,29 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 
-import { authReducer, authActions } from "./authSlice";
+import { sessionReducer, sessionActions } from "./sessionSlice";
+import { authenticationReducer, authenticationActions } from "./authenticationSlice";
 import { restoreSession } from "../services/session/restoreSession";
 
-const makeStore = () => configureStore({ reducer: { auth: authReducer } });
-const statusOf = (store: ReturnType<typeof makeStore>) => store.getState().auth.session;
+const makeStore = () =>
+  configureStore({ reducer: { session: sessionReducer, authentication: authenticationReducer } });
+const statusOf = (store: ReturnType<typeof makeStore>) => store.getState().session.status;
 
 const USER = { id: 1, username: "ada" };
 const session = { user: USER, accessToken: "a-token" };
 
-/**
- * Three separate call sites dispatch `authLogout`, and each knows the answer it
- * is reporting. A reader waiting to be told must not be sent back to waiting by
- * any of them.
- */
+/** Several sites end the session, each knowing the answer it reports. A reader
+ *  waiting to be told must not be sent back to waiting by any of them. */
 describe("the session status", () => {
   it("starts unknown, because nothing has asked yet", () => {
     expect(statusOf(makeStore())).toBe("unknown");
   });
 
-  it("settles when a session is hydrated", () => {
+  it("settles when a session is established", () => {
     const store = makeStore();
 
-    store.dispatch(authActions.sessionHydrated(session));
+    store.dispatch(sessionActions.sessionEstablished(session));
 
     expect(statusOf(store)).toBe("settled");
   });
@@ -69,41 +68,48 @@ describe("the session status", () => {
   });
 });
 
-/**
- * `authLogout` is what `executeLogout` and the expiry callback in `bootstrap`
- * both dispatch, so these cover all three sites through the action they share.
- */
-describe("a logout answers rather than forgets", () => {
+describe("a session ending answers rather than forgets", () => {
   it("stays settled, and still clears the identity", () => {
     const store = makeStore();
-    store.dispatch(authActions.sessionHydrated(session));
+    store.dispatch(sessionActions.sessionEstablished(session));
 
-    store.dispatch(authActions.authLogout());
+    store.dispatch(sessionActions.sessionEnded());
 
     expect(statusOf(store)).toBe("settled");
-    expect(store.getState().auth.accessToken).toBeNull();
-    expect(store.getState().auth.user).toBeNull();
+    expect(store.getState().session.accessToken).toBeNull();
+    expect(store.getState().session.user).toBeNull();
   });
 
   it("settles even when it is the first thing that happens", () => {
     const store = makeStore();
 
-    store.dispatch(authActions.authLogout());
+    store.dispatch(sessionActions.sessionEnded());
 
     expect(statusOf(store)).toBe("settled");
   });
 
-  it("still clears every request slot", () => {
+  it("clears its own sign-out slot", () => {
     const store = makeStore();
     store.dispatch(
-      authActions.authRequestRejected({
+      sessionActions.signOutRejected({ error: { type: "network", message: "no", status: 0 } }),
+    );
+
+    store.dispatch(sessionActions.sessionEnded());
+
+    expect(store.getState().session.requests.signOut).toEqual({ status: "idle", error: null });
+  });
+
+  it("is reacted to by authentication, which clears every request slot of its own", () => {
+    const store = makeStore();
+    store.dispatch(
+      authenticationActions.requestRejected({
         requestType: "login",
         error: { type: "unauthorized", message: "no", status: 401 },
       }),
     );
 
-    store.dispatch(authActions.authLogout());
+    store.dispatch(sessionActions.sessionEnded());
 
-    expect(store.getState().auth.requests.login).toEqual({ status: "idle", error: null });
+    expect(store.getState().authentication.login).toEqual({ status: "idle", error: null });
   });
 });

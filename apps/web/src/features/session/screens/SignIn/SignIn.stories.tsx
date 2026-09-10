@@ -6,7 +6,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { SignIn } from "./SignIn";
 import { AuthLayout } from "@modules/auth/layout";
-import { authReducer, authActions } from "../../store";
+import { sessionReducer, authenticationReducer, authenticationActions } from "../../store";
 import { AUTH_COPY } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 /** A store per story, seeded with the request state the story is about, so the
  *  screen is driven by the real slice rather than by props it does not take. */
 const withState = (seed?: (dispatch: ReturnType<typeof configureStore>["dispatch"]) => void) => {
-  const store = configureStore({ reducer: { auth: authReducer } });
+  const store = configureStore({ reducer: { session: sessionReducer, authentication: authenticationReducer } });
   seed?.(store.dispatch);
 
   return (Story: () => React.ReactElement) => (
@@ -79,7 +79,7 @@ export const AServerErrorIsAnnounced: Story = {
   decorators: [
     withState((dispatch) =>
       dispatch(
-        authActions.authRequestRejected({
+        authenticationActions.requestRejected({
           requestType: "login",
           error: {
             type: "unauthorized",
@@ -101,7 +101,7 @@ export const AServerErrorIsAnnounced: Story = {
 /** The submit reports its own busy state rather than a full-screen overlay. */
 export const SubmittingIsReportedInPlace: Story = {
   decorators: [
-    withState((dispatch) => dispatch(authActions.authRequestPending({ requestType: "login" }))),
+    withState((dispatch) => dispatch(authenticationActions.requestPending({ requestType: "login" }))),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

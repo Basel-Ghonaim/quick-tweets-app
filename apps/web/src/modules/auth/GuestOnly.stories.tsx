@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { GuestOnly } from "./GuestOnly";
-import { authReducer, authActions } from "@features/session";
+import { sessionReducer, sessionActions } from "@features/session";
 
 const meta = {
   title: "Auth/Guest only",
@@ -40,14 +40,13 @@ const guarded = (signedInTo: string, Story: () => React.ReactElement) => (
 const at =
   (signedIn: boolean, signedInTo = "/feed") =>
   (Story: () => React.ReactElement) => {
-    const store = configureStore({ reducer: { auth: authReducer } });
+    const store = configureStore({ reducer: { session: sessionReducer } });
     // The guard waits for the restore to answer before it decides anything.
-    store.dispatch(authActions.sessionSettled());
+    store.dispatch(sessionActions.sessionSettled());
 
     if (signedIn) {
       store.dispatch(
-        authActions.authRequestFulfilled({
-          requestType: "login",
+        sessionActions.sessionEstablished({
           user: { id: 1, username: "ada" },
           accessToken: "a-token",
         }),
@@ -103,7 +102,7 @@ export const AnAccountHolderIsSentWhereTheirEquivalentIs: Story = {
 export const NothingIsShownBeforeTheAnswer: Story = {
   decorators: [
     (Story: () => React.ReactElement) => {
-      const store = configureStore({ reducer: { auth: authReducer } });
+      const store = configureStore({ reducer: { session: sessionReducer } });
 
       return <Provider store={store}>{guarded("/feed", Story)}</Provider>;
     },

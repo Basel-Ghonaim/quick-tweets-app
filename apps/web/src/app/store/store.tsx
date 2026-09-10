@@ -1,11 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer } from "@modules/auth";
+import { sessionReducer, authenticationReducer } from "@modules/auth";
 import { baseApi } from "@shared/rtk-query";
 import { setupListeners } from "@reduxjs/toolkit/query/react";
 
 export const reduxStore = configureStore({
   reducer: {
-    auth: authReducer,
+    session: sessionReducer,
+    authentication: authenticationReducer,
     [baseApi.reducerPath]: baseApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>

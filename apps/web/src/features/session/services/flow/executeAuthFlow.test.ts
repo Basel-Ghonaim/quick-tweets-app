@@ -1,14 +1,10 @@
 /**
- * Unit tests for the shared auth flow (#258).
- *
- * Authentication success is determined solely by the server response: the flow
- * commits the authenticated state on success and rejects on failure. There is no
- * local persistence, so nothing can gate a successful login. Exercised against a
- * real store with a stubbed API call — no DOM.
+ * Authentication success is the server response alone: the flow commits the
+ * session it yields and marks its own slot. No local persistence gates it.
  */
 import { describe, it, expect } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer } from "../../store";
+import { sessionReducer, authenticationReducer } from "../../store";
 import { executeAuthFlow } from "./executeAuthFlow";
 import { createAppError } from "@shared/errors";
 import type { AuthUser } from "@shared/types";
@@ -16,22 +12,23 @@ import type { AuthResponse } from "../../entity";
 
 const makeStore = () =>
   configureStore({
-    reducer: { auth: authReducer },
+    reducer: { session: sessionReducer, authentication: authenticationReducer },
   });
 
 const user: AuthUser = { id: 1, username: "ada" };
-const session: AuthResponse = { user, accessToken: "tok-123" };
+const response: AuthResponse = { user, accessToken: "tok-123" };
 
-describe("executeAuthFlow — success is the server response, no persistence gate (#258)", () => {
-  it("commits the authenticated state on a successful server response", async () => {
+describe("executeAuthFlow — success is the server response, no persistence gate", () => {
+  it("commits the session and marks the slot on a successful server response", async () => {
     const store = makeStore();
 
-    await executeAuthFlow(store.dispatch, () => Promise.resolve(session), "login");
+    await executeAuthFlow(store.dispatch, () => Promise.resolve(response), "login");
 
-    const { auth } = store.getState();
-    expect(auth.requests.login).toEqual({ status: "success", error: null });
-    expect(auth.user).toEqual(user);
-    expect(auth.accessToken).toBe("tok-123");
+    const { session, authentication } = store.getState();
+    expect(authentication.login).toEqual({ status: "success", error: null });
+    expect(session.user).toEqual(user);
+    expect(session.accessToken).toBe("tok-123");
+    expect(session.status).toBe("settled");
   });
 
   it("rejects and records the error on a server authentication failure", async () => {
@@ -42,11 +39,11 @@ describe("executeAuthFlow — success is the server response, no persistence gat
       executeAuthFlow(store.dispatch, () => Promise.reject(serverError), "login"),
     ).rejects.toBeTruthy();
 
-    const { auth } = store.getState();
-    expect(auth.requests.login.status).toBe("error");
-    expect(auth.requests.login.error).toMatchObject({ type: "unknown", message: "bad credentials" });
-    expect(auth.requests.login.error).not.toBeInstanceOf(Error); // stored as a plain DTO
-    expect(auth.user).toBeNull();
-    expect(auth.accessToken).toBeNull();
+    const { session, authentication } = store.getState();
+    expect(authentication.login.status).toBe("error");
+    expect(authentication.login.error).toMatchObject({ type: "unknown", message: "bad credentials" });
+    expect(authentication.login.error).not.toBeInstanceOf(Error);
+    expect(session.user).toBeNull();
+    expect(session.accessToken).toBeNull();
   });
 });

@@ -1,43 +1,26 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import type { AppError } from "@shared/errors";
-import { authActions, type AuthRequestType } from "../../store";
+import { authenticationActions, sessionActions, type AuthRequestType } from "../../store";
 import type { AuthResponse } from "../../entity";
 import { authErrorHandler } from "../authErrorHandler";
 
-/**
- * The shared login / register flow.
- *
- * Authentication success is determined **solely by the server response**: on
- * success the authenticated state is committed; on failure a normalized error is
- * surfaced. There is no local session persistence — the session lives in Redux
- * and is restored from the server on reload (#258).
- *
- * Extracted from the `useAuthActions` hook so the single flow that login and
- * register share is the one owner of this policy and is unit-testable without a
- * DOM: it drives the `dispatch` it is given.
- */
+/** The one flow login and register share. Success is the server's answer alone;
+ *  the session it yields is committed to the session, which owns it. */
 export const executeAuthFlow = async (
   dispatch: Dispatch,
   apiCall: () => Promise<AuthResponse>,
   requestType: AuthRequestType,
 ): Promise<void> => {
-  const { authRequestPending, authRequestFulfilled, authRequestRejected } =
-    authActions;
+  const { requestPending, requestFulfilled, requestRejected } = authenticationActions;
 
   try {
-    dispatch(authRequestPending({ requestType }));
+    dispatch(requestPending({ requestType }));
     const res = await apiCall();
-    dispatch(
-      authRequestFulfilled({
-        requestType,
-        accessToken: res.accessToken,
-        user: res.user,
-      }),
-    );
+    dispatch(sessionActions.sessionEstablished({ user: res.user, accessToken: res.accessToken }));
+    dispatch(requestFulfilled({ requestType }));
   } catch (error) {
     const authError = authErrorHandler(error as AppError);
-    // Store the plain, serializable projection (Redux state must be serializable);
-    dispatch(authRequestRejected({ requestType, error: authError.toSerialized() }));
+    dispatch(requestRejected({ requestType, error: authError.toSerialized() }));
     throw authError;
   }
 };

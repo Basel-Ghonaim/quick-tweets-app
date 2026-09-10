@@ -7,7 +7,7 @@ import { ThemeProvider } from "@shared/preferences";
 import { SignUp } from "./SignUp";
 import { AuthLayout } from "@modules/auth/layout";
 import { JourneyLayout } from "@modules/auth/layout/JourneyLayout";
-import { authReducer, authActions } from "../../store";
+import { sessionReducer, authenticationReducer, authenticationActions } from "../../store";
 import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "@modules/auth/journey";
 
@@ -32,7 +32,7 @@ type Story = StoryObj<typeof meta>;
 /** A store per story, seeded with the request state the story is about, so the
  *  screen is driven by the real slice rather than by props it does not take. */
 const withState = (seed?: (dispatch: ReturnType<typeof configureStore>["dispatch"]) => void) => {
-  const store = configureStore({ reducer: { auth: authReducer } });
+  const store = configureStore({ reducer: { session: sessionReducer, authentication: authenticationReducer } });
   seed?.(store.dispatch);
 
   return (Story: () => React.ReactElement) => (
@@ -96,7 +96,7 @@ export const AServerErrorIsAnnounced: Story = {
   decorators: [
     withState((dispatch) =>
       dispatch(
-        authActions.authRequestRejected({
+        authenticationActions.requestRejected({
           requestType: "register",
           error: {
             type: "conflict",
@@ -117,7 +117,7 @@ export const AServerErrorIsAnnounced: Story = {
 
 export const SubmittingIsReportedInPlace: Story = {
   decorators: [
-    withState((dispatch) => dispatch(authActions.authRequestPending({ requestType: "register" }))),
+    withState((dispatch) => dispatch(authenticationActions.requestPending({ requestType: "register" }))),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

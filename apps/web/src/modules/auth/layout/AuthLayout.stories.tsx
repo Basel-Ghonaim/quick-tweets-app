@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Provider } from "react-redux";
 import { ThemeProvider } from "@shared/preferences";
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer } from "@features/session";
+import { sessionReducer } from "@features/session";
 import { AuthLayout } from "./AuthLayout";
 import { useRouteNavigate } from "@shared/routing";
 import { AUTH_COPY } from "@shared/copy";
@@ -44,7 +44,7 @@ const Body = () => {
 
 /* Composed from the module's own reducer: a feature may not import the
    composition root's store. */
-const store = configureStore({ reducer: { auth: authReducer } });
+const store = configureStore({ reducer: { session: sessionReducer } });
 
 const at = (entry: string) => (Story: () => React.ReactElement) => (
   <Provider store={store}>
