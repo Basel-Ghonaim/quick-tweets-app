@@ -16,7 +16,7 @@ export type JourneyMove =
   | { to: "code" }
   | { to: "completed" };
 
-export interface JourneyRepository {
-  read(): Promise<JourneyState>;
-  advance(move: JourneyMove): Promise<JourneyState>;
-}
+export type JourneyRead =
+  | { status: "unresolved" }
+  | { status: "resolved"; state: JourneyState }
+  | { status: "failed"; unauthorized: boolean };

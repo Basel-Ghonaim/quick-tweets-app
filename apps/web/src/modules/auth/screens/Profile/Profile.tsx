@@ -3,7 +3,7 @@ import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { AUTH_COPY } from "@shared/copy";
 import { useProfileFlow, profileFormSchema, BIO_MAX } from "../../profile";
 import type { ProfileRepository } from "../../profile";
-import type { ProfileOutcome } from "../../journey";
+import type { ProfileOutcome } from "@features/journey";
 import styles from "./Profile.module.css";
 
 const fields = toFieldEntries(profileFormSchema);

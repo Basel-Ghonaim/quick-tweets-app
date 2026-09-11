@@ -6,7 +6,7 @@
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, where features meet the platform, and how each capability inside them is organised.
 > **Maturity:** This document describes the **intended and settled** architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The capability structure was written once authentication, recovery, the session and channel verification had been built in two different shapes, and reconciles them ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
 > **Superseded in part:** the **outer architecture** this document states — the three zones, the dependency rule, and the module contract — is superseded by [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md), which decides four zones (`app` · `pages` · `features` · `shared`) and moves the route-subtree rule from the feature to the page group. **Where this document and that ADR disagree, the ADR governs.** What is written below describes the architecture the code was built to, not the one it is moving to; it is restated in its new operative form as the structure lands ([ADR 0012](../architecture/decisions/0012-foundation-contract-independent-of-consumer-adoption.md) Decision 5). The composition root, the platform index, the thin-utility rule and the capability structure are unaffected; the last is written to the four zones.
-> **Version:** 2.1
+> **Version:** 2.2
 > **Last Updated:** 2026-09-11
 > **Owner:** Basel Ghonaim
 
@@ -103,6 +103,7 @@ It does not govern the platform's **mechanisms** — the design system, the form
 ### The rules
 
 - **The root barrel is the only way in.** Nothing outside a capability imports past its `index.ts`, and nothing inside it imports itself through its own alias. A capability exposes no second barrel; this replaces the sub-barrel allowed above.
+- **Each layer carries its own `index.ts`.** It declares what the layer offers the rest of the capability: a file reaches another layer through that barrel, and a sibling in its own layer directly. A layer barrel is internal — nothing outside the capability imports one, so it is not a second way in.
 - **Dependencies inside a capability run downward.** `screens` use `hooks`; `hooks` use `services`, `forms`, `store` and `repository`; `services` use `store` and `repository`; every layer may use `model`. Nothing imports a layer that uses it.
 - **A screen presents.** It renders what its hooks return and calls what they expose. It composes no repository, runs no orchestration, and holds no rule the server also states ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 6); a route or a step that belongs to someone else reaches it from the page that mounts it (Decisions 2 and 4).
 - **A capability's calls to the server live in its own repository.** The [transport](api-client.md) supplies the clients, the envelope and the interceptors, and holds no capability's endpoints.

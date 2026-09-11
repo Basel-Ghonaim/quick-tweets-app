@@ -4,7 +4,7 @@ import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
 import { JourneyLayout } from "../../layout";
 import { useRouteNavigate } from "@shared/routing";
-import { useJourney, type JourneyRepository } from "../../journey";
+import { useJourney, type JourneyRepository } from "@features/journey";
 import { destinationFor } from "./destinationFor";
 import { stepStates } from "../../components/Stepper";
 import { Profile } from "../Profile";
