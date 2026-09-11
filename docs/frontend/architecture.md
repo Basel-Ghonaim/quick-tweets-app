@@ -109,7 +109,7 @@ It does not govern the platform's **mechanisms** — the design system, the form
 - **A capability's boundary is held by its own test.** `boundary.test.ts` checks at least that the capability is reached only through its barrel, that it imports nothing its zone forbids, and — where it has no `screens/` — that it holds no component, stylesheet or story. Whatever the decision that governs the capability adds, it checks too.
 - **A platform capability has no `screens/`.** The platform publishes no product interface ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6).
 
-The rules above state the target. Which capabilities do not yet meet them is the findings register's to say, not this section's.
+The rules above state the target. Which capabilities do not yet meet them is the findings register's to say, not this section's; [Finding 0030](../architecture/findings/0030-the-capabilities-predate-the-structure-they-share.md) records where each stood when this section was written.
 
 ## The platform index
 
