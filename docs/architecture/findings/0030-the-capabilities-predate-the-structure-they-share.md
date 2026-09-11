@@ -2,7 +2,7 @@
 
 > **Status:** Open
 > **Date:** 2026-09-11
-> **Affected areas:** `apps/web/src/features/authentication/`; `apps/web/src/features/recovery/`; `apps/web/src/shared/session/`; `apps/web/src/shared/channel-verification/`; `apps/web/src/modules/auth/journey/`; `apps/web/src/modules/auth/profile/`; `apps/web/src/modules/auth/screens/Profile/`; `apps/web/src/shared/api/channelVerification.ts`; `apps/web/src/shared/api/media.ts`
+> **Affected areas:** `apps/web/src/features/authentication/`; `apps/web/src/features/recovery/`; `apps/web/src/shared/session/`; `apps/web/src/shared/channel-verification/`; `apps/web/src/features/journey/`; `apps/web/src/modules/auth/profile/`; `apps/web/src/modules/auth/screens/Profile/`; `apps/web/src/shared/api/channelVerification.ts`; `apps/web/src/shared/api/media.ts`
 > **Reported by:** Basel Ghonaim (surfaced while recording the capability structure, [#695](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/695))
 
 ## Observation
@@ -34,3 +34,11 @@ Bringing each capability to the structure is the work the [Frontend Capability S
 ## Not decided here
 
 The order in which the capabilities are brought to it, which is the plan's. Whether a screen may name a repository in its signature so that its stories can pass a test double — four do today — which is a question that plan leaves open. Where Media's upload belongs once a second consumer needs it.
+
+## Addendum — 2026-09-11
+
+**Journey now meets the structure** ([#699](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/699)). It lives at `features/journey`, organised in `model/`, `repository/`, `services/` and `hooks/`, each with its own barrel, and its boundary test holds its rules. Its row above is resolved.
+
+**The structure gained a rule in the same change** — each layer carries its own `index.ts` — and two capabilities do not yet meet it: none of the session's four layers has one, and authentication's `screens/` has none. Recovery and channel verification already do.
+
+The Finding stays `Open`: five capabilities remain to be brought to the structure.
