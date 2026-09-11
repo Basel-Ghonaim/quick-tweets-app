@@ -4,10 +4,10 @@
 > **Type:** Refactoring
 > **Owner:** Basel Ghonaim
 > **Last Updated:** 2026-09-11
-> **Parent Issue:** —
+> **Parent Issue:** [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678)
 > **Supersedes:** [Frontend Zone Migration](frontend-zone-migration.md)
 
-**Active.** Drafted outside the tracked tree and adopted here in the first branch of its first Work Item, per [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 2. It governs the effort's strategy and sequencing; it governs no Work Item's contents.
+**Active.** Drafted outside the tracked tree and adopted here in the first branch of its first Work Item, per [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 2. It continues the effort #678 tracks, whose first plan it supersedes. It governs the effort's strategy and sequencing; it governs no Work Item's contents.
 
 ---
 

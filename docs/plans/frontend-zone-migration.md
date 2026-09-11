@@ -194,4 +194,4 @@ Phase 0 is complete. Phase 1 delivered recovery, and the session outside it; jou
 
 Journey and profile remain in the legacy zone; no page group exists; the composition root reaches the auth routes through the legacy zone's barrel; nothing checks the zone direction; the frontend architecture's outer rules are not restated to four zones. The superseding plan carries each of them.
 
-Its working rules — a move is a move, and a Work Item's class sets its evidence — are carried forward by the superseding plan's §3. Parent [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) tracked this plan; closing it is the human's.
+Its working rules — a move is a move, and a Work Item's class sets its evidence — are carried forward by the superseding plan's §3. Parent [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) tracked this plan, and continues as the parent of the plan that superseded it: the effort is the same one, carried on.
