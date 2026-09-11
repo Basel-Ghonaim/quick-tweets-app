@@ -15,7 +15,7 @@ The [capability structure](../../frontend/architecture.md#the-capability-structu
 | recovery | its wire shapes, entities and mapper sit in `dto/`, `entity/` and `mapper/`; its step types (`recovery.types.ts`) and form definitions (`recoveryFormSchemas.ts`) sit loose at the root; no boundary test |
 | session | the structure's layers under other names — `transport/` for `repository/`, `state/` for `store/`, `lifecycle/` for `services/` — with its typed selector hook in `hooks/` rather than `store/` |
 | channel verification | its endpoints live in the transport, `shared/api/channelVerification.ts`, which its repository only delegates to, and the challenge type it returns is declared there too; no boundary test |
-| journey | flat, and holding the stepper's view-model and the onboarding route's destinations; no boundary test |
+| journey | flat; no boundary test |
 | profile | flat, its form definition beside everything else; no boundary test |
 
 Two departures run across capabilities rather than within one:
