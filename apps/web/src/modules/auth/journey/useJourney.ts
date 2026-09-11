@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSession } from "@shared/session";
 import { restJourney } from "./restJourney";
 import { resolveJourney, type JourneyRead } from "./resolveJourney";
 import type { JourneyMove, JourneyRepository, JourneyState } from "./journey.types";
@@ -15,11 +16,8 @@ export interface Journey {
  * The server's answer, held in one place and replaced by every response it
  * gives — never derived, and never remembered across a reload.
  */
-/**
- * @param ready - whether the session has answered. Asking before it has sends a
- *   request with no token, and its 401 is not an answer about the journey.
- */
-export const useJourney = (given?: JourneyRepository, ready = true): Journey => {
+export const useJourney = (given?: JourneyRepository): Journey => {
+  const { sessionSettled } = useSession();
   // Held across renders: the effect is keyed on it, and a fresh one each render
   // would read the journey forever.
   const repo = useMemo(() => given ?? restJourney(), [given]);
@@ -27,7 +25,9 @@ export const useJourney = (given?: JourneyRepository, ready = true): Journey => 
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!ready) return;
+    // The restore does not block the first render, so the journey is asked only
+    // once the session has answered: a 401 from asking early is not an answer.
+    if (!sessionSettled) return;
 
     let live = true;
     void resolveJourney(repo).then((next) => {
@@ -37,7 +37,7 @@ export const useJourney = (given?: JourneyRepository, ready = true): Journey => 
     return () => {
       live = false;
     };
-  }, [repo, attempt, ready]);
+  }, [repo, attempt, sessionSettled]);
 
   const advance = useCallback(
     async (move: JourneyMove) => {
