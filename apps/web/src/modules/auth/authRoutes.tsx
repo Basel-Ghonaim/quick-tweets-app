@@ -4,7 +4,7 @@ import { SignIn, SignUp } from "@features/authentication";
 import { Onboarding } from "./screens/Onboarding";
 import { Recovery } from "@features/recovery";
 import { GuestOnly } from "./GuestOnly";
-import { stepStates } from "./journey";
+import { stepStates } from "./components/Stepper";
 
 /** Everything auth contains: the composition root decides whether it is
  *  mounted, and a new screen never widens this surface. The journey is one

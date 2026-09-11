@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ThemeProvider } from "@shared/preferences";
 import { Stepper, type JourneyStepId, type StepState } from "./Stepper";
 import { JourneyLayout } from "../../layout/JourneyLayout";
-import { stepStates, type StepPosition } from "../../journey";
+import { stepStates, type StepPosition } from "./stepStates";
 import { AUTH_COPY } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint

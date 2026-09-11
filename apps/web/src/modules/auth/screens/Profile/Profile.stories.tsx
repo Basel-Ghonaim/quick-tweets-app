@@ -11,7 +11,7 @@ import { createAppError } from "@shared/errors";
 import type { ProfileRepository } from "../../profile";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
-import { stepStates } from "../../journey";
+import { stepStates } from "../../components/Stepper";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */

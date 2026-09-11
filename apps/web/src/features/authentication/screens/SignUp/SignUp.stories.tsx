@@ -10,7 +10,7 @@ import { JourneyLayout } from "@modules/auth/layout/JourneyLayout";
 import { sessionReducer } from "@shared/session";
 import { authenticationReducer, authenticationActions } from "../../store";
 import { AUTH_COPY } from "@shared/copy";
-import { stepStates } from "@modules/auth/journey";
+import { stepStates } from "@modules/auth/components/Stepper";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
