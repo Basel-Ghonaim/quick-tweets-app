@@ -1,5 +1,5 @@
 import type { JourneyStepId, StepState } from "./Stepper";
-import type { JourneyPhase, ProfileOutcome } from "@modules/auth/journey";
+import type { JourneyPhase, ProfileOutcome } from "@features/journey";
 
 export const JOURNEY_STEPS = ["account", "profile", "verify"] as const satisfies
   readonly JourneyStepId[];

@@ -1,4 +1,4 @@
-import type { JourneyPhase, JourneyRead } from "@modules/auth/journey";
+import type { JourneyPhase, JourneyRead } from "@features/journey";
 
 /** What the onboarding route shows, or where it sends the reader instead. */
 export type Destination = "pending" | "retry" | "signin" | "feed" | JourneyPhase;

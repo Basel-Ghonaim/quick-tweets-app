@@ -3,7 +3,7 @@ import { useSchemaForm } from "@shared/schema-form";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
-import type { ProfileOutcome } from "../journey";
+import type { ProfileOutcome } from "@features/journey";
 import { restProfile } from "./restProfile";
 import { executeProfileUpdate } from "./executeProfileUpdate";
 import { profileFormSchema } from "./profileFormSchema";
