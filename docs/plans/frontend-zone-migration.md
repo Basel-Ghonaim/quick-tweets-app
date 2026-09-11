@@ -1,13 +1,14 @@
 # Frontend Zone Migration — Execution Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Migration
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-10
+> **Last Updated:** 2026-09-11
 > **Parent Issue:** [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678)
 > **Supersedes:** —
+> **Archived:** 2026-09-11 — superseded by [Frontend Capability Structure](frontend-capability-structure.md) during Phase 1. Its durable facts now live in [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md), [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md), the [frontend architecture](../frontend/architecture.md) and Findings 0023–0029; this plan is retained as provenance.
 
-**Active.** Drafted outside the tracked tree and adopted here in the first branch of its first Work Item, per [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 2. It governs the effort's strategy and sequencing; it governs no Work Item's contents.
+**Historical — superseded.** Drafted outside the tracked tree and adopted in the first branch of its first Work Item, per [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 2. It governed the effort's strategy and sequencing until the plan that superseded it took over; §10 records what it delivered and what it handed on.
 
 **Preliminary by intention.** This plan is deliberately coarse. A structural migration discovers things — a dependency nobody predicted, a placement the decisions do not cover, a proof that turns out to be missing — and a plan that specified every Work Item in advance would be wrong by the second phase and followed anyway. What is fixed here is the **objective, the phase order, and the dependencies between phases**. What is not fixed is the content of any Work Item.
 
@@ -160,4 +161,37 @@ Named so no Work Item has to decide whether they belong:
 
 ## 10 · Reconciliation
 
-*Added as the effort approaches `Historical`: where the durable knowledge landed, which Findings were recorded, and the forward links.*
+*Final. Written as the plan moved to `Historical` — superseded, not completed.*
+
+### Why it was superseded
+
+Its objective was to move the capabilities inside the auth module into the four zones. The analysis that preceded journey's extraction found that moving was not enough: the capabilities did not share one internal structure, and journey held presentation and routing that belonged to what renders it. The direction became bringing every capability to one structure, with journey's boundary redefined first. [Frontend Capability Structure](frontend-capability-structure.md) owns that effort, and re-derives the remaining work rather than inheriting this plan's expected Work Items.
+
+### What landed
+
+| Work Item | Delivered | Findings |
+|---|---|---|
+| [#679](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/679) · [#680](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/680) | the message region joins the Design System; this plan adopted | 0023 · 0024 · 0025 |
+| [#681](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/681) · [#682](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/682) | the navigation helpers become `shared/routing` | — |
+| [#683](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/683) · [#684](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/684) | the validation rules join `shared/validation`, their messages `shared/copy` | 0026 · 0027 |
+| [#685](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/685) · [#686](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/686) | the auth copy joins the catalogue | — |
+| [#687](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/687) · [#688](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/688) | the session leaves the module as a feature of its own — a placement ADR 0019 then reversed | — |
+| [#691](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/691) · [#692](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/692) — *outside this plan* | the session at `shared/session`, authentication at `features/authentication` | 0028 · 0029 |
+| [#693](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/693) · [#694](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/694) | account recovery moves to `features/recovery` | — |
+
+Phase 0 is complete. Phase 1 delivered recovery, and the session outside it; journey and profile had not moved.
+
+### Where the durable facts landed
+
+| Fact | Now owned by |
+|---|---|
+| The four zones, what each owns, and the one-way rule between them | [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) |
+| Authentication is a feature, the session is platform, and when a capability is platform | [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) |
+| The platform index, including the session | the [frontend architecture](../frontend/architecture.md) |
+| The deviations the work surfaced | [Findings 0023–0029](../architecture/findings/) |
+
+### Handed on, not done
+
+Journey and profile remain in the legacy zone; no page group exists; the composition root reaches the auth routes through the legacy zone's barrel; nothing checks the zone direction; the frontend architecture's outer rules are not restated to four zones. The superseding plan carries each of them.
+
+Its working rules — a move is a move, and a Work Item's class sets its evidence — are carried forward by the superseding plan's §3. Parent [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) tracked this plan; closing it is the human's.
