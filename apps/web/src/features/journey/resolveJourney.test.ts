@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createAppError } from "@shared/errors";
 import { resolveJourney } from "./resolveJourney";
 import type { JourneyState } from "@features/journey/model";
-import type { JourneyRepository } from "./JourneyRepository";
+import type { JourneyRepository } from "@features/journey/repository";
 
 const state = (over: Partial<JourneyState> = {}): JourneyState => ({
   phase: "profile",
