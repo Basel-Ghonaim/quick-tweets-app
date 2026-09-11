@@ -1,5 +1,5 @@
 export { restJourney } from "./repository";
-export { resolveJourney } from "./resolveJourney";
+export { resolveJourney } from "./services";
 export { useJourney } from "./useJourney";
 export type { JourneyRepository } from "./repository";
 export type {
