@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "@shared/session";
 import { restJourney } from "./restJourney";
-import { resolveJourney, type JourneyRead } from "./resolveJourney";
-import type { JourneyMove, JourneyRepository, JourneyState } from "./journey.types";
+import { resolveJourney } from "./resolveJourney";
+import type { JourneyMove, JourneyRead, JourneyState } from "./journey.types";
+import type { JourneyRepository } from "./JourneyRepository";
 
 export interface Journey {
   read: JourneyRead;

@@ -1,11 +1,11 @@
 export { restJourney } from "./restJourney";
 export { resolveJourney } from "./resolveJourney";
 export { useJourney } from "./useJourney";
-export type { JourneyRead } from "./resolveJourney";
+export type { JourneyRepository } from "./JourneyRepository";
 export type {
   JourneyMove,
   JourneyPhase,
-  JourneyRepository,
+  JourneyRead,
   JourneyState,
   ProfileOutcome,
 } from "./journey.types";
