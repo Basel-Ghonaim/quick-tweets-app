@@ -1,4 +1,4 @@
-import type { JourneyMove, JourneyState } from "./journey.types";
+import type { JourneyMove, JourneyState } from "@features/journey/model";
 
 export interface JourneyRepository {
   read(): Promise<JourneyState>;

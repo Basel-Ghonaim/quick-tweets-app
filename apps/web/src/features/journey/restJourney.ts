@@ -1,5 +1,5 @@
 import { authClient, unwrap, type ApiEnvelope } from "@shared/api";
-import type { JourneyState } from "./journey.types";
+import type { JourneyState } from "@features/journey/model";
 import type { JourneyRepository } from "./JourneyRepository";
 
 export const restJourney = (client = authClient): JourneyRepository => ({

@@ -8,4 +8,4 @@ export type {
   JourneyRead,
   JourneyState,
   ProfileOutcome,
-} from "./journey.types";
+} from "./model";

@@ -1,5 +1,5 @@
 import { AppError } from "@shared/errors";
-import type { JourneyRead, JourneyState } from "./journey.types";
+import type { JourneyRead, JourneyState } from "@features/journey/model";
 import type { JourneyRepository } from "./JourneyRepository";
 
 const unauthorized = (error: unknown) =>
