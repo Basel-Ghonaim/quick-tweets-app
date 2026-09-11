@@ -2,7 +2,7 @@
 
 > **Status:** Open
 > **Date:** 2026-09-09
-> **Affected areas:** `apps/web/src/modules/auth/components/Stepper/`; `apps/web/src/modules/auth/journey/stepStates.ts`; the interface vocabulary in [`docs/project/overview.md`](../../project/overview.md)
+> **Affected areas:** `apps/web/src/modules/auth/components/Stepper/`; `apps/web/src/modules/auth/components/Stepper/stepStates.ts`; the interface vocabulary in [`docs/project/overview.md`](../../project/overview.md)
 > **Reported by:** Basel Ghonaim (surfaced during the architectural reassessment behind [ADR 0018](../decisions/0018-composition-has-a-home-four-frontend-zones.md), [#679](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/679))
 
 ## Observation
@@ -32,3 +32,11 @@ What is left open is the naming collision and the unbuilt commitment behind it.
 ## Not decided here
 
 Whether the generic `Stepper` is built, whether the journey's is renamed to say what it is, and whether the committed entry is restated. A finding records the deviation; it never schedules the fix.
+
+## Addendum — 2026-09-11
+
+**The placement stated under *What ADR 0018 settles* is superseded in part.** ADR 0018 Decision 3 permits a feature to own the interface that is its interaction; it does not require one to. The [Frontend Capability Structure](../../plans/frontend-capability-structure.md) plan gives the journey capability no interface, and leaves where the journey's progress display lives open as its question E. The component and its types are therefore not the journey capability's by settlement.
+
+`stepStates` — which turns the journey's position into this component's props — has accordingly left the journey capability to sit beside the component ([#697](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/697)). Where the component and its view-model finally live is question E.
+
+The naming collision this Finding records is unaffected, and so is its status.
