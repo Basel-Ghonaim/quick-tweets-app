@@ -8,7 +8,7 @@ import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
-import { stepStates } from "../../journey";
+import { stepStates } from "../../components/Stepper";
 import { createAppError } from "@shared/errors";
 import type { VerificationRepository } from "@shared/channel-verification";
 import { sessionReducer } from "@shared/session";
