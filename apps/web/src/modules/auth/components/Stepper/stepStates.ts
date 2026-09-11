@@ -1,4 +1,4 @@
-import type { JourneyStepId, StepState } from "@modules/auth/components/Stepper";
+import type { JourneyStepId, StepState } from "./Stepper";
 import type { JourneyPhase, ProfileOutcome } from "@modules/auth/journey";
 
 export const JOURNEY_STEPS = ["account", "profile", "verify"] as const satisfies
