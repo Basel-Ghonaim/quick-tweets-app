@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveRecovery } from "./resolveRecovery";
 import type { RecoveryPosition } from "../model";
-import type { RecoveryRepository } from "../gateway";
+import type { RecoveryGateway } from "../gateway";
 
 const POSITION: RecoveryPosition = {
   step: "password",
@@ -10,7 +10,7 @@ const POSITION: RecoveryPosition = {
   canResend: false,
 };
 
-const repo = (position: () => Promise<RecoveryPosition>): RecoveryRepository => ({
+const repo = (position: () => Promise<RecoveryPosition>): RecoveryGateway => ({
   position,
   request: async () => POSITION,
   resend: async () => POSITION,

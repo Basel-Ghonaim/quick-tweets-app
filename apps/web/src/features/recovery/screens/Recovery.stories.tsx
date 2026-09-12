@@ -11,7 +11,7 @@ import { AuthLayout } from "@modules/auth/layout";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import type { RecoveryPosition } from "../model";
-import type { RecoveryRepository } from "../gateway";
+import type { RecoveryGateway } from "../gateway";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -39,7 +39,7 @@ const at = (over: Partial<RecoveryPosition> = {}): RecoveryPosition => ({
   ...over,
 });
 
-const repository = (over: Partial<RecoveryRepository> = {}): RecoveryRepository => ({
+const repository = (over: Partial<RecoveryGateway> = {}): RecoveryGateway => ({
   position: async () => at(),
   request: async () => at(),
   resend: async () => at(),
@@ -48,7 +48,7 @@ const repository = (over: Partial<RecoveryRepository> = {}): RecoveryRepository 
   ...over,
 });
 
-const withRepo = (repo: RecoveryRepository) => {
+const withRepo = (repo: RecoveryGateway) => {
   const store = configureStore({ reducer: { session: sessionReducer } });
 
   return () => (
@@ -112,7 +112,7 @@ export const AReloadAtThePasswordStepCanStillFinish: Story = {
 
 /* Without the shell: the comparison is about the screen's own output, and two
    layouts in one document would be two banner landmarks. */
-const bare = (repo: RecoveryRepository) => {
+const bare = (repo: RecoveryGateway) => {
   const store = configureStore({ reducer: { session: sessionReducer } });
 
   return () => (

@@ -1,7 +1,7 @@
 import { publicCredentialedClient, unwrap, type ApiEnvelope } from "@shared/api";
 import type { RecoveryPositionDto } from "../gateway/recoveryDto";
 import { recoveryMapper } from "../gateway/recoveryMapper";
-import type { RecoveryRepository } from "./RecoveryRepository";
+import type { RecoveryGateway } from "./RecoveryGateway";
 
 type Answer = ApiEnvelope<RecoveryPositionDto>;
 
@@ -10,7 +10,7 @@ type Answer = ApiEnvelope<RecoveryPositionDto>;
 export const restRecovery = (
   client = publicCredentialedClient,
   mapper = recoveryMapper(),
-): RecoveryRepository => ({
+): RecoveryGateway => ({
   position: async () =>
     mapper.toPosition(unwrap(await client.get<Answer>("/auth/password-reset/session"))),
 
