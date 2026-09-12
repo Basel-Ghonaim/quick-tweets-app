@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 import { uploadMedia } from "@shared/api";
-import {
-  avatarUploadInitial,
-  avatarUploadReducer,
-  type AvatarUploadStatus,
-} from "./avatarUpload";
+import { avatarUploadInitial, avatarUploadReducer } from "./services";
+import type { AvatarUploadStatus } from "./model";
 
 interface AvatarUpload {
   status: AvatarUploadStatus;

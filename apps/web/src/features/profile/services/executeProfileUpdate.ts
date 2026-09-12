@@ -1,7 +1,7 @@
 import type { AppError } from "@shared/errors";
 import type { RequestState } from "@shared/types";
 import { profileErrorHandler } from "./profileErrorHandler";
-import type { UpdatedProfile } from "./model";
+import type { UpdatedProfile } from "../model";
 
 /**
  * Drives the setter it is given, so the flow is exercised without a renderer.

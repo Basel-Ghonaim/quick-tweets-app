@@ -1,4 +1,4 @@
-import type { AvatarUploadStatus } from "./model";
+import type { AvatarUploadStatus } from "../model";
 
 export type { AvatarUploadStatus };
 
