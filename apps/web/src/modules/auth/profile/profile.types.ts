@@ -29,3 +29,7 @@ export interface UpdatedProfile {
   name: string | null;
   bio: string;
 }
+
+/** How this screen ends, in profile's own words. The journey records its own
+ *  outcome from it; the two vocabularies are not one. */
+export type ProfileSettlement = "saved" | "skipped";

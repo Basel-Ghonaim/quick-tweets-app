@@ -22,7 +22,7 @@ describe("executeProfileUpdate", () => {
   it("leaves the state at the failure rather than at rest, and re-raises", async () => {
     const { seen, set } = track();
     const failing = vi.fn(async () => {
-      throw createAppError("conflict", "raw");
+      throw createAppError("validation", "raw");
     });
 
     await expect(executeProfileUpdate(set, failing)).rejects.toThrow();
@@ -35,7 +35,7 @@ describe("executeProfileUpdate", () => {
 
     await expect(
       executeProfileUpdate(set, async () => {
-        throw createAppError("conflict", "raw");
+        throw createAppError("validation", "raw");
       }),
     ).rejects.toThrow();
 

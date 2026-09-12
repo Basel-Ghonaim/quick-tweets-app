@@ -3,7 +3,7 @@ import { useSchemaForm } from "@shared/schema-form";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
-import type { ProfileOutcome } from "@features/journey";
+import type { ProfileSettlement } from "./profile.types";
 import { restProfile } from "./restProfile";
 import { executeProfileUpdate } from "./executeProfileUpdate";
 import { profileFormSchema } from "./profileFormSchema";
@@ -32,7 +32,7 @@ interface ProfileFlow {
  * by the time Save runs, so the update carries its reference rather than bytes.
  */
 export const useProfileFlow = (
-  onSettled?: (outcome: ProfileOutcome) => void,
+  onSettled?: (outcome: ProfileSettlement) => void,
   repo = restProfile(),
 ): ProfileFlow => {
   const [request, setRequest] = useState<RequestState>({ status: "idle", error: null });

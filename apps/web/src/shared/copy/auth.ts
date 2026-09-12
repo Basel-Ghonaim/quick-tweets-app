@@ -92,6 +92,10 @@ export const AUTH_COPY = {
     uploaded: "Picture ready.",
     uploadFailed: "That picture could not be uploaded.",
     uploadRetry: "Try again",
+    /* Only what this screen can meet: it sends no username, so the conflict
+       the endpoint answers is not one it can cause. */
+    invalid: "Please review the highlighted fields.",
+    sessionExpired: "Your session has expired. Please sign in again.",
 
     /* The count is a live number, so it is read by sight; the limit is
        announced once through the field's own description. */
