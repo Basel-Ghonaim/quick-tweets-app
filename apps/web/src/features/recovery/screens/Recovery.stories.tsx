@@ -11,7 +11,7 @@ import { AuthLayout } from "@modules/auth/layout";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import type { RecoveryPosition } from "../model";
-import type { RecoveryRepository } from "../repository";
+import type { RecoveryRepository } from "../gateway";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */

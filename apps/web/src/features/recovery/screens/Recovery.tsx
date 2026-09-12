@@ -2,7 +2,7 @@ import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
 import { useRouteNavigate } from "@shared/routing";
 import { useRecoveryFlow } from "../hooks";
-import type { RecoveryRepository } from "../repository";
+import type { RecoveryRepository } from "../gateway";
 import { RecoveryCode, RecoveryPassword, RecoveryRequest } from "./steps";
 import styles from "./Recovery.module.css";
 

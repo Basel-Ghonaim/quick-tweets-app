@@ -3,7 +3,7 @@ import { AUTH_COPY } from "@shared/copy";
 import { screenFor } from "../services";
 import { useRecovery } from "./useRecovery";
 import type { RecoveryPosition, RecoveryScreen } from "../model";
-import type { RecoveryRepository } from "../repository";
+import type { RecoveryRepository } from "../gateway";
 
 export interface RecoveryFlow {
   screen: RecoveryScreen;

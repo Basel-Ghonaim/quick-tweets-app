@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveRecovery } from "./resolveRecovery";
 import type { RecoveryPosition } from "../model";
-import type { RecoveryRepository } from "../repository";
+import type { RecoveryRepository } from "../gateway";
 
 const POSITION: RecoveryPosition = {
   step: "password",

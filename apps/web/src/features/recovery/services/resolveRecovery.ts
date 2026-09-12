@@ -1,5 +1,5 @@
 import type { RecoveryRead } from "../model";
-import type { RecoveryRepository } from "../repository";
+import type { RecoveryRepository } from "../gateway";
 
 /**
  * The read never `404`s and produces no `401` to distinguish, so every way it

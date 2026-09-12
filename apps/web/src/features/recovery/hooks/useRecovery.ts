@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
-import { restRecovery } from "../repository";
+import { restRecovery } from "../gateway";
 import { completeReset, resolveRecovery } from "../services";
 import type { RecoveryPosition, RecoveryRead } from "../model";
-import type { RecoveryRepository } from "../repository";
+import type { RecoveryRepository } from "../gateway";
 
 export interface Recovery {
   read: RecoveryRead;
