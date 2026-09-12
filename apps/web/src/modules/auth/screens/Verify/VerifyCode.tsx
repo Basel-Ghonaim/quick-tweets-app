@@ -1,19 +1,17 @@
 import { Button, Input, MessageRegion, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
-import { useCodeFlow } from "@shared/channel-verification";
+import { useCodeFlow, type VerificationGateway } from "@shared/channel-verification";
 import { VERIFICATION_MESSAGES } from "./messages";
 import { RouteLink } from "@shared/routing";
 import styles from "./Verify.module.css";
 
 interface VerifyCodeProps {
-  /** Handed over by the ask, which was told it. A reload loses it, and the
-   *  first resend asks the server for it again. */
-  openingWindow?: number;
   onVerified: () => void;
   onLater: () => void;
+  repo?: VerificationGateway;
 }
 
-export const VerifyCode = ({ openingWindow, onVerified, onLater }: VerifyCodeProps) => {
+export const VerifyCode = ({ onVerified, onLater, repo }: VerifyCodeProps) => {
   const {
     code,
     setCode,
@@ -27,9 +25,9 @@ export const VerifyCode = ({ openingWindow, onVerified, onLater }: VerifyCodePro
     submit,
   } = useCodeFlow({
     onVerified,
+    repo,
     messages: VERIFICATION_MESSAGES,
     resendReadyMessage: AUTH_COPY.verify.resendReady,
-    openingWindow,
   });
 
   return (

@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { confirmChallenge, issueChallenge } from "./channelVerification";
+import { confirmChallenge, currentChallenge, issueChallenge } from "./channelVerification";
 
 const issued = {
   data: { success: true, data: { delivery: "accepted", resendAvailableInSeconds: 60 } },
 };
+
+const standing = { data: { success: true, data: { status: "pending", resendAvailableInSeconds: 42 } } };
 
 const clientThatCaptures = () => {
   const calls: { url: string; body?: unknown }[] = [];
@@ -14,9 +16,33 @@ const clientThatCaptures = () => {
         calls.push({ url, body });
         return issued;
       }),
+      get: vi.fn(async (url: string) => {
+        calls.push({ url });
+        return standing;
+      }),
     } as never,
   };
 };
+
+describe("currentChallenge", () => {
+  it("asks for the holder’s own standing, with no body and no parameters", async () => {
+    const { calls, client } = clientThatCaptures();
+
+    await currentChallenge(client);
+
+    expect(calls[0].url).toBe("/channel-verification/challenges/current");
+    expect(calls[0].body).toBeUndefined();
+  });
+
+  it("answers the status and what is left of the window", async () => {
+    const { client } = clientThatCaptures();
+
+    await expect(currentChallenge(client)).resolves.toEqual({
+      status: "pending",
+      resendAvailableInSeconds: 42,
+    });
+  });
+});
 
 describe("issueChallenge", () => {
   it("sends no body, so the subject is the token's account and never the caller's claim", async () => {

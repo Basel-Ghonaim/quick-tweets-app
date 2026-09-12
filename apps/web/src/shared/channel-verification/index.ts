@@ -1,3 +1,3 @@
-export * from "./hooks";
-export type { VerificationMessages } from "./services";
-export type { VerificationRepository } from "./repository";
+export { useAskFlow, useCodeFlow } from "./hooks";
+export type { VerificationGateway } from "./gateway";
+export type { VerificationMessages } from "./model";

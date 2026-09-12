@@ -80,3 +80,11 @@ The Finding stays `Open`: authentication, channel verification and profile remai
 **What remains of authentication's row is owned elsewhere.** Its seven route literals wait for the page, which is question F in Phase 4, and the error handler its barrel publishes for profile waits for question C in profile's own Work Item.
 
 The Finding stays `Open`: channel verification and profile remain to be brought to the structure.
+
+## Addendum — 2026-09-12, channel verification ([#711](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/711))
+
+**Channel verification is organised as the structure says.** It holds `model/`, `gateway/`, `services/` and `hooks/`, each with a barrel that names what it offers, and its boundary test holds five rules. Its two endpoints and the challenge shape came home from `shared/api`, which no longer mentions the capability, and its port is `VerificationGateway`. Its row above is resolved, and so is the departure that row recorded about its endpoints living in the transport.
+
+**The resend window no longer crosses the page.** The capability reads where the holder stands when the code screen mounts, and holds the answer as an instant rather than a duration. The ask hands nothing forward, the code screen takes no window, and the onboarding screen holds no verification state. No client-side cooldown is kept anywhere: the number is the server's in all three places it states it.
+
+The Finding stays `Open`: profile remains to be brought to the structure, and the two departures that run across capabilities are unchanged but for the one form-definition import profile still carries.

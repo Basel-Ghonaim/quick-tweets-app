@@ -118,6 +118,8 @@ How each capability gets there, and the questions in §5 that bear on it, are se
 | **D** | Should a screen's public signature name a gateway so that its stories can pass a test double — four do today — and if not, how does a screen receive one? | the screens that carry one today, Phase 3 |
 | **E** | Where does the journey's progress display live? [Finding 0025](../architecture/findings/0025-journey-stepper-holds-the-committed-steppers-name.md) | the progress display, Phase 3 |
 
+**B has since been answered**, on 2026-09-12, and its row stays for the record. The window is the server's and it is now readable: `GET /channel-verification/challenges/current` answers what remains of it, so the code screen asks on arrival ([#711](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/711)). The sequence is still two lifecycles, and nothing crosses the page between them.
+
 ---
 
 ## 6 · The first Work Item — [#695](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/695)

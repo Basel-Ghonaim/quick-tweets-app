@@ -1,14 +1,14 @@
 import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
-import { useAskFlow, type VerificationRepository } from "@shared/channel-verification";
+import { useAskFlow, type VerificationGateway } from "@shared/channel-verification";
 import { VERIFICATION_MESSAGES } from "./messages";
 import { RouteLink } from "@shared/routing";
 import styles from "./Verify.module.css";
 
 interface VerifyAskProps {
-  onSent: (resendAvailableInSeconds: number) => void;
+  onSent: () => void;
   onLater: () => void;
-  repo?: VerificationRepository;
+  repo?: VerificationGateway;
 }
 
 export const VerifyAsk = ({ onSent, onLater, repo }: VerifyAskProps) => {

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
@@ -17,7 +16,6 @@ import styles from "./Onboarding.module.css";
  */
 export const Onboarding = ({ repo }: { repo?: JourneyGateway } = {}) => {
   const { read, state, advance, leave, retry } = useJourney(repo);
-  const [openingWindow, setOpeningWindow] = useState<number>();
   const navigate = useRouteNavigate();
   const destination = destinationFor(read);
 
@@ -57,8 +55,7 @@ export const Onboarding = ({ repo }: { repo?: JourneyGateway } = {}) => {
 
       {destination === "verify" && (
         <VerifyAsk
-          onSent={(seconds) => {
-            setOpeningWindow(seconds);
+          onSent={() => {
             void advance({ to: "code" });
           }}
           onLater={leave}
@@ -66,7 +63,7 @@ export const Onboarding = ({ repo }: { repo?: JourneyGateway } = {}) => {
       )}
 
       {destination === "code" && (
-        <VerifyCode openingWindow={openingWindow} onVerified={exit} onLater={leave} />
+        <VerifyCode onVerified={exit} onLater={leave} />
       )}
     </JourneyLayout>
   );

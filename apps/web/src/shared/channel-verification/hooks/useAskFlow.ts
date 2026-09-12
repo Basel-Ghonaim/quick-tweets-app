@@ -2,13 +2,14 @@ import { useCallback, useState } from "react";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
-import { restVerification } from "../repository";
-import { executeVerification, type VerificationMessages } from "../services";
-import type { VerificationRepository } from "../repository";
+import { restVerification } from "../gateway";
+import { executeVerification } from "../services";
+import type { VerificationMessages } from "../model";
+import type { VerificationGateway } from "../gateway";
 
 export interface AskFlowOptions {
-  onSent?: (resendAvailableInSeconds: number) => void;
-  repo?: VerificationRepository;
+  onSent?: () => void;
+  repo?: VerificationGateway;
   messages?: VerificationMessages;
 }
 
@@ -21,8 +22,8 @@ interface AskFlow {
 const IDLE: RequestState = { status: "idle", error: null };
 
 /**
- * The ask sends and then leaves, handing the window it was given to the screen
- * that needs it: the answer arrives here and is spent there.
+ * The ask sends and then leaves. It hands nothing on: the screen that needs the
+ * window asks the server for it when it arrives.
  */
 export const useAskFlow = ({
   onSent,
@@ -34,7 +35,7 @@ export const useAskFlow = ({
 
   const send = useCallback(() => {
     void executeVerification(setRequest, () => repo.issue(), messages)
-      .then(({ resendAvailableInSeconds }) => onSent?.(resendAvailableInSeconds))
+      .then(() => onSent?.())
       .catch(() => {});
   }, [messages, onSent, repo]);
 
