@@ -8,7 +8,7 @@ import type { VerificationMessages } from "../model";
 import type { VerificationRepository } from "../gateway";
 
 export interface AskFlowOptions {
-  onSent?: (resendAvailableInSeconds: number) => void;
+  onSent?: () => void;
   repo?: VerificationRepository;
   messages?: VerificationMessages;
 }
@@ -22,8 +22,8 @@ interface AskFlow {
 const IDLE: RequestState = { status: "idle", error: null };
 
 /**
- * The ask sends and then leaves, handing the window it was given to the screen
- * that needs it: the answer arrives here and is spent there.
+ * The ask sends and then leaves. It hands nothing on: the screen that needs the
+ * window asks the server for it when it arrives.
  */
 export const useAskFlow = ({
   onSent,
@@ -35,7 +35,7 @@ export const useAskFlow = ({
 
   const send = useCallback(() => {
     void executeVerification(setRequest, () => repo.issue(), messages)
-      .then(({ resendAvailableInSeconds }) => onSent?.(resendAvailableInSeconds))
+      .then(() => onSent?.())
       .catch(() => {});
   }, [messages, onSent, repo]);
 

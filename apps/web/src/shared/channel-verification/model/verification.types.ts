@@ -7,3 +7,21 @@ import type { AppError } from "@shared/errors";
  * who is reading.
  */
 export type VerificationMessages = Partial<Record<AppError["type"], string>>;
+
+/** What the capability knows about the holder's own endpoint. */
+export type VerificationStatus = "unproven" | "pending" | "proven";
+
+export interface VerificationPosition {
+  status: VerificationStatus;
+  /** When another code may be asked for, or `null` when nothing is running. */
+  resendAvailableAt: number | null;
+}
+
+export interface IssuedChallenge {
+  resendAvailableAt: number | null;
+}
+
+export type VerificationRead =
+  | { status: "unresolved" }
+  | { status: "resolved"; position: VerificationPosition }
+  | { status: "failed" };

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import type { AppError, SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import {
@@ -9,8 +9,9 @@ import {
 } from "@shared/one-time-code";
 import type { RequestState } from "@shared/types";
 import { restVerification } from "../gateway";
-import { executeVerification } from "../services";
-import type { VerificationMessages } from "../model";
+import { executeVerification, resolveVerification } from "../services";
+import { secondsUntilWindow } from "../model";
+import type { VerificationMessages, VerificationRead } from "../model";
 import type { VerificationRepository } from "../gateway";
 
 export interface CodeFlowOptions {
@@ -18,7 +19,6 @@ export interface CodeFlowOptions {
   repo?: VerificationRepository;
   messages?: VerificationMessages;
   resendReadyMessage?: string;
-  openingWindow?: number;
 }
 
 interface CodeFlow {
@@ -37,33 +37,46 @@ interface CodeFlow {
 const IDLE: RequestState = { status: "idle", error: null };
 
 /**
- * The wait is unknown on arrival, because a reader who reloads keeps the field
- * and loses the clock. Rather than guess it, the screen lets a resend ask: a
- * refusal answers with the seconds it has left, and an acceptance answers with
- * a fresh window. Either way the number is the server's.
+ * The wait is the server's, and it is asked for on arrival rather than handed
+ * over: a reader who reloads resolves exactly as one who was just sent a code.
+ * Until the answer arrives the resend is held, because offering it would invite
+ * a refusal the server has already answered.
  */
 export const useCodeFlow = ({
   onVerified,
-  repo = restVerification(),
+  repo: given,
   messages,
   resendReadyMessage = "",
-  openingWindow = 0,
 }: CodeFlowOptions = {}): CodeFlow => {
+  // Held across renders: the read effect is keyed on it, and a fresh one each
+  // render would ask forever.
+  const repo = useMemo(() => given ?? restVerification(), [given]);
+
   const [issueRequest, setIssueRequest] = useState<RequestState>(IDLE);
   const [confirmRequest, setConfirmRequest] = useState<RequestState>(IDLE);
   const issue = useRequestState(issueRequest);
   const confirm = useRequestState(confirmRequest);
 
   const [code, setCodeRaw] = useState("");
-  const [cooldown, tick] = useReducer(
-    resendCooldownReducer,
-    openingWindow > 0
-      ? resendCooldownReducer(resendCooldownInitial, {
-          type: "started",
-          seconds: openingWindow,
-        })
-      : resendCooldownInitial,
-  );
+  const [read, setRead] = useState<VerificationRead>({ status: "unresolved" });
+  const [cooldown, tick] = useReducer(resendCooldownReducer, resendCooldownInitial);
+
+  useEffect(() => {
+    let live = true;
+
+    void resolveVerification(repo).then((next) => {
+      if (!live) return;
+
+      setRead(next);
+      if (next.status === "resolved") {
+        tick({ type: "started", seconds: secondsUntilWindow(next.position.resendAvailableAt) });
+      }
+    });
+
+    return () => {
+      live = false;
+    };
+  }, [repo]);
 
   useEffect(() => {
     if (cooldown.secondsLeft === 0) return;
@@ -74,8 +87,8 @@ export const useCodeFlow = ({
 
   const resend = useCallback(() => {
     void executeVerification(setIssueRequest, () => repo.issue(), messages)
-      .then(({ resendAvailableInSeconds }) =>
-        tick({ type: "started", seconds: resendAvailableInSeconds }),
+      .then(({ resendAvailableAt }) =>
+        tick({ type: "started", seconds: secondsUntilWindow(resendAvailableAt) }),
       )
       .catch((refusal: AppError) => {
         if (refusal.retryAfterSeconds !== undefined) {
@@ -102,7 +115,7 @@ export const useCodeFlow = ({
     isResending: issue.isLoading,
     error: confirm.error ?? issue.error,
     secondsLeft: cooldown.secondsLeft,
-    canResend: canResend(cooldown),
+    canResend: read.status !== "unresolved" && canResend(cooldown),
     announcement: cooldown.justEnded ? resendReadyMessage : "",
     resend,
     submit,

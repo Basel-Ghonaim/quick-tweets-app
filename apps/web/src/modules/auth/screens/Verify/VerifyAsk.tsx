@@ -6,7 +6,7 @@ import { RouteLink } from "@shared/routing";
 import styles from "./Verify.module.css";
 
 interface VerifyAskProps {
-  onSent: (resendAvailableInSeconds: number) => void;
+  onSent: () => void;
   onLater: () => void;
   repo?: VerificationRepository;
 }

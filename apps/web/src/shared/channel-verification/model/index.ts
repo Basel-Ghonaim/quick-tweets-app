@@ -1,1 +1,8 @@
-export type { VerificationMessages } from "./verification.types";
+export { resendWindowAt, secondsUntilWindow } from "./resendWindow";
+export type {
+  IssuedChallenge,
+  VerificationMessages,
+  VerificationPosition,
+  VerificationRead,
+  VerificationStatus,
+} from "./verification.types";
