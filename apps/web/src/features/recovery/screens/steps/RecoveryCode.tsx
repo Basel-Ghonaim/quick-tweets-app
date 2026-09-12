@@ -2,9 +2,7 @@ import { Button, Input, MessageRegion, Typography } from "@shared/design-system"
 import { AUTH_COPY } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
 import styles from "./RecoveryCode.module.css";
-import { normaliseCode } from "@shared/one-time-code";
-import { recoveryFormSchemas } from "../../forms";
-import { useRecoveryForm, useResendWindow } from "../../hooks";
+import { useCodeForm, useResendWindow } from "../../hooks";
 import type { RecoveryPosition } from "../../model";
 
 interface RecoveryCodeProps {
@@ -26,11 +24,7 @@ export const RecoveryCode = ({
   onRestart,
 }: RecoveryCodeProps) => {
   const { values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
-    useRecoveryForm(recoveryFormSchemas.codeFields, ({ code }) =>
-      // Normalised before it travels: the server normalises nothing and answers
-      // every rejection alike, so a lowercase code would look like a wrong one.
-      onSubmit(normaliseCode(code)),
-    );
+    useCodeForm(onSubmit);
 
   const { secondsLeft, isOpen, announcement } = useResendWindow(position);
 
