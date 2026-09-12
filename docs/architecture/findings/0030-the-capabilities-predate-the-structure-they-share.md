@@ -60,3 +60,13 @@ The Finding stays `Open`: four capabilities remain to be brought to the structur
 **Three things about recovery remain, each with an owner.** Its three step screens still import a form definition directly, which the second of its Work Items settles. Its screen's signature still names a gateway so its stories can pass a double, which is question D in Phase 3. Its two route literals still name `/auth/signin`, which the plan's question F leaves to the page in Phase 4; both are counted in the nine recorded above.
 
 The Finding stays `Open`: authentication, channel verification and profile remain to be brought to the structure, and the two departures that run across capabilities are unchanged.
+
+## Addendum — 2026-09-12, recovery's screens ([#705](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/705))
+
+**Three of the six screens that reached past their hooks no longer do.** Recovery's step screens each take their fields and their form state from one hook, which closes over the schema; the code step's hook returns the controller alone, because its screen binds its single input for the reason its own comment gives. A fifth rule in recovery's boundary test holds the seam: no file under its `screens/` reaches the forms or the services layer.
+
+`SignIn.tsx`, `SignUp.tsx` and `Profile.tsx` still name a form definition directly, and each takes the same shape when its capability is brought to the structure. The count in the row above therefore reads three, not six.
+
+**Recovery's Phase 2 work is complete.** What remains of its row is owned elsewhere: its screen's signature names a gateway, which is question D in Phase 3, and its two route literals wait for the page, which is question F in Phase 4.
+
+The Finding stays `Open`: authentication, channel verification and profile remain to be brought to the structure.
