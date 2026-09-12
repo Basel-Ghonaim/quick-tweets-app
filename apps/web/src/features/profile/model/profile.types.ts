@@ -22,3 +22,7 @@ export interface UpdatedProfile {
 /** How this screen ends, in profile's own words. The journey records its own
  *  outcome from it; the two vocabularies are not one. */
 export type ProfileSettlement = "saved" | "skipped";
+
+/** The four states of choosing a picture, which the screen shows and the
+ *  update waits on. */
+export type AvatarUploadStatus = "idle" | "uploading" | "uploaded" | "failed";
