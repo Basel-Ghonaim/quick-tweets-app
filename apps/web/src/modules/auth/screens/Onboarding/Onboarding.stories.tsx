@@ -10,7 +10,7 @@ import { Onboarding } from "./Onboarding";
 import { AuthLayout } from "../../layout";
 import { sessionActions, sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
-import type { JourneyMove, JourneyRepository, JourneyState } from "@features/journey";
+import type { JourneyMove, JourneyGateway, JourneyState } from "@features/journey";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -38,7 +38,7 @@ const state = (over: Partial<JourneyState> = {}): JourneyState => ({
 
 const never = () => new Promise<never>(() => {});
 
-const withRepo = (repo: JourneyRepository, settled = true) => {
+const withRepo = (repo: JourneyGateway, settled = true) => {
   const store = configureStore({ reducer: { session: sessionReducer } });
   if (settled) store.dispatch(sessionActions.sessionSettled());
 

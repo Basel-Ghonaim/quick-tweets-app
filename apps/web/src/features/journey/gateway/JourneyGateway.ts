@@ -1,6 +1,6 @@
 import type { JourneyMove, JourneyState } from "../model";
 
-export interface JourneyRepository {
+export interface JourneyGateway {
   read(): Promise<JourneyState>;
   advance(move: JourneyMove): Promise<JourneyState>;
 }

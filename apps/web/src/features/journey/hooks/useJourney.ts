@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "@shared/session";
-import { restJourney, type JourneyRepository } from "../gateway";
+import { restJourney, type JourneyGateway } from "../gateway";
 import { resolveJourney } from "../services";
 import type { JourneyMove, JourneyRead, JourneyState } from "../model";
 
@@ -16,7 +16,7 @@ export interface Journey {
  * The server's answer, held in one place and replaced by every response it
  * gives — never derived, and never remembered across a reload.
  */
-export const useJourney = (given?: JourneyRepository): Journey => {
+export const useJourney = (given?: JourneyGateway): Journey => {
   const { sessionSettled } = useSession();
   // Held across renders: the effect is keyed on it, and a fresh one each render
   // would read the journey forever.

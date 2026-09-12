@@ -1,2 +1,2 @@
 export { restJourney } from "./restJourney";
-export type { JourneyRepository } from "./JourneyRepository";
+export type { JourneyGateway } from "./JourneyGateway";
