@@ -9,7 +9,8 @@ import {
 } from "@shared/one-time-code";
 import type { RequestState } from "@shared/types";
 import { restVerification } from "../gateway";
-import { executeVerification, type VerificationMessages } from "../services";
+import { executeVerification } from "../services";
+import type { VerificationMessages } from "../model";
 import type { VerificationRepository } from "../gateway";
 
 export interface CodeFlowOptions {

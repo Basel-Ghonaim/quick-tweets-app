@@ -3,7 +3,8 @@ import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
 import { restVerification } from "../gateway";
-import { executeVerification, type VerificationMessages } from "../services";
+import { executeVerification } from "../services";
+import type { VerificationMessages } from "../model";
 import type { VerificationRepository } from "../gateway";
 
 export interface AskFlowOptions {

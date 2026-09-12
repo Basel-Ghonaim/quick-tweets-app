@@ -1,6 +1,7 @@
 import type { AppError } from "@shared/errors";
 import type { RequestState } from "@shared/types";
-import { verificationErrorHandler, type VerificationMessages } from "./verificationErrorHandler";
+import { verificationErrorHandler } from "./verificationErrorHandler";
+import type { VerificationMessages } from "../model";
 
 /** Drives the setter it is given, so the flow is exercised without a renderer.
  *  It commits no identity: proving an address changes no session. */
