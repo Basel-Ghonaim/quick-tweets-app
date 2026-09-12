@@ -1,19 +1,17 @@
 import { useLocation } from "react-router-dom";
 import { Button, MessageRegion, Typography } from "@shared/design-system";
-import { SchemaField, toFieldEntries } from "@shared/schema-form";
+import { SchemaField } from "@shared/schema-form";
 import { useLoginFlow } from "../../hooks";
-import { authFormSchemas } from "../../forms";
 import { AUTH_COPY } from "@shared/copy";
 import { RouteLink, useRouteNavigate } from "@shared/routing";
 import styles from "./SignIn.module.css";
-
-const fields = toFieldEntries(authFormSchemas.loginFields);
 
 export const SignIn = () => {
   const navigate = useRouteNavigate();
   const { notice } = (useLocation().state ?? {}) as { notice?: string };
 
   const {
+    fields,
     values,
     errors,
     isSubmitting,

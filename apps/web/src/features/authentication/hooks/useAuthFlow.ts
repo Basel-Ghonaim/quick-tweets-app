@@ -2,6 +2,7 @@ import { useAuthenticationSelector } from "../store/hooks";
 import { useRequestState } from "@shared/hooks";
 import type { SerializedAppError } from "@shared/errors";
 import {
+  toFieldEntries,
   useSchemaForm,
   type FormFieldConfig,
   type FormPayload,
@@ -16,6 +17,9 @@ import { afterSuccess } from "../services";
 import type { AuthRequestType } from "../store";
 
 type AuthFlowType = AuthRequestType;
+
+const loginFields = toFieldEntries(authFormSchemas.loginFields);
+const registerFields = toFieldEntries(authFormSchemas.registerFields);
 
 export interface AuthFlowReturn<
   TSchema extends Record<string, FormFieldConfig<FormPayload>>,
@@ -70,18 +74,22 @@ const useAuthFormBase = <
 
 export const useLoginFlow = (onDone?: () => void) => {
   const { login } = useAuthActions();
-  return useAuthFormBase(
+  const form = useAuthFormBase(
     authFormSchemas.loginFields,
     afterSuccess(login, onDone),
     "login",
   );
+
+  return { fields: loginFields, ...form };
 };
 
 export const useRegisterFlow = (onDone?: () => void) => {
   const { register } = useAuthActions();
-  return useAuthFormBase(
+  const form = useAuthFormBase(
     authFormSchemas.registerFields,
     afterSuccess(register, onDone),
     "register",
   );
+
+  return { fields: registerFields, ...form };
 };
