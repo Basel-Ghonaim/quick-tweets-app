@@ -49,6 +49,6 @@ The Finding stays `Open`: five capabilities remain to be brought to the structur
 
 **The session now meets the structure** (#701). It lives at `shared/session`, organised in `model/`, `gateway/`, `services/`, `store/` and `hooks/`, each with its own barrel, with its typed selector hook in `store/` and its port named `SessionGateway`. Its row above is resolved, and so is the layer-barrel gap the 2026-09-11 addendum recorded against it; authentication's `screens/` still has none.
 
-**The rename adds one departure of its own.** Journey meets the structure in every other way, but its layer is still named `repository/` and its port `JourneyRepository`; no Work Item is yet scheduled to rename them. Authentication, recovery and channel verification take the name as each is brought to the structure.
+**Journey takes the name in the same Work Item.** Its layer is `gateway/` and its port `JourneyGateway`, so the two capabilities that meet the structure meet it under one vocabulary rather than two. Authentication, recovery and channel verification take the name as each is brought to the structure; until then their `repository/` folders are a departure of the same kind as the others recorded above.
 
-The Finding stays `Open`: four capabilities remain to be brought to the structure, and journey's layer keeps the former name.
+The Finding stays `Open`: four capabilities remain to be brought to the structure.
