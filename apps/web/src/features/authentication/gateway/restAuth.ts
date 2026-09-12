@@ -1,7 +1,7 @@
 import type { AuthRepository } from "./AuthRepository";
 import { authClient, unwrap, type ApiEnvelope } from "@shared/api";
 import { toAuthResponse, type AuthResponseDto } from "@shared/session";
-import { authMapper } from "../mapper";
+import { authMapper } from "./authMapper";
 import type { RegisterRequestDto } from "./authDto";
 
 export const restAuth = (authApi = authClient): AuthRepository => {
