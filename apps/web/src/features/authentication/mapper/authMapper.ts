@@ -1,4 +1,4 @@
-import type { LoginCredentials, RegisterCredentials } from "../credentials";
+import type { LoginCredentials, RegisterCredentials } from "../model";
 import type { LoginRequestDto, RegisterRequestDto } from "../dto";
 
 export interface AuthMapper {
