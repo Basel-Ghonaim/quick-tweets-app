@@ -3,7 +3,7 @@ import { AUTH_COPY } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
 import styles from "./RecoveryCode.module.css";
 import { normaliseCode } from "@shared/one-time-code";
-import { recoveryFormSchemas } from "../../recoveryFormSchemas";
+import { recoveryFormSchemas } from "../../forms";
 import { useRecoveryForm, useResendWindow } from "../../hooks";
 import type { RecoveryPosition } from "../../model";
 
