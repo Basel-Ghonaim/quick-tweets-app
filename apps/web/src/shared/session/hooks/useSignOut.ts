@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRequestState } from "@shared/hooks";
 import { useSessionSelector, selectSignOutRequest } from "../store";
-import { executeSignOut } from "../lifecycle/executeSignOut";
+import { executeSignOut } from "../services";
 import { restSession } from "../gateway";
 
 /** Only `isError` is surfaced: a successful sign-out is observed as `isLoggedIn`

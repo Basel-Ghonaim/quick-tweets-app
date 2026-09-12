@@ -12,7 +12,7 @@ export { useSession } from "./hooks/useSession";
 export { useSessionRestore } from "./hooks/useSessionRestore";
 export { useSignOut } from "./hooks/useSignOut";
 
-export { executeSignOut } from "./lifecycle/executeSignOut";
+export { executeSignOut } from "./services";
 export { refreshSession } from "./gateway";
 
 export type { AuthResponse } from "./model";
