@@ -129,7 +129,7 @@ export const AServerErrorIsAnnounced: Story = {
 
     const alert = await canvas.findByRole("alert");
     await expect(alert).toBeVisible();
-    await expect(alert).not.toHaveTextContent("raw");
+    await expect(alert).toHaveTextContent(AUTH_COPY.profile.invalid);
   },
 };
 
