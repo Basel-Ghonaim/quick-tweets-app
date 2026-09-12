@@ -1,5 +1,5 @@
 import type { LoginCredentials, RegisterCredentials } from "../model";
-import type { LoginRequestDto, RegisterRequestDto } from "../gateway/authDto";
+import type { LoginRequestDto, RegisterRequestDto } from "./authDto";
 
 export interface AuthMapper {
   loginCredentialsToDto: (data: LoginCredentials) => LoginRequestDto;

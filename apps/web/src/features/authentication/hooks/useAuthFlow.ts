@@ -1,4 +1,4 @@
-import { useAuthenticationSelector } from "../store/hooks";
+import { useAuthenticationSelector } from "../store";
 import { useRequestState } from "@shared/hooks";
 import type { SerializedAppError } from "@shared/errors";
 import {
