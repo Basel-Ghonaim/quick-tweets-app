@@ -1,5 +1,5 @@
 import { publicCredentialedClient, unwrap, type ApiEnvelope } from "@shared/api";
-import type { RecoveryPositionDto } from "../dto";
+import type { RecoveryPositionDto } from "../gateway/recoveryDto";
 import { recoveryMapper } from "../mapper";
 import type { RecoveryRepository } from "./RecoveryRepository";
 
