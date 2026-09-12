@@ -4297,6 +4297,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
+                  "pm.environment.set(\"cvResendSeconds\", pm.response.json().data.resendAvailableInSeconds);",
                   "pm.test(\"the backend accepted the message\", () =>",
                   "  pm.expect(pm.response.json().data.delivery).to.eql(\"accepted\"));",
                   "// The code is NOT in this response and never will be. Open the newest file",
@@ -4317,6 +4318,57 @@
               "path": [
                 "channel-verification",
                 "challenges"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{cvToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CHV-01b · The window the issue reported can be read",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"a challenge is outstanding\", () => pm.expect(d.status).to.eql(\"pending\"));",
+                  "// The same anchor, read a moment later: never larger than what the issue",
+                  "// reported, and still running.",
+                  "pm.test(\"the window is the issue's own\", () => {",
+                  "  pm.expect(d.resendAvailableInSeconds).to.be.above(0);",
+                  "  pm.expect(d.resendAvailableInSeconds).to.be.at.most(",
+                  "    Number(pm.environment.get(\"cvResendSeconds\")),",
+                  "  );",
+                  "});",
+                  "pm.test(\"the answer carries nothing else\", () =>",
+                  "  pm.expect(Object.keys(d).sort()).to.eql([\"resendAvailableInSeconds\", \"status\"]));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/channel-verification/challenges/current",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "channel-verification",
+                "challenges",
+                "current"
               ]
             },
             "auth": {
