@@ -1,6 +1,6 @@
 import type { AuthResponse } from "../model";
 
-export interface SessionRepository {
+export interface SessionGateway {
   refresh: () => Promise<AuthResponse>;
   logout: () => Promise<void>;
 }
