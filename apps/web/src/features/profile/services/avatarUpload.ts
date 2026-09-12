@@ -1,7 +1,5 @@
 import type { AvatarUploadStatus } from "../model";
 
-export type { AvatarUploadStatus };
-
 export interface AvatarUploadState {
   status: AvatarUploadStatus;
   /** The reference the profile update carries. Present only once uploaded. */

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { useSchemaForm } from "@shared/schema-form";
+import { toFieldEntries, useSchemaForm } from "@shared/schema-form";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
@@ -7,11 +7,15 @@ import type { AvatarUploadStatus, ProfileSettlement } from "../model";
 import { restProfile } from "../gateway";
 import type { ProfileGateway } from "../gateway";
 import { executeProfileUpdate } from "../services";
-import { profileFormSchema } from "../forms";
+import { profileFormSchema, BIO_MAX } from "../forms";
+import { AVATAR_ACCEPT, AVATAR_MAX_BYTES } from "../model";
 import { useAvatarUpload } from "./useAvatarUpload";
 import { composeEdits } from "../services";
 
 interface ProfileFlow {
+  /** What the screen renders, so it names no schema of its own. */
+  fields: typeof fields;
+  bioMax: number;
   values: { name: string; bio: string };
   errors: Record<"name" | "bio", string | null>;
   isSubmitting: boolean;
@@ -21,11 +25,15 @@ interface ProfileFlow {
     status: AvatarUploadStatus;
     select: (file: File | null) => void;
     retry: () => void;
+    accept: string;
+    maxBytes: number;
   };
   handleChange: ReturnType<typeof useSchemaForm>["handleChange"];
   handleSubmit: ReturnType<typeof useSchemaForm>["handleSubmit"];
   skip: () => void;
 }
+
+const fields = toFieldEntries(profileFormSchema);
 
 /**
  * Composes the two requests behind one submit: the picture is already uploaded
@@ -58,12 +66,20 @@ export const useProfileFlow = (
   const skip = useCallback(() => onSettled?.("skipped"), [onSettled]);
 
   return {
+    fields,
+    bioMax: BIO_MAX,
     values: form.values,
     errors: form.errors,
     isSubmitting: form.isSubmitting || isLoading,
     isError,
     serverError,
-    avatar: { status: avatar.status, select: avatar.select, retry: avatar.retry },
+    avatar: {
+      status: avatar.status,
+      select: avatar.select,
+      retry: avatar.retry,
+      accept: AVATAR_ACCEPT,
+      maxBytes: AVATAR_MAX_BYTES,
+    },
     handleChange: form.handleChange,
     handleSubmit: form.handleSubmit,
     skip,

@@ -1,15 +1,10 @@
 import { Button, FileInput, MessageRegion, Typography } from "@shared/design-system";
-import { SchemaField, toFieldEntries } from "@shared/schema-form";
+import { SchemaField } from "@shared/schema-form";
 import { AUTH_COPY } from "@shared/copy";
-import { useProfileFlow, profileFormSchema, BIO_MAX } from "@features/profile";
+import { useProfileFlow } from "@features/profile";
 import type { ProfileGateway } from "@features/profile";
 import type { ProfileOutcome } from "@features/journey";
 import styles from "./Profile.module.css";
-
-const fields = toFieldEntries(profileFormSchema);
-
-const AVATAR_ACCEPT = "image/jpeg,image/png";
-const AVATAR_MAX_BYTES = 1024 * 1024;
 
 interface ProfileProps {
   onSettled: (outcome: ProfileOutcome) => void;
@@ -18,6 +13,8 @@ interface ProfileProps {
 
 export const Profile = ({ onSettled, repo }: ProfileProps) => {
   const {
+    fields,
+    bioMax,
     values,
     errors,
     isSubmitting,
@@ -57,8 +54,8 @@ export const Profile = ({ onSettled, repo }: ProfileProps) => {
             name="avatar"
             label={AUTH_COPY.profile.avatarLabel}
             helperText={AUTH_COPY.profile.avatarHint}
-            accept={AVATAR_ACCEPT}
-            maxSize={AVATAR_MAX_BYTES}
+            accept={avatar.accept}
+            maxSize={avatar.maxBytes}
             onFilesChange={(files) => avatar.select(files[0] ?? null)}
           />
 
@@ -88,7 +85,7 @@ export const Profile = ({ onSettled, repo }: ProfileProps) => {
         ))}
 
         <p className={styles.count} aria-hidden="true">
-          {AUTH_COPY.profile.bioCount(values.bio.length, BIO_MAX)}
+          {AUTH_COPY.profile.bioCount(values.bio.length, bioMax)}
         </p>
 
         <Button
