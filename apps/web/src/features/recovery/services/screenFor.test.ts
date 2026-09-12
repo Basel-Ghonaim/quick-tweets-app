@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { screenFor } from "./screenFor";
-import type { RecoveryPosition } from "../entity";
+import type { RecoveryPosition } from "../model";
 
 const at = (step: RecoveryPosition["step"]): RecoveryPosition => ({
   step,

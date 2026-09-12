@@ -1,3 +1,3 @@
-export * from "./RecoveryRequest";
-export * from "./RecoveryCode";
-export * from "./RecoveryPassword";
+export { RecoveryRequest } from "./RecoveryRequest";
+export { RecoveryCode } from "./RecoveryCode";
+export { RecoveryPassword } from "./RecoveryPassword";

@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react";
 import { AUTH_COPY } from "@shared/copy";
-import { screenFor, type RecoveryScreen } from "../services";
+import { screenFor } from "../services";
 import { useRecovery } from "./useRecovery";
-import type { RecoveryPosition } from "../entity";
-import type { RecoveryRepository } from "../repository";
+import type { RecoveryPosition, RecoveryScreen } from "../model";
+import type { RecoveryGateway } from "../gateway";
 
 export interface RecoveryFlow {
   screen: RecoveryScreen;
@@ -26,7 +26,7 @@ export interface RecoveryFlow {
  * submitted one is never empty.
  */
 export const useRecoveryFlow = (
-  repo?: RecoveryRepository,
+  repo?: RecoveryGateway,
   onComplete?: () => void,
 ): RecoveryFlow => {
   const { read, position, request, resend, confirm, apply, retry } = useRecovery(repo);

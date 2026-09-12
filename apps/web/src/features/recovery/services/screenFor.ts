@@ -1,8 +1,4 @@
-import type { RecoveryStep } from "../recovery.types";
-import type { RecoveryRead } from "./resolveRecovery";
-
-/** What the recovery route shows. Every value is the server's or a wait for it. */
-export type RecoveryScreen = "pending" | "retry" | RecoveryStep;
+import type { RecoveryRead, RecoveryScreen } from "../model";
 
 /**
  * A read that failed is not an answer of `request`: treating it as one would

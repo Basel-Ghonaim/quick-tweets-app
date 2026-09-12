@@ -5,7 +5,7 @@ import {
   resendCooldownInitial,
   resendCooldownReducer,
 } from "@shared/one-time-code";
-import type { RecoveryPosition } from "../entity";
+import type { RecoveryPosition } from "../model";
 
 /**
  * The seconds tick here; the number they start from is always the server's.

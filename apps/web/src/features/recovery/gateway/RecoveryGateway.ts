@@ -1,6 +1,6 @@
-import type { RecoveryPosition } from "../entity";
+import type { RecoveryPosition } from "../model";
 
-export interface RecoveryRepository {
+export interface RecoveryGateway {
   /** Never fails for want of a position: an absent one answers `request`. */
   position(): Promise<RecoveryPosition>;
   request(email: string): Promise<RecoveryPosition>;
