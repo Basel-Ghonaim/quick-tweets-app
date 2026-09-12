@@ -42,3 +42,13 @@ The order in which the capabilities are brought to it, which is the plan's. Whet
 **The structure gained a rule in the same change** — each layer carries its own `index.ts` — and two capabilities do not yet meet it: none of the session's four layers has one, and authentication's `screens/` has none. Recovery and channel verification already do.
 
 The Finding stays `Open`: five capabilities remain to be brought to the structure.
+
+## Addendum — 2026-09-12
+
+**The structure's server-facing layer is now `gateway/`** ([#701](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/701)). A repository is a collection of aggregates reached by identity; what this layer holds is operations against a remote system, which is a gateway. Wherever this Finding says `repository/` above, including the 2026-09-11 addendum, it names that layer by its former name.
+
+**The session now meets the structure** (#701). It lives at `shared/session`, organised in `model/`, `gateway/`, `services/`, `store/` and `hooks/`, each with its own barrel, with its typed selector hook in `store/` and its port named `SessionGateway`. Its row above is resolved, and so is the layer-barrel gap the 2026-09-11 addendum recorded against it; authentication's `screens/` still has none.
+
+**Journey takes the name in the same Work Item.** Its layer is `gateway/` and its port `JourneyGateway`, so the two capabilities that meet the structure meet it under one vocabulary rather than two. Authentication, recovery and channel verification take the name as each is brought to the structure; until then their `repository/` folders are a departure of the same kind as the others recorded above.
+
+The Finding stays `Open`: four capabilities remain to be brought to the structure.

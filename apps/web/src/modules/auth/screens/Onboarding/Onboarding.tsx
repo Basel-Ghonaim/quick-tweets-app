@@ -4,7 +4,7 @@ import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
 import { JourneyLayout } from "../../layout";
 import { useRouteNavigate } from "@shared/routing";
-import { useJourney, type JourneyRepository } from "@features/journey";
+import { useJourney, type JourneyGateway } from "@features/journey";
 import { destinationFor } from "./destinationFor";
 import { stepStates } from "../../components/Stepper";
 import { Profile } from "../Profile";
@@ -15,7 +15,7 @@ import styles from "./Onboarding.module.css";
  * The journey's one route. Which screen renders is the server's answer, so a
  * reload, a second tab and a typed path all resolve the same way.
  */
-export const Onboarding = ({ repo }: { repo?: JourneyRepository } = {}) => {
+export const Onboarding = ({ repo }: { repo?: JourneyGateway } = {}) => {
   const { read, state, advance, leave, retry } = useJourney(repo);
   const [openingWindow, setOpeningWindow] = useState<number>();
   const navigate = useRouteNavigate();

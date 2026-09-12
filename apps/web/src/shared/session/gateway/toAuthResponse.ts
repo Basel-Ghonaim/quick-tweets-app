@@ -1,5 +1,5 @@
 import type { AuthResponseDto } from "./AuthResponseDto";
-import type { AuthResponse } from "./AuthResponse";
+import type { AuthResponse } from "../model";
 
 /** The one wire shape every session-yielding endpoint returns, as the domain sees it. */
 export const toAuthResponse = (data: AuthResponseDto): AuthResponse => ({

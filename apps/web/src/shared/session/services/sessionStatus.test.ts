@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 
-import { sessionReducer, sessionActions } from "./sessionSlice";
-import { restoreSession } from "../lifecycle/restoreSession";
+import { sessionReducer, sessionActions } from "../store";
+import { restoreSession } from "./restoreSession";
 
 const makeStore = () =>
   configureStore({ reducer: { session: sessionReducer } });

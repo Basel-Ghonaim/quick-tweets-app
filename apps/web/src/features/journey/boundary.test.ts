@@ -75,7 +75,7 @@ describe("the journey's public surface", () => {
         "JourneyMove",
         "JourneyPhase",
         "JourneyRead",
-        "JourneyRepository",
+        "JourneyGateway",
         "JourneyState",
         "ProfileOutcome",
       ].sort(),

@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRequestState } from "@shared/hooks";
-import { useSessionSelector } from "./useSessionSelector";
-import { selectSignOutRequest } from "../state/selectors";
-import { executeSignOut } from "../lifecycle/executeSignOut";
-import { restSession } from "../transport/restSession";
+import { useSessionSelector, selectSignOutRequest } from "../store";
+import { executeSignOut } from "../services";
+import { restSession } from "../gateway";
 
 /** Only `isError` is surfaced: a successful sign-out is observed as `isLoggedIn`
  *  turning false, since ending the session is what it does. */

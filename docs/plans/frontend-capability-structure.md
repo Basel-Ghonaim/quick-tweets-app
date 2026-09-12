@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Refactoring
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-11
+> **Last Updated:** 2026-09-12
 > **Parent Issue:** [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678)
 > **Supersedes:** [Frontend Zone Migration](frontend-zone-migration.md)
 
@@ -115,7 +115,7 @@ How each capability gets there, and the questions in §5 that bear on it, are se
 | **A** | Where does the interface of a platform capability live when a product surface needs it? The verification screens are channel verification's interaction, yet the platform publishes no product interface ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6), a feature is defined by a fact it owns (ADR 0018 Decision 3), and a page cannot share a screen with another page. [Finding 0023](../architecture/findings/0023-verification-ui-is-placed-by-composition.md) | the verification screens, Phase 3 |
 | **B** | How is channel verification's request-then-confirm sequence held? Today it is two lifecycles, and the resend window crosses the page's state between them | channel verification, Phase 2, and the page that carries the window today |
 | **C** | When profile stops borrowing authentication's error wording, does it keep the same words — preserving behaviour, and a message known to be wrong — or correct them? | profile's boundaries, Phase 2 |
-| **D** | Should a screen's public signature name a repository so that its stories can pass a test double — four do today — and if not, how does a screen receive one? | the screens that carry one today, Phase 3 |
+| **D** | Should a screen's public signature name a gateway so that its stories can pass a test double — four do today — and if not, how does a screen receive one? | the screens that carry one today, Phase 3 |
 | **E** | Where does the journey's progress display live? [Finding 0025](../architecture/findings/0025-journey-stepper-holds-the-committed-steppers-name.md) | the progress display, Phase 3 |
 
 ---

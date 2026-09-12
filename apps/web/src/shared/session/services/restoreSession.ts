@@ -1,8 +1,7 @@
 import type { Dispatch } from "@reduxjs/toolkit";
-import { restSession } from "../transport/restSession";
-import { sessionActions } from "../state/sessionSlice";
-import type { AuthResponse } from "../transport/AuthResponse";
-import { hasSessionHint, clearSessionHint } from "./sessionHint";
+import { restSession, hasSessionHint, clearSessionHint } from "../gateway";
+import { sessionActions } from "../store";
+import type { AuthResponse } from "../model";
 
 // Injectable seams so the policy is unit-testable in Node (no DOM/network).
 export interface RestoreSessionDeps {

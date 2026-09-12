@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createAppError } from "@shared/errors";
 import { resolveJourney } from "./resolveJourney";
 import type { JourneyState } from "../model";
-import type { JourneyRepository } from "../repository";
+import type { JourneyGateway } from "../gateway";
 
 const state = (over: Partial<JourneyState> = {}): JourneyState => ({
   phase: "profile",
@@ -11,7 +11,7 @@ const state = (over: Partial<JourneyState> = {}): JourneyState => ({
   ...over,
 });
 
-const repoOf = (over: Partial<JourneyRepository> = {}): JourneyRepository => ({
+const repoOf = (over: Partial<JourneyGateway> = {}): JourneyGateway => ({
   read: vi.fn(async () => state()),
   advance: vi.fn(async () => state()),
   ...over,

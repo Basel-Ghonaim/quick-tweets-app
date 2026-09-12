@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { restoreSession } from "../lifecycle/restoreSession";
+import { restoreSession } from "../services";
 
 // Non-blocking, hint-gated identity restore on mount — never gates render.
 export const useSessionRestore = (): void => {

@@ -1,5 +1,9 @@
-import { useSessionSelector } from "./useSessionSelector";
-import { selectAccessToken, selectSessionStatus, selectSessionUser } from "../state/selectors";
+import {
+  useSessionSelector,
+  selectAccessToken,
+  selectSessionStatus,
+  selectSessionUser,
+} from "../store";
 
 export const useSession = () => {
   const user = useSessionSelector(selectSessionUser);

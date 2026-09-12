@@ -6,8 +6,8 @@
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, where features meet the platform, and how each capability inside them is organised.
 > **Maturity:** This document describes the **intended and settled** architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The capability structure was written once authentication, recovery, the session and channel verification had been built in two different shapes, and reconciles them ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
 > **Superseded in part:** the **outer architecture** this document states — the three zones, the dependency rule, and the module contract — is superseded by [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md), which decides four zones (`app` · `pages` · `features` · `shared`) and moves the route-subtree rule from the feature to the page group. **Where this document and that ADR disagree, the ADR governs.** What is written below describes the architecture the code was built to, not the one it is moving to; it is restated in its new operative form as the structure lands ([ADR 0012](../architecture/decisions/0012-foundation-contract-independent-of-consumer-adoption.md) Decision 5). The composition root, the platform index, the thin-utility rule and the capability structure are unaffected; the last is written to the four zones.
-> **Version:** 2.2
-> **Last Updated:** 2026-09-11
+> **Version:** 2.3
+> **Last Updated:** 2026-09-12
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -90,7 +90,7 @@ It does not govern the platform's **mechanisms** — the design system, the form
 |---|---|---|
 | `index.ts` | the capability's public surface | always |
 | `model/` | its vocabulary: its entities, and the types more than one of its layers shares | always |
-| `repository/` | its port to the server, the implementation that fulfils it, and the wire shapes and the mapper between them and the model | it reaches the server |
+| `gateway/` | its port to the server, the implementation that fulfils it, and the wire shapes and the mapper between them and the model | it reaches the server |
 | `services/` | logic that runs without a renderer: orchestration, policy, pure reducers, error handling applied to a normalised error | it holds logic beyond a call |
 | `store/` | its slice, the state shape and payloads only the slice uses, its selectors and typed store hooks | its state outlives the component that reads it |
 | `forms/` | its form definitions — the fields and the validators they compose | it takes input through the [form engine](forms.md) |
@@ -104,9 +104,9 @@ It does not govern the platform's **mechanisms** — the design system, the form
 
 - **The root barrel is the only way in.** Nothing outside a capability imports past its `index.ts`, and nothing inside it imports itself through its own alias. A capability exposes no second barrel; this replaces the sub-barrel allowed above.
 - **Each layer carries its own `index.ts`.** It declares what the layer offers the rest of the capability: a file reaches another layer through that barrel, and a sibling in its own layer directly. A layer barrel is internal — nothing outside the capability imports one, so it is not a second way in.
-- **Dependencies inside a capability run downward.** `screens` use `hooks`; `hooks` use `services`, `forms`, `store` and `repository`; `services` use `store` and `repository`; every layer may use `model`. Nothing imports a layer that uses it.
-- **A screen presents.** It renders what its hooks return and calls what they expose. It composes no repository, runs no orchestration, and holds no rule the server also states ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 6); a route or a step that belongs to someone else reaches it from the page that mounts it (Decisions 2 and 4).
-- **A capability's calls to the server live in its own repository.** The [transport](api-client.md) supplies the clients, the envelope and the interceptors, and holds no capability's endpoints.
+- **Dependencies inside a capability run downward.** `screens` use `hooks`; `hooks` use `services`, `forms`, `store` and `gateway`; `services` use `store` and `gateway`; every layer may use `model`. Nothing imports a layer that uses it.
+- **A screen presents.** It renders what its hooks return and calls what they expose. It composes no gateway, runs no orchestration, and holds no rule the server also states ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 6); a route or a step that belongs to someone else reaches it from the page that mounts it (Decisions 2 and 4).
+- **A capability's calls to the server live in its own gateway.** The [transport](api-client.md) supplies the clients, the envelope and the interceptors, and holds no capability's endpoints.
 - **A capability's boundary is held by its own test.** `boundary.test.ts` checks at least that the capability is reached only through its barrel, that it imports nothing its zone forbids, and — where it has no `screens/` — that it holds no component, stylesheet or story. Whatever the decision that governs the capability adds, it checks too.
 - **A platform capability has no `screens/` while [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6 holds**, because under it the platform publishes no product interface. The rule follows that decision and changes with it; where a platform capability's interface lives when a product surface needs one is not settled here.
 

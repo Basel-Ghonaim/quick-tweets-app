@@ -1,20 +1,19 @@
-export { sessionReducer, sessionActions, SESSION_SLICE_KEY } from "./state/sessionSlice";
 export {
+  sessionReducer,
+  sessionActions,
+  SESSION_SLICE_KEY,
   selectAccessToken,
   selectSessionUser,
   selectSessionStatus,
   selectSignOutRequest,
-} from "./state/selectors";
-export type { WithSession } from "./state/selectors";
-export type { SessionState, SessionStatus } from "./state/sessionState";
+} from "./store";
+export type { SessionState, SessionStatus, WithSession } from "./store";
 
-export { useSession } from "./hooks/useSession";
-export { useSessionRestore } from "./hooks/useSessionRestore";
-export { useSignOut } from "./hooks/useSignOut";
+export { useSession, useSessionRestore, useSignOut } from "./hooks";
 
-export { executeSignOut } from "./lifecycle/executeSignOut";
-export { refreshSession } from "./transport/refreshSession";
+export { executeSignOut } from "./services";
 
-export type { AuthResponse } from "./transport/AuthResponse";
-export type { AuthResponseDto, UserDto } from "./transport/AuthResponseDto";
-export { toAuthResponse } from "./transport/toAuthResponse";
+export { refreshSession, toAuthResponse } from "./gateway";
+export type { AuthResponseDto, UserDto } from "./gateway";
+
+export type { AuthResponse } from "./model";
