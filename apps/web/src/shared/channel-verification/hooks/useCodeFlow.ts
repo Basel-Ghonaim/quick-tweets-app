@@ -8,9 +8,9 @@ import {
   resendCooldownReducer,
 } from "@shared/one-time-code";
 import type { RequestState } from "@shared/types";
-import { restVerification } from "../repository";
+import { restVerification } from "../gateway";
 import { executeVerification, type VerificationMessages } from "../services";
-import type { VerificationRepository } from "../repository";
+import type { VerificationRepository } from "../gateway";
 
 export interface CodeFlowOptions {
   onVerified?: () => void;

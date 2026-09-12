@@ -2,9 +2,9 @@ import { useCallback, useState } from "react";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
-import { restVerification } from "../repository";
+import { restVerification } from "../gateway";
 import { executeVerification, type VerificationMessages } from "../services";
-import type { VerificationRepository } from "../repository";
+import type { VerificationRepository } from "../gateway";
 
 export interface AskFlowOptions {
   onSent?: (resendAvailableInSeconds: number) => void;
