@@ -1,4 +1,4 @@
-import type { ProfileEdits, UpdatedProfile } from "./model";
+import type { ProfileEdits, UpdatedProfile } from "../model";
 import type { UpdateProfileDto } from "./profileDto";
 
 interface ProfileResponseDto {

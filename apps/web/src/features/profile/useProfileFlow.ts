@@ -4,7 +4,7 @@ import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
 import type { ProfileSettlement } from "./model";
-import { restProfile } from "./restProfile";
+import { restProfile } from "./gateway";
 import { executeProfileUpdate } from "./executeProfileUpdate";
 import { profileFormSchema } from "./profileFormSchema";
 import { useAvatarUpload } from "./useAvatarUpload";
