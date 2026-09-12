@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useRequestState } from "@shared/hooks";
-import { useSessionSelector } from "./useSessionSelector";
-import { selectSignOutRequest } from "../store";
+import { useSessionSelector, selectSignOutRequest } from "../store";
 import { executeSignOut } from "../lifecycle/executeSignOut";
 import { restSession } from "../gateway";
 
