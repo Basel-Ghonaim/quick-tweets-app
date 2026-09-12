@@ -3,12 +3,12 @@ import { useSchemaForm } from "@shared/schema-form";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
-import type { AvatarUploadStatus, ProfileSettlement } from "./model";
-import { restProfile } from "./gateway";
-import { executeProfileUpdate } from "./services";
-import { profileFormSchema } from "./profileFormSchema";
+import type { AvatarUploadStatus, ProfileSettlement } from "../model";
+import { restProfile } from "../gateway";
+import { executeProfileUpdate } from "../services";
+import { profileFormSchema } from "../forms";
 import { useAvatarUpload } from "./useAvatarUpload";
-import { composeEdits } from "./services";
+import { composeEdits } from "../services";
 
 interface ProfileFlow {
   values: { name: string; bio: string };
