@@ -20,6 +20,8 @@ import type { IUserRepository, UserWithCounts } from "./user.types.js";
 const verificationStub = {
   statusOf: async () => "unproven" as const,
   statusOfMany: async (subjects: unknown[]) => subjects.map(() => "unproven" as const),
+  // The self-view reads a status; the whole state is the capability's own route's.
+  stateOf: async () => ({ status: "unproven" as const, resendAvailableInSeconds: 0 }),
 };
 
 const TX = { __tx: true } as never; // opaque sentinel for the transaction client
@@ -373,6 +375,7 @@ describe("the self-view's verification projection", () => {
       return answer;
     },
     statusOfMany: async (subjects: unknown[]) => subjects.map(() => answer),
+    stateOf: async () => ({ status: answer, resendAvailableInSeconds: 0 }),
   });
 
   it("reports what the capability says, not anything the account row holds", async () => {

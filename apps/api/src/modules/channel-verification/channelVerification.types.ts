@@ -203,6 +203,17 @@ export interface IChannelVerificationRepository {
 /** What the capability knows about a subject, resolved rather than stored. */
 export type VerificationStatus = "unproven" | "pending" | "proven";
 
+/**
+ * A subject's whole read-time answer: what is known, and how long until another
+ * challenge may be issued. Both are derived on read from the same two rows, so
+ * asking writes nothing and an expired challenge answers correctly untouched.
+ */
+export interface VerificationState {
+  status: VerificationStatus;
+  /** `0` when no window is running — never challenged, or the wait has passed. */
+  resendAvailableInSeconds: number;
+}
+
 export interface IssueInput {
   userId: number;
   /** The subject, taken as given: this module normalizes nothing. */
@@ -247,4 +258,10 @@ export interface IChannelVerificationService {
     endpoint: string,
     client?: DbClient,
   ): Promise<VerificationStatus>;
+  /** One subject's whole read-time answer, for the capability's own read route. */
+  stateOf(
+    userId: number,
+    endpoint: string,
+    client?: DbClient,
+  ): Promise<VerificationState>;
 }
