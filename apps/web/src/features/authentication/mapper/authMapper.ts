@@ -1,4 +1,10 @@
-import type { AuthMapper } from "./Mapper";
+import type { LoginCredentials, RegisterCredentials } from "../credentials";
+import type { LoginRequestDto, RegisterRequestDto } from "../dto";
+
+export interface AuthMapper {
+  loginCredentialsToDto: (data: LoginCredentials) => LoginRequestDto;
+  registerCredentialsToDto: (data: RegisterCredentials) => RegisterRequestDto;
+}
 
 export const authMapper = (): AuthMapper => ({
   loginCredentialsToDto: (data) => ({
