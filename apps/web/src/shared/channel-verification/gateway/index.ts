@@ -1,2 +1,2 @@
-export * from "./VerificationGateway";
-export * from "./restVerification";
+export { restVerification } from "./restVerification";
+export type { VerificationGateway } from "./VerificationGateway";

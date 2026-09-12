@@ -1,3 +1,3 @@
-export * from "./executeVerification";
-export * from "./resolveVerification";
-export * from "./verificationErrorHandler";
+export { executeVerification } from "./executeVerification";
+export { resolveVerification } from "./resolveVerification";
+export { verificationErrorHandler } from "./verificationErrorHandler";
