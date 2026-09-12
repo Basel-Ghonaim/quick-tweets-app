@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSession } from "@shared/session";
-import { restJourney, type JourneyRepository } from "../repository";
+import { restJourney, type JourneyRepository } from "../gateway";
 import { resolveJourney } from "../services";
 import type { JourneyMove, JourneyRead, JourneyState } from "../model";
 

@@ -1,6 +1,6 @@
 import { AppError } from "@shared/errors";
 import type { JourneyRead, JourneyState } from "../model";
-import type { JourneyRepository } from "../repository";
+import type { JourneyRepository } from "../gateway";
 
 const unauthorized = (error: unknown) =>
   error instanceof AppError && error.type === "unauthorized";

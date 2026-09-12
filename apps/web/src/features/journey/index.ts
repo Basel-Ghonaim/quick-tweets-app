@@ -1,5 +1,5 @@
 export { useJourney } from "./hooks";
-export type { JourneyRepository } from "./repository";
+export type { JourneyRepository } from "./gateway";
 export type {
   JourneyMove,
   JourneyPhase,
