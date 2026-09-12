@@ -1,4 +1,4 @@
-import type { ProfileEdits, UpdatedProfile } from "./profile.types";
+import type { ProfileEdits, UpdatedProfile } from "./model";
 
 export interface ProfileRepository {
   updateProfile: (edits: ProfileEdits) => Promise<UpdatedProfile>;
