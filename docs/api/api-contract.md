@@ -84,6 +84,7 @@ GET    /api/v1/follows/:username/following
 GET    /api/v1/onboarding/journey                       (authenticated)
 POST   /api/v1/onboarding/journey/advance               (authenticated)
 
+GET    /api/v1/channel-verification/challenges/current  (authenticated)
 POST   /api/v1/channel-verification/challenges          (authenticated)
 POST   /api/v1/channel-verification/challenges/confirm  (authenticated)
 
@@ -234,7 +235,7 @@ interface ErrorBody {
 
 ### Rate Limiting
 
-Every limiter below is **per IP**, over a fixed window, and answers with `type: "rate_limit"`. Routes are limited by prefix **except** where a route's own cost earns it something tighter — which is why `/media` and `/channel-verification` carry a limiter per route rather than one across the prefix, and why neither falls under the general cap.
+Every limiter below is **per IP**, over a fixed window, and answers with `type: "rate_limit"`. Routes are limited by prefix **except** where a route's own cost earns it something tighter — which is why `/media` and `/channel-verification` carry a limiter per route rather than one across the prefix. Their writes therefore fall outside the general cap; the verification read names that cap explicitly, since a route in a prefix with no blanket limiter has none unless it says so.
 
 | Scope | Endpoints | Limit | 429 Message |
 |---|---|---|---|
@@ -242,7 +243,7 @@ Every limiter below is **per IP**, over a fixed window, and answers with `type: 
 | Refresh | `/auth/refresh` | 30 req / 15 min | "Too many refresh requests. Please wait a few minutes before continuing." |
 | Verification issue | `POST /channel-verification/challenges` | **10 req / 15 min** | "Too many verification requests. Please wait 15 minutes before trying again." |
 | Verification confirm | `POST /channel-verification/challenges/confirm` | **10 req / 15 min** | "Too many confirmation attempts. Please wait 15 minutes before trying again." |
-| API | `/tweets`, `/comments`, `/users`, `/follows`, `/onboarding`, and `POST /media` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
+| API | `/tweets`, `/comments`, `/users`, `/follows`, `/onboarding`, `POST /media`, and `GET /channel-verification/challenges/current` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
 | Reset request | `POST /auth/password-reset` **and** `POST /auth/password-reset/resend` | **10 req / 15 min, shared** | "Too many password reset requests. Please wait 15 minutes before trying again." |
 | Reset confirm | `POST /auth/password-reset/confirm` | **10 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
 | Reset apply | `POST /auth/password-reset/apply` | **5 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
@@ -1217,6 +1218,35 @@ The presence check itself still applies, and it is the one case that answers dif
 ```
 
 > **One failure shape, deliberately.** Uniform opacity is auditable; a carve-out is not. The moment one cause reports itself it acquires its own message, then its own status, and the guarantee decays by increments — the same reasoning as the generic `401` on login. A code is **single-use**, so replaying a confirmed one is refused identically; a *wrong* value, by contrast, leaves the challenge usable, so one mistyped character cannot deny a holder their own verification.
+
+### `GET /channel-verification/challenges/current` — Where the holder stands
+
+**Auth:** Required. **Rate limit:** the general cap, 100 req / 15 min per IP. This prefix carries no blanket limiter, so the read names one rather than having none.
+
+Answers what the capability knows about the authenticated account's own endpoint, and how long until another challenge may be issued. **There is no `404`:** nothing outstanding is a legitimate answer meaning *there is nothing to wait for*, so a client never reads a status code to decide a screen — the same posture the password reset session's read takes.
+
+**The subject is the caller's own**, resolved server-side exactly as it is for the two writes. A body or a query naming another address is ignored.
+
+**`resendAvailableInSeconds` is the same number the `202` and the cooldown `429` report**, derived from the same anchor on the record at the moment the answer is produced. It is `0` when no window is running — never challenged, or the wait has passed — so a client offers a resend rather than a countdown. The cooldown stays a server setting, and a client that hardcoded it would be wrong whenever an operator changed it.
+
+**`status` is the projection the self-view also exposes** as [`emailVerification`](#get-usersme--own-profile), resolved on read from the record and its challenge. The read writes nothing, so an expired challenge answers correctly whether or not anything has cleaned it up.
+
+```jsonc
+// Response 200 — a challenge is outstanding, and its window is still running
+{ "success": true, "data": { "status": "pending", "resendAvailableInSeconds": 42 } }
+
+// Response 200 — nothing outstanding, and nothing to wait for
+{ "success": true, "data": { "status": "unproven", "resendAvailableInSeconds": 0 } }
+
+// Response 200 — control is proven; a window from the last issue may still be running
+{ "success": true, "data": { "status": "proven", "resendAvailableInSeconds": 0 } }
+
+// Response 401 — no valid Bearer token
+{ "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
+
+// Response 404 — the authenticated account no longer exists
+{ "success": false, "error": { "type": "not_found", "message": "Account not found" } }
+```
 
 ---
 
