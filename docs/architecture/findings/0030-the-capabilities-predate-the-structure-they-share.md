@@ -52,3 +52,11 @@ The Finding stays `Open`: five capabilities remain to be brought to the structur
 **Journey takes the name in the same Work Item.** Its layer is `gateway/` and its port `JourneyGateway`, so the two capabilities that meet the structure meet it under one vocabulary rather than two. Authentication, recovery and channel verification take the name as each is brought to the structure; until then their `repository/` folders are a departure of the same kind as the others recorded above.
 
 The Finding stays `Open`: four capabilities remain to be brought to the structure.
+
+## Addendum — 2026-09-12, recovery ([#703](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/703))
+
+**Recovery is organised as the structure says.** It holds `model/`, `gateway/`, `services/`, `forms/`, `hooks/` and `screens/`, each with a barrel that names what it offers, and its boundary test holds four rules. Its wire shapes, entity and mapper are inside the gateway, its port is `RecoveryGateway`, and its step, position, read and screen types are the model. Its row above is resolved.
+
+**Three things about recovery remain, each with an owner.** Its three step screens still import a form definition directly, which the second of its Work Items settles. Its screen's signature still names a gateway so its stories can pass a double, which is question D in Phase 3. Its two route literals still name `/auth/signin`, which the plan's question F leaves to the page in Phase 4; both are counted in the nine recorded above.
+
+The Finding stays `Open`: authentication, channel verification and profile remain to be brought to the structure, and the two departures that run across capabilities are unchanged.
