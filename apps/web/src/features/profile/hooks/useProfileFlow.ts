@@ -1,10 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSchemaForm } from "@shared/schema-form";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
 import type { AvatarUploadStatus, ProfileSettlement } from "../model";
 import { restProfile } from "../gateway";
+import type { ProfileGateway } from "../gateway";
 import { executeProfileUpdate } from "../services";
 import { profileFormSchema } from "../forms";
 import { useAvatarUpload } from "./useAvatarUpload";
@@ -32,11 +33,14 @@ interface ProfileFlow {
  */
 export const useProfileFlow = (
   onSettled?: (outcome: ProfileSettlement) => void,
-  repo = restProfile(),
+  given?: ProfileGateway,
 ): ProfileFlow => {
+  // Held across renders: the upload effect is keyed on the call it is given.
+  const repo = useMemo(() => given ?? restProfile(), [given]);
+
   const [request, setRequest] = useState<RequestState>({ status: "idle", error: null });
   const { isLoading, isError, error: serverError } = useRequestState(request);
-  const avatar = useAvatarUpload();
+  const avatar = useAvatarUpload(repo.uploadAvatar);
 
   const submit = useCallback(
     async (values: { name: string; bio: string }) => {

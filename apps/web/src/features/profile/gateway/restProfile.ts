@@ -1,4 +1,4 @@
-import { authClient, unwrap, type ApiEnvelope } from "@shared/api";
+import { authClient, unwrap, uploadMedia, type ApiEnvelope } from "@shared/api";
 import type { ProfileGateway } from "./ProfileGateway";
 import { profileMapper } from "./profileMapper";
 import type { ProfileResponseDto } from "./profileDto";
@@ -14,5 +14,7 @@ export const restProfile = (profileApi = authClient): ProfileGateway => {
       );
       return toUpdatedProfile(unwrap(res));
     },
+
+    uploadAvatar: async (file) => (await uploadMedia(file)).token,
   };
 };

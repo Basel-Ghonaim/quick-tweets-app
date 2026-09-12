@@ -116,6 +116,7 @@ export const TheBioCountTracksWhatIsTyped: Story = {
 export const AServerErrorIsAnnounced: Story = {
   decorators: [
     withState({
+      uploadAvatar: async () => "token",
       updateProfile: async () => {
         throw createAppError("validation", "raw");
       },
@@ -134,7 +135,7 @@ export const AServerErrorIsAnnounced: Story = {
 
 export const SavingIsReportedInPlace: Story = {
   decorators: [
-    withState({ updateProfile: () => new Promise(() => {}) }),
+    withState({ uploadAvatar: async () => "token", updateProfile: () => new Promise(() => {}) }),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
-import { uploadMedia } from "@shared/api";
 import { avatarUploadInitial, avatarUploadReducer } from "../services";
 import type { AvatarUploadStatus } from "../model";
 
@@ -15,7 +14,7 @@ interface AvatarUpload {
  * its four states are states of the screen, and inside a submit they would
  * collapse into one spinner.
  */
-export const useAvatarUpload = (upload = uploadMedia): AvatarUpload => {
+export const useAvatarUpload = (upload: (file: File) => Promise<string>): AvatarUpload => {
   const [state, dispatch] = useReducer(avatarUploadReducer, avatarUploadInitial);
   const attempt = useRef(0);
 
@@ -25,7 +24,7 @@ export const useAvatarUpload = (upload = uploadMedia): AvatarUpload => {
     const mine = ++attempt.current;
 
     upload(state.file)
-      .then(({ token }) => {
+      .then((token) => {
         if (mine === attempt.current) dispatch({ type: "succeeded", token });
       })
       .catch(() => {
