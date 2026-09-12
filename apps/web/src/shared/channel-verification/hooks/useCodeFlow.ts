@@ -12,11 +12,11 @@ import { restVerification } from "../gateway";
 import { executeVerification, resolveVerification } from "../services";
 import { secondsUntilWindow } from "../model";
 import type { VerificationMessages, VerificationRead } from "../model";
-import type { VerificationRepository } from "../gateway";
+import type { VerificationGateway } from "../gateway";
 
 export interface CodeFlowOptions {
   onVerified?: () => void;
-  repo?: VerificationRepository;
+  repo?: VerificationGateway;
   messages?: VerificationMessages;
   resendReadyMessage?: string;
 }

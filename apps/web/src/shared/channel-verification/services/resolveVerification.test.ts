@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { resolveVerification } from "./resolveVerification";
-import type { VerificationRepository } from "../gateway";
+import type { VerificationGateway } from "../gateway";
 
 const AT = 1_700_000_060_000;
 
-const repoThat = (current: VerificationRepository["current"]): VerificationRepository => ({
+const repoThat = (current: VerificationGateway["current"]): VerificationGateway => ({
   current,
   issue: async () => ({ resendAvailableAt: null }),
   confirm: async () => {},

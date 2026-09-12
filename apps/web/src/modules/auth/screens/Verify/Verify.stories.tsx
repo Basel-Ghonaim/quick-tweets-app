@@ -10,7 +10,7 @@ import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { stepStates } from "../../components/Stepper";
 import { createAppError } from "@shared/errors";
-import type { VerificationRepository } from "@shared/channel-verification";
+import type { VerificationGateway } from "@shared/channel-verification";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 
@@ -65,7 +65,7 @@ const ASK = <VerifyAsk onSent={noop} onLater={noop} />;
 
 /* The code screen asks where the holder stands when it mounts, so every story
    of it answers that read rather than letting one reach the network. */
-const standing = (seconds: number): VerificationRepository => ({
+const standing = (seconds: number): VerificationGateway => ({
   current: async () => ({
     status: "pending",
     resendAvailableAt: seconds > 0 ? Date.now() + seconds * 1000 : null,
@@ -78,7 +78,7 @@ const CODE = <VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />;
 
 /* A refusal the reader can reach only by asking, so the story exercises the
    translation rather than asserting a message it planted itself. */
-const refusing = (type: "too_many_requests" | "rate_limit"): VerificationRepository => ({
+const refusing = (type: "too_many_requests" | "rate_limit"): VerificationGateway => ({
   current: async () => ({ status: "pending", resendAvailableAt: null }),
   issue: async () => {
     throw createAppError(type, "raw");

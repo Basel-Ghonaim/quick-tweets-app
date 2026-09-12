@@ -5,11 +5,11 @@ import type { RequestState } from "@shared/types";
 import { restVerification } from "../gateway";
 import { executeVerification } from "../services";
 import type { VerificationMessages } from "../model";
-import type { VerificationRepository } from "../gateway";
+import type { VerificationGateway } from "../gateway";
 
 export interface AskFlowOptions {
   onSent?: () => void;
-  repo?: VerificationRepository;
+  repo?: VerificationGateway;
   messages?: VerificationMessages;
 }
 

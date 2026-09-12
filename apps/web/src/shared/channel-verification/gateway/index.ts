@@ -1,2 +1,2 @@
-export * from "./VerificationRepository";
+export * from "./VerificationGateway";
 export * from "./restVerification";
