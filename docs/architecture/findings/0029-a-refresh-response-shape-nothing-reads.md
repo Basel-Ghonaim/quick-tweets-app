@@ -1,7 +1,8 @@
 # Finding 0029: A refresh response shape that nothing reads
 
-> **Status:** Open
+> **Status:** Resolved
 > **Date:** 2026-09-10
+> **Resolved:** 2026-09-12 ([#707](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/707))
 > **Affected areas:** `apps/web/src/features/authentication/dto/RefreshResponse.ts`; `apps/web/src/features/authentication/dto/index.ts`
 > **Reported by:** Basel Ghonaim (surfaced while separating authentication from the session, [#691](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/691))
 
@@ -18,3 +19,7 @@ It sits in the authentication feature, which does not refresh anything — the r
 ## Not decided here
 
 Whether it is deleted in a hygiene pass or when the feature's DTOs are next touched. A finding records the deviation; it never schedules the fix.
+
+## Resolution
+
+Deleted when authentication was brought to the capability structure ([#707](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/707)), in a commit of its own, before its wire shapes moved into the gateway. The question this finding left open — whether it went in a hygiene pass or when the feature's wire shapes were next touched — was answered by the second: carrying a shape nothing reads into a new layer would have given that layer a file with no reason to exist.
