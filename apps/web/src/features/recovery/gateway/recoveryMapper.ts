@@ -3,7 +3,7 @@ import type {
   ConfirmCodeDto,
   RecoveryPositionDto,
   RequestCodeDto,
-} from "../gateway/recoveryDto";
+} from "./recoveryDto";
 import type { RecoveryPosition } from "../model";
 
 export interface RecoveryMapper {
