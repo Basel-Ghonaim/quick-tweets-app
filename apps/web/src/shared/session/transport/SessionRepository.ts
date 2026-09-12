@@ -1,4 +1,4 @@
-import type { AuthResponse } from "./AuthResponse";
+import type { AuthResponse } from "../model";
 
 export interface SessionRepository {
   refresh: () => Promise<AuthResponse>;

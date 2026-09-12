@@ -15,6 +15,6 @@ export { useSignOut } from "./hooks/useSignOut";
 export { executeSignOut } from "./lifecycle/executeSignOut";
 export { refreshSession } from "./transport/refreshSession";
 
-export type { AuthResponse } from "./transport/AuthResponse";
+export type { AuthResponse } from "./model";
 export type { AuthResponseDto, UserDto } from "./transport/AuthResponseDto";
 export { toAuthResponse } from "./transport/toAuthResponse";
