@@ -88,3 +88,13 @@ The Finding stays `Open`: channel verification and profile remain to be brought 
 **The resend window no longer crosses the page.** The capability reads where the holder stands when the code screen mounts, and holds the answer as an instant rather than a duration. The ask hands nothing forward, the code screen takes no window, and the onboarding screen holds no verification state. No client-side cooldown is kept anywhere: the number is the server's in all three places it states it.
 
 The Finding stays `Open`: profile remains to be brought to the structure, and the two departures that run across capabilities are unchanged but for the one form-definition import profile still carries.
+
+## Addendum — 2026-09-12, profile ([#713](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/713))
+
+**Profile is organised as the structure says, and every capability now is.** It lives at `features/profile` with `model/`, `gateway/`, `services/`, `forms/` and `hooks/`, each with a barrel that names what it offers, and its boundary test holds five rules. It publishes a hook and its port and nothing else: no interface, no schema, no limits. Its row above is resolved, and with it the last of the six rows this Finding opened with.
+
+**Both cross-feature imports are gone.** Profile wrote its own wording, which ended the borrow this Finding's sibling question C recorded, and its hook speaks its own settlement rather than the journey's outcome; the screen that composes both maps one to the other, which is a page's business. Its avatar upload now goes through its own gateway rather than reaching the transport directly.
+
+**The screens that reached past their hooks no longer do.** All six form-definition imports the row above recorded are gone, the last of them profile's.
+
+The Finding stays `Open` for what remains across capabilities: the nine route literals, which question F leaves to the page in Phase 4, and Media's upload, which still has no capability of its own — profile reaches it through its own gateway now, but where it finally belongs is undecided. Where profile itself lives once a Users capability exists is likewise open, and the move will be a directory move.
