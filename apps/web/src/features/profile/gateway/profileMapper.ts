@@ -1,10 +1,9 @@
 import type { ProfileEdits, UpdatedProfile } from "../model";
-import type { UpdateProfileDto } from "./profileDto";
+import type { ProfileResponseDto, UpdateProfileDto } from "./profileDto";
 
-interface ProfileResponseDto {
-  username: string;
-  name: string | null;
-  bio: string;
+export interface ProfileMapper {
+  editsToDto: (edits: ProfileEdits) => UpdateProfileDto;
+  toUpdatedProfile: (data: ProfileResponseDto) => UpdatedProfile;
 }
 
 /**
@@ -12,7 +11,7 @@ interface ProfileResponseDto {
  * with `""` — and the server rejects each field's other form, so an empty
  * string is translated per field rather than passed through.
  */
-export const profileMapper = () => ({
+export const profileMapper = (): ProfileMapper => ({
   editsToDto: (edits: ProfileEdits): UpdateProfileDto => {
     const dto: UpdateProfileDto = {};
 

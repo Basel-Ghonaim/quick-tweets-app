@@ -8,3 +8,11 @@ export interface UpdateProfileDto {
   /** Omitted = unchanged, `{ token }` = set, `null` = remove. */
   avatar?: { token: string } | null;
 }
+
+/** What this screen reads back from the update. The full self profile is the
+ *  User domain's, and the capability asks for none of it. */
+export interface ProfileResponseDto {
+  username: string;
+  name: string | null;
+  bio: string;
+}
