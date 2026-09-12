@@ -1,7 +1,7 @@
 import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { useRegisterFlow } from "../../hooks";
-import { authFormSchemas } from "../../authFormSchemas";
+import { authFormSchemas } from "../../forms";
 import { AUTH_COPY } from "@shared/copy";
 import { RouteLink, useRouteNavigate } from "@shared/routing";
 import styles from "./SignUp.module.css";
