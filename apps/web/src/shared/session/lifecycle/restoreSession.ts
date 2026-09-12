@@ -1,6 +1,6 @@
 import type { Dispatch } from "@reduxjs/toolkit";
 import { restSession, hasSessionHint, clearSessionHint } from "../gateway";
-import { sessionActions } from "../state/sessionSlice";
+import { sessionActions } from "../store";
 import type { AuthResponse } from "../model";
 
 // Injectable seams so the policy is unit-testable in Node (no DOM/network).

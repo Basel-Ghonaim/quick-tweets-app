@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { describe, expect, test } from "vitest";
-import { initialSessionState } from "./state/sessionState";
+import { initialSessionState } from "./store";
 
 /**
  * The session is platform (ADR 0019) and holds the fact of a session and

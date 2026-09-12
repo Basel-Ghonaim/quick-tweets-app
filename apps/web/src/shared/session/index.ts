@@ -1,12 +1,12 @@
-export { sessionReducer, sessionActions, SESSION_SLICE_KEY } from "./state/sessionSlice";
+export { sessionReducer, sessionActions, SESSION_SLICE_KEY } from "./store";
 export {
   selectAccessToken,
   selectSessionUser,
   selectSessionStatus,
   selectSignOutRequest,
-} from "./state/selectors";
-export type { WithSession } from "./state/selectors";
-export type { SessionState, SessionStatus } from "./state/sessionState";
+} from "./store";
+export type { WithSession } from "./store";
+export type { SessionState, SessionStatus } from "./store";
 
 export { useSession } from "./hooks/useSession";
 export { useSessionRestore } from "./hooks/useSessionRestore";
