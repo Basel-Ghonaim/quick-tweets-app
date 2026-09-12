@@ -1,10 +1,10 @@
-import type { AuthRepository } from "./AuthRepository";
+import type { AuthGateway } from "./AuthGateway";
 import { authClient, unwrap, type ApiEnvelope } from "@shared/api";
 import { toAuthResponse, type AuthResponseDto } from "@shared/session";
-import { authMapper } from "../mapper";
-import type { RegisterRequestDto } from "../dto";
+import { authMapper } from "./authMapper";
+import type { RegisterRequestDto } from "./authDto";
 
-export const restAuth = (authApi = authClient): AuthRepository => {
+export const restAuth = (authApi = authClient): AuthGateway => {
   const { loginCredentialsToDto, registerCredentialsToDto } = authMapper();
 
   return {

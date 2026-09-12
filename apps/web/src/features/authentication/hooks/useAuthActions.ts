@@ -1,7 +1,7 @@
 import { useDispatch } from "react-redux";
-import { restAuth } from "../repository";
+import { restAuth } from "../gateway";
 import { executeAuthFlow } from "../services";
-import type { LoginCredentials, RegisterCredentials } from "../credentials";
+import type { LoginCredentials, RegisterCredentials } from "../model";
 
 export const useAuthActions = () => {
   const dispatch = useDispatch();

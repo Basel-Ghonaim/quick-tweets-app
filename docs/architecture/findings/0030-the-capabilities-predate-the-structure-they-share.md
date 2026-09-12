@@ -70,3 +70,13 @@ The Finding stays `Open`: authentication, channel verification and profile remai
 **Recovery's Phase 2 work is complete.** What remains of its row is owned elsewhere: its screen's signature names a gateway, which is question D in Phase 3, and its two route literals wait for the page, which is question F in Phase 4.
 
 The Finding stays `Open`: authentication, channel verification and profile remain to be brought to the structure.
+
+## Addendum — 2026-09-12, authentication ([#707](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/707))
+
+**Authentication is organised as the structure says.** Its credentials are the model, its wire shapes and mapper sit inside the gateway beside the port and the adapter, its form definitions have a layer, its screens have the barrel they lacked, every barrel names what it offers, and its boundary test holds five rules. Its port is `AuthGateway`, and the dead wire shape [Finding 0029](0029-a-refresh-response-shape-nothing-reads.md) recorded is gone. Its row above is resolved.
+
+**Two of the six screens that reached past their hooks no longer do.** The flow hooks already closed over their schema, so they now hand the fields to their screens; `Profile.tsx` is the last one left, and it takes the same shape when profile is brought to the structure. The count in the row above therefore reads one.
+
+**What remains of authentication's row is owned elsewhere.** Its seven route literals wait for the page, which is question F in Phase 4, and the error handler its barrel publishes for profile waits for question C in profile's own Work Item.
+
+The Finding stays `Open`: channel verification and profile remain to be brought to the structure.
