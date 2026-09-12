@@ -1,4 +1,4 @@
-import type { RecoveryStep } from "../recovery.types";
+import type { RecoveryStep } from "../model/recovery.types";
 
 export interface RecoveryPosition {
   step: RecoveryStep;
