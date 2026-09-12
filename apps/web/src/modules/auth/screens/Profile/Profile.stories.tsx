@@ -8,7 +8,7 @@ import { Profile } from "./Profile";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { createAppError } from "@shared/errors";
-import type { ProfileRepository } from "../../profile";
+import type { ProfileRepository } from "@features/profile";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "../../components/Stepper";

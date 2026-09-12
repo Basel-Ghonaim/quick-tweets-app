@@ -1,8 +1,8 @@
 import { Button, FileInput, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { AUTH_COPY } from "@shared/copy";
-import { useProfileFlow, profileFormSchema, BIO_MAX } from "../../profile";
-import type { ProfileRepository } from "../../profile";
+import { useProfileFlow, profileFormSchema, BIO_MAX } from "@features/profile";
+import type { ProfileRepository } from "@features/profile";
 import type { ProfileOutcome } from "@features/journey";
 import styles from "./Profile.module.css";
 
