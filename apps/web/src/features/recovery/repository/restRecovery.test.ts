@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AxiosInstance } from "axios";
 import { restRecovery } from "./restRecovery";
 import type { RecoveryPositionDto } from "../dto";
-import type { RecoveryPosition } from "../entity";
+import type { RecoveryPosition } from "../model";
 
 const ANSWER: RecoveryPositionDto = {
   step: "code",

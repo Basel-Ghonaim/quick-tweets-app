@@ -1,4 +1,4 @@
-import type { RecoveryPosition } from "../entity";
+import type { RecoveryPosition } from "../model";
 
 export interface RecoveryRepository {
   /** Never fails for want of a position: an absent one answers `request`. */

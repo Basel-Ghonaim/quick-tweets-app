@@ -1,4 +1,4 @@
-import type { RecoveryPosition } from "../entity";
+import type { RecoveryPosition } from "../model";
 import type { RecoveryRepository } from "../repository";
 
 export type RecoveryRead =

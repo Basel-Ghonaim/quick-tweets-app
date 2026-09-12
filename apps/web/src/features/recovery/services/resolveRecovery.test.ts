@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveRecovery } from "./resolveRecovery";
-import type { RecoveryPosition } from "../entity";
+import type { RecoveryPosition } from "../model";
 import type { RecoveryRepository } from "../repository";
 
 const POSITION: RecoveryPosition = {

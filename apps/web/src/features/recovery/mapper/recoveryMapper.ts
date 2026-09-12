@@ -4,7 +4,7 @@ import type {
   RecoveryPositionDto,
   RequestCodeDto,
 } from "../dto";
-import type { RecoveryPosition } from "../entity";
+import type { RecoveryPosition } from "../model";
 
 export interface RecoveryMapper {
   toPosition: (data: RecoveryPositionDto) => RecoveryPosition;
