@@ -1,4 +1,4 @@
-import { confirmChallenge, issueChallenge } from "@shared/api";
+import { confirmChallenge, issueChallenge } from "./channelVerification";
 import type { VerificationRepository } from "./VerificationRepository";
 
 export const restVerification = (

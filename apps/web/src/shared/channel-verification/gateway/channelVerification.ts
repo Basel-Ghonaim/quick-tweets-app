@@ -2,8 +2,7 @@
 // Neither call carries a shape belonging to a feature: issue sends no body, so
 // the server resolves the subject from the token, and confirm sends a code.
 
-import { authClient } from "./authClient";
-import { unwrap, type ApiEnvelope } from "./envelope";
+import { authClient, unwrap, type ApiEnvelope } from "@shared/api";
 
 export interface IssuedChallenge {
   delivery: "accepted" | "refused" | "unknown";

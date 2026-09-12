@@ -1,4 +1,4 @@
-import type { IssuedChallenge } from "@shared/api";
+import type { IssuedChallenge } from "./channelVerification";
 
 export interface VerificationRepository {
   issue: () => Promise<IssuedChallenge>;
