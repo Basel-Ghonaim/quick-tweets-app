@@ -1,2 +1,2 @@
 export type { RecoveryPosition } from "./RecoveryPosition";
-export type { RecoveryStep } from "./recovery.types";
+export type { RecoveryRead, RecoveryScreen, RecoveryStep } from "./recovery.types";

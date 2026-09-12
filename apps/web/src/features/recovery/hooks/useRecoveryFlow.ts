@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { AUTH_COPY } from "@shared/copy";
-import { screenFor, type RecoveryScreen } from "../services";
+import { screenFor } from "../services";
 import { useRecovery } from "./useRecovery";
-import type { RecoveryPosition } from "../model";
+import type { RecoveryPosition, RecoveryScreen } from "../model";
 import type { RecoveryRepository } from "../repository";
 
 export interface RecoveryFlow {

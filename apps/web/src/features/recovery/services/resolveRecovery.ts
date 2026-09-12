@@ -1,10 +1,5 @@
-import type { RecoveryPosition } from "../model";
+import type { RecoveryRead } from "../model";
 import type { RecoveryRepository } from "../repository";
-
-export type RecoveryRead =
-  | { status: "unresolved" }
-  | { status: "resolved"; position: RecoveryPosition }
-  | { status: "failed" };
 
 /**
  * The read never `404`s and produces no `401` to distinguish, so every way it
