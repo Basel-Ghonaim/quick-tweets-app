@@ -13,8 +13,8 @@ export { useSessionRestore } from "./hooks/useSessionRestore";
 export { useSignOut } from "./hooks/useSignOut";
 
 export { executeSignOut } from "./lifecycle/executeSignOut";
-export { refreshSession } from "./transport/refreshSession";
+export { refreshSession } from "./gateway";
 
 export type { AuthResponse } from "./model";
-export type { AuthResponseDto, UserDto } from "./transport/AuthResponseDto";
-export { toAuthResponse } from "./transport/toAuthResponse";
+export type { AuthResponseDto, UserDto } from "./gateway";
+export { toAuthResponse } from "./gateway";

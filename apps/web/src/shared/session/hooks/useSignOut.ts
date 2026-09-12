@@ -4,7 +4,7 @@ import { useRequestState } from "@shared/hooks";
 import { useSessionSelector } from "./useSessionSelector";
 import { selectSignOutRequest } from "../state/selectors";
 import { executeSignOut } from "../lifecycle/executeSignOut";
-import { restSession } from "../transport/restSession";
+import { restSession } from "../gateway";
 
 /** Only `isError` is surfaced: a successful sign-out is observed as `isLoggedIn`
  *  turning false, since ending the session is what it does. */
