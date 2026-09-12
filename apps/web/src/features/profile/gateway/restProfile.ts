@@ -1,9 +1,9 @@
 import { authClient, unwrap, type ApiEnvelope } from "@shared/api";
-import type { ProfileRepository } from "./ProfileRepository";
+import type { ProfileGateway } from "./ProfileGateway";
 import { profileMapper } from "./profileMapper";
 import type { ProfileResponseDto } from "./profileDto";
 
-export const restProfile = (profileApi = authClient): ProfileRepository => {
+export const restProfile = (profileApi = authClient): ProfileGateway => {
   const { editsToDto, toUpdatedProfile } = profileMapper();
 
   return {

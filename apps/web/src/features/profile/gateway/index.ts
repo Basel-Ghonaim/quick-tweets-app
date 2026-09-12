@@ -1,2 +1,2 @@
 export { restProfile } from "./restProfile";
-export type { ProfileRepository } from "./ProfileRepository";
+export type { ProfileGateway } from "./ProfileGateway";

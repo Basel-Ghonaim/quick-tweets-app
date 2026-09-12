@@ -8,7 +8,7 @@ import { Profile } from "./Profile";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { createAppError } from "@shared/errors";
-import type { ProfileRepository } from "@features/profile";
+import type { ProfileGateway } from "@features/profile";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "../../components/Stepper";
@@ -35,7 +35,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const withState = (
-  repo?: ProfileRepository,
+  repo?: ProfileGateway,
   settled?: (outcome: "saved" | "skipped") => void,
 ) => {
   const store = configureStore({ reducer: { session: sessionReducer } });

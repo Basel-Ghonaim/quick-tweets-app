@@ -2,7 +2,7 @@ import { Button, FileInput, MessageRegion, Typography } from "@shared/design-sys
 import { SchemaField, toFieldEntries } from "@shared/schema-form";
 import { AUTH_COPY } from "@shared/copy";
 import { useProfileFlow, profileFormSchema, BIO_MAX } from "@features/profile";
-import type { ProfileRepository } from "@features/profile";
+import type { ProfileGateway } from "@features/profile";
 import type { ProfileOutcome } from "@features/journey";
 import styles from "./Profile.module.css";
 
@@ -13,7 +13,7 @@ const AVATAR_MAX_BYTES = 1024 * 1024;
 
 interface ProfileProps {
   onSettled: (outcome: ProfileOutcome) => void;
-  repo?: ProfileRepository;
+  repo?: ProfileGateway;
 }
 
 export const Profile = ({ onSettled, repo }: ProfileProps) => {
