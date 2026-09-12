@@ -148,3 +148,104 @@ describe("asking about many subjects", () => {
     expect(repo.findOpenChallenges).toHaveBeenCalledWith([1], tx);
   });
 });
+
+const COOLDOWN = 60_000;
+
+const buildState = (found: VerificationRecord | null, open: OpenChallenge | null = null) => {
+  const repo = {
+    findRecord: vi.fn(async () => found),
+    findOpenChallenge: vi.fn(async () => open),
+  } as unknown as IChannelVerificationRepository;
+
+  return { repo, status: createChannelVerificationStatus(repo, () => T0, COOLDOWN) };
+};
+
+describe("reading a subject's whole state", () => {
+  it("reports no wait when the subject has never been challenged", async () => {
+    const { status } = buildState(record());
+
+    await expect(status.stateOf(3, "holder@example.test")).resolves.toEqual({
+      status: "unproven",
+      resendAvailableInSeconds: 0,
+    });
+  });
+
+  it("reports what remains of the window, rounded up", async () => {
+    // Forty and a half seconds in: nineteen and a half remain, and a caller
+    // told twenty and waiting twenty is past the window rather than short of it.
+    const record40s = record({ lastChallengedAt: new Date(T0.getTime() - 40_500) });
+    const { status } = buildState(record40s, challenge());
+
+    await expect(status.stateOf(3, "holder@example.test")).resolves.toEqual({
+      status: "pending",
+      resendAvailableInSeconds: 20,
+    });
+  });
+
+  it("reports no wait once the window has passed", async () => {
+    const lapsed = record({ lastChallengedAt: new Date(T0.getTime() - COOLDOWN - 1) });
+    const { status } = buildState(lapsed, challenge());
+
+    await expect(status.stateOf(3, "holder@example.test")).resolves.toEqual({
+      status: "pending",
+      resendAvailableInSeconds: 0,
+    });
+  });
+
+  it("answers for a subject nothing is on record for", async () => {
+    const { status } = buildState(null);
+
+    await expect(status.stateOf(3, "holder@example.test")).resolves.toEqual({
+      status: "unproven",
+      resendAvailableInSeconds: 0,
+    });
+  });
+
+  it("is proven once a proof is recorded, and still answers the window it is in", async () => {
+    const proven = record({ provenAt: T0, lastChallengedAt: new Date(T0.getTime() - 30_000) });
+    const { status } = buildState(proven);
+
+    await expect(status.stateOf(3, "holder@example.test")).resolves.toEqual({
+      status: "proven",
+      resendAvailableInSeconds: 30,
+    });
+  });
+
+  it("falls back to unproven when the open challenge has lapsed", async () => {
+    const lapsed = challenge({ expiresAt: new Date(T0.getTime() - 1) });
+    const { status } = buildState(record({ lastChallengedAt: T0 }), lapsed);
+
+    await expect(status.stateOf(3, "holder@example.test")).resolves.toEqual({
+      status: "unproven",
+      resendAvailableInSeconds: 60,
+    });
+  });
+
+  it("asks for a challenge only when the record could still be pending", async () => {
+    const { repo, status } = buildState(record({ provenAt: T0 }));
+
+    await status.stateOf(3, "holder@example.test");
+
+    expect(repo.findOpenChallenge).not.toHaveBeenCalled();
+  });
+
+  it("writes nothing — the repository is only ever read", async () => {
+    const { repo, status } = buildState(record(), challenge());
+
+    await status.stateOf(3, "holder@example.test");
+
+    for (const method of Object.keys(repo)) {
+      expect(method.startsWith("find")).toBe(true);
+    }
+  });
+
+  it("passes a transaction client through to both reads", async () => {
+    const tx = { __tx: true } as never;
+    const { repo, status } = buildState(record(), challenge());
+
+    await status.stateOf(3, "holder@example.test", tx);
+
+    expect(repo.findRecord).toHaveBeenCalledWith(3, "holder@example.test", tx);
+    expect(repo.findOpenChallenge).toHaveBeenCalledWith(1, tx);
+  });
+});

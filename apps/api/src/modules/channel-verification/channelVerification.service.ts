@@ -22,6 +22,10 @@ import {
   digestChallengeCode,
   mintChallengeCode,
 } from "./channelVerification.codes.js";
+import {
+  resendAvailableAt,
+  secondsUntil,
+} from "./channelVerification.cooldown.js";
 import { ChannelVerificationError } from "./channelVerification.errors.js";
 import { createChannelVerificationRepository } from "./channelVerification.repository.js";
 import {
@@ -49,16 +53,6 @@ export interface ChannelVerificationServiceDeps {
   resendCooldownMs?: number;
 }
 
-/**
- * Whole seconds from `from` until `target`, never negative.
- *
- * Rounded up so a caller told `n` and waiting `n` is past the window rather
- * than a fraction short of it — the difference between one wasted refusal and
- * none.
- */
-const secondsUntil = (target: Date, from: Date): number =>
-  Math.max(0, Math.ceil((target.getTime() - from.getTime()) / 1000));
-
 const composeMessage = (code: ChallengeCode) => ({
   subject: "Your verification code",
   body: `Your verification code is ${code}. It expires shortly; if you did not request it, ignore this message.`,
@@ -70,15 +64,16 @@ export const createChannelVerificationService = (
   const repo = deps.repo ?? createChannelVerificationRepository();
   const mail = deps.mail ?? createMailAdapter(undefined, env.MAIL_RECIPIENT_CAP_GENERAL);
   const now = deps.now ?? (() => new Date());
-  const status = deps.status ?? createChannelVerificationStatus(repo, now);
+  const resendCooldownMs =
+    deps.resendCooldownMs ?? env.CHANNEL_VERIFICATION_RESEND_COOLDOWN_MS;
+  const status =
+    deps.status ?? createChannelVerificationStatus(repo, now, resendCooldownMs);
   const runTransaction = deps.runInTransaction ?? defaultRunInTransaction;
   const format = deps.format ?? {
     alphabet: env.CHANNEL_VERIFICATION_CODE_ALPHABET,
     length: env.CHANNEL_VERIFICATION_CODE_LENGTH,
   };
   const challengeTtlMs = deps.challengeTtlMs ?? env.CHANNEL_VERIFICATION_CHALLENGE_TTL_MS;
-  const resendCooldownMs =
-    deps.resendCooldownMs ?? env.CHANNEL_VERIFICATION_RESEND_COOLDOWN_MS;
 
   /**
    * One attempt at the persisted half of issuing. The record is locked before
@@ -98,7 +93,7 @@ export const createChannelVerificationService = (
         // The same anchor a successful issue reports its window from, read from
         // the other side: what is left of it rather than the whole of it.
         throw ChannelVerificationError.cooldownActive(
-          secondsUntil(new Date(lastChallengedAt.getTime() + resendCooldownMs), at),
+          secondsUntil(resendAvailableAt(lastChallengedAt, resendCooldownMs), at),
         );
       }
 
@@ -145,7 +140,7 @@ export const createChannelVerificationService = (
     // The anchor `persistChallenge` just stamped. Held now so the window is
     // measured from when the throttle actually started, not from when the send
     // happened to finish.
-    const resendAvailableAt = new Date(at.getTime() + resendCooldownMs);
+    const windowOpensAt = resendAvailableAt(at, resendCooldownMs);
 
     // Sent after commit: a transport failure must not undo a persisted
     // challenge, and no row lock is held across a network call.
@@ -156,7 +151,7 @@ export const createChannelVerificationService = (
       // Read after the send, so a slow transport shortens the number rather
       // than inflating it: a caller counting down from a stale figure would
       // still be waiting when the window had already opened.
-      resendAvailableInSeconds: secondsUntil(resendAvailableAt, now()),
+      resendAvailableInSeconds: secondsUntil(windowOpensAt, now()),
     } satisfies IssueOutcome;
   };
 
@@ -209,5 +204,8 @@ export const createChannelVerificationService = (
   const statusOf: IChannelVerificationService["statusOf"] = (userId, endpoint, client) =>
     status.statusOf(userId, endpoint, client);
 
-  return { issue, confirm, statusOf };
+  const stateOf: IChannelVerificationService["stateOf"] = (userId, endpoint, client) =>
+    status.stateOf(userId, endpoint, client);
+
+  return { issue, confirm, statusOf, stateOf };
 };

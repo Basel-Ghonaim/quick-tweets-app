@@ -11,10 +11,14 @@
  * without anyone having touched it.
  */
 
+import { env } from "../../config/env.js";
 import type { DbClient } from "../../shared/database/index.js";
+import { resendAvailableInSeconds } from "./channelVerification.cooldown.js";
 import { createChannelVerificationRepository } from "./channelVerification.repository.js";
 import type {
   IChannelVerificationRepository,
+  VerificationRecord,
+  VerificationState,
   VerificationStatus,
   VerificationSubject,
 } from "./channelVerification.types.js";
@@ -36,14 +40,42 @@ export interface IChannelVerificationStatus {
     endpoint: string,
     client?: DbClient,
   ): Promise<VerificationStatus>;
+
+  /**
+   * One subject's whole read-time answer: the status, and what remains of the
+   * resend window. The capability's own read route serves this; it writes
+   * nothing, as everything here reads.
+   */
+  stateOf(
+    userId: number,
+    endpoint: string,
+    client?: DbClient,
+  ): Promise<VerificationState>;
 }
 
 // The id is numeric, so the first space is unambiguously the separator.
 const subjectKey = (userId: number, endpoint: string) => `${userId} ${endpoint}`;
 
+/** The one rule, so a second caller cannot derive the status its own way. */
+const statusFrom = (
+  record: VerificationRecord | null | undefined,
+  challenge: { expiresAt: Date } | null | undefined,
+  at: number,
+): VerificationStatus => {
+  // No record for this exact value: either never asked about, or the endpoint
+  // changed and this is a different subject.
+  if (record === null || record === undefined) return "unproven";
+  if (record.provenAt !== null) return "proven";
+
+  return challenge !== null && challenge !== undefined && challenge.expiresAt.getTime() > at
+    ? "pending"
+    : "unproven";
+};
+
 export const createChannelVerificationStatus = (
   repo: IChannelVerificationRepository = createChannelVerificationRepository(),
   now: () => Date = () => new Date(),
+  resendCooldownMs: number = env.CHANNEL_VERIFICATION_RESEND_COOLDOWN_MS,
 ): IChannelVerificationStatus => {
   const statusOfMany: IChannelVerificationStatus["statusOfMany"] = async (
     subjects,
@@ -62,16 +94,8 @@ export const createChannelVerificationStatus = (
     const at = now().getTime();
 
     return subjects.map(({ userId, endpoint }) => {
-      // No record for this exact value: either never asked about, or the
-      // endpoint changed and this is a different subject.
       const record = bySubject.get(subjectKey(userId, endpoint));
-      if (record === undefined) return "unproven";
-      if (record.provenAt !== null) return "proven";
-
-      const challenge = byRecord.get(record.id);
-      return challenge !== undefined && challenge.expiresAt.getTime() > at
-        ? "pending"
-        : "unproven";
+      return statusFrom(record, record && byRecord.get(record.id), at);
     });
   };
 
@@ -79,6 +103,25 @@ export const createChannelVerificationStatus = (
     statusOfMany,
     statusOf: async (userId, endpoint, client) =>
       (await statusOfMany([{ userId, endpoint }], client))[0]!,
+
+    stateOf: async (userId, endpoint, client) => {
+      const at = now();
+      const record = await repo.findRecord(userId, endpoint, client);
+      // Only an unproven record can still be pending, so nothing else is asked about.
+      const challenge =
+        record !== null && record.provenAt === null
+          ? await repo.findOpenChallenge(record.id, client)
+          : null;
+
+      return {
+        status: statusFrom(record, challenge, at.getTime()),
+        resendAvailableInSeconds: resendAvailableInSeconds(
+          record?.lastChallengedAt ?? null,
+          resendCooldownMs,
+          at,
+        ),
+      };
+    },
   };
 };
 

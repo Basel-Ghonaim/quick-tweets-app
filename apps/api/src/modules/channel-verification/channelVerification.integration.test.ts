@@ -294,3 +294,46 @@ describe("the sweep, against real rows", () => {
     expect(afterSweep).toBe(beforeSweep);
   });
 });
+
+// Its own subject: the cooldown is anchored per record, and the tests above
+// leave one running on the account's own endpoint.
+const SUBJECT = `cv-read-${RUN}@example.test`;
+
+describe("the window the read reports", () => {
+  it("agrees with what the issue answered, from the same anchor", async () => {
+    if (!reachable) return;
+    const service = serviceWith(capturingMail().adapter);
+
+    const outcome = await service.issue({ userId, endpoint: SUBJECT });
+    const read = await service.stateOf(userId, SUBJECT);
+
+    expect(read.status).toBe("pending");
+    // The read is produced a moment later, so it is never larger than what the
+    // issue reported and at most a second smaller: both count down from the
+    // anchor that issue stamped.
+    expect(read.resendAvailableInSeconds).toBeLessThanOrEqual(outcome.resendAvailableInSeconds);
+    expect(outcome.resendAvailableInSeconds - read.resendAvailableInSeconds).toBeLessThanOrEqual(1);
+  });
+
+  it("writes nothing — asking twice leaves the record and its challenge untouched", async () => {
+    if (!reachable) return;
+    const service = serviceWith(capturingMail().adapter);
+
+    const snapshot = async () => ({
+      record: await prisma.channelVerification.findFirst({
+        where: { userId, endpoint: SUBJECT },
+        select: { updatedAt: true, lastChallengedAt: true, provenAt: true },
+      }),
+      challenges: await prisma.channelVerificationChallenge.count({
+        where: { verification: { userId, endpoint: SUBJECT } },
+      }),
+    });
+
+    const before = await snapshot();
+    await service.stateOf(userId, SUBJECT);
+    await service.stateOf(userId, SUBJECT);
+    const after = await snapshot();
+
+    expect(after).toEqual(before);
+  });
+});

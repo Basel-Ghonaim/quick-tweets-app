@@ -35,6 +35,7 @@ const build = (
     issue: vi.fn(async () => ({ delivery: "accepted" as const, resendAvailableInSeconds: 60 })),
     confirm: vi.fn(async () => {}),
     statusOf: vi.fn(async () => "unproven" as const),
+    stateOf: vi.fn(async () => ({ status: "pending" as const, resendAvailableInSeconds: 42 })),
     ...over,
   };
   return {
@@ -87,9 +88,44 @@ describe("resolving the subject", () => {
     expect(error?.statusCode).toBe(404);
     expect(service.confirm).not.toHaveBeenCalled();
   });
+
+  it("does the same on the read, which asks about the account's own endpoint", async () => {
+    const { controller, service } = build();
+    await run(controller.current, { endpoint: "attacker@example.test" });
+    expect(service.stateOf).toHaveBeenCalledWith(USER, EMAIL);
+
+    const gone = build({}, async () => null);
+    const { error } = await run(gone.controller.current);
+
+    expect(error?.statusCode).toBe(404);
+    expect(gone.service.stateOf).not.toHaveBeenCalled();
+  });
 });
 
 describe("successful responses", () => {
+  it("answers the read with the status and the window, and nothing else", async () => {
+    const { controller } = build();
+
+    const { res } = await run(controller.current);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      data: { status: "pending", resendAvailableInSeconds: 42 },
+    });
+  });
+
+  it("answers the read for a subject with nothing outstanding, rather than 404", async () => {
+    const { controller } = build({
+      stateOf: vi.fn(async () => ({ status: "unproven" as const, resendAvailableInSeconds: 0 })),
+    });
+
+    const { res, next } = await run(controller.current);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it("reports the delivery outcome and the resend window on issue", async () => {
     const { controller } = build();
 
