@@ -1,21 +1,16 @@
 import { Button, MessageRegion } from "@shared/design-system";
-import { SchemaField, toFieldEntries } from "@shared/schema-form";
+import { SchemaField } from "@shared/schema-form";
 import { AUTH_COPY } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
-import { recoveryFormSchemas } from "../../forms";
-import { useRecoveryForm } from "../../hooks";
-
-const fields = toFieldEntries(recoveryFormSchemas.passwordFields);
+import { usePasswordForm } from "../../hooks";
 
 interface RecoveryPasswordProps {
   onSubmit: (newPassword: string) => Promise<void>;
 }
 
 export const RecoveryPassword = ({ onSubmit }: RecoveryPasswordProps) => {
-  const { values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
-    useRecoveryForm(recoveryFormSchemas.passwordFields, ({ newPassword }) =>
-      onSubmit(newPassword),
-    );
+  const { fields, values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
+    usePasswordForm(onSubmit);
 
   return (
     <StepLayout

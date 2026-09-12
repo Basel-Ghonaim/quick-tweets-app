@@ -6,6 +6,7 @@ import { describe, expect, test } from "vitest";
 
 const SRC = join(process.cwd(), "src");
 const CAPABILITY = join(SRC, "features", "recovery");
+const SCREENS = join(CAPABILITY, "screens");
 const ALIAS = "@features/recovery";
 
 const filesUnder = (dir: string): string[] =>
@@ -28,6 +29,9 @@ const capabilityFiles = filesUnder(CAPABILITY);
 
 /** What a feature may not know: another feature, the legacy zone, the root. */
 const FORBIDDEN = ["@features/", "@modules/", "@app/"];
+
+/** The layers a screen reaches through its hooks rather than itself. */
+const BENEATH_THE_SCREENS = /(^|\/)(forms|services)$/;
 
 describe("recovery's public surface", () => {
   test("a consumer reaches it only through the root barrel", () => {
@@ -81,6 +85,21 @@ describe("what recovery holds", () => {
           .filter((s) => !isSelf(s) && FORBIDDEN.some((f) => s.startsWith(f)))
           .map((s) => `${label(file)} — ${s}`),
       );
+
+    expect(violations.sort()).toEqual([]);
+  });
+
+  test("a screen reaches neither the forms nor the services", () => {
+    const screens = capabilityFiles.filter(
+      (file) => isSource(file) && file.startsWith(SCREENS + sep),
+    );
+    expect(screens.length).toBeGreaterThan(5);
+
+    const violations = screens.flatMap((file) =>
+      specifiersIn(readFileSync(file, "utf8"))
+        .filter((s) => BENEATH_THE_SCREENS.test(s))
+        .map((s) => `${label(file)} — ${s}`),
+    );
 
     expect(violations.sort()).toEqual([]);
   });

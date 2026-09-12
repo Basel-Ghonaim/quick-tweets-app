@@ -1,11 +1,8 @@
 import { Button, MessageRegion } from "@shared/design-system";
-import { SchemaField, toFieldEntries } from "@shared/schema-form";
+import { SchemaField } from "@shared/schema-form";
 import { AUTH_COPY } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
-import { recoveryFormSchemas } from "../../forms";
-import { useRecoveryForm } from "../../hooks";
-
-const fields = toFieldEntries(recoveryFormSchemas.requestFields);
+import { useRequestForm } from "../../hooks";
 
 interface RecoveryRequestProps {
   /** Shown when a reader arrives here because their reset lapsed. */
@@ -19,12 +16,8 @@ export const RecoveryRequest = ({
   initialEmail,
   onSubmit,
 }: RecoveryRequestProps) => {
-  const { values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
-    useRecoveryForm(
-      recoveryFormSchemas.requestFields,
-      ({ email }) => onSubmit(email),
-      initialEmail ? { email: initialEmail } : undefined,
-    );
+  const { fields, values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
+    useRequestForm(onSubmit, initialEmail);
 
   return (
     <StepLayout
