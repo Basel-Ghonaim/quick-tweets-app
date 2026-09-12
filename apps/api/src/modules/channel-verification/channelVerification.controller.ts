@@ -76,6 +76,25 @@ export const createChannelVerificationController = (
   },
 
   /**
+   * GET /channel-verification/challenges/current
+   * What the capability knows about the authenticated holder's own endpoint,
+   * and how long until another challenge may be issued. Nothing outstanding is
+   * an answer rather than a missing resource, so this never reports `404` for
+   * the absence of a challenge.
+   */
+  current: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!;
+      const endpoint = await resolveEndpoint(userId);
+      if (endpoint === null) throw AppError.notFound("Account");
+
+      sendSuccess(res, await service.stateOf(userId, endpoint), 200);
+    } catch (err) {
+      next(asHttpError(err));
+    }
+  },
+
+  /**
    * POST /channel-verification/challenges/confirm
    * Confirms an outstanding challenge for the authenticated holder.
    */
