@@ -1,4 +1,4 @@
-import type { ProfileEdits } from "./profile.types";
+import type { ProfileEdits } from "../model";
 
 /**
  * A picture that failed contributes nothing rather than half of something: the

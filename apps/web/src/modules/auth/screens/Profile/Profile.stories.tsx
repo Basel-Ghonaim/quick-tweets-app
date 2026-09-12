@@ -8,7 +8,7 @@ import { Profile } from "./Profile";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { createAppError } from "@shared/errors";
-import type { ProfileRepository } from "../../profile";
+import type { ProfileGateway } from "@features/profile";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "../../components/Stepper";
@@ -35,7 +35,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const withState = (
-  repo?: ProfileRepository,
+  repo?: ProfileGateway,
   settled?: (outcome: "saved" | "skipped") => void,
 ) => {
   const store = configureStore({ reducer: { session: sessionReducer } });
@@ -116,6 +116,7 @@ export const TheBioCountTracksWhatIsTyped: Story = {
 export const AServerErrorIsAnnounced: Story = {
   decorators: [
     withState({
+      uploadAvatar: async () => "token",
       updateProfile: async () => {
         throw createAppError("validation", "raw");
       },
@@ -128,13 +129,13 @@ export const AServerErrorIsAnnounced: Story = {
 
     const alert = await canvas.findByRole("alert");
     await expect(alert).toBeVisible();
-    await expect(alert).not.toHaveTextContent("raw");
+    await expect(alert).toHaveTextContent(AUTH_COPY.profile.invalid);
   },
 };
 
 export const SavingIsReportedInPlace: Story = {
   decorators: [
-    withState({ updateProfile: () => new Promise(() => {}) }),
+    withState({ uploadAvatar: async () => "token", updateProfile: () => new Promise(() => {}) }),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

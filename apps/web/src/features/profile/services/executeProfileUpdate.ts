@@ -1,7 +1,7 @@
 import type { AppError } from "@shared/errors";
 import type { RequestState } from "@shared/types";
-import { authErrorHandler } from "@features/authentication";
-import type { UpdatedProfile } from "./profile.types";
+import { profileErrorHandler } from "./profileErrorHandler";
+import type { UpdatedProfile } from "../model";
 
 /**
  * Drives the setter it is given, so the flow is exercised without a renderer.
@@ -18,7 +18,7 @@ export const executeProfileUpdate = async (
     await apiCall();
     setState({ status: "success", error: null });
   } catch (error) {
-    const handled = authErrorHandler(error as AppError);
+    const handled = profileErrorHandler(error as AppError);
     setState({ status: "error", error: handled.toSerialized() });
     throw handled;
   }

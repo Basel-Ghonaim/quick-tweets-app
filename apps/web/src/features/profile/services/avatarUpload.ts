@@ -1,4 +1,4 @@
-export type AvatarUploadStatus = "idle" | "uploading" | "uploaded" | "failed";
+import type { AvatarUploadStatus } from "../model";
 
 export interface AvatarUploadState {
   status: AvatarUploadStatus;

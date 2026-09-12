@@ -1,17 +1,21 @@
-import { useCallback, useState } from "react";
-import { useSchemaForm } from "@shared/schema-form";
+import { useCallback, useMemo, useState } from "react";
+import { toFieldEntries, useSchemaForm } from "@shared/schema-form";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
-import type { ProfileOutcome } from "@features/journey";
-import { restProfile } from "./restProfile";
-import { executeProfileUpdate } from "./executeProfileUpdate";
-import { profileFormSchema } from "./profileFormSchema";
+import type { AvatarUploadStatus, ProfileSettlement } from "../model";
+import { restProfile } from "../gateway";
+import type { ProfileGateway } from "../gateway";
+import { executeProfileUpdate } from "../services";
+import { profileFormSchema, BIO_MAX } from "../forms";
+import { AVATAR_ACCEPT, AVATAR_MAX_BYTES } from "../model";
 import { useAvatarUpload } from "./useAvatarUpload";
-import { composeEdits } from "./composeEdits";
-import type { AvatarUploadStatus } from "./avatarUpload";
+import { composeEdits } from "../services";
 
 interface ProfileFlow {
+  /** What the screen renders, so it names no schema of its own. */
+  fields: typeof fields;
+  bioMax: number;
   values: { name: string; bio: string };
   errors: Record<"name" | "bio", string | null>;
   isSubmitting: boolean;
@@ -21,23 +25,30 @@ interface ProfileFlow {
     status: AvatarUploadStatus;
     select: (file: File | null) => void;
     retry: () => void;
+    accept: string;
+    maxBytes: number;
   };
   handleChange: ReturnType<typeof useSchemaForm>["handleChange"];
   handleSubmit: ReturnType<typeof useSchemaForm>["handleSubmit"];
   skip: () => void;
 }
 
+const fields = toFieldEntries(profileFormSchema);
+
 /**
  * Composes the two requests behind one submit: the picture is already uploaded
  * by the time Save runs, so the update carries its reference rather than bytes.
  */
 export const useProfileFlow = (
-  onSettled?: (outcome: ProfileOutcome) => void,
-  repo = restProfile(),
+  onSettled?: (outcome: ProfileSettlement) => void,
+  given?: ProfileGateway,
 ): ProfileFlow => {
+  // Held across renders: the upload effect is keyed on the call it is given.
+  const repo = useMemo(() => given ?? restProfile(), [given]);
+
   const [request, setRequest] = useState<RequestState>({ status: "idle", error: null });
   const { isLoading, isError, error: serverError } = useRequestState(request);
-  const avatar = useAvatarUpload();
+  const avatar = useAvatarUpload(repo.uploadAvatar);
 
   const submit = useCallback(
     async (values: { name: string; bio: string }) => {
@@ -55,12 +66,20 @@ export const useProfileFlow = (
   const skip = useCallback(() => onSettled?.("skipped"), [onSettled]);
 
   return {
+    fields,
+    bioMax: BIO_MAX,
     values: form.values,
     errors: form.errors,
     isSubmitting: form.isSubmitting || isLoading,
     isError,
     serverError,
-    avatar: { status: avatar.status, select: avatar.select, retry: avatar.retry },
+    avatar: {
+      status: avatar.status,
+      select: avatar.select,
+      retry: avatar.retry,
+      accept: AVATAR_ACCEPT,
+      maxBytes: AVATAR_MAX_BYTES,
+    },
     handleChange: form.handleChange,
     handleSubmit: form.handleSubmit,
     skip,
