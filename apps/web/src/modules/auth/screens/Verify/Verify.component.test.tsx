@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
 import { createAppError } from "@shared/errors";
 import { AUTH_COPY } from "@shared/copy";
+import { normaliseCode } from "@shared/one-time-code";
 import { sessionReducer } from "@shared/session";
 import type { VerificationGateway } from "@shared/channel-verification";
 import { VerifyAsk } from "./VerifyAsk";
@@ -86,21 +87,30 @@ describe("the client limiter says something else", () => {
 });
 
 describe("the code field forgives what is typed", () => {
-  it("shows the code the way the field accepts it", async () => {
+  it("puts what is typed through the normaliser rather than showing it raw", async () => {
     mount(<VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />);
 
+    const typed = "7qk3-mnp2 xvzo";
     const field = await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
-    fireEvent.change(field, { target: { value: "7qk3-mnp2 xvzo" } });
+    fireEvent.change(field, { target: { value: typed } });
 
-    await waitFor(() => expect((field as HTMLInputElement).value).toBe("7QK3MNP2XVZ0"));
+    // What the normaliser turns a code into is `normaliseCode.test.ts`'s; this
+    // asserts only that the field is wired to it.
+    await waitFor(() => expect((field as HTMLInputElement).value).toBe(normaliseCode(typed)));
+    expect((field as HTMLInputElement).value).not.toBe(typed);
   });
 });
 
 describe("the wait comes from the server", () => {
-  it("renders the resend held for as long as the server says", async () => {
-    mount(<VerifyCode repo={standing(60)} onVerified={noop} onLater={noop} />);
+  it("renders the resend held while the server's window is open", async () => {
+    const seconds = 60;
+    mount(<VerifyCode repo={standing(seconds)} onVerified={noop} onLater={noop} />);
 
-    const resend = await screen.findByRole("button", { name: AUTH_COPY.verify.resendIn(60) });
+    // How long the window lasts is the cooldown reducer's; this asserts only
+    // that an open one reaches the control as a refusal to act.
+    const resend = await screen.findByRole("button", {
+      name: AUTH_COPY.verify.resendIn(seconds),
+    });
 
     expect((resend as HTMLButtonElement).disabled).toBe(true);
   });
@@ -132,10 +142,11 @@ describe("a failed read still lets the code be typed", () => {
       />,
     );
 
+    const typed = "7qk3";
     const field = await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
-    fireEvent.change(field, { target: { value: "7qk3" } });
+    fireEvent.change(field, { target: { value: typed } });
 
-    await waitFor(() => expect((field as HTMLInputElement).value).toBe("7QK3"));
+    await waitFor(() => expect((field as HTMLInputElement).value).toBe(normaliseCode(typed)));
     const resend = screen.getByRole("button", { name: AUTH_COPY.verify.resend });
     expect((resend as HTMLButtonElement).disabled).toBe(false);
   });
