@@ -11,6 +11,7 @@
     "build-storybook": "storybook build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --project unit",
+    "test:component": "vitest run --project component",
     "test:storybook": "vitest run --project storybook"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "@storybook/addon-onboarding": "^10.3.4",
     "@storybook/addon-vitest": "^10.3.4",
     "@storybook/react-vite": "^10.3.4",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
@@ -35,6 +37,7 @@
     "@vitest/browser-playwright": "^4.1.11",
     "@vitest/coverage-v8": "^4.1.11",
     "babel-plugin-react-compiler": "^1.0.0",
+    "jsdom": "^30.0.1",
     "playwright": "^1.59.1",
     "storybook": "^10.3.4",
     "typescript": "~6.0.3",

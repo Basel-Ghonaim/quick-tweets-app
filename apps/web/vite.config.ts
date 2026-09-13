@@ -1,4 +1,3 @@
-/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
@@ -7,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import { playwright } from '@vitest/browser-playwright';
+import { configDefaults } from 'vitest/config';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
@@ -27,12 +27,25 @@ export default defineConfig({
   test: {
     projects: [
       {
-        // Fast unit lane (Node env) — the CI gate runs this project only.
+        // Outcomes that depend only on inputs. No DOM, so a test that must
+        // mount belongs to the component project below.
         extends: true,
         test: {
           name: 'unit',
           environment: 'node',
           include: ['src/**/*.{test,spec}.{ts,tsx}'],
+          exclude: [...configDefaults.exclude, 'src/**/*.component.test.tsx'],
+        },
+      },
+      {
+        // Outcomes that depend on a renderer's lifecycle. A renderer, not a
+        // browser: anything needing paint belongs to the storybook project.
+        extends: true,
+        test: {
+          name: 'component',
+          environment: 'jsdom',
+          include: ['src/**/*.component.test.tsx'],
+          setupFiles: ['./vitest.component.setup.ts'],
         },
       },
       {
