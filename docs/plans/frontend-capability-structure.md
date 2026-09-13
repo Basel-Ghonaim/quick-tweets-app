@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Refactoring
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-12
+> **Last Updated:** 2026-09-13
 > **Parent Issue:** [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678)
 > **Supersedes:** [Frontend Zone Migration](frontend-zone-migration.md)
 
@@ -117,6 +117,8 @@ How each capability gets there, and the questions in §5 that bear on it, are se
 | **C** | When profile stops borrowing authentication's error wording, does it keep the same words — preserving behaviour, and a message known to be wrong — or correct them? | profile's boundaries, Phase 2 |
 | **D** | Should a screen's public signature name a gateway so that its stories can pass a test double — four do today — and if not, how does a screen receive one? | the screens that carry one today, Phase 3 |
 | **E** | Where does the journey's progress display live? [Finding 0025](../architecture/findings/0025-journey-stepper-holds-the-committed-steppers-name.md) | the progress display, Phase 3 |
+
+**D has since been retired**, on 2026-09-13, and its row stays for the record. It asks whether a screen's public signature may name a gateway; [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decisions 5 and 6 settle that no production signature carries one, and that a story is given the answer rather than the answerer — so the question's premise does not survive. What replaces it is not an answer to D but a different placement of the proof, and Phase 3's objective is restated by the Work Item that acts on it.
 
 **B has since been answered**, on 2026-09-12, and its row stays for the record. The window is the server's and it is now readable: `GET /channel-verification/challenges/current` answers what remains of it, so the code screen asks on arrival ([#711](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/711)). The sequence is still two lifecycles, and nothing crosses the page between them.
 
