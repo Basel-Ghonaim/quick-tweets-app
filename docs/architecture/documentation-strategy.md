@@ -4,7 +4,7 @@
 > **Class:** Contract (§3).
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.8
+> **Version:** 1.9
 > **Last Updated:** 2026-09-13
 > **Owner:** Basel Ghonaim
 
@@ -198,7 +198,7 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Axios API client (clients, interceptors, retry, 401-refresh) | `frontend/api-client.md` | feature documents |
 | Schema-driven form engine (validation, state, inference, SchemaField seam) | `frontend/forms.md` | feature documents |
 | Design system (design language, authoring conventions) | `frontend/design-system/` | feature documents, `frontend/forms.md` |
-| Where a behavior is proven — the testing lanes and what each owns | `development/testing-topology.md` *(owner assigned by [ADR 0020](decisions/0020-proof-has-a-home-testing-topology.md); not yet written)* | the Engineering Execution Standard's Definition of Done and Stop Rules, [Engineering Principles §8](../development/engineering-principles.md) |
+| Where a behavior is proven — the testing lanes and what each owns | [`development/testing-topology.md`](../development/testing-topology.md) | the Engineering Execution Standard's Definition of Done and Stop Rules, [Engineering Principles §8](../development/engineering-principles.md) |
 | Project history | Git history | `project/overview.md` (status only) |
 | What the product is committed to building | `project/overview.md` (a Commitment, §3) | any document needing to test whether a need is grounded |
 | Live status of work in progress | Issue tracker (issues, milestones) | `project/overview.md`, execution plans (link only) |

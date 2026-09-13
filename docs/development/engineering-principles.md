@@ -74,7 +74,7 @@ Principles only — concrete mechanisms (token model, password hashing, rate lim
 
 ## 8. Testing Principles
 
-Principles only — **where** a behavior is proven is owned by the testing topology ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md)), not by this document.
+Principles only — **where** a behavior is proven is owned by the [testing topology](testing-topology.md), not by this document.
 
 - **Test behavior, not implementation.** Assert observable outcomes, so refactors do not break tests.
 - **Design for testability.** A unit that is hard to test usually has a design problem. Pure functions and injected dependencies are how a design stays testable; a seam threaded past units that own nothing is not ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 6).
