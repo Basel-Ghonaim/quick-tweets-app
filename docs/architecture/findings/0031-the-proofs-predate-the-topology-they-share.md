@@ -73,3 +73,15 @@ The same shape held for all twelve. The original table collapsed two behaviors i
 **Why it is recorded rather than quietly fixed.** The classification was wrong for one day and was caught by the rule the same effort had just recorded, before a single test was edited. That sequence is the evidence that the topology is usable as a rule rather than a description, and deleting the mistake would delete the evidence.
 
 The Finding stays `Open`: every case above waits on the component lane.
+
+## Addendum — 2026-09-13, the lifecycle class is resolved ([#719](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/719))
+
+**The component lane is built and gated, and the lifecycle behaviors are in it.** They are proven against the hooks that decide them — `useJourney` and `useRecovery` — rather than through the screens that happened to render them, and the two `setTimeout` proofs are gone. *The journey waits for the session* no longer asserts that nothing happened within 200 ms; it asserts that nothing is asked while the session is unsettled **and that the read follows the moment it settles**, which is the behavior the sleep was standing in for. The lifecycle row above is resolved.
+
+**One case in that table was never lifecycle.** `Profile` · *skipping issues no request* uses no gateway double, does not spy, and asserts that no alert appears and submit stays enabled after a click. `skip` is `useCallback(() => onSettled?.("skipped"))` and reaches no gateway, so there was nothing to spy on. It is **interaction**, and moves to that class — which now holds thirteen named cases, not twelve.
+
+**A gap the move exposed, and which this Finding now records.** Three of the four mutations run against the new tests failed exactly one test each. The fourth did not: removing the `useMemo` that holds `useJourney`'s gateway across renders **breaks nothing**, because every test supplies a stable gateway through the hook's optional parameter, and the memo only matters on the path where none is supplied. **The seam added for testing is what prevents the behavior it protects from being proven.** No test was added to close this — a test that reached for the memo would assert an implementation rather than an outcome ([Engineering Principles §8](../../development/engineering-principles.md)) — and it is evidence for the Work Item that removes the seam rather than for this one.
+
+**Nothing in production changed.** The six tests inject through the existing optional gateway, which stays marked for removal; no prop, parameter or barrel was touched.
+
+The Finding stays `Open`: the interaction class remains, and waits on nothing now but a Work Item to move it.
