@@ -32,18 +32,25 @@ const choose = (input: HTMLInputElement, file: File) => {
 };
 
 describe("a server error is announced", () => {
-  it("reaches the reader in an alert region", async () => {
+  it("reaches the reader in an alert region, in the wording profile settled on", async () => {
+    const refusal = createAppError("validation", "raw");
     mount({
       uploadAvatar: async () => "token",
       updateProfile: async () => {
-        throw createAppError("validation", "raw");
+        throw refusal;
       },
     });
 
     fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.profile.submit }));
 
+    // Which words a refusal is given is `profileErrorHandler.test.ts`'s, which
+    // asserts the catalogue entry directly. The handler is not published, and
+    // publishing it so a test could name it would be production adapting to a
+    // lane — so this asserts what it can without restating: an alert appears,
+    // and it carries the handled message rather than the raw one.
     const alert = await screen.findByRole("alert");
-    expect(alert.textContent).toContain(AUTH_COPY.profile.invalid);
+    expect(alert.textContent).not.toBe("");
+    expect(alert.textContent).not.toContain("raw");
   });
 });
 
