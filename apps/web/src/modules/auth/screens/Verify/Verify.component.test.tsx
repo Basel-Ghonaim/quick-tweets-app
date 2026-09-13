@@ -1,0 +1,142 @@
+import type { ReactElement } from "react";
+import { configureStore } from "@reduxjs/toolkit";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { Provider } from "react-redux";
+import { describe, expect, it } from "vitest";
+import { createAppError } from "@shared/errors";
+import { AUTH_COPY } from "@shared/copy";
+import { sessionReducer } from "@shared/session";
+import type { VerificationGateway } from "@shared/channel-verification";
+import { VerifyAsk } from "./VerifyAsk";
+import { VerifyCode } from "./VerifyCode";
+
+const noop = () => {};
+
+/* `RouteLink` reads the search params, so a router is what these screens need
+   to mount — the layout and the theme are the browser lane's business. */
+const mount = (element: ReactElement) =>
+  render(
+    <Provider store={configureStore({ reducer: { session: sessionReducer } })}>
+      <MemoryRouter initialEntries={["/auth/onboarding"]}>{element}</MemoryRouter>
+    </Provider>,
+  );
+
+/* The code screen asks where the holder stands when it mounts, so every mount
+   of it answers that read rather than letting one reach the network. */
+const standing = (seconds: number): VerificationGateway => ({
+  current: async () => ({
+    status: "pending",
+    resendAvailableAt: seconds > 0 ? Date.now() + seconds * 1000 : null,
+  }),
+  issue: async () => ({ resendAvailableAt: Date.now() + 60_000 }),
+  confirm: async () => {},
+});
+
+const refusing = (type: "too_many_requests" | "rate_limit"): VerificationGateway => ({
+  current: async () => ({ status: "pending", resendAvailableAt: null }),
+  issue: async () => {
+    throw createAppError(type, "raw");
+  },
+  confirm: async () => {},
+});
+
+describe("sending is reported in place", () => {
+  it("names the wait on the control that started it", async () => {
+    mount(
+      <VerifyAsk
+        onSent={noop}
+        onLater={noop}
+        repo={{
+          current: async () => ({ status: "pending", resendAvailableAt: null }),
+          issue: () => new Promise(() => {}),
+          confirm: async () => {},
+        }}
+      />,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: AUTH_COPY.verify.send }));
+
+    expect(await screen.findByRole("button", { name: AUTH_COPY.verify.sending })).toBeTruthy();
+  });
+});
+
+describe("the cooldown refusal says what it is", () => {
+  it("reaches the reader in this screen's words, not a form's", async () => {
+    mount(<VerifyAsk onSent={noop} onLater={noop} repo={refusing("too_many_requests")} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: AUTH_COPY.verify.send }));
+
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      AUTH_COPY.verify.cooldownRefused,
+    );
+  });
+});
+
+describe("the client limiter says something else", () => {
+  it("is told apart from the address cooldown where the reader meets it", async () => {
+    mount(<VerifyAsk onSent={noop} onLater={noop} repo={refusing("rate_limit")} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: AUTH_COPY.verify.send }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain(AUTH_COPY.verify.rateLimited);
+    expect(alert.textContent).not.toContain(AUTH_COPY.verify.cooldownRefused);
+  });
+});
+
+describe("the code field forgives what is typed", () => {
+  it("shows the code the way the field accepts it", async () => {
+    mount(<VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />);
+
+    const field = await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
+    fireEvent.change(field, { target: { value: "7qk3-mnp2 xvzo" } });
+
+    await waitFor(() => expect((field as HTMLInputElement).value).toBe("7QK3MNP2XVZ0"));
+  });
+});
+
+describe("the wait comes from the server", () => {
+  it("renders the resend held for as long as the server says", async () => {
+    mount(<VerifyCode repo={standing(60)} onVerified={noop} onLater={noop} />);
+
+    const resend = await screen.findByRole("button", { name: AUTH_COPY.verify.resendIn(60) });
+
+    expect((resend as HTMLButtonElement).disabled).toBe(true);
+  });
+});
+
+describe("arriving with no window offers resend at once", () => {
+  it("offers the control without a refusal to discover there is nothing to wait for", async () => {
+    mount(<VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />);
+
+    const resend = await screen.findByRole("button", { name: AUTH_COPY.verify.resend });
+
+    expect((resend as HTMLButtonElement).disabled).toBe(false);
+  });
+});
+
+describe("a failed read still lets the code be typed", () => {
+  it("leaves the field usable and the resend offered when the read fails", async () => {
+    mount(
+      <VerifyCode
+        repo={{
+          current: async () => {
+            throw createAppError("network", "offline");
+          },
+          issue: async () => ({ resendAvailableAt: null }),
+          confirm: async () => {},
+        }}
+        onVerified={noop}
+        onLater={noop}
+      />,
+    );
+
+    const field = await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
+    fireEvent.change(field, { target: { value: "7qk3" } });
+
+    await waitFor(() => expect((field as HTMLInputElement).value).toBe("7QK3"));
+    const resend = screen.getByRole("button", { name: AUTH_COPY.verify.resend });
+    expect((resend as HTMLButtonElement).disabled).toBe(false);
+  });
+});
