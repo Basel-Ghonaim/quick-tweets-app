@@ -5,7 +5,6 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
-import { createAppError } from "@shared/errors";
 import { Recovery } from "./Recovery";
 import { AuthLayout } from "@modules/auth/layout";
 import { sessionReducer } from "@shared/session";
@@ -65,19 +64,6 @@ const withRepo = (repo: RecoveryGateway) => {
       </ThemeProvider>
     </Provider>
   );
-};
-
-/** Each step renders because the server said so, never because the client
- *  tracked how far the reader had got. */
-export const TheStepChoosesTheScreen: Story = {
-  render: withRepo(repository({ position: async () => at({ step: "request" }) })),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(
-      await canvas.findByRole("heading", { name: AUTH_COPY.recovery.requestTitle }),
-    ).toBeVisible();
-  },
 };
 
 /** A reload at the code step lands on the code step, which is the whole reason
@@ -208,29 +194,6 @@ export const TheConfirmationSaysNothingAboutTheAccount: Story = {
     await expect(confirmation).toBeVisible();
     // Announced rather than merely drawn, and politely: it is not a failure.
     await expect(confirmation.closest("[role='status']")).not.toBeNull();
-  },
-};
-
-/** A read that failed is not an answer of `request`: offering the first screen
- *  would discard a recovery the server still holds. */
-export const AFailedReadOffersARetry: Story = {
-  render: withRepo(
-    repository({
-      position: async () => {
-        throw createAppError("network", "offline");
-      },
-    }),
-  ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(await canvas.findByText(AUTH_COPY.recovery.unavailable)).toBeVisible();
-    await expect(
-      canvas.getByRole("button", { name: AUTH_COPY.recovery.retry }),
-    ).toBeVisible();
-    await expect(
-      canvas.queryByRole("heading", { name: AUTH_COPY.recovery.requestTitle }),
-    ).toBeNull();
   },
 };
 

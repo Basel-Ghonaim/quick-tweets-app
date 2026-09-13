@@ -113,3 +113,21 @@ The Finding stays `Open`.
 Eleven of the fourteen named cases are now resolved. Three remain: two in `Recovery`, one in `Onboarding`.
 
 The Finding stays `Open`.
+
+## Addendum — 2026-09-13, the named class is complete ([#725](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/725))
+
+**The last three moved and none narrowed** — a third distinct outcome, after Verify narrowed three of seven and Profile one of four. The difference is a distinction this Finding had not drawn, and it is the useful thing to come out of the three rounds:
+
+> A case **restates** when its assertion **names** another lane's output. It **traverses** when it merely **depends** on one to reach its own subject.
+
+Profile's error case named `AUTH_COPY.profile.invalid`, which `profileErrorHandler.test.ts` asserts — a restatement, and narrowed. These three name a heading, a control and a wording that **no other lane asserts**; the mapping they depend on sits upstream of the assertion rather than inside it. Traversal is what the [topology](../../development/testing-topology.md) already permits: *another lane may traverse a behavior incidentally; it may not take it as its subject.*
+
+**Two mutations per case established that, rather than reading.** Breaking a mapping — `screenFor({failed})` to `request`, `destinationFor({failed})` to `feed` — failed **both** lanes, which is what proves the unit lane owns it and these cases only pass through. Breaking a rendering — the retry control's name, in each screen — failed **only** the component lane, which is what proves each case has a subject of its own. Had a mapping mutation failed only the component lane, the verdict would have been wrong and the case would have narrowed.
+
+**Where each test lives follows the capability's fences, unamended.** Recovery's sits inside the capability, because its barrel publishes only the screen, and reaches its model and gateway by relative path. Onboarding's sits beside its screen in the legacy zone.
+
+**All fourteen named interaction cases are resolved.** The lifecycle class was resolved in #719.
+
+**The transition row is not closed, and this Finding does not propose closing it.** The interaction class is wider than the fourteen this Finding named: `Recovery.stories.tsx` holds twelve further cases, `Onboarding.stories.tsx` two, `Profile.stories.tsx` four and `Verify.stories.tsx` five. Each was left on the ground that it needs a browser, and **none has had the per-case check the fourteen received**. Whether any belongs in the component lane is a separate evaluation, and until it happens this Finding asserts nothing about them.
+
+The Finding stays `Open` for that evaluation.

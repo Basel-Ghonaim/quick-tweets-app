@@ -4,7 +4,6 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
-import { createAppError } from "@shared/errors";
 import { Onboarding } from "./Onboarding";
 import { AuthLayout } from "../../layout";
 import { sessionActions, sessionReducer } from "@shared/session";
@@ -74,26 +73,6 @@ export const ThePhaseChoosesTheScreen: Story = {
 
 /** Skipping and saving are the same transition to the server, and the outcome
  *  is the only thing that tells them apart. */
-
-/** A read that failed is not an answer of none: ejecting a reader whose journey
- *  is open is the one thing this must never do. */
-export const AFailedReadOffersARetry: Story = {
-  render: withRepo({
-    read: async () => {
-      throw createAppError("network", "Offline");
-    },
-    advance: async () => state(),
-  }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(await canvas.findByRole("alert")).toHaveTextContent(
-      AUTH_COPY.onboarding.unavailable,
-    );
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.onboarding.retry })).toBeVisible();
-    await expect(canvas.queryByText("the feed")).not.toBeInTheDocument();
-  },
-};
 
 /** The feed is public, so leaving must never wait on a request that may never
  *  answer — a dropped network would otherwise trap the reader here. */
