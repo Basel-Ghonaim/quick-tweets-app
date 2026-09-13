@@ -47,7 +47,7 @@ This is the **map** of the project's documentation — every document, what it o
 - [setup.md](development/setup.md) — running the project locally.
 - [engineering-principles.md](development/engineering-principles.md) — code-design principles (SOLID, data/architectural patterns, naming).
 - [engineering-execution-standard.md](development/engineering-execution-standard.md) — how work is executed: the Git lifecycle, scope control, review, and decision authority.
-- `testing-topology.md` — where a behavior is proven: the testing lanes, what each owns, and what each is forbidden. Its ownership is assigned by [ADR 0020](architecture/decisions/0020-proof-has-a-home-testing-topology.md); the document itself is **not yet written**.
+- [testing-topology.md](development/testing-topology.md) — where a behavior is proven: the lanes, what each owns, what each is forbidden, and the rule that assigns a behavior to one. It owns the *placement* of proof, never its *quality* ([ADR 0020](architecture/decisions/0020-proof-has-a-home-testing-topology.md)).
 - [verification/](development/verification/) — the manual verification harness (Postman collection + pgAdmin checkpoints) for the Media subsystem and core flows; see its [README](development/verification/README.md).
 
 ### `plans/` — execution-oriented plans

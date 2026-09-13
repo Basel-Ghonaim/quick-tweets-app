@@ -180,7 +180,7 @@ Review runs in three layers, and two definitions mark the work's transitions.
 - its **acceptance criteria** (the contract from §3, represented per §8) are met;
 - scope was respected (§7) and the commit history is atomic and clean (§6);
 - the branch is pushed and the PR — and the Issue, if substantial — is prepared.
-- *Code Work Items also:* build and lint clean, with new behavior covered by tests **in the lane that owns it** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md)) — coverage in a lane that merely can run the behavior does not meet this.
+- *Code Work Items also:* build and lint clean, with new behavior covered by tests **in the lane that owns it** ([Testing Topology](testing-topology.md)) — coverage in a lane that merely can run the behavior does not meet this.
 - *Documentation Work Items also:* every triggered documentation update is included, links resolve, and one-owner-per-fact holds.
 
 **Definition of Accepted** — the Work Item is *complete* when the human has approved it, the PR is **merged**, and the Issue (if any) is **closed**. (Deleting the branch is the lifecycle's cleanup step — §4 — that follows acceptance, not a condition of it.)

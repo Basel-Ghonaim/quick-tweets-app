@@ -61,6 +61,7 @@ Consult the relevant one before deep work; do not duplicate it here.
 - **Agent onboarding** (the on-ramp for a new agent or contributor — reading order, decision authority in practice, common mistakes, the self-review bar) → `docs/development/agent-onboarding.md`
 - **Engineering Execution Standard** (work units, Git lifecycle, branch/commit strategy, scope control, review, Definition of Done & Accepted, Decision Authority Matrix, stop rules) → `docs/development/engineering-execution-standard.md`
 - **Code design principles** (SOLID, data/architectural patterns, naming) → `docs/development/engineering-principles.md`
+- **Testing topology** (where a behaviour is proven — the lanes, what each owns and is forbidden, and the rule that assigns one) → `docs/development/testing-topology.md`
 
 ---
 
