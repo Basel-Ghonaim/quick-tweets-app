@@ -99,3 +99,17 @@ The Finding stays `Open`: the interaction class remains, and waits on nothing no
 **A count this Finding has been carrying wrong.** The interaction table holds twelve rows but **thirteen** cases — one row names two — and the reclassified profile case makes **fourteen**, not the thirteen the previous addendum said. Seven are now resolved; seven remain, in `Recovery`, `Profile` and `Onboarding`.
 
 The Finding stays `Open`.
+
+## Addendum — 2026-09-13, Profile's interaction is in its lane ([#723](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/723))
+
+**Four behaviors moved, and this time the table was right about one and wrong about none** — but only checking established that. `profileErrorHandler.test.ts` asserts the **real** catalogue entry, unlike Verify's service test which stood in its own map, so *a server error is announced* genuinely restated and was narrowed. The other three were confirmed un-narrowed by mutation, each run against **both** lanes: breaking the submit label and breaking the file-selection wiring each failed one component test while the unit lane held at 254, which is what proves the unit lane does not cover them.
+
+**A narrowing technique that was available for Verify is not available generally.** Verify's cases could defer to their owner by name — asserting `normaliseCode(typed)` rather than a literal. Profile's could not: `profileErrorHandler` is **not published**, and publishing it so a test could name it would be production adapting to a lane. The assertion was narrowed to what a consumer can see instead — an alert appears, carrying the handled message rather than the raw one — and a mutation that renders the raw message fails it. **Where an owner is private, narrowing asserts the consequence rather than the value.**
+
+**A browser API the component lane does not have.** `new DataTransfer()` is undefined in jsdom, so *choosing a picture starts the upload* could not carry its harness across. The file is put on the input directly instead; the assertion is unchanged, and a mutation that unwires the selection still fails it. The story's note about `pointer-events: none` stayed behind, because that is a browser fact.
+
+**What the browser lane keeps, recorded rather than left silent.** Four cases remain in `Profile.stories.tsx` — the resting layout, the stepper's rendered state, the live bio count, the narrow viewport — and they are the browser lane's by charter. Beyond the named fourteen, the interaction class is wider: `Recovery.stories.tsx` holds fourteen cases of which two are named, and `Onboarding.stories.tsx` three of which one is. Whether the unnamed ones follow is not decided here, and this Finding does not assert they are misplaced without the same per-case check the named ones received.
+
+Eleven of the fourteen named cases are now resolved. Three remain: two in `Recovery`, one in `Onboarding`.
+
+The Finding stays `Open`.
