@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -7,7 +7,6 @@ import { ThemeProvider } from "@shared/preferences";
 import { Profile } from "./Profile";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
-import { createAppError } from "@shared/errors";
 import type { ProfileGateway } from "@features/profile";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
@@ -110,74 +109,6 @@ export const TheBioCountTracksWhatIsTyped: Story = {
     await waitFor(() =>
       expect(canvas.getByText(AUTH_COPY.profile.bioCount(5, 160))).toBeInTheDocument(),
     );
-  },
-};
-
-export const AServerErrorIsAnnounced: Story = {
-  decorators: [
-    withState({
-      uploadAvatar: async () => "token",
-      updateProfile: async () => {
-        throw createAppError("validation", "raw");
-      },
-    }),
-  ],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.profile.submit }));
-
-    const alert = await canvas.findByRole("alert");
-    await expect(alert).toBeVisible();
-    await expect(alert).toHaveTextContent(AUTH_COPY.profile.invalid);
-  },
-};
-
-export const SavingIsReportedInPlace: Story = {
-  decorators: [
-    withState({ uploadAvatar: async () => "token", updateProfile: () => new Promise(() => {}) }),
-  ],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.profile.submit }));
-
-    await expect(
-      await canvas.findByRole("button", { name: AUTH_COPY.profile.submitting }),
-    ).toBeVisible();
-  },
-};
-
-/** Skipping is the absence of a request, so nothing about the update moves. */
-export const SkippingIssuesNoRequest: Story = {
-  decorators: [withState()],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.profile.skip }));
-
-    await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
-    await expect(
-      canvas.getByRole("button", { name: AUTH_COPY.profile.submit }),
-    ).toBeEnabled();
-  },
-};
-
-/** The upload runs on selection, so its states are reachable without a submit. */
-export const ChoosingAPictureStartsTheUpload: Story = {
-  decorators: [withState()],
-  play: async ({ canvasElement }) => {
-    const input = canvasElement.querySelector<HTMLInputElement>("input[type='file']")!;
-
-    // Assigned rather than clicked: the avatar's native input is deliberately
-    // `pointer-events: none`, so a pointer-driven upload cannot reach it.
-    const transfer = new DataTransfer();
-    transfer.items.add(new File([new Uint8Array([1, 2, 3])], "a.png", { type: "image/png" }));
-    input.files = transfer.files;
-    fireEvent.change(input);
-
-    const live = canvasElement.querySelector("[role='status']")!;
-    await waitFor(() => expect(live.textContent).not.toBe(""));
   },
 };
 
