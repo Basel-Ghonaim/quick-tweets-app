@@ -4,8 +4,8 @@
 > **Class:** Contract (§3).
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.7
-> **Last Updated:** 2026-08-17
+> **Version:** 1.8
+> **Last Updated:** 2026-09-13
 > **Owner:** Basel Ghonaim
 
 
@@ -176,7 +176,7 @@ Each category has a single responsibility. Material outside that responsibility 
 | `backend/` | Cross-cutting backend mechanisms (conventions, security) | Per-feature or per-module logic |
 | `frontend/` | Cross-cutting frontend platform subsystems: API client, state/data, error normalization, the schema-driven form engine, and the design system (presentation only) | Per-feature flows |
 | `features/` | One capability's intent, rules, and feature-specific bindings — composing platform docs by link | Restated endpoints, schema, or generic mechanisms |
-| `development/` | How to run the project and how the team works | Architecture or feature content |
+| `development/` | How to run the project and how the team works, and **where a behavior is proven** — the testing lanes, what each owns, and what each is forbidden ([ADR 0020](decisions/0020-proof-has-a-home-testing-topology.md)) | Architecture or feature content; the *quality* of a test, which is [Engineering Principles §8](../development/engineering-principles.md)'s |
 | `plans/` | The strategy, sequencing, rationale, risk management, and execution structure of multi-Work-Item efforts (a lifecycle-governed class — see [ADR 0006](decisions/0006-execution-plans-home-and-lifecycle.md)) | Per-Work-Item implementation, status, or acceptance criteria (owned by Issues); permanent architecture rationale (owned by the relevant doc or ADR) |
 
 ---
@@ -198,6 +198,7 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Axios API client (clients, interceptors, retry, 401-refresh) | `frontend/api-client.md` | feature documents |
 | Schema-driven form engine (validation, state, inference, SchemaField seam) | `frontend/forms.md` | feature documents |
 | Design system (design language, authoring conventions) | `frontend/design-system/` | feature documents, `frontend/forms.md` |
+| Where a behavior is proven — the testing lanes and what each owns | `development/testing-topology.md` *(owner assigned by [ADR 0020](decisions/0020-proof-has-a-home-testing-topology.md); not yet written)* | the Engineering Execution Standard's Definition of Done and Stop Rules, [Engineering Principles §8](../development/engineering-principles.md) |
 | Project history | Git history | `project/overview.md` (status only) |
 | What the product is committed to building | `project/overview.md` (a Commitment, §3) | any document needing to test whether a need is grounded |
 | Live status of work in progress | Issue tracker (issues, milestones) | `project/overview.md`, execution plans (link only) |

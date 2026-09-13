@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** The authoritative source for **how work is executed** in this repository — work items, the Git lifecycle, commits, scope control, review, and the authority to make decisions. Binding on all contributors, human and AI.
 > **Scope:** Owns *process and execution*. It does **not** own *code design* ([Engineering Principles](engineering-principles.md)) or *documentation governance* ([Documentation Strategy](../architecture/documentation-strategy.md)).
-> **Version:** 1.2
-> **Last Updated:** 2026-08-14
+> **Version:** 1.3
+> **Last Updated:** 2026-09-13
 > **Owner:** Basel Ghonaim
 
 ## How to read this document
@@ -180,7 +180,7 @@ Review runs in three layers, and two definitions mark the work's transitions.
 - its **acceptance criteria** (the contract from §3, represented per §8) are met;
 - scope was respected (§7) and the commit history is atomic and clean (§6);
 - the branch is pushed and the PR — and the Issue, if substantial — is prepared.
-- *Code Work Items also:* build and lint clean, with new behavior covered by tests.
+- *Code Work Items also:* build and lint clean, with new behavior covered by tests **in the lane that owns it** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md)) — coverage in a lane that merely can run the behavior does not meet this.
 - *Documentation Work Items also:* every triggered documentation update is included, links resolve, and one-owner-per-fact holds.
 
 **Definition of Accepted** — the Work Item is *complete* when the human has approved it, the PR is **merged**, and the Issue (if any) is **closed**. (Deleting the branch is the lifecycle's cleanup step — §4 — that follows acceptance, not a condition of it.)
@@ -212,6 +212,7 @@ Execution surfaces things the Work Item did not plan for — a latent bug, a des
 - **A choice with lasting architectural consequence** → **stop and propose an ADR** (propose → approve, §10); do not decide it yourself.
 - **Separable work with its own contract** → **propose a new Work Item** (§2) for it (propose → approve, §10); do not fold it into this branch, and do not start it yourself.
 - **Something that blocks the contract** — you cannot complete the Work Item correctly without resolving it → **stop and escalate**: the Work Item is mis-defined or blocked, and continuing would either break scope or guess at a decision you do not own.
+- **A behavior no testing lane owns** → **stop and raise it** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 8); never place it in the nearest lane that happens to be able to run it. A lane is assigned, and a missing one is a gap to be decided rather than worked around.
 - **None of these — within the contract and clearly correct** → **continue.**
 
 **When in doubt, record — never absorb.** If you cannot tell whether a discovery is a finding, an ADR, or a new Work Item, record it as a finding and surface it; never silently widen the current Work Item to cover it (§7). The boundary: Stop Rules decide *whether and how to capture* a mid-execution discovery; the [Documentation Strategy](../architecture/documentation-strategy.md) owns *what a finding or an ADR is* (definition, format, location); §12 decides *when a discovery is large enough to warrant a standalone planning artifact*.

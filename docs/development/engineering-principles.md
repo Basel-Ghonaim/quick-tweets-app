@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for the project's **code-design principles** — the patterns and rules that define what good code looks like here. Binding on all contributors, human and AI.
 > **Scope:** Owns *principles* (the timeless "why" and "what good looks like"). It does **not** own *mechanisms* (the current "how"), which live in the relevant platform, security, and contract documents, nor *process* (Git, commits, reviews), which lives in the Engineering Execution Standard.
-> **Version:** 1.3
-> **Last Updated:** 2026-08-17
+> **Version:** 1.4
+> **Last Updated:** 2026-09-13
 > **Owner:** Basel Ghonaim
 
 ## How to read this document
@@ -74,8 +74,10 @@ Principles only — concrete mechanisms (token model, password hashing, rate lim
 
 ## 8. Testing Principles
 
+Principles only — **where** a behavior is proven is owned by the testing topology ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md)), not by this document.
+
 - **Test behavior, not implementation.** Assert observable outcomes, so refactors do not break tests.
-- **Design for testability.** Pure functions and dependency injection make logic testable without infrastructure. A unit that is hard to test usually has a design problem.
+- **Design for testability.** A unit that is hard to test usually has a design problem. Pure functions and injected dependencies are how a design stays testable; a seam threaded past units that own nothing is not ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 6).
 
 ## 9. Performance Principles
 
