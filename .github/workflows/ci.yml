@@ -24,6 +24,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck --workspace @quick-tweets/web
       - run: npm run test --workspace @quick-tweets/web
+      - run: npm run test:component --workspace @quick-tweets/web
       # Repository-level, not the web's. It runs here only because this job
       # exists; it earns its own job when a packages/* consumer does.
       - run: npm run check:boundaries

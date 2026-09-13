@@ -60,19 +60,19 @@ A case whose **only** subject belongs to another lane is **deleted rather than r
 
 | Lane | State |
 |---|---|
-| Web unit · Repository boundaries · API unit | **built**, and gated by CI |
+| Web unit · **Component** · Repository boundaries · API unit | **built**, and gated by CI |
 | Browser · API integration · Manual harness | **built**, and **not** gated — a green CI run says nothing about them, so a Work Item that could affect one runs it and says so |
-| **Component** · **Frontend integration** | **adopted, not built** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 7). A behavior belongs to them from today; building them is a Work Item of its own |
+| **Frontend integration** | **adopted, not built** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 7). A behavior belongs to it from today; building it is a Work Item of its own |
 | **E2E** | **not adopted.** It becomes warranted when a reader's journey crosses more than one page group and no narrower lane can prove that it connects. That is a condition on the state of the code, not a date, and this is not a prohibition ([Documentation Strategy §8](../architecture/documentation-strategy.md)) |
 
 ## What sits outside its lane today
 
-Two lanes are adopted and unbuilt, so some behavior is proven where it does not belong. **This list is closed on the day it is written** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 8): it is a record of debt, not an exemption. No check is relaxed by an entry appearing here, and **nothing joins it** — a behavior that later finds no lane is a stop, and the Work Item raises it.
+One lane is adopted and unbuilt, so some behavior is proven where it does not belong. **This list is closed on the day it is written** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 8): it is a record of debt, not an exemption. No check is relaxed by an entry appearing here, and **nothing joins it** — a behavior that later finds no lane is a stop, and the Work Item raises it. An entry leaves only by the behavior reaching its lane.
 
 | Class | Held by | Belongs to |
 |---|---|---|
-| **Lifecycle** — how often a capability is asked, what it waits for, and which calls it makes | the browser lane, in four story files: `Onboarding`, `Recovery`, `Profile`, `Verify` | component |
-| **Interaction** — typing, clicking, disabled state, and the values that follow | the browser lane, in the same four files | component |
+| ~~**Lifecycle**~~ — how often a capability is asked, what it waits for, and which calls it makes | — | **resolved**: the component lane holds it |
+| **Interaction** — typing, clicking, disabled state, and the values that follow | the browser lane, in four story files: `Onboarding`, `Recovery`, `Profile`, `Verify` | component |
 
 **A case that restates a behavior another lane owns is narrowed, not deleted.** Where a case asserts both — something this lane owns, and alongside it an outcome the owning lane already proves — only the second half is redundant, and removing the case would take the first half with it. Apply the test above to each half separately: a case is deleted only when **every** behavior it asserts survives its deletion. Which cases carry such a half is [Finding 0031](../architecture/findings/0031-the-proofs-predate-the-topology-they-share.md)'s to record, and this document does not enumerate it.
 

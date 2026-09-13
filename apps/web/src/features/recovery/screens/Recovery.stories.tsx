@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -391,79 +391,6 @@ export const ThePasswordStepShowsNoAddress: Story = {
 
 /** The position is asked for once, not once per render — a repository rebuilt
  *  each time would key the read effect afresh and never settle. */
-export const ThePositionIsAskedForOnce: Story = {
-  render: () => {
-    const Harness = () => {
-      const [reads, setReads] = useState(0);
-      const [Mounted] = useState(() =>
-        withRepo(
-          repository({
-            position: async () => {
-              setReads((n) => n + 1);
-              return at({ step: "request" });
-            },
-          }),
-        ),
-      );
-
-      return (
-        <>
-          <Mounted />
-          <p data-testid="reads">{String(reads)}</p>
-        </>
-      );
-    };
-
-    return <Harness />;
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.requestTitle });
-    await new Promise((resolve) => setTimeout(resolve, 150));
-
-    await expect(canvas.getByTestId("reads")).toHaveTextContent("1");
-  },
-};
 
 /** Confirming does not decide the step: the server is asked again, and what it
  *  says is what renders. */
-export const ConfirmingReReadsRatherThanAssuming: Story = {
-  render: () => {
-    const Harness = () => {
-      const [Mounted] = useState(() => {
-        let confirmed = false;
-
-        return withRepo(
-          repository({
-            position: async () => at({ step: confirmed ? "password" : "code" }),
-            confirm: async () => {
-              confirmed = true;
-            },
-          }),
-        );
-      });
-
-      return <Mounted />;
-    };
-
-    return <Harness />;
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.type(
-      await canvas.findByLabelText(AUTH_COPY.recovery.codeLabel),
-      "7qk3-mnp2-xvzb",
-    );
-    await userEvent.click(
-      canvas.getByRole("button", { name: AUTH_COPY.recovery.submitCode }),
-    );
-
-    await waitFor(async () =>
-      expect(
-        await canvas.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle }),
-      ).toBeVisible(),
-    );
-  },
-};
