@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
+import { createAppError } from "@shared/errors";
 import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
 import { AuthLayout } from "../../layout";
@@ -136,5 +137,85 @@ export const Compact: Story = {
 
     await expect(window.innerWidth).toBeLessThan(576);
     await expect(await canvas.findByRole("button", { name: AUTH_COPY.verify.send })).toBeVisible();
+  },
+};
+
+/* The four below exist for the accessibility check and nothing else. Each puts
+   one state on screen so axe evaluates it, and asserts only that the state is
+   there — what the state means is the component lane's. */
+
+const refusing = (type: "too_many_requests" | "rate_limit"): VerificationGateway => ({
+  current: async () => ({ status: "pending", resendAvailableAt: null }),
+  issue: async () => {
+    throw createAppError(type, "raw");
+  },
+  confirm: async () => {},
+});
+
+export const TheAskRefused: Story = {
+  decorators: [
+    showing(<VerifyAsk onSent={noop} onLater={noop} repo={refusing("too_many_requests")} />),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
+    await canvas.findByRole("alert");
+  },
+};
+
+export const TheAskSending: Story = {
+  decorators: [
+    showing(
+      <VerifyAsk
+        onSent={noop}
+        onLater={noop}
+        repo={{
+          current: async () => ({ status: "pending", resendAvailableAt: null }),
+          issue: () => new Promise(() => {}),
+          confirm: async () => {},
+        }}
+      />,
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
+    await canvas.findByRole("button", { name: AUTH_COPY.verify.sending });
+  },
+};
+
+export const TheCodeRefused: Story = {
+  decorators: [
+    showing(
+      <VerifyCode
+        repo={{
+          current: async () => ({ status: "pending", resendAvailableAt: null }),
+          issue: async () => ({ resendAvailableAt: null }),
+          confirm: async () => {
+            throw createAppError("bad_request", "raw");
+          },
+        }}
+        onVerified={noop}
+        onLater={noop}
+      />,
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.verify.codeLabel), "7QK3MNP2XVZB");
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.verify.submit }));
+    await canvas.findByRole("alert");
+  },
+};
+
+export const TheResendHeld: Story = {
+  decorators: [showing(<VerifyCode repo={standing(60)} onVerified={noop} onLater={noop} />)],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByRole("button", { name: AUTH_COPY.verify.resendIn(60) });
   },
 };

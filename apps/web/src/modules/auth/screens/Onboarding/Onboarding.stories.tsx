@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
+import { createAppError } from "@shared/errors";
 import { Onboarding } from "./Onboarding";
 import { AuthLayout } from "../../layout";
 import { sessionActions, sessionReducer } from "@shared/session";
@@ -89,5 +90,21 @@ export const ASkippedProfileReadsAsSkipped: Story = {
 
     const profile = (await canvas.findByText(AUTH_COPY.journey.steps.profile)).closest("li");
     await expect(within(profile!).getByText(AUTH_COPY.journey.states.skipped)).toBeVisible();
+  },
+};
+
+/* For the accessibility check and nothing else: the retry screen is rendered
+   nowhere else, and what it means is the component lane's. */
+export const TheReadFailed: Story = {
+  render: withRepo({
+    read: async () => {
+      throw createAppError("network", "Offline");
+    },
+    advance: async () => state(),
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByRole("button", { name: AUTH_COPY.onboarding.retry });
   },
 };
