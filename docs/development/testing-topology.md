@@ -4,7 +4,7 @@
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **where a behavior is proven** — the lanes that exist, what each one owns, what each one is forbidden, and the rule that assigns a behavior to exactly one of them. It owns the **placement** of proof and never its **quality**, which is [Engineering Principles §8](engineering-principles.md)'s. The decision that gives it this ownership, and the reasoning behind it, are [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md)'s — cited here, never restated.
 > **Scope:** Every lane in this repository, both tiers, automated and manual. It does **not** own any lane's configuration, which is code; nor the [manual verification harness](verification/README.md)'s contents, which that directory owns; nor whether a particular Work Item has proved enough, which is its acceptance criteria's.
-> **Version:** 1.0
+> **Version:** 1.1
 > **Last Updated:** 2026-09-13
 > **Owner:** Basel Ghonaim
 
@@ -38,7 +38,7 @@ Ask what the answer depends on:
 
 **The test:** if this lane's case were deleted, would the behavior still be proven? **Yes** — the case is incidental, and permitted. **No** — this lane owns it, and must be the lane assigned above.
 
-A case whose subject belongs to another lane is **deleted rather than rewritten**, because a case stripped of its subject has nothing left to assert. Counts fall when that happens, and a falling count under this rule is not a regression — but it is named by the Work Item, never discovered by a reviewer.
+A case whose **only** subject belongs to another lane is **deleted rather than rewritten**, because a case stripped of its subject has nothing left to assert. Counts fall when that happens, and a falling count under this rule is not a regression — but it is named by the Work Item, never discovered by a reviewer. Most cases assert more than one behavior, so apply the test to each of them before reaching for a deletion.
 
 ## The lanes
 
@@ -74,7 +74,7 @@ Two lanes are adopted and unbuilt, so some behavior is proven where it does not 
 | **Lifecycle** — how often a capability is asked, what it waits for, and which calls it makes | the browser lane, in four story files: `Onboarding`, `Recovery`, `Profile`, `Verify` | component |
 | **Interaction** — typing, clicking, disabled state, and the values that follow | the browser lane, in the same four files | component |
 
-**Duplicated proof is not on this list.** Where a behavior is proven in the browser lane *and* in the lane that owns it, the owning lane exists — so that is redundancy to remove, not debt to hold. Which cases those are is [Finding 0031](../architecture/findings/0031-the-proofs-predate-the-topology-they-share.md)'s to record, and this document does not enumerate it.
+**A case that restates a behavior another lane owns is narrowed, not deleted.** Where a case asserts both — something this lane owns, and alongside it an outcome the owning lane already proves — only the second half is redundant, and removing the case would take the first half with it. Apply the test above to each half separately: a case is deleted only when **every** behavior it asserts survives its deletion. Which cases carry such a half is [Finding 0031](../architecture/findings/0031-the-proofs-predate-the-topology-they-share.md)'s to record, and this document does not enumerate it.
 
 ## What a lane may never require of production
 
