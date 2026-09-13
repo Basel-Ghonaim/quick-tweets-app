@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, within } from "storybook/test";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -9,7 +9,6 @@ import { VerifyCode } from "./VerifyCode";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { stepStates } from "../../components/Stepper";
-import { createAppError } from "@shared/errors";
 import type { VerificationGateway } from "@shared/channel-verification";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
@@ -76,16 +75,6 @@ const standing = (seconds: number): VerificationGateway => ({
 
 const CODE = <VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />;
 
-/* A refusal the reader can reach only by asking, so the story exercises the
-   translation rather than asserting a message it planted itself. */
-const refusing = (type: "too_many_requests" | "rate_limit"): VerificationGateway => ({
-  current: async () => ({ status: "pending", resendAvailableAt: null }),
-  issue: async () => {
-    throw createAppError(type, "raw");
-  },
-  confirm: async () => {},
-});
-
 /** Nothing is sent until it is asked for: an optional step that mailed everyone
  *  who reached it would be behaving like a mandatory one. */
 export const TheAskComesFirst: Story = {
@@ -128,77 +117,6 @@ export const TheCodeScreenOffersNoWayBack: Story = {
   },
 };
 
-export const SendingIsReportedInPlace: Story = {
-  decorators: [
-    showing(
-      <VerifyAsk
-        onSent={noop}
-        onLater={noop}
-        repo={{
-          current: async () => ({ status: "pending", resendAvailableAt: null }),
-          issue: () => new Promise(() => {}),
-          confirm: async () => {},
-        }}
-      />,
-    ),
-  ],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
-
-    await expect(
-      await canvas.findByRole("button", { name: AUTH_COPY.verify.sending }),
-    ).toBeVisible();
-  },
-};
-
-/** The address cooldown and the client limiter are different refusals, and the
- *  screen says so in its own words rather than a form's. */
-export const TheCooldownRefusalSaysWhatItIs: Story = {
-  decorators: [
-    showing(<VerifyAsk onSent={noop} onLater={noop} repo={refusing("too_many_requests")} />),
-  ],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
-
-    await expect(await canvas.findByRole("alert")).toHaveTextContent(
-      AUTH_COPY.verify.cooldownRefused,
-    );
-  },
-};
-
-export const TheClientLimiterSaysSomethingElse: Story = {
-  decorators: [
-    showing(<VerifyAsk onSent={noop} onLater={noop} repo={refusing("rate_limit")} />),
-  ],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
-
-    const alert = await canvas.findByRole("alert");
-    await expect(alert).toHaveTextContent(AUTH_COPY.verify.rateLimited);
-    await expect(alert).not.toHaveTextContent(AUTH_COPY.verify.cooldownRefused);
-  },
-};
-
-/** Typing the code raises it, drops separators, and reads the ambiguous letters
- *  as digits — the server normalises none of that and rejects opaquely. */
-export const TheCodeFieldForgivesWhatIsTyped: Story = {
-  decorators: [showing(CODE)],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const field = await canvas.findByLabelText(AUTH_COPY.verify.codeLabel);
-    await userEvent.type(field, "7qk3-mnp2 xvzo");
-
-    await waitFor(() => expect(field).toHaveValue("7QK3MNP2XVZ0"));
-  },
-};
-
 /** Both of the step's screens report the same step. */
 export const BothScreensAreTheSameStep: Story = {
   decorators: [showing(CODE)],
@@ -207,62 +125,6 @@ export const BothScreensAreTheSameStep: Story = {
 
     const verify = canvas.getByText(AUTH_COPY.journey.steps.verify).closest("li");
     await expect(verify).toHaveAttribute("aria-current", "step");
-  },
-};
-
-/** The wait is the server's and the screen asks for it on arrival, so a reload
- *  and a hand-over resolve alike. */
-export const TheWaitComesFromTheServer: Story = {
-  decorators: [showing(<VerifyCode repo={standing(60)} onVerified={noop} onLater={noop} />)],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const resend = await canvas.findByRole("button", {
-      name: AUTH_COPY.verify.resendIn(60),
-    });
-    await expect(resend).toBeDisabled();
-  },
-};
-
-/** Nothing outstanding is an answer of its own: the control is offered at once,
- *  with no refusal needed to discover there is nothing to wait for. */
-export const ArrivingWithNoWindowOffersResendAtOnce: Story = {
-  decorators: [showing(CODE)],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(
-      await canvas.findByRole("button", { name: AUTH_COPY.verify.resend }),
-    ).toBeEnabled();
-  },
-};
-
-/** A read that fails leaves the wait unknown rather than the screen unusable:
- *  the code can still be typed, and the server's refusal remains the authority. */
-export const AFailedReadStillLetsTheCodeBeTyped: Story = {
-  decorators: [
-    showing(
-      <VerifyCode
-        repo={{
-          current: async () => {
-            throw createAppError("network", "offline");
-          },
-          issue: async () => ({ resendAvailableAt: null }),
-          confirm: async () => {},
-        }}
-        onVerified={noop}
-        onLater={noop}
-      />,
-    ),
-  ],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const field = await canvas.findByLabelText(AUTH_COPY.verify.codeLabel);
-    await userEvent.type(field, "7qk3");
-
-    await waitFor(() => expect(field).toHaveValue("7QK3"));
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.verify.resend })).toBeEnabled();
   },
 };
 

@@ -85,3 +85,17 @@ The Finding stays `Open`: every case above waits on the component lane.
 **Nothing in production changed.** The six tests inject through the existing optional gateway, which stays marked for removal; no prop, parameter or barrel was touched.
 
 The Finding stays `Open`: the interaction class remains, and waits on nothing now but a Work Item to move it.
+
+## Addendum — 2026-09-13, Verify's interaction is in its lane ([#721](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/721))
+
+**Seven behaviors moved, and the table's third column was wrong for five of them.** Verifying before acting — for the third time on this Finding — found that `executeVerification.test.ts` proves the **mechanism** and not the wording: it stands in its own map and says so, *"this layer knows only that a map was given, never whose it is."* That `too_many_requests` reads as the cooldown wording lives in the screen's own `messages.ts`, and **no unit test asserts it**. So *the cooldown refusal says what it is*, *the client limiter says something else*, *sending is reported in place*, *arriving with no window offers resend at once* and *a failed read still lets the code be typed* restated nothing. They were the only proof of what they assert.
+
+**Three assertions did restate, and were narrowed rather than dropped.** Two were expected — the normaliser's output and the reducer's window — and a mutation found a third: *a failed read still lets the code be typed* repeated a normalised literal too. Each now asserts against the owning lane's own output rather than a copy of it, so the wiring is proven and the transformation is not repeated.
+
+**The correction that matters for the rest of the class:** a story asserting *the words a reader sees* is usually asserting the **screen's** mapping, not a service outcome. The service applies whatever map it is handed. Expect the three remaining files to hold fewer restatements than this Finding's table claims, and check each before narrowing it.
+
+**The doubles stay in `Verify.stories.tsx`.** `standing()` survives because the code screen reads on mount, so even a pure rendering case needs an answerer; `refusing()` left with the cases that used it. That is the mount-time read showing through, not a residual violation, and it is the seam-removal Work Item's to answer.
+
+**A count this Finding has been carrying wrong.** The interaction table holds twelve rows but **thirteen** cases — one row names two — and the reclassified profile case makes **fourteen**, not the thirteen the previous addendum said. Seven are now resolved; seven remain, in `Recovery`, `Profile` and `Onboarding`.
+
+The Finding stays `Open`.
