@@ -7,7 +7,7 @@ import { createAppError } from "@shared/errors";
 import { AUTH_COPY } from "@shared/copy";
 import { sessionReducer } from "@shared/session";
 import type { ProfileGateway } from "@features/profile";
-import { JourneyLayout } from "@pages/auth/layout";
+import { JourneyLayout } from "../../layout";
 import { stepStates } from "../../services";
 import { Profile } from "./Profile";
 

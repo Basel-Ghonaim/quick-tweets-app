@@ -1,13 +1,13 @@
 import { Navigate } from "react-router-dom";
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
-import { JourneyLayout } from "@pages/auth/layout";
+import { JourneyLayout } from "../../layout";
 import { useRouteNavigate } from "@shared/routing";
 import { useJourney, type JourneyGateway } from "@features/journey";
 import { destinationFor } from "../../services";
 import { stepStates } from "../../services";
-import { Profile } from "@pages/auth/screens/Profile";
-import { VerifyAsk, VerifyCode } from "@pages/auth/screens/Verify";
+import { Profile } from "../Profile";
+import { VerifyAsk, VerifyCode } from "../Verify";
 import styles from "./Onboarding.module.css";
 
 /**
