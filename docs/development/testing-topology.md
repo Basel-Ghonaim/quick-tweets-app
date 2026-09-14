@@ -4,7 +4,7 @@
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **where a behavior is proven** — the lanes that exist, what each one owns, what each one is forbidden, and the rule that assigns a behavior to exactly one of them. It owns the **placement** of proof and never its **quality**, which is [Engineering Principles §8](engineering-principles.md)'s. The decision that gives it this ownership, and the reasoning behind it, are [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md)'s — cited here, never restated.
 > **Scope:** Every lane in this repository, both tiers, automated and manual. It does **not** own any lane's configuration, which is code; nor the [manual verification harness](verification/README.md)'s contents, which that directory owns; nor whether a particular Work Item has proved enough, which is its acceptance criteria's.
-> **Version:** 1.2
+> **Version:** 1.3
 > **Last Updated:** 2026-09-14
 > **Owner:** Basel Ghonaim
 
@@ -46,7 +46,7 @@ A case whose **only** subject belongs to another lane is **deleted rather than r
 |---|---|---|---|
 | **Web unit** | node, no DOM | outcomes that depend only on inputs — services, mappers, reducers, models, error maps, and gateway adapters given a fake client; and each capability's boundary fence | rendering; any assertion that depends on elapsed time |
 | **Component** | a renderer, no browser | outcomes that depend on a renderer's lifecycle — when a capability is asked, how often, what it waits for; how a component is wired to its hook; interaction that needs no painting | appearance, layout, contrast, and the accessibility tree as computed |
-| **Browser** | a real browser | what cannot be true without one — rendered layout, visual state, responsive behavior, contrast, focus as painted, and the accessibility tree as a browser computes it | knowing that a gateway exists; running or implementing a state machine; standing as the proof of any service's or gateway's behavior |
+| **Browser** | a real browser | what cannot be true without one — rendered layout, visual state, responsive behavior, contrast, focus as painted, and the accessibility tree as a browser computes it; **and rendering every state of a screen under that check** | knowing that a gateway exists; running or implementing a state machine; standing as the proof of any service's or gateway's behavior |
 | **Frontend integration** | node, against a server or a contract artifact | that the wire shapes a gateway expects match what the server returns | capability logic; anything a reader sees |
 | **Repository boundaries** | node | the dependency boundaries [ADR 0013](../architecture/decisions/0013-applications-and-cross-tier-packages.md) fixes between applications and packages | anything internal to one application |
 | **API unit** | node | backend services, validators and policies, given fakes | a real database |
@@ -55,6 +55,16 @@ A case whose **only** subject belongs to another lane is **deleted rather than r
 | **E2E** | — | a reader's journey across more than one page group | anything a narrower lane already proves |
 
 **The browser lane is given the answer, never the answerer** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 5). An *answerer* is anything supplied to a story that decides an outcome: a gateway, a client, a promise whose resolution the story controls to manufacture timing, or an error thrown to stand in for a server's refusal. Values, callbacks that only receive, and presentation settings are answers, and remain permitted.
+
+## Every state is rendered under the accessibility check
+
+**The browser lane renders every state of a screen, because the accessibility check runs on what is rendered and nowhere else.** A *state* is each arm of a conditional render, plus each distinct value of a prop that changes what is announced; a redirect that renders nothing is not one.
+
+This is an obligation on the lane, never an exemption for a case. It decides nothing about where an assertion belongs — a case whose subject is another lane's still moves — and it is satisfied by *a* renderer of each state, never by any particular case. A story that reaches a state and asserts its presence satisfies it; asserting anything further would return the duplication the interaction moves removed.
+
+**Why this lane and not the cheaper one:** the component lane is forbidden the accessibility tree as computed, so a state rendered only there is rendered under no check at all. Three Work Items moved a case correctly and deleted a state's only accessibility proof, which is the failure this rule exists to prevent ([Finding 0031](../architecture/findings/0031-the-proofs-predate-the-topology-they-share.md)).
+
+**The check is a tripwire, not a proof.** Per-file **branch**-coverage floors over the screen files, measured on the browser project alone, fail when a branch stops being rendered. Coverage does not map to states — it counts closing tags, default parameters and callback bodies — so the floors are a ratchet whose numbers mean nothing on their own, and a green run says that nothing stopped rendering rather than that every state is covered. **What proves a state covered is the mutation: inject a violation inside its branch, run the lane, revert.** The floors ride the browser lane, so they are gated exactly as much as it is, which is not at all.
 
 ## Which lanes exist
 
