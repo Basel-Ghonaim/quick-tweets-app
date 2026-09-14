@@ -131,3 +131,24 @@ Profile's error case named `AUTH_COPY.profile.invalid`, which `profileErrorHandl
 **The transition row is not closed, and this Finding does not propose closing it.** The interaction class is wider than the fourteen this Finding named: `Recovery.stories.tsx` holds twelve further cases, `Onboarding.stories.tsx` two, `Profile.stories.tsx` four and `Verify.stories.tsx` five. Each was left on the ground that it needs a browser, and **none has had the per-case check the fourteen received**. Whether any belongs in the component lane is a separate evaluation, and until it happens this Finding asserts nothing about them.
 
 The Finding stays `Open` for that evaluation.
+
+## Addendum — 2026-09-13, the evaluation, and a cost the three moves did not name ([#727](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/727))
+
+**The evaluation found the opposite of what the remaining cases' placement assumed.** Twenty-one of the twenty-three unnamed cases assert structure, text, DOM attributes or typing — things a renderer establishes. Only two need a browser for their **assertions**: the two `Compact` cases, which read the viewport.
+
+**But every story in those four files carries `a11y: { test: "error" }`**, which `preview.ts` documents as failing CI on violations, and which was proven to bite: an unlabelled input on `VerifyAsk` failed **three** browser tests and **zero** component tests, though the component lane renders that screen three times. **Each story is therefore also an accessibility assertion on a real rendering, and the component lane has no equivalent.** That is browser-only under this repository's own [topology](../../development/testing-topology.md), and it is why the remaining twenty-one are not moved: each would trade a cheap assertion for the loss of an axe run.
+
+**Nine states had already lost theirs, and nothing said so.** Each was rendered only by a case that #722, #724 or #726 moved. Five were proven by injecting a violation inside the state's branch and finding the browser lane still green; four were established by reading which stories remain:
+
+| State | Established by |
+|---|---|
+| `VerifyAsk` error · `VerifyCode` error · `Profile` error · `Recovery` retry · `Onboarding` retry | mutation — the lane stayed green |
+| `VerifyAsk` sending · `VerifyCode` resend held · `Profile` submitting · `Profile` avatar uploading | reading — no remaining story reaches them |
+
+**This was a regression introduced by those three Work Items and not named in any of them.** Each reported its Storybook delta as "exactly the cases moved", which was true of the count and silent about what the count carried.
+
+**All nine are restored** by stories whose only purpose is the axe run, asserting presence and nothing else. Each is proven by the mutation that proved it lost: the violation now fails, and fails on the restoring story alone.
+
+**A rule this suggests, deliberately not applied here:** a case may be correctly assigned by subject and still be the only thing rendering a state under axe. Whether the topology should say that a case cannot leave the browser lane while it is a state's sole renderer is a separate decision, recorded here and not taken.
+
+The Finding stays `Open`: the interaction transition row is unchanged, and the twenty-one remain where they are.
