@@ -178,3 +178,34 @@ The Finding stays `Open`: the interaction transition row is unchanged, and the t
 **Its limit is known and named.** The floors are coarser than the rule they guard. Withdrawing `TheRequestSending` did **not** trip them, because another story passes through the same branch transiently on its way elsewhere — so the tripwire catches a branch nothing else reaches and can miss one that something else crosses incidentally. It is evidence that a rendering stopped, never evidence that every state is covered. **What proves a state covered is the mutation**, and this addendum's thirty-three results are that proof at this date rather than a claim the check can renew.
 
 The Finding stays `Open`: the interaction transition row is unchanged, and the twenty-one unnamed cases remain where they are.
+
+## Addendum — 2026-09-14, the twenty-one are checked, and the class is empty ([#731](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/731))
+
+**Every case this Finding left unevaluated now has a verdict, and all twenty-one belong to the component lane.** Each asserts structure, text, a DOM attribute or typing — things a renderer establishes. The two `Compact` cases stay in the browser lane, because reading the viewport is what a browser is for.
+
+**Twenty-six mutations established that, not reading.** Five broke a mapping and failed **both** lanes — `stepStates` twice, `destinationFor`, and `screenFor` twice — which is what proves the unit lane owns those mappings and these cases only **traverse** them. Twenty-one broke a rendering and failed the **component lane alone**, which is what proves each case has a subject of its own.
+
+**A third distinct outcome, after Verify narrowed three of seven and Profile one of four: none of the twenty-one restated anything.** The distinction #725 drew is why — a case restates when its assertion *names* another lane's output, and these name headings, labels, attributes and copy constants that no unit test asserts. Where they depend on a mapping, they depend on it to reach their subject rather than asserting it.
+
+**Six states would have been stranded, and the check named them before anything moved.** Withdrawing all twenty-one and running #729's floors named `Onboarding.tsx`, `Recovery.tsx` and `RecoveryCode.tsx` in a single run — two phases of the journey and four states of the recovery code step, each rendered by a departing case and nothing else. Six presence-only stories were added **before** the cases left, so no state was unrendered at any commit. Six of the nine screens needed nothing, because the presence-only stories of #727 and #729 already carried them.
+
+### Recovery's floor moves from 70 to 64, and why that is a transition rather than a loss
+
+`Recovery.tsx` is the one file the six new stories did not return to its floor. **No state is missing.** All five of its screen arms were mutated, and every one still fails — on several stories each:
+
+| Arm | The mutation fails |
+|---|---|
+| pending · retry | *The Position Is Being Read* · *The Read Failed* |
+| request | *The Request Refused* · *Lapsed* · *Sending* · *The Address Step After Restart* |
+| code | *The Code Refused* · *Submitting* · *Resend Window Is Open* · *Resend Is Spent* · *Code Step Confirms* |
+| password | *The Password Refused* · *Submitting* |
+
+What fell is **branches the departing cases traversed on their way somewhere else** — multi-step flows through *start over*, a two-address comparison, and the `screen` predicates reached from several directions within one case. Coverage counts those; a state is not one of them. The floor is a ratchet on a proxy, so lowering it while every state is proven rendered records a **transition between lanes**, not a gap in coverage.
+
+**This is the coarseness recorded against the check when it was built, seen from the other side.** #729 recorded that a branch another story crosses incidentally survives a withdrawal; this records that a branch only a departing case crossed falls without any state going with it. Neither is a defect in the rule — both are the distance between a branch and a state, and both are why **the mutation is the proof and the floor is only a tripwire**.
+
+Adding cases to lift the number back would have been tests written for a metric, which is the inversion [ADR 0020](../decisions/0020-proof-has-a-home-testing-topology.md) exists to prevent. The floor was lowered on a human ruling rather than by the branch that wanted it lowered, because a check that lowers its own bar is worth nothing.
+
+**The interaction class is empty, and the transition row is closed.** The [topology](../../development/testing-topology.md) records it.
+
+The Finding stays `Open`: the seam named in *Why it matters* — the `repo?` prop on five screens, the optional gateway on every hook, and the three published ports — is untouched, and every lane in this repository still reaches those screens through it.
