@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** A **navigation aid, not a source of truth.** It maps paths that a restructure changed, so that a document written before the change stays readable without being edited. **It defines no structure and owns no rule** — the repository's structure is [ADR 0013](decisions/0013-applications-and-cross-tier-packages.md)'s, and each subsystem's layout belongs to the document that owns it.
 > **Scope:** Path changes only, and only those a reader of an older document would otherwise fail to resolve.
-> **Version:** 1.1
-> **Last Updated:** 2026-08-27
+> **Version:** 1.2
+> **Last Updated:** 2026-09-14
 > **Owner:** Basel Ghonaim
 
 ## 2026-08-05 — theme grouped under a resolution axis
@@ -23,6 +23,19 @@ Theme became one resolution axis among the several the architecture anticipates,
 | `server/…` | `apps/api/…` |
 
 Everything beneath either path moved with it, content unchanged; `git log --follow` traces any file across the move.
+
+## 2026-09-14 — the auth module became a page group
+
+| Written as | Now reads |
+|---|---|
+| `apps/web/src/modules/auth/layout/…` | `apps/web/src/pages/auth/layout/…` |
+| `apps/web/src/modules/auth/components/Stepper/…` | `apps/web/src/pages/auth/layout/Stepper/…` |
+| `apps/web/src/modules/auth/GuestOnly.tsx` | `apps/web/src/pages/auth/guards/GuestOnly.tsx` |
+| `apps/web/src/modules/auth/screens/…` | `apps/web/src/pages/auth/screens/…` |
+| `apps/web/src/modules/auth/authRoutes.tsx` | `apps/web/src/pages/auth/routes/authRoutes.tsx` |
+| `@modules/auth/…` | `@pages/auth/…` |
+
+The zone [ADR 0018](decisions/0018-composition-has-a-home-four-frontend-zones.md) names for composition replaced the one that held it, so `modules/` and its alias no longer exist. Two mappings are not one-to-one: the progress display moved under the layout that renders it, and the two pure mappings the module carried beside their consumers now sit in the group's `services/`.
 
 ## Why the old paths are still there
 

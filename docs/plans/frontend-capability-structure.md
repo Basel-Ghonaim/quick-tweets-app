@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Refactoring
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-13
+> **Last Updated:** 2026-09-14
 > **Parent Issue:** [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678)
 > **Supersedes:** [Frontend Zone Migration](frontend-zone-migration.md)
 
@@ -88,6 +88,8 @@ How each capability gets there, and the questions in §5 that bear on it, are se
 
 **Why here:** each waits on a question in §5, and each must be answered before the page that renders it is built.
 
+**Its third clause is deferred**, on 2026-09-14. Question D is retired, and removing the seam it named turns out to require splitting every screen from its presentation — a change to how the whole tree is written, ruled out of this effort and deferred whole rather than begun and left half-made. The first two clauses are answered: A and E below.
+
 ### Phase 4 — Composition
 
 **Objective:** the auth page group exists, and composes the capabilities while holding none of their logic.
@@ -117,8 +119,15 @@ How each capability gets there, and the questions in §5 that bear on it, are se
 | **C** | When profile stops borrowing authentication's error wording, does it keep the same words — preserving behaviour, and a message known to be wrong — or correct them? | profile's boundaries, Phase 2 |
 | **D** | Should a screen's public signature name a gateway so that its stories can pass a test double — four do today — and if not, how does a screen receive one? | the screens that carry one today, Phase 3 |
 | **E** | Where does the journey's progress display live? [Finding 0025](../architecture/findings/0025-journey-stepper-holds-the-committed-steppers-name.md) | the progress display, Phase 3 |
+| **F** | How does a capability's screen learn a destination it does not own? Nine route literals sit in screens that own no route ([Finding 0030](../architecture/findings/0030-the-capabilities-predate-the-structure-they-share.md)), and only a page group holds routes (ADR 0018 Decision 2) | those screens, Phase 4 |
 
 **D has since been retired**, on 2026-09-13, and its row stays for the record. It asks whether a screen's public signature may name a gateway; [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decisions 5 and 6 settle that no production signature carries one, and that a story is given the answer rather than the answerer — so the question's premise does not survive. What replaces it is not an answer to D but a different placement of the proof, and Phase 3's objective is restated by the Work Item that acts on it.
+
+**A and E have since been answered**, on 2026-09-14 ([#733](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/733)), and their rows stay for the record. The verification screens and the progress display both live in the auth page group — the screens under `screens/`, the display under `layout/` — because a page composes what no capability owns and a page group holds the layout its routes share. Findings 0023 and 0025 record what each answer leaves open.
+
+**C has since been answered**, on 2026-09-12, and its row stays for the record. Profile wrote its own wording in #713: it maps `validation` and `unauthorized` in its own catalogue words and carries no conflict message, because the screen sends no username and can never cause the `409` that endpoint answers.
+
+**F is recorded and not answered.** It was cited by three of Finding 0030's addenda before it had a row here, which is the defect the row fixes. #733 moved the route table into the page group and left the nine literals where they are: how a screen learns a destination it does not own is a mechanism no ruling has settled, and a restructure is not where one gets invented.
 
 **B has since been answered**, on 2026-09-12, and its row stays for the record. The window is the server's and it is now readable: `GET /channel-verification/challenges/current` answers what remains of it, so the code screen asks on arrival ([#711](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/711)). The sequence is still two lifecycles, and nothing crosses the page between them.
 

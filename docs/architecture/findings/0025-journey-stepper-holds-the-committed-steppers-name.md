@@ -40,3 +40,13 @@ Whether the generic `Stepper` is built, whether the journey's is renamed to say 
 `stepStates` — which turns the journey's position into this component's props — has accordingly left the journey capability to sit beside the component ([#697](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/697)). Where the component and its view-model finally live is question E.
 
 The naming collision this Finding records is unaffected, and so is its status.
+
+## Addendum — 2026-09-14, the progress display has a home ([#733](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/733))
+
+**Question E is answered: the progress display lives in the auth page group's layout**, at `apps/web/src/pages/auth/layout/Stepper/`, and its view-model in that group's `services/`. It has two consumers and always had — the sign-up route and the onboarding route — and both sit inside one route subtree, which is what [ADR 0018](../decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 2 gives a page group. The chrome two routes of one subtree share is the group's layout, not a capability's interface.
+
+That also settles what the 2026-09-11 addendum left open. `stepStates` left the journey capability then because the journey owns no interface; it has now arrived somewhere rather than merely having departed.
+
+**The step identities and states are no longer the component's to declare.** They are the page group's vocabulary and sit in its `model/`, so the view-model no longer imports a component in order to describe a position.
+
+**The naming collision this Finding records is untouched, and the Finding stays `Open` for it.** A reader consulting the committed interface vocabulary still finds a `Stepper` in the tree that is not the generic control the product committed to — it is the journey's own presentation of the journey's own fact, and it still reads the authentication copy catalogue directly. Moving it changed where it lives and nothing about what it is.
