@@ -38,7 +38,7 @@ export default defineConfig({
         'src/pages/auth/screens/Verify/VerifyAsk.tsx': { branches: 82 },
         'src/pages/auth/screens/Verify/VerifyCode.tsx': { branches: 91 },
         'src/pages/auth/screens/Profile/Profile.tsx': { branches: 92 },
-        'src/modules/auth/screens/Onboarding/Onboarding.tsx': { branches: 63 },
+        'src/pages/auth/screens/Onboarding/Onboarding.tsx': { branches: 63 },
         'src/features/recovery/screens/Recovery.tsx': { branches: 64 },
         'src/features/recovery/screens/steps/RecoveryRequest.tsx': { branches: 87 },
         'src/features/recovery/screens/steps/RecoveryCode.tsx': { branches: 98 },

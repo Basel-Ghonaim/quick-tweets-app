@@ -1,7 +1,7 @@
 import { Navigate, Route } from "react-router-dom";
 import { AuthLayout, JourneyLayout } from "@pages/auth/layout";
 import { SignIn, SignUp } from "@features/authentication";
-import { Onboarding } from "./screens/Onboarding";
+import { Onboarding } from "@pages/auth/screens/Onboarding";
 import { Recovery } from "@features/recovery";
 import { GuestOnly } from "@pages/auth/guards/GuestOnly";
 import { stepStates } from "@pages/auth/layout/Stepper";
