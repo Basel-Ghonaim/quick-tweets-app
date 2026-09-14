@@ -353,12 +353,6 @@ export const ThePasswordStepShowsNoAddress: Story = {
   },
 };
 
-/** The position is asked for once, not once per render — a repository rebuilt
- *  each time would key the read effect afresh and never settle. */
-
-/** Confirming does not decide the step: the server is asked again, and what it
- *  says is what renders. */
-
 /* For the accessibility check and nothing else: the retry screen is rendered
    nowhere else, and what it means is the component lane's. */
 export const TheReadFailed: Story = {
