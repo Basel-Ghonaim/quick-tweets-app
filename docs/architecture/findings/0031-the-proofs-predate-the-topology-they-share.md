@@ -152,3 +152,29 @@ The Finding stays `Open` for that evaluation.
 **A rule this suggests, deliberately not applied here:** a case may be correctly assigned by subject and still be the only thing rendering a state under axe. Whether the topology should say that a case cannot leave the browser lane while it is a state's sole renderer is a separate decision, recorded here and not taken.
 
 The Finding stays `Open`: the interaction transition row is unchanged, and the twenty-one remain where they are.
+
+## Addendum — 2026-09-14, every state is enumerated, and the rule has a tripwire ([#729](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/729))
+
+**The nine screens hold thirty-three states, and thirteen of them were rendered by nothing.** Each was established by its own isolated mutation — a violation injected inside the state's own branch, the browser lane run over only the story files that could reach it, then reverted. Twenty states failed their mutation and were therefore already rendered; thirteen left the lane green.
+
+| Screen | States with no story |
+|---|---|
+| `VerifyCode` | submitting |
+| `Profile` | avatar uploaded · avatar rejected |
+| `Onboarding` | the position being read · the code step |
+| `Recovery` | the position being read |
+| `RecoveryRequest` | **every one** — refused · lapsed · sending |
+| `RecoveryCode` | refused · submitting |
+| `RecoveryPassword` | refused · submitting |
+
+**`RecoveryRequest` is the finding inside the finding.** Not one of its three states was rendered, so the first screen of the recovery journey had never been evaluated by axe in any state but its resting one. That is not a regression the three moves caused; it is a gap that predates them and that nothing would have reported.
+
+**All thirteen are restored**, each by one story that reaches the state and asserts its presence, and each proven by the mutation that proved it missing: the violation now fails the lane, and fails **on the restoring story alone** — one failure, never two.
+
+**A second defect surfaced while restoring one of them.** The password step refuses anything without an uppercase letter, a digit and a symbol. A story submitting a weak password therefore never reached the server at all: it was asserting a *validation* message while appearing to assert a server refusal, and would have reported a state it never rendered. Found because the mutation for that state did not bite, which is what the per-state proof is for.
+
+**The rule now has a tripwire.** Per-file branch floors over the nine screens, measured on the browser project alone and carried by the lane's own script. Proven to bite: withdrawing `ThePictureRejected` drops `Profile.tsx` from 92.53% to 91.04%, misses its floor and exits non-zero; restored, it passes.
+
+**Its limit is known and named.** The floors are coarser than the rule they guard. Withdrawing `TheRequestSending` did **not** trip them, because another story passes through the same branch transiently on its way elsewhere — so the tripwire catches a branch nothing else reaches and can miss one that something else crosses incidentally. It is evidence that a rendering stopped, never evidence that every state is covered. **What proves a state covered is the mutation**, and this addendum's thirty-three results are that proof at this date rather than a claim the check can renew.
+
+The Finding stays `Open`: the interaction transition row is unchanged, and the twenty-one unnamed cases remain where they are.

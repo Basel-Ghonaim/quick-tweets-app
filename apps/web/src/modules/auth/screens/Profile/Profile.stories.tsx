@@ -125,7 +125,7 @@ export const Compact: Story = {
   },
 };
 
-/* The three below exist for the accessibility check and nothing else. Each puts
+/* The five below exist for the accessibility check and nothing else. Each puts
    one state on screen so axe evaluates it, and asserts only that the state is
    there — what the state means is the component lane's. */
 
@@ -171,5 +171,38 @@ export const ThePictureUploading: Story = {
     fireEvent.change(input);
 
     await waitFor(() => expect(canvasElement.querySelector("[role='status']")!.textContent).not.toBe(""));
+  },
+};
+
+const choosePicture = (canvasElement: HTMLElement) => {
+  const input = canvasElement.querySelector<HTMLInputElement>("input[type='file']")!;
+  const transfer = new DataTransfer();
+  transfer.items.add(new File([new Uint8Array([1, 2, 3])], "a.png", { type: "image/png" }));
+  input.files = transfer.files;
+  fireEvent.change(input);
+};
+
+export const ThePictureUploaded: Story = {
+  decorators: [
+    withState({ uploadAvatar: async () => "token", updateProfile: () => new Promise(() => {}) }),
+  ],
+  play: async ({ canvasElement }) => {
+    choosePicture(canvasElement);
+    await within(canvasElement).findByText(AUTH_COPY.profile.uploaded);
+  },
+};
+
+export const ThePictureRejected: Story = {
+  decorators: [
+    withState({
+      uploadAvatar: async () => {
+        throw createAppError("validation", "raw");
+      },
+      updateProfile: () => new Promise(() => {}),
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    choosePicture(canvasElement);
+    await within(canvasElement).findByRole("button", { name: AUTH_COPY.profile.uploadRetry });
   },
 };

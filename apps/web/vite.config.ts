@@ -25,6 +25,26 @@ export default defineConfig({
     }
   },
   test: {
+    // A branch that stops being rendered drops a floor and fails the lane; the
+    // numbers are a ratchet, not a target (see docs/development/testing-topology.md).
+    coverage: {
+      provider: 'v8',
+      enabled: false,
+      reporter: ['text'],
+      include: ['src/modules/auth/screens/**/*.tsx', 'src/features/recovery/screens/**/*.tsx'],
+      exclude: ['**/*.stories.tsx', '**/*.component.test.tsx'],
+      thresholds: {
+        'src/modules/auth/screens/Verify/VerifyAsk.tsx': { branches: 82 },
+        'src/modules/auth/screens/Verify/VerifyCode.tsx': { branches: 91 },
+        'src/modules/auth/screens/Profile/Profile.tsx': { branches: 92 },
+        'src/modules/auth/screens/Onboarding/Onboarding.tsx': { branches: 63 },
+        'src/features/recovery/screens/Recovery.tsx': { branches: 70 },
+        'src/features/recovery/screens/steps/RecoveryRequest.tsx': { branches: 87 },
+        'src/features/recovery/screens/steps/RecoveryCode.tsx': { branches: 98 },
+        'src/features/recovery/screens/steps/RecoveryPassword.tsx': { branches: 82 },
+        'src/features/recovery/screens/steps/StepLayout.tsx': { branches: 80 },
+      },
+    },
     projects: [
       {
         // Outcomes that depend only on inputs. No DOM, so a test that must
