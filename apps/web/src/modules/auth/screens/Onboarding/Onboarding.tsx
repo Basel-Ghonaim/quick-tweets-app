@@ -7,7 +7,7 @@ import { useJourney, type JourneyGateway } from "@features/journey";
 import { destinationFor } from "./destinationFor";
 import { stepStates } from "@pages/auth/layout/Stepper";
 import { Profile } from "../Profile";
-import { VerifyAsk, VerifyCode } from "../Verify";
+import { VerifyAsk, VerifyCode } from "@pages/auth/screens/Verify";
 import styles from "./Onboarding.module.css";
 
 /**
