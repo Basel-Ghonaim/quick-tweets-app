@@ -55,44 +55,6 @@ const withRepo = (repo: JourneyGateway, settled = true) => {
   );
 };
 
-export const ThePhaseChoosesTheScreen: Story = {
-  render: withRepo({
-    read: async () => state({ phase: "profile" }),
-    advance: async () => state(),
-  }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(
-      await canvas.findByRole("heading", { name: AUTH_COPY.profile.title }),
-    ).toBeVisible();
-  },
-};
-
-/** The read is one request, not one per render — a repository rebuilt each time
- *  would key the effect afresh and never settle. */
-
-/** Skipping and saving are the same transition to the server, and the outcome
- *  is the only thing that tells them apart. */
-
-/** The feed is public, so leaving must never wait on a request that may never
- *  answer — a dropped network would otherwise trap the reader here. */
-
-/** A skipped step reads as skipped, which is the whole reason the server holds
- *  the outcome rather than the client remembering it. */
-export const ASkippedProfileReadsAsSkipped: Story = {
-  render: withRepo({
-    read: async () => state({ phase: "verify", profileOutcome: "skipped" }),
-    advance: async () => state({ phase: "verify", profileOutcome: "skipped" }),
-  }),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const profile = (await canvas.findByText(AUTH_COPY.journey.steps.profile)).closest("li");
-    await expect(within(profile!).getByText(AUTH_COPY.journey.states.skipped)).toBeVisible();
-  },
-};
-
 /* For the accessibility check and nothing else: the retry screen is rendered
    nowhere else, and what it means is the component lane's. */
 export const TheReadFailed: Story = {
@@ -125,5 +87,25 @@ export const TheCodeStep: Story = {
   render: withRepo({ read: async () => state({ phase: "code" }), advance: async () => state() }),
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByRole("heading", { name: AUTH_COPY.verify.codeTitle });
+  },
+};
+
+/* The two below exist for the accessibility check and nothing else: each
+   renders a phase whose only other renderer moved to the component lane. */
+
+export const TheProfileStep: Story = {
+  render: withRepo({ read: async () => state({ phase: "profile" }), advance: async () => state() }),
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByRole("heading", { name: AUTH_COPY.profile.title });
+  },
+};
+
+export const TheVerifyStep: Story = {
+  render: withRepo({
+    read: async () => state({ phase: "verify" }),
+    advance: async () => state({ phase: "verify" }),
+  }),
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByRole("heading", { name: AUTH_COPY.verify.askTitle });
   },
 };
