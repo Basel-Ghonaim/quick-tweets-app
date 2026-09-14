@@ -6,12 +6,12 @@ import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { createAppError } from "@shared/errors";
 import { Profile } from "./Profile";
-import { AuthLayout } from "../../layout";
-import { JourneyLayout } from "../../layout/JourneyLayout";
+import { AuthLayout } from "@pages/auth/layout";
+import { JourneyLayout } from "@pages/auth/layout/JourneyLayout";
 import type { ProfileGateway } from "@features/profile";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
-import { stepStates } from "../../components/Stepper";
+import { stepStates } from "@pages/auth/layout/Stepper";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */

@@ -7,8 +7,8 @@ import { createAppError } from "@shared/errors";
 import { AUTH_COPY } from "@shared/copy";
 import { sessionReducer } from "@shared/session";
 import type { ProfileGateway } from "@features/profile";
-import { JourneyLayout } from "../../layout";
-import { stepStates } from "../../components/Stepper";
+import { JourneyLayout } from "@pages/auth/layout";
+import { stepStates } from "@pages/auth/layout/Stepper";
 import { Profile } from "./Profile";
 
 const noop = () => {};

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Stepper, type JourneyStepId, type StepState } from "../components/Stepper";
+import { Stepper, type JourneyStepId, type StepState } from "./Stepper";
 import styles from "./JourneyLayout.module.css";
 
 interface JourneyLayoutProps {

@@ -6,7 +6,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { createAppError } from "@shared/errors";
 import { Onboarding } from "./Onboarding";
-import { AuthLayout } from "../../layout";
+import { AuthLayout } from "@pages/auth/layout";
 import { sessionActions, sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import type { JourneyGateway, JourneyState } from "@features/journey";

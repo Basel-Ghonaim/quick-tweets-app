@@ -1,10 +1,10 @@
 import { Navigate, Route } from "react-router-dom";
-import { AuthLayout, JourneyLayout } from "./layout";
+import { AuthLayout, JourneyLayout } from "@pages/auth/layout";
 import { SignIn, SignUp } from "@features/authentication";
 import { Onboarding } from "./screens/Onboarding";
 import { Recovery } from "@features/recovery";
 import { GuestOnly } from "./GuestOnly";
-import { stepStates } from "./components/Stepper";
+import { stepStates } from "@pages/auth/layout/Stepper";
 
 /** Everything auth contains: the composition root decides whether it is
  *  mounted, and a new screen never widens this surface. The journey is one

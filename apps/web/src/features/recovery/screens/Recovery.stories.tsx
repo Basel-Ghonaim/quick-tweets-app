@@ -6,7 +6,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
 import { createAppError } from "@shared/errors";
 import { Recovery } from "./Recovery";
-import { AuthLayout } from "@modules/auth/layout";
+import { AuthLayout } from "@pages/auth/layout";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import type { RecoveryPosition } from "../model";

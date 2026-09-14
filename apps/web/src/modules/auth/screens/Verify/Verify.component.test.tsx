@@ -9,8 +9,8 @@ import { AUTH_COPY } from "@shared/copy";
 import { normaliseCode } from "@shared/one-time-code";
 import { sessionReducer } from "@shared/session";
 import type { VerificationGateway } from "@shared/channel-verification";
-import { JourneyLayout } from "../../layout";
-import { stepStates } from "../../components/Stepper";
+import { JourneyLayout } from "@pages/auth/layout";
+import { stepStates } from "@pages/auth/layout/Stepper";
 import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
 
