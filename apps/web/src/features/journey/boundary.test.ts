@@ -72,7 +72,6 @@ describe("the journey's public surface", () => {
     expect(Object.keys(barrel).sort()).toEqual(["useJourney"]);
     expect(types.sort()).toEqual(
       [
-        "JourneyMove",
         "JourneyPhase",
         "JourneyRead",
         "JourneyGateway",

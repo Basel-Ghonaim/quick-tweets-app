@@ -62,7 +62,7 @@ describe("authentication's public surface", () => {
     expect(violations.sort()).toEqual([]);
   });
 
-  test("the barrel offers the two screens, the wording and the slice", () => {
+  test("the barrel offers the two screens and the slice", () => {
     const barrel = readFileSync(join(CAPABILITY, "index.ts"), "utf8");
     const offered = [...barrel.matchAll(/export (?:type )?\{([^}]+)\}/g)].flatMap((m) =>
       m[1]
@@ -75,7 +75,6 @@ describe("authentication's public surface", () => {
       [
         "SignIn",
         "SignUp",
-        "authErrorHandler",
         "authenticationReducer",
         "authenticationActions",
       ].sort(),
