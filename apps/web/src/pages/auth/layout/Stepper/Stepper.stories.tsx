@@ -2,9 +2,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useState } from "react";
 import { ThemeProvider } from "@shared/preferences";
-import { Stepper, type JourneyStepId, type StepState } from "./Stepper";
+import { Stepper } from "./Stepper";
+import type { JourneyStepId, StepState } from "../../model";
 import { JourneyLayout } from "../JourneyLayout";
-import { stepStates, type StepPosition } from "./stepStates";
+import { stepStates } from "./stepStates";
+import type { StepPosition } from "../../model";
 import { AUTH_COPY } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint

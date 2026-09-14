@@ -5,10 +5,8 @@ import {
   UserIcon,
 } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
+import type { JourneyStepId, StepState } from "../../model";
 import styles from "./Stepper.module.css";
-
-export type StepState = "done" | "current" | "optional" | "skipped";
-export type JourneyStepId = "account" | "profile" | "verify";
 
 /** The journey is three fixed steps, so the stepper carries their identities
  *  and a caller supplies only where the reader has got to. */
