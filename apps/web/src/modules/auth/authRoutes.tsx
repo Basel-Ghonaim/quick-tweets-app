@@ -3,7 +3,7 @@ import { AuthLayout, JourneyLayout } from "@pages/auth/layout";
 import { SignIn, SignUp } from "@features/authentication";
 import { Onboarding } from "./screens/Onboarding";
 import { Recovery } from "@features/recovery";
-import { GuestOnly } from "./GuestOnly";
+import { GuestOnly } from "@pages/auth/guards/GuestOnly";
 import { stepStates } from "@pages/auth/layout/Stepper";
 
 /** Everything auth contains: the composition root decides whether it is
