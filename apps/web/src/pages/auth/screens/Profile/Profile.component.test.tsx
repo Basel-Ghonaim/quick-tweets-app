@@ -8,7 +8,7 @@ import { AUTH_COPY } from "@shared/copy";
 import { sessionReducer } from "@shared/session";
 import type { ProfileGateway } from "@features/profile";
 import { JourneyLayout } from "../../layout";
-import { stepStates } from "../../components/Stepper";
+import { stepStates } from "../../services";
 import { Profile } from "./Profile";
 
 const noop = () => {};

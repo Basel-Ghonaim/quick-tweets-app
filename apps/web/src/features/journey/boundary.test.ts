@@ -27,7 +27,7 @@ const capabilityFiles = filesUnder(CAPABILITY);
 
 const FORBIDDEN = [
   "@features/",
-  "@modules/",
+  "@pages/",
   "@app/",
   "@shared/copy",
   "@shared/schema-form",
@@ -72,7 +72,6 @@ describe("the journey's public surface", () => {
     expect(Object.keys(barrel).sort()).toEqual(["useJourney"]);
     expect(types.sort()).toEqual(
       [
-        "JourneyMove",
         "JourneyPhase",
         "JourneyRead",
         "JourneyGateway",
@@ -87,12 +86,18 @@ describe("what the journey holds", () => {
   test("no interface: no component, no stylesheet, no story", () => {
     expect(capabilityFiles.length).toBeGreaterThan(5);
 
-    const ui = capabilityFiles.filter((f) => /\.(tsx|module\.css|stories\.tsx)$/.test(f)).map(label);
+    /* A test that mounts a hook is `.tsx` and is not an interface. It is the
+       only `.tsx` this capability admits, and it must live here: a hook's
+       double belongs to the capability that owns the dependency. */
+    const ui = capabilityFiles
+      .filter((f) => !f.endsWith(".component.test.tsx"))
+      .filter((f) => /\.(tsx|module\.css|stories\.tsx)$/.test(f))
+      .map(label);
 
     expect(ui).toEqual([]);
   });
 
-  test("no other feature, no legacy zone, no root, no content, no form, no control, no route", () => {
+  test("no other feature, no page, no root, no content, no form, no control, no route", () => {
     const violations = capabilityFiles
       .filter(isSource)
       .flatMap((file) =>

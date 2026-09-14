@@ -4,7 +4,9 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { describe, expect, it, vi } from "vitest";
 import { sessionActions, sessionReducer } from "@shared/session";
-import { useJourney, type JourneyGateway, type JourneyState } from "@features/journey";
+import type { JourneyGateway } from "../gateway";
+import type { JourneyState } from "../model";
+import { useJourney } from "./useJourney";
 
 const state = (over: Partial<JourneyState> = {}): JourneyState => ({
   phase: "profile",

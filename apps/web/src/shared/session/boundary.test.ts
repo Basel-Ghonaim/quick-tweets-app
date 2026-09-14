@@ -32,7 +32,7 @@ const layerFiles = filesUnder(LAYER);
 /** What the platform may not know: a feature, a page, the root, content, forms, controls, routing. */
 const FORBIDDEN = [
   "@features/",
-  "@modules/",
+  "@pages/",
   "@app/",
   "@shared/copy",
   "@shared/schema-form",

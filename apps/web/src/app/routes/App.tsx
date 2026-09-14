@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useSessionRestore } from "@shared/session";
-import { authRoute } from "@modules/auth";
+import { authRoute } from "@pages/auth";
 import { Placeholder } from "./placeholder";
 
 export const App = () => {

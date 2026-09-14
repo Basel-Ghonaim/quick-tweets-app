@@ -98,3 +98,17 @@ The Finding stays `Open`: profile remains to be brought to the structure, and th
 **The screens that reached past their hooks no longer do.** All six form-definition imports the row above recorded are gone, the last of them profile's.
 
 The Finding stays `Open` for what remains across capabilities: the nine route literals, which question F leaves to the page in Phase 4, and Media's upload, which still has no capability of its own — profile reaches it through its own gateway now, but where it finally belongs is undecided. Where profile itself lives once a Users capability exists is likewise open, and the move will be a directory move.
+
+## Addendum — 2026-09-14, the zone this Finding was written in no longer exists ([#733](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/733))
+
+**The auth page group exists and `modules/` is deleted**, with the `@modules` alias that reached it. Every path this Finding cites under `apps/web/src/modules/auth/` is mapped in [historical paths](../historical-paths.md); nothing above is edited, because each citation records where evidence stood when it was gathered.
+
+**What the page group took**, and why each piece is the composition's rather than a capability's: the two layouts and their parts, because a page group holds the layout; the progress display, which is question E; the verification screens, which is question A; the profile form, because profile publishes a hook and no interface; the route table and the access guard, because a page group publishes a route subtree and a guard belongs visibly at each route. Its boundary is held by five checks, each proven by an isolated mutation.
+
+**Two exports this Finding's siblings recorded came off their barrels.** `authErrorHandler` lost its last consumer when profile wrote its own wording in #713, and `JourneyMove` lost its when the story that typed a spy with it moved to the component lane in #719. Neither is a gateway.
+
+**The nine route literals still stand, and question F is now recorded in the plan rather than only in these addenda.** Three of this Finding's addenda cited a question the plan never carried; it carries it now. **It is recorded, not answered**: how a capability's screen learns a destination it does not own is a mechanism nobody has ruled, and inventing one inside a restructure is what this plan's rules forbid.
+
+**The seam is untouched by decision.** The `repo?` prop on five screens, the optional gateway on every hook, and the three published ports all remain exactly as they were. Removing them turns out to require splitting each screen from its presentation, which is a change to how every screen in the tree is written — so it was deferred whole, rather than begun and left half-made.
+
+The Finding stays `Open`: the route literals and Media's upload are unchanged, and where profile lives once a Users capability exists is still undecided.

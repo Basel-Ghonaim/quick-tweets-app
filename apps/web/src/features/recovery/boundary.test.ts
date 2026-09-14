@@ -27,11 +27,13 @@ const isSelf = (specifier: string) => specifier === ALIAS || specifier.startsWit
 const sources = filesUnder(SRC).filter(isSource);
 const capabilityFiles = filesUnder(CAPABILITY);
 
-/** What a feature may not know: another feature, the legacy zone, the root. */
-const FORBIDDEN = ["@features/", "@modules/", "@app/"];
+/** What a feature may not know: another feature, a page, the root. */
+const FORBIDDEN = ["@features/", "@pages/", "@app/"];
 
 /** The layers a screen reaches through its hooks rather than itself. */
-const BENEATH_THE_SCREENS = /(^|\/)(forms|services)$/;
+/* Relative only: a screen reaching *this* capability's layers writes a relative
+   path, and another zone's `services/` is not what this rule is about. */
+const BENEATH_THE_SCREENS = /^\..*\/(forms|services)$/;
 
 describe("recovery's public surface", () => {
   test("a consumer reaches it only through the root barrel", () => {
@@ -75,7 +77,7 @@ describe("recovery's public surface", () => {
 
 describe("what recovery holds", () => {
   // Story files are exempt from the zone direction (ADR 0018 Decision 9).
-  test("no other feature, no legacy zone, no root", () => {
+  test("no other feature, no page, no root", () => {
     expect(capabilityFiles.length).toBeGreaterThan(20);
 
     const violations = capabilityFiles

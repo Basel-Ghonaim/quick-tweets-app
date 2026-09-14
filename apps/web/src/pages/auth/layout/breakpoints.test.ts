@@ -12,7 +12,7 @@ import { describe, expect, test } from "vitest";
  * sees every place it is repeated.
  */
 
-const MODULE = join(process.cwd(), "src/modules/auth");
+const MODULE = join(process.cwd(), "src/pages/auth");
 const SCANNED = [MODULE];
 
 /** Where the two columns stop, and where the compact set begins. */

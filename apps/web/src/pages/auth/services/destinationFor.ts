@@ -1,7 +1,5 @@
-import type { JourneyPhase, JourneyRead } from "@features/journey";
-
-/** What the onboarding route shows, or where it sends the reader instead. */
-export type Destination = "pending" | "retry" | "signin" | "feed" | JourneyPhase;
+import type { JourneyRead } from "@features/journey";
+import type { Destination } from "../model";
 
 /**
  * A read that failed is not an answer of `none`: treating it as one would eject

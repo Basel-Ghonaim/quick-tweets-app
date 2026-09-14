@@ -9,7 +9,7 @@ import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
-import { stepStates } from "../../components/Stepper";
+import { stepStates } from "../../services";
 import type { VerificationGateway } from "@shared/channel-verification";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";

@@ -11,7 +11,7 @@ import { JourneyLayout } from "../../layout/JourneyLayout";
 import type { ProfileGateway } from "@features/profile";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
-import { stepStates } from "../../components/Stepper";
+import { stepStates } from "../../services";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */

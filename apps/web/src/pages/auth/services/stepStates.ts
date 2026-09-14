@@ -1,11 +1,8 @@
-import type { JourneyStepId, StepState } from "./Stepper";
-import type { JourneyPhase, ProfileOutcome } from "@features/journey";
+import type { ProfileOutcome } from "@features/journey";
+import type { JourneyStepId, StepPosition, StepState } from "../model";
 
 export const JOURNEY_STEPS = ["account", "profile", "verify"] as const satisfies
   readonly JourneyStepId[];
-
-/** Where the reader stands, in the stepper's own vocabulary. */
-export type StepPosition = "account" | JourneyPhase;
 
 const CURRENT_AT: Record<StepPosition, JourneyStepId | null> = {
   account: "account",

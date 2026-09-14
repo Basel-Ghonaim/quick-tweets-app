@@ -26,3 +26,11 @@ That is a prediction, not the trigger. The finding stands whether or not Setting
 ## Not decided here
 
 Whether the verification UI becomes a feature of its own, whether it moves to sit beside the capability it composes, and what a product UI over a platform capability should be called. A finding records the deviation; it never schedules the fix.
+
+## Addendum — 2026-09-14, the screens have a home ([#733](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/733))
+
+**Question A is answered: the verification screens live in the auth page group**, at `apps/web/src/pages/auth/screens/Verify/`. They are the interaction of a platform capability that publishes no product interface ([ADR 0019](../decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6), and a page is the zone that composes what no capability owns ([ADR 0018](../decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 4).
+
+**What this Finding recorded is unchanged, and is now recorded against a real zone rather than a legacy one.** The placement is still the composition's rather than the capability's, and the cost this Finding named still stands: Settings is the surface most likely to render these screens next, and a page may not import another page. **That remains the trigger to revisit**, and it has not fired.
+
+The answer settles *where*, not *what*. Whether a product interface over a platform capability eventually becomes something with a name of its own is still not decided, and this Finding still records it as open.
