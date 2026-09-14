@@ -56,3 +56,27 @@ describe("a failed read offers a retry", () => {
     expect(screen.queryByText("the feed")).toBeNull();
   });
 });
+
+describe("the phase chooses the screen", () => {
+  it("renders the screen the position reports, not the one the client assumes", async () => {
+    mount(gatewayOf({ read: async () => state({ phase: "profile" }) }));
+
+    expect(await screen.findByRole("heading", { name: AUTH_COPY.profile.title })).not.toBeNull();
+  });
+});
+
+describe("a skipped profile reads as skipped", () => {
+  it("shows the step as skipped rather than done, from the outcome the server holds", async () => {
+    // Both answer: at `verify` the resolution asks the server to move to the
+    // code step, and the state it renders is whatever that answers.
+    const skipped = state({ phase: "verify", profileOutcome: "skipped" });
+    mount(gatewayOf({ read: async () => skipped, advance: async () => skipped }));
+
+    // The verify screen arriving is what says the read resolved; reading the
+    // stepper before it would read the position the journey starts from.
+    await screen.findByRole("heading", { name: AUTH_COPY.verify.askTitle });
+
+    const profile = screen.getByText(AUTH_COPY.journey.steps.profile).closest("li");
+    expect(profile?.textContent).toContain(AUTH_COPY.journey.states.skipped);
+  });
+});

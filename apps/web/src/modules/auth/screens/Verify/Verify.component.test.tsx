@@ -9,6 +9,8 @@ import { AUTH_COPY } from "@shared/copy";
 import { normaliseCode } from "@shared/one-time-code";
 import { sessionReducer } from "@shared/session";
 import type { VerificationGateway } from "@shared/channel-verification";
+import { JourneyLayout } from "../../layout";
+import { stepStates } from "../../components/Stepper";
 import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
 
@@ -149,5 +151,47 @@ describe("a failed read still lets the code be typed", () => {
     await waitFor(() => expect((field as HTMLInputElement).value).toBe(normaliseCode(typed)));
     const resend = screen.getByRole("button", { name: AUTH_COPY.verify.resend });
     expect((resend as HTMLButtonElement).disabled).toBe(false);
+  });
+});
+
+describe("the ask comes first", () => {
+  it("offers the send, and no field for a code nothing has sent", async () => {
+    mount(<VerifyAsk onSent={noop} onLater={noop} repo={standing(0)} />);
+
+    await screen.findByRole("heading", { name: AUTH_COPY.verify.askTitle });
+    expect(screen.getByRole("button", { name: AUTH_COPY.verify.send })).not.toBeNull();
+    expect(screen.queryByLabelText(AUTH_COPY.verify.codeLabel)).toBeNull();
+  });
+});
+
+describe("the code screen is what the phase chooses", () => {
+  it("renders the field for a code already sent, rather than the ask", async () => {
+    mount(<VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />);
+
+    await screen.findByRole("heading", { name: AUTH_COPY.verify.codeTitle });
+    expect(screen.getByLabelText(AUTH_COPY.verify.codeLabel)).not.toBeNull();
+  });
+});
+
+describe("the code screen offers no way back", () => {
+  it("holds no link to the step before it", async () => {
+    mount(<VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />);
+
+    await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
+    expect(screen.queryByRole("link", { name: AUTH_COPY.verify.backToProfile })).toBeNull();
+  });
+});
+
+describe("both screens are the same step", () => {
+  it("marks verify current for the second of them, as for the first", async () => {
+    mount(
+      <JourneyLayout states={stepStates("verify", null)}>
+        <VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />
+      </JourneyLayout>,
+    );
+
+    await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
+    const verify = screen.getByText(AUTH_COPY.journey.steps.verify).closest("li");
+    expect(verify?.getAttribute("aria-current")).toBe("step");
   });
 });

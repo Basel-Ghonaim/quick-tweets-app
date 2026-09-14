@@ -7,6 +7,8 @@ import { createAppError } from "@shared/errors";
 import { AUTH_COPY } from "@shared/copy";
 import { sessionReducer } from "@shared/session";
 import type { ProfileGateway } from "@features/profile";
+import { JourneyLayout } from "../../layout";
+import { stepStates } from "../../components/Stepper";
 import { Profile } from "./Profile";
 
 const noop = () => {};
@@ -90,5 +92,60 @@ describe("choosing a picture starts the upload", () => {
 
     const live = document.querySelector("[role='status']")!;
     await waitFor(() => expect(live.textContent).not.toBe(""));
+  });
+});
+
+/* The stepper is the layout's, so the one case about it mounts the layout the
+   route mounts rather than the screen on its own. */
+const mountInJourney = () =>
+  render(
+    <Provider store={configureStore({ reducer: { session: sessionReducer } })}>
+      <MemoryRouter initialEntries={["/auth/onboarding"]}>
+        <JourneyLayout states={stepStates("profile", null)}>
+          <Profile onSettled={noop} />
+        </JourneyLayout>
+      </MemoryRouter>
+    </Provider>,
+  );
+
+describe("the form is at rest", () => {
+  it("offers every field and both actions, with one submit among them", () => {
+    const { container } = mount();
+
+    expect(screen.getByRole("heading", { name: AUTH_COPY.profile.title })).not.toBeNull();
+    expect(screen.getByLabelText(/display name/i)).not.toBeNull();
+    expect(screen.getByLabelText(/^bio$/i)).not.toBeNull();
+    expect(screen.getByLabelText(AUTH_COPY.profile.avatarLabel)).not.toBeNull();
+    expect(screen.getByRole("button", { name: AUTH_COPY.profile.submit })).not.toBeNull();
+    expect(screen.getByRole("button", { name: AUTH_COPY.profile.skip })).not.toBeNull();
+
+    /* Everything that is not the primary action carries no fill. */
+    expect(container.querySelectorAll("button[type='submit']")).toHaveLength(1);
+  });
+});
+
+describe("the journey is at profile", () => {
+  it("marks profile current and the step before it done", () => {
+    mountInJourney();
+
+    const profile = screen.getByText(AUTH_COPY.journey.steps.profile).closest("li");
+    expect(profile?.getAttribute("aria-current")).toBe("step");
+
+    const account = screen.getByText(AUTH_COPY.journey.steps.account).closest("li");
+    expect(account?.textContent).toContain(AUTH_COPY.journey.states.done);
+  });
+});
+
+describe("the bio count tracks what is typed", () => {
+  it("moves with the field rather than waiting for a submit", async () => {
+    mount();
+
+    expect(screen.getByText(AUTH_COPY.profile.bioCount(0, 160))).not.toBeNull();
+
+    fireEvent.change(screen.getByLabelText(/^bio$/i), { target: { value: "hello" } });
+
+    await waitFor(() =>
+      expect(screen.getByText(AUTH_COPY.profile.bioCount(5, 160))).not.toBeNull(),
+    );
   });
 });
