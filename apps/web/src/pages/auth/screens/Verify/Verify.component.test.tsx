@@ -10,7 +10,7 @@ import { normaliseCode } from "@shared/one-time-code";
 import { sessionReducer } from "@shared/session";
 import type { VerificationGateway } from "@shared/channel-verification";
 import { JourneyLayout } from "@pages/auth/layout";
-import { stepStates } from "@pages/auth/layout/Stepper";
+import { stepStates } from "../../services";
 import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
 

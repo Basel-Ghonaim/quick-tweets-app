@@ -31,7 +31,9 @@ const capabilityFiles = filesUnder(CAPABILITY);
 const FORBIDDEN = ["@features/", "@pages/", "@app/"];
 
 /** The layers a screen reaches through its hooks rather than itself. */
-const BENEATH_THE_SCREENS = /(^|\/)(forms|services)$/;
+/* Relative only: a screen reaching *this* capability's layers writes a relative
+   path, and another zone's `services/` is not what this rule is about. */
+const BENEATH_THE_SCREENS = /^\..*\/(forms|services)$/;
 
 describe("authentication's public surface", () => {
   test("a consumer reaches it only through the root barrel", () => {

@@ -1,5 +1,5 @@
 import type { JourneyRead } from "@features/journey";
-import type { Destination } from "../../model";
+import type { Destination } from "../model";
 
 /**
  * A read that failed is not an answer of `none`: treating it as one would eject

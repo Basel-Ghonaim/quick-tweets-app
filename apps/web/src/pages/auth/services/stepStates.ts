@@ -1,5 +1,5 @@
 import type { ProfileOutcome } from "@features/journey";
-import type { JourneyStepId, StepPosition, StepState } from "../../model";
+import type { JourneyStepId, StepPosition, StepState } from "../model";
 
 export const JOURNEY_STEPS = ["account", "profile", "verify"] as const satisfies
   readonly JourneyStepId[];

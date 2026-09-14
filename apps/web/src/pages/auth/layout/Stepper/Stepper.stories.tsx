@@ -5,7 +5,7 @@ import { ThemeProvider } from "@shared/preferences";
 import { Stepper } from "./Stepper";
 import type { JourneyStepId, StepState } from "../../model";
 import { JourneyLayout } from "../JourneyLayout";
-import { stepStates } from "./stepStates";
+import { stepStates } from "../../services";
 import type { StepPosition } from "../../model";
 import { AUTH_COPY } from "@shared/copy";
 
