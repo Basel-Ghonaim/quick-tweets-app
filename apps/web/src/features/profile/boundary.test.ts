@@ -29,8 +29,8 @@ const isSelf = (specifier: string) => specifier === ALIAS || specifier.startsWit
 const sources = filesUnder(SRC).filter(isSource);
 const capabilityFiles = filesUnder(CAPABILITY);
 
-/** What a feature may not know: another feature, the legacy zone, the root. */
-const FORBIDDEN = ["@features/", "@modules/", "@app/"];
+/** What a feature may not know: another feature, a page, the root. */
+const FORBIDDEN = ["@features/", "@pages/", "@app/"];
 
 describe("profile's public surface", () => {
   test("a consumer reaches it only through the root barrel", () => {
@@ -81,7 +81,7 @@ describe("what profile holds", () => {
     expect(ui).toEqual([]);
   });
 
-  test("no other feature, no legacy zone, no root", () => {
+  test("no other feature, no page, no root", () => {
     const violations = capabilityFiles
       .filter(isSource)
       .flatMap((file) =>

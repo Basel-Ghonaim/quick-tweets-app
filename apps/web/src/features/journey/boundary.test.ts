@@ -27,7 +27,7 @@ const capabilityFiles = filesUnder(CAPABILITY);
 
 const FORBIDDEN = [
   "@features/",
-  "@modules/",
+  "@pages/",
   "@app/",
   "@shared/copy",
   "@shared/schema-form",
@@ -92,7 +92,7 @@ describe("what the journey holds", () => {
     expect(ui).toEqual([]);
   });
 
-  test("no other feature, no legacy zone, no root, no content, no form, no control, no route", () => {
+  test("no other feature, no page, no root, no content, no form, no control, no route", () => {
     const violations = capabilityFiles
       .filter(isSource)
       .flatMap((file) =>

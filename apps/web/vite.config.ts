@@ -19,7 +19,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@shared': path.resolve(__dirname, './src/shared'),
-      '@modules': path.resolve(__dirname, './src/modules'),
       '@features': path.resolve(__dirname, './src/features'),
       '@pages': path.resolve(__dirname, './src/pages'),
       '@app': path.resolve(__dirname, './src/app')
@@ -32,7 +31,7 @@ export default defineConfig({
       provider: 'v8',
       enabled: false,
       reporter: ['text'],
-      include: ['src/modules/auth/screens/**/*.tsx', 'src/pages/auth/screens/**/*.tsx', 'src/features/recovery/screens/**/*.tsx'],
+      include: ['src/pages/auth/screens/**/*.tsx', 'src/features/recovery/screens/**/*.tsx'],
       exclude: ['**/*.stories.tsx', '**/*.component.test.tsx'],
       thresholds: {
         'src/pages/auth/screens/Verify/VerifyAsk.tsx': { branches: 82 },
