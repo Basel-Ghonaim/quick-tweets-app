@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -106,5 +106,24 @@ export const TheReadFailed: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByRole("button", { name: AUTH_COPY.onboarding.retry });
+  },
+};
+
+/* The two below exist for the accessibility check and nothing else. Each puts
+   one state on screen so axe evaluates it, and asserts only that it is there. */
+
+export const ThePositionIsBeingRead: Story = {
+  render: withRepo({ read: () => new Promise(() => {}), advance: async () => state() }),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector("[class*='pending']")).not.toBeNull(),
+    );
+  },
+};
+
+export const TheCodeStep: Story = {
+  render: withRepo({ read: async () => state({ phase: "code" }), advance: async () => state() }),
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByRole("heading", { name: AUTH_COPY.verify.codeTitle });
   },
 };

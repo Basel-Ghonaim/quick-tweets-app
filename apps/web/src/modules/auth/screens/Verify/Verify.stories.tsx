@@ -140,7 +140,7 @@ export const Compact: Story = {
   },
 };
 
-/* The four below exist for the accessibility check and nothing else. Each puts
+/* The five below exist for the accessibility check and nothing else. Each puts
    one state on screen so axe evaluates it, and asserts only that the state is
    there — what the state means is the component lane's. */
 
@@ -217,5 +217,28 @@ export const TheResendHeld: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByRole("button", { name: AUTH_COPY.verify.resendIn(60) });
+  },
+};
+
+export const TheCodeSubmitting: Story = {
+  decorators: [
+    showing(
+      <VerifyCode
+        repo={{
+          current: async () => ({ status: "pending", resendAvailableAt: null }),
+          issue: async () => ({ resendAvailableAt: null }),
+          confirm: () => new Promise(() => {}),
+        }}
+        onVerified={noop}
+        onLater={noop}
+      />,
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.verify.codeLabel), "7QK3MNP2XVZB");
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.verify.submit }));
+    await canvas.findByRole("button", { name: AUTH_COPY.verify.submitting });
   },
 };

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
@@ -367,5 +367,145 @@ export const TheReadFailed: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByRole("button", { name: AUTH_COPY.recovery.retry });
+  },
+};
+
+/* The eight below exist for the accessibility check and nothing else. Each puts
+   one state on screen so axe evaluates it, and asserts only that it is there —
+   what the state means is the component lane's. */
+
+const askFor = async (canvas: ReturnType<typeof within>) => {
+  await userEvent.type(
+    await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel),
+    "holder@example.test",
+  );
+  await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.send }));
+};
+
+export const ThePositionIsBeingRead: Story = {
+  render: withRepo(repository({ position: () => new Promise(() => {}) })),
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector("[class*='waiting']")).not.toBeNull(),
+    );
+  },
+};
+
+export const TheRequestRefused: Story = {
+  render: withRepo(
+    repository({
+      position: async () => at({ step: "request" }),
+      request: async () => {
+        throw createAppError("validation", "raw");
+      },
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await askFor(canvas);
+    await canvas.findByRole("alert");
+  },
+};
+
+export const TheRequestLapsed: Story = {
+  render: withRepo(
+    repository({
+      position: async () => at({ step: "request" }),
+      request: async () => at({ step: "request" }),
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await askFor(canvas);
+    await canvas.findByText(AUTH_COPY.recovery.lapsed);
+  },
+};
+
+export const TheRequestSending: Story = {
+  render: withRepo(
+    repository({
+      position: async () => at({ step: "request" }),
+      request: () => new Promise(() => {}),
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await askFor(canvas);
+    await canvas.findByRole("button", { name: AUTH_COPY.recovery.sending });
+  },
+};
+
+export const TheCodeRefused: Story = {
+  render: withRepo(
+    repository({
+      confirm: async () => {
+        throw createAppError("validation", "raw");
+      },
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.recovery.codeLabel), "7QK3MNP2XVZB");
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.submitCode }));
+    await canvas.findByRole("alert");
+  },
+};
+
+export const TheCodeSubmitting: Story = {
+  render: withRepo(repository({ confirm: () => new Promise(() => {}) })),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.recovery.codeLabel), "7QK3MNP2XVZB");
+    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.submitCode }));
+    await canvas.findByRole("button", { name: AUTH_COPY.recovery.submittingCode });
+  },
+};
+
+const setPassword = async (canvas: ReturnType<typeof within>) => {
+  await userEvent.type(
+    await canvas.findByLabelText(AUTH_COPY.recovery.newPasswordLabel),
+    "A-new-passw0rd!",
+  );
+  await userEvent.type(
+    canvas.getByLabelText(AUTH_COPY.recovery.confirmPasswordLabel),
+    "A-new-passw0rd!",
+  );
+  await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.submitPassword }));
+};
+
+export const ThePasswordRefused: Story = {
+  render: withRepo(
+    repository({
+      position: async () => at({ step: "password" }),
+      apply: async () => {
+        throw createAppError("validation", "raw");
+      },
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await setPassword(canvas);
+    await canvas.findByRole("alert");
+  },
+};
+
+export const ThePasswordSubmitting: Story = {
+  render: withRepo(
+    repository({
+      position: async () => at({ step: "password" }),
+      apply: () => new Promise(() => {}),
+    }),
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await setPassword(canvas);
+    await canvas.findByRole("button", { name: AUTH_COPY.recovery.submittingPassword });
   },
 };
