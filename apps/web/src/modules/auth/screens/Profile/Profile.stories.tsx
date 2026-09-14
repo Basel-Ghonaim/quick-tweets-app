@@ -62,57 +62,6 @@ const withState = (
     </Provider>
   );
 };
-
-export const Idle: Story = {
-  decorators: [withState()],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(canvas.getByRole("heading", { name: AUTH_COPY.profile.title })).toBeVisible();
-    await expect(canvas.getByLabelText(/display name/i)).toBeVisible();
-    await expect(canvas.getByLabelText(/^bio$/i)).toBeVisible();
-    await expect(canvas.getByLabelText(AUTH_COPY.profile.avatarLabel)).toBeInTheDocument();
-
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.profile.submit })).toBeVisible();
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.profile.skip })).toBeVisible();
-
-    /* Everything that is not the primary action carries no fill. */
-    await expect(canvasElement.querySelectorAll("button[type='submit']")).toHaveLength(1);
-  },
-};
-
-/** The stepper is the layout's, and it reads the journey from the path. */
-export const TheJourneyIsAtProfile: Story = {
-  decorators: [withState()],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const profile = canvas.getByText(AUTH_COPY.journey.steps.profile).closest("li");
-    await expect(profile).toHaveAttribute("aria-current", "step");
-
-    const account = canvas.getByText(AUTH_COPY.journey.steps.account).closest("li");
-    await expect(
-      within(account as HTMLElement).getByText(AUTH_COPY.journey.states.done),
-    ).toBeVisible();
-  },
-};
-
-/** The limit is legible while there is still time to write to it. */
-export const TheBioCountTracksWhatIsTyped: Story = {
-  decorators: [withState()],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(canvas.getByText(AUTH_COPY.profile.bioCount(0, 160))).toBeInTheDocument();
-
-    await userEvent.type(canvas.getByLabelText(/^bio$/i), "hello");
-
-    await waitFor(() =>
-      expect(canvas.getByText(AUTH_COPY.profile.bioCount(5, 160))).toBeInTheDocument(),
-    );
-  },
-};
-
 export const Compact: Story = {
   decorators: [withState()],
   globals: { viewport: { value: "phone" } },

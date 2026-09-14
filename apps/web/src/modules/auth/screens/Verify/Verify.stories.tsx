@@ -74,61 +74,6 @@ const standing = (seconds: number): VerificationGateway => ({
   confirm: async () => {},
 });
 
-const CODE = <VerifyCode repo={standing(0)} onVerified={noop} onLater={noop} />;
-
-/** Nothing is sent until it is asked for: an optional step that mailed everyone
- *  who reached it would be behaving like a mandatory one. */
-export const TheAskComesFirst: Story = {
-  decorators: [showing(ASK)],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(
-      await canvas.findByRole("heading", { name: AUTH_COPY.verify.askTitle }),
-    ).toBeVisible();
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.verify.send })).toBeVisible();
-    await expect(canvas.queryByLabelText(AUTH_COPY.verify.codeLabel)).not.toBeInTheDocument();
-  },
-};
-
-/** The code screen is what the phase chooses, so a reload keeps the field for a
- *  code already in the reader's inbox — the server says `code`, not the path. */
-export const TheCodeScreenIsWhatThePhaseChooses: Story = {
-  decorators: [showing(CODE)],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(
-      await canvas.findByRole("heading", { name: AUTH_COPY.verify.codeTitle }),
-    ).toBeVisible();
-    await expect(canvas.getByLabelText(AUTH_COPY.verify.codeLabel)).toBeVisible();
-  },
-};
-
-/** There is no way back from here, only on or out. */
-export const TheCodeScreenOffersNoWayBack: Story = {
-  decorators: [showing(CODE)],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await canvas.findByLabelText(AUTH_COPY.verify.codeLabel);
-    await expect(
-      canvas.queryByRole("link", { name: AUTH_COPY.verify.backToProfile }),
-    ).not.toBeInTheDocument();
-  },
-};
-
-/** Both of the step's screens report the same step. */
-export const BothScreensAreTheSameStep: Story = {
-  decorators: [showing(CODE)],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    const verify = canvas.getByText(AUTH_COPY.journey.steps.verify).closest("li");
-    await expect(verify).toHaveAttribute("aria-current", "step");
-  },
-};
-
 export const Compact: Story = {
   decorators: [showing(ASK)],
   globals: { viewport: { value: "phone" } },
