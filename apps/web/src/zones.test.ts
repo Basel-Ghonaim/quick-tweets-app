@@ -144,4 +144,23 @@ describe("the frontend zones", () => {
 
     expect(violations.sort()).toEqual([]);
   });
+
+  /**
+   * One of the two rules ADR 0018 Decision 4 gives a page, and the only one a
+   * check can see: a page arranges capabilities and may not reach the wire
+   * itself. Owning no state is the other, and no import expresses it — the
+   * limitation is recorded rather than implied by a green run.
+   *
+   * Matched on the slice a specifier resolves to rather than on the text of
+   * the specifier, so a relative path reaches the same verdict as an alias.
+   */
+  const TRANSPORT = ["shared/api", "shared/rtk-query"];
+
+  test("a page composes, and never reaches the wire itself", () => {
+    const violations = crossings
+      .filter((c) => c.from.zone === "pages" && TRANSPORT.includes(c.to.slice))
+      .map(report);
+
+    expect(violations.sort()).toEqual([]);
+  });
 });
