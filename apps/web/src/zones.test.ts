@@ -126,4 +126,22 @@ describe("the frontend zones", () => {
 
     expect(violations.sort()).toEqual([]);
   });
+
+  test("a slice never reaches a sibling in its own zone", () => {
+    // The sibling rule does not reach `shared/`: that zone is divided by
+    // mechanism rather than by domain, so its parts compose one another freely
+    // (ADR 0018 Decision 1, as revised). What bounds them is the direction
+    // above, which the rule below cannot express and does not try to.
+    const violations = crossings
+      .filter(
+        (c) =>
+          !c.story &&
+          c.from.zone === c.to.zone &&
+          c.from.zone !== "shared" &&
+          c.from.slice !== c.to.slice,
+      )
+      .map(report);
+
+    expect(violations.sort()).toEqual([]);
+  });
 });
