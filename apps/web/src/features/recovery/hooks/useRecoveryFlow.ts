@@ -3,7 +3,6 @@ import { AUTH_COPY } from "@shared/copy";
 import { screenFor } from "../services";
 import { useRecovery } from "./useRecovery";
 import type { RecoveryPosition, RecoveryScreen } from "../model";
-import type { RecoveryGateway } from "../gateway";
 
 export interface RecoveryFlow {
   screen: RecoveryScreen;
@@ -26,10 +25,9 @@ export interface RecoveryFlow {
  * submitted one is never empty.
  */
 export const useRecoveryFlow = (
-  repo?: RecoveryGateway,
   onComplete?: () => void,
 ): RecoveryFlow => {
-  const { read, position, request, resend, confirm, apply, retry } = useRecovery(repo);
+  const { read, position, request, resend, confirm, apply, retry } = useRecovery();
   const [asked, setAsked] = useState("");
   const [restarting, setRestarting] = useState(false);
 

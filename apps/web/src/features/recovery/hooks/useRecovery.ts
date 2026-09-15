@@ -3,7 +3,6 @@ import { useDispatch } from "react-redux";
 import { restRecovery } from "../gateway";
 import { completeReset, resolveRecovery } from "../services";
 import type { RecoveryPosition, RecoveryRead } from "../model";
-import type { RecoveryGateway } from "../gateway";
 
 export interface Recovery {
   read: RecoveryRead;
@@ -20,10 +19,10 @@ export interface Recovery {
  * No readiness flag: these endpoints are anonymous, so unlike the journey there
  * is no session whose absence would be mistaken for an answer.
  */
-export const useRecovery = (given?: RecoveryGateway): Recovery => {
+export const useRecovery = (): Recovery => {
   // Held across renders: the read effect is keyed on it, and a fresh one each
   // render would re-ask the position forever.
-  const repo = useMemo(() => given ?? restRecovery(), [given]);
+  const repo = useMemo(() => restRecovery(), []);
   const [read, setRead] = useState<RecoveryRead>({ status: "unresolved" });
   const [attempt, setAttempt] = useState(0);
   const dispatch = useDispatch();

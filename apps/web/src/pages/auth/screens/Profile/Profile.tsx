@@ -2,16 +2,14 @@ import { Button, FileInput, MessageRegion, Typography } from "@shared/design-sys
 import { SchemaField } from "@shared/schema-form";
 import { AUTH_COPY } from "@shared/copy";
 import { useProfileFlow } from "@features/profile";
-import type { ProfileGateway } from "@features/profile";
 import type { ProfileOutcome } from "@features/journey";
 import styles from "./Profile.module.css";
 
 interface ProfileProps {
   onSettled: (outcome: ProfileOutcome) => void;
-  repo?: ProfileGateway;
 }
 
-export const Profile = ({ onSettled, repo }: ProfileProps) => {
+export const Profile = ({ onSettled }: ProfileProps) => {
   const {
     fields,
     bioMax,
@@ -24,7 +22,7 @@ export const Profile = ({ onSettled, repo }: ProfileProps) => {
     handleChange,
     handleSubmit,
     skip,
-  } = useProfileFlow(onSettled, repo);
+  } = useProfileFlow(onSettled);
 
   const uploadMessage = AUTH_COPY.profile[
     avatar.status === "uploading"

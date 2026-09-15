@@ -12,11 +12,9 @@ import { restVerification } from "../gateway";
 import { executeVerification, resolveVerification } from "../services";
 import { secondsUntilWindow } from "../model";
 import type { VerificationMessages, VerificationRead } from "../model";
-import type { VerificationGateway } from "../gateway";
 
 export interface CodeFlowOptions {
   onVerified?: () => void;
-  repo?: VerificationGateway;
   messages?: VerificationMessages;
   resendReadyMessage?: string;
 }
@@ -44,13 +42,12 @@ const IDLE: RequestState = { status: "idle", error: null };
  */
 export const useCodeFlow = ({
   onVerified,
-  repo: given,
   messages,
   resendReadyMessage = "",
 }: CodeFlowOptions = {}): CodeFlow => {
   // Held across renders: the read effect is keyed on it, and a fresh one each
   // render would ask forever.
-  const repo = useMemo(() => given ?? restVerification(), [given]);
+  const repo = useMemo(() => restVerification(), []);
 
   const [issueRequest, setIssueRequest] = useState<RequestState>(IDLE);
   const [confirmRequest, setConfirmRequest] = useState<RequestState>(IDLE);

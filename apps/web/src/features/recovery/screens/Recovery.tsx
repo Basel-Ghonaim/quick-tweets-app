@@ -2,7 +2,6 @@ import { Button, MessageRegion, Spinner } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
 import { useRouteNavigate } from "@shared/routing";
 import { useRecoveryFlow } from "../hooks";
-import type { RecoveryGateway } from "../gateway";
 import { RecoveryCode, RecoveryPassword, RecoveryRequest } from "./steps";
 import styles from "./Recovery.module.css";
 
@@ -10,7 +9,7 @@ import styles from "./Recovery.module.css";
  * Recovery's one route. Which step renders is the server's answer, so a reload,
  * a second tab and a typed path all resolve the same way.
  */
-export const Recovery = ({ repo }: { repo?: RecoveryGateway } = {}) => {
+export const Recovery = () => {
   const navigate = useRouteNavigate();
 
   const {
@@ -25,7 +24,7 @@ export const Recovery = ({ repo }: { repo?: RecoveryGateway } = {}) => {
     resend,
     apply,
     retry,
-  } = useRecoveryFlow(repo, () =>
+  } = useRecoveryFlow(() =>
     navigate("/auth/signin", { state: { notice: AUTH_COPY.recovery.done } }),
   );
 

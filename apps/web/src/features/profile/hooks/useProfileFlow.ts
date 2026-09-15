@@ -5,7 +5,6 @@ import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
 import type { AvatarUploadStatus, ProfileSettlement } from "../model";
 import { restProfile } from "../gateway";
-import type { ProfileGateway } from "../gateway";
 import { executeProfileUpdate } from "../services";
 import { profileFormSchema, BIO_MAX } from "../forms";
 import { AVATAR_ACCEPT, AVATAR_MAX_BYTES } from "../model";
@@ -41,10 +40,9 @@ const fields = toFieldEntries(profileFormSchema);
  */
 export const useProfileFlow = (
   onSettled?: (outcome: ProfileSettlement) => void,
-  given?: ProfileGateway,
 ): ProfileFlow => {
   // Held across renders: the upload effect is keyed on the call it is given.
-  const repo = useMemo(() => given ?? restProfile(), [given]);
+  const repo = useMemo(() => restProfile(), []);
 
   const [request, setRequest] = useState<RequestState>({ status: "idle", error: null });
   const { isLoading, isError, error: serverError } = useRequestState(request);

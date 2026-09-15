@@ -1,15 +1,13 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
 import { restVerification } from "../gateway";
 import { executeVerification } from "../services";
 import type { VerificationMessages } from "../model";
-import type { VerificationGateway } from "../gateway";
 
 export interface AskFlowOptions {
   onSent?: () => void;
-  repo?: VerificationGateway;
   messages?: VerificationMessages;
 }
 
@@ -27,9 +25,10 @@ const IDLE: RequestState = { status: "idle", error: null };
  */
 export const useAskFlow = ({
   onSent,
-  repo = restVerification(),
   messages,
 }: AskFlowOptions = {}): AskFlow => {
+  // Held across renders so the send it closes over keeps one identity.
+  const repo = useMemo(() => restVerification(), []);
   const [request, setRequest] = useState<RequestState>(IDLE);
   const { isLoading, error } = useRequestState(request);
 
