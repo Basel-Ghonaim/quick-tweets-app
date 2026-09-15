@@ -28,8 +28,14 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-storybook": "^10.3.4",
     "globals": "^16.5.0",
+    "msw": "^2.15.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.48.0",
     "vitest": "^4.1.11"
+  },
+  "msw": {
+    "workerDirectory": [
+      "apps\\web\\.storybook\\public"
+    ]
   }
 }
