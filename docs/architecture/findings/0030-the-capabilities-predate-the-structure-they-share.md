@@ -112,3 +112,13 @@ The Finding stays `Open` for what remains across capabilities: the nine route li
 **The seam is untouched by decision.** The `repo?` prop on five screens, the optional gateway on every hook, and the three published ports all remain exactly as they were. Removing them turns out to require splitting each screen from its presentation, which is a change to how every screen in the tree is written — so it was deferred whole, rather than begun and left half-made.
 
 The Finding stays `Open`: the route literals and Media's upload are unchanged, and where profile lives once a Users capability exists is still undecided.
+
+## Addendum — 2026-09-15, the effort closes and what outlives it ([#740](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/740))
+
+**Every row this Finding opened with is resolved, and the two departures that ran across capabilities are settled or scheduled.** The seam — the `repo?` prop on five screens, the optional gateway on six hooks, and the three published ports — is gone ([#735](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/735)), removed rather than ratified: both lanes now say what the server answers instead of being handed an answerer, so no production declaration remains whose only consumer is a test.
+
+**The nine route literals have a home for the question, not an answer.** They stand exactly where this Finding recorded them, and the question of how a screen learns a destination it does not own is now [#739](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/739) — open, with no approach adopted or ruled out. It gates nothing: Phase 4 closed with the literals left, and Phase 5's enforcement landed without depending on it.
+
+**What still has no answer**, and is not this Finding's to invent: where Media's upload belongs, now that profile reaches it through its own gateway; and where profile itself lives once a Users capability exists, which remains a directory move by construction. A fifth thing joins them — the four capabilities this effort created still share one document, which is [Finding 0034](0034-four-capabilities-are-described-by-a-document-that-does-not-own-them.md).
+
+The Finding stays `Open` for those.
