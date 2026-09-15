@@ -4,11 +4,16 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
-import { createAppError } from "@shared/errors";
+import {
+  avatarNeverUploads,
+  avatarRefused,
+  avatarUploads,
+  profileNeverSaves,
+  profileRefuses,
+} from "@testing/handlers/profile";
 import { Profile } from "./Profile";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
-import type { ProfileGateway } from "@features/profile";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 import { stepStates } from "../../services";
@@ -34,10 +39,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const withState = (
-  repo?: ProfileGateway,
-  settled?: (outcome: "saved" | "skipped") => void,
-) => {
+const withState = (settled?: (outcome: "saved" | "skipped") => void) => {
   const store = configureStore({ reducer: { session: sessionReducer } });
 
   return (Story: () => React.ReactElement) => (
@@ -50,7 +52,7 @@ const withState = (
                 path="onboarding"
                 element={
                   <JourneyLayout states={stepStates("profile", null)}>
-                    <Profile onSettled={settled ?? noop} repo={repo} />
+                    <Profile onSettled={settled ?? noop} />
                   </JourneyLayout>
                 }
               />
@@ -79,14 +81,8 @@ export const Compact: Story = {
    there — what the state means is the component lane's. */
 
 export const TheSaveRefused: Story = {
-  decorators: [
-    withState({
-      uploadAvatar: async () => "token",
-      updateProfile: async () => {
-        throw createAppError("validation", "raw");
-      },
-    }),
-  ],
+  decorators: [withState()],
+  parameters: { msw: { handlers: [profileRefuses()] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -96,9 +92,8 @@ export const TheSaveRefused: Story = {
 };
 
 export const TheSaveInFlight: Story = {
-  decorators: [
-    withState({ uploadAvatar: async () => "token", updateProfile: () => new Promise(() => {}) }),
-  ],
+  decorators: [withState()],
+  parameters: { msw: { handlers: [profileNeverSaves()] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -108,7 +103,8 @@ export const TheSaveInFlight: Story = {
 };
 
 export const ThePictureUploading: Story = {
-  decorators: [withState({ uploadAvatar: () => new Promise(() => {}), updateProfile: () => new Promise(() => {}) })],
+  decorators: [withState()],
+  parameters: { msw: { handlers: [avatarNeverUploads()] } },
   play: async ({ canvasElement }) => {
     const input = canvasElement.querySelector<HTMLInputElement>("input[type='file']")!;
 
@@ -132,9 +128,8 @@ const choosePicture = (canvasElement: HTMLElement) => {
 };
 
 export const ThePictureUploaded: Story = {
-  decorators: [
-    withState({ uploadAvatar: async () => "token", updateProfile: () => new Promise(() => {}) }),
-  ],
+  decorators: [withState()],
+  parameters: { msw: { handlers: [avatarUploads()] } },
   play: async ({ canvasElement }) => {
     choosePicture(canvasElement);
     await within(canvasElement).findByText(AUTH_COPY.profile.uploaded);
@@ -142,14 +137,8 @@ export const ThePictureUploaded: Story = {
 };
 
 export const ThePictureRejected: Story = {
-  decorators: [
-    withState({
-      uploadAvatar: async () => {
-        throw createAppError("validation", "raw");
-      },
-      updateProfile: () => new Promise(() => {}),
-    }),
-  ],
+  decorators: [withState()],
+  parameters: { msw: { handlers: [avatarRefused()] } },
   play: async ({ canvasElement }) => {
     choosePicture(canvasElement);
     await within(canvasElement).findByRole("button", { name: AUTH_COPY.profile.uploadRetry });

@@ -4,13 +4,22 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
-import { createAppError } from "@shared/errors";
+import {
+  recoveryApplyNeverAnswers,
+  recoveryApplyRefuses,
+  recoveryConfirmNeverAnswers,
+  recoveryConfirmRefuses,
+  recoveryPositionIs,
+  recoveryPositionNeverAnswers,
+  recoveryPositionRefuses,
+  recoveryRequestNeverAnswers,
+  recoveryRequestRefuses,
+  recoveryRequests,
+} from "@testing/handlers/recovery";
 import { Recovery } from "./Recovery";
 import { AuthLayout } from "@pages/auth/layout";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
-import type { RecoveryPosition } from "../model";
-import type { RecoveryGateway } from "../gateway";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -30,24 +39,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const at = (over: Partial<RecoveryPosition> = {}): RecoveryPosition => ({
-  step: "code",
-  maskedAddress: "h•••••@example.test",
-  resendAvailableIn: 0,
+/** The step a reader who already has a code stands on. */
+const AT_CODE = {
+  step: "code" as const,
+  maskedEndpoint: "h•••••@example.test",
   canResend: true,
-  ...over,
-});
+};
 
-const repository = (over: Partial<RecoveryGateway> = {}): RecoveryGateway => ({
-  position: async () => at(),
-  request: async () => at(),
-  resend: async () => at(),
-  confirm: async () => {},
-  apply: async () => {},
-  ...over,
-});
+const AT_REQUEST = { step: "request" as const };
+const AT_PASSWORD = { step: "password" as const };
 
-const withRepo = (repo: RecoveryGateway) => {
+/* The screen is mounted as its route mounts it, and the step it shows is the
+   one the server answers with. */
+const asTheRouteMountsIt = () => {
   const store = configureStore({ reducer: { session: sessionReducer } });
 
   return () => (
@@ -56,7 +60,7 @@ const withRepo = (repo: RecoveryGateway) => {
         <MemoryRouter initialEntries={["/auth/recovery"]}>
           <Routes>
             <Route path="/auth" element={<AuthLayout />}>
-              <Route path="recovery" element={<Recovery repo={repo} />} />
+              <Route path="recovery" element={<Recovery />} />
               <Route path="signin" element={<p>sign in</p>} />
             </Route>
           </Routes>
@@ -68,13 +72,8 @@ const withRepo = (repo: RecoveryGateway) => {
 /* For the accessibility check and nothing else: the retry screen is rendered
    nowhere else, and what it means is the component lane's. */
 export const TheReadFailed: Story = {
-  render: withRepo(
-    repository({
-      position: async () => {
-        throw createAppError("network", "offline");
-      },
-    }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: { msw: { handlers: [recoveryPositionRefuses()] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -95,7 +94,8 @@ const askFor = async (canvas: ReturnType<typeof within>) => {
 };
 
 export const ThePositionIsBeingRead: Story = {
-  render: withRepo(repository({ position: () => new Promise(() => {}) })),
+  render: asTheRouteMountsIt(),
+  parameters: { msw: { handlers: [recoveryPositionNeverAnswers()] } },
   play: async ({ canvasElement }) => {
     await waitFor(() =>
       expect(canvasElement.querySelector("[class*='waiting']")).not.toBeNull(),
@@ -104,14 +104,12 @@ export const ThePositionIsBeingRead: Story = {
 };
 
 export const TheRequestRefused: Story = {
-  render: withRepo(
-    repository({
-      position: async () => at({ step: "request" }),
-      request: async () => {
-        throw createAppError("validation", "raw");
-      },
-    }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: {
+      handlers: [recoveryPositionIs(AT_REQUEST), recoveryRequestRefuses(422, "validation")],
+    },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -121,12 +119,10 @@ export const TheRequestRefused: Story = {
 };
 
 export const TheRequestLapsed: Story = {
-  render: withRepo(
-    repository({
-      position: async () => at({ step: "request" }),
-      request: async () => at({ step: "request" }),
-    }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs(AT_REQUEST), recoveryRequests(AT_REQUEST)] },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -136,12 +132,10 @@ export const TheRequestLapsed: Story = {
 };
 
 export const TheRequestSending: Story = {
-  render: withRepo(
-    repository({
-      position: async () => at({ step: "request" }),
-      request: () => new Promise(() => {}),
-    }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs(AT_REQUEST), recoveryRequestNeverAnswers()] },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -151,13 +145,10 @@ export const TheRequestSending: Story = {
 };
 
 export const TheCodeRefused: Story = {
-  render: withRepo(
-    repository({
-      confirm: async () => {
-        throw createAppError("validation", "raw");
-      },
-    }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs(AT_CODE), recoveryConfirmRefuses(422, "validation")] },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -168,7 +159,10 @@ export const TheCodeRefused: Story = {
 };
 
 export const TheCodeSubmitting: Story = {
-  render: withRepo(repository({ confirm: () => new Promise(() => {}) })),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs(AT_CODE), recoveryConfirmNeverAnswers()] },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -191,14 +185,10 @@ const setPassword = async (canvas: ReturnType<typeof within>) => {
 };
 
 export const ThePasswordRefused: Story = {
-  render: withRepo(
-    repository({
-      position: async () => at({ step: "password" }),
-      apply: async () => {
-        throw createAppError("validation", "raw");
-      },
-    }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs(AT_PASSWORD), recoveryApplyRefuses(422, "validation")] },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -208,12 +198,10 @@ export const ThePasswordRefused: Story = {
 };
 
 export const ThePasswordSubmitting: Story = {
-  render: withRepo(
-    repository({
-      position: async () => at({ step: "password" }),
-      apply: () => new Promise(() => {}),
-    }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs(AT_PASSWORD), recoveryApplyNeverAnswers()] },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -226,9 +214,10 @@ export const ThePasswordSubmitting: Story = {
    renders a state whose only other renderer moved to the component lane. */
 
 export const TheResendWindowIsOpen: Story = {
-  render: withRepo(
-    repository({ position: async () => at({ step: "code", resendAvailableIn: 42 }) }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs({ ...AT_CODE, retryAfterSeconds: 42 })] },
+  },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByRole("button", {
       name: AUTH_COPY.recovery.resendIn(42),
@@ -237,19 +226,20 @@ export const TheResendWindowIsOpen: Story = {
 };
 
 export const TheResendIsSpent: Story = {
-  render: withRepo(repository({ position: async () => at({ step: "code", canResend: false }) })),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs({ ...AT_CODE, canResend: false })] },
+  },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByText(AUTH_COPY.recovery.resendSpent);
   },
 };
 
 export const TheCodeStepConfirms: Story = {
-  render: withRepo(
-    repository({
-      position: async () => at({ step: "request" }),
-      request: async () => at({ step: "code" }),
-    }),
-  ),
+  render: asTheRouteMountsIt(),
+  parameters: {
+    msw: { handlers: [recoveryPositionIs(AT_REQUEST), recoveryRequests(AT_CODE)] },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -263,7 +253,8 @@ export const TheCodeStepConfirms: Story = {
 };
 
 export const TheAddressStepAfterRestart: Story = {
-  render: withRepo(repository({ position: async () => at({ step: "code" }) })),
+  render: asTheRouteMountsIt(),
+  parameters: { msw: { handlers: [recoveryPositionIs(AT_CODE)] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

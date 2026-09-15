@@ -4,12 +4,17 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
-import { createAppError } from "@shared/errors";
+import {
+  journeyAdvancesTo,
+  journeyIs,
+  journeyNeverAnswers,
+  journeyRefuses,
+} from "@testing/handlers/journey";
+import { verificationIs } from "@testing/handlers/verification";
 import { Onboarding } from "./Onboarding";
 import { AuthLayout } from "../../layout";
 import { sessionActions, sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
-import type { JourneyGateway, JourneyState } from "@features/journey";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -29,13 +34,9 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const state = (over: Partial<JourneyState> = {}): JourneyState => ({
-  phase: "profile",
-  profileOutcome: null,
-  ...over,
-});
-
-const withRepo = (repo: JourneyGateway, settled = true) => {
+/* The screen is mounted as its route mounts it, and the phase it shows is the
+   one the server answers with. */
+const asTheRouteMountsIt = (settled = true) => {
   const store = configureStore({ reducer: { session: sessionReducer } });
   if (settled) store.dispatch(sessionActions.sessionSettled());
 
@@ -45,7 +46,7 @@ const withRepo = (repo: JourneyGateway, settled = true) => {
         <MemoryRouter initialEntries={["/auth/onboarding"]}>
           <Routes>
             <Route path="/auth" element={<AuthLayout />}>
-              <Route path="onboarding" element={<Onboarding repo={repo} />} />
+              <Route path="onboarding" element={<Onboarding />} />
             </Route>
             <Route path="/feed" element={<p>the feed</p>} />
           </Routes>
@@ -58,12 +59,8 @@ const withRepo = (repo: JourneyGateway, settled = true) => {
 /* For the accessibility check and nothing else: the retry screen is rendered
    nowhere else, and what it means is the component lane's. */
 export const TheReadFailed: Story = {
-  render: withRepo({
-    read: async () => {
-      throw createAppError("network", "Offline");
-    },
-    advance: async () => state(),
-  }),
+  render: asTheRouteMountsIt(),
+  parameters: { msw: { handlers: [journeyRefuses()] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -75,7 +72,8 @@ export const TheReadFailed: Story = {
    one state on screen so axe evaluates it, and asserts only that it is there. */
 
 export const ThePositionIsBeingRead: Story = {
-  render: withRepo({ read: () => new Promise(() => {}), advance: async () => state() }),
+  render: asTheRouteMountsIt(),
+  parameters: { msw: { handlers: [journeyNeverAnswers()] } },
   play: async ({ canvasElement }) => {
     await waitFor(() =>
       expect(canvasElement.querySelector("[class*='pending']")).not.toBeNull(),
@@ -84,7 +82,10 @@ export const ThePositionIsBeingRead: Story = {
 };
 
 export const TheCodeStep: Story = {
-  render: withRepo({ read: async () => state({ phase: "code" }), advance: async () => state() }),
+  render: asTheRouteMountsIt(),
+  // The code screen reads where the holder stands when it mounts, so the
+  // journey's answer alone does not put this state on screen.
+  parameters: { msw: { handlers: [journeyIs("code"), verificationIs("pending", 60)] } },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByRole("heading", { name: AUTH_COPY.verify.codeTitle });
   },
@@ -94,17 +95,18 @@ export const TheCodeStep: Story = {
    renders a phase whose only other renderer moved to the component lane. */
 
 export const TheProfileStep: Story = {
-  render: withRepo({ read: async () => state({ phase: "profile" }), advance: async () => state() }),
+  render: asTheRouteMountsIt(),
+  parameters: { msw: { handlers: [journeyIs("profile")] } },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByRole("heading", { name: AUTH_COPY.profile.title });
   },
 };
 
 export const TheVerifyStep: Story = {
-  render: withRepo({
-    read: async () => state({ phase: "verify" }),
-    advance: async () => state({ phase: "verify" }),
-  }),
+  render: asTheRouteMountsIt(),
+  // At `verify` the read asks the server to move to the code step, and the
+  // state rendered is whatever that answers.
+  parameters: { msw: { handlers: [journeyIs("verify"), journeyAdvancesTo("verify")] } },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByRole("heading", { name: AUTH_COPY.verify.askTitle });
   },
