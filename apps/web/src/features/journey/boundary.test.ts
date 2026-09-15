@@ -63,22 +63,16 @@ describe("the journey's public surface", () => {
     expect(violations.sort()).toEqual([]);
   });
 
-  test("the barrel offers the hook and the types its consumers name, and nothing else", async () => {
+  test("the barrel offers the hook and the vocabulary a page composes, and nothing else", async () => {
     const barrel = await import("./index");
     const types = [
       ...readFileSync(join(CAPABILITY, "index.ts"), "utf8").matchAll(/export type \{([^}]+)\}/g),
     ].flatMap((m) => m[1].split(",").map((name) => name.trim()).filter(Boolean));
 
     expect(Object.keys(barrel).sort()).toEqual(["useJourney"]);
-    expect(types.sort()).toEqual(
-      [
-        "JourneyPhase",
-        "JourneyRead",
-        "JourneyGateway",
-        "JourneyState",
-        "ProfileOutcome",
-      ].sort(),
-    );
+    // The port and the wire state are the capability's own: a page names the
+    // phase it composes, never how the phase is fetched.
+    expect(types.sort()).toEqual(["JourneyPhase", "JourneyRead", "ProfileOutcome"].sort());
   });
 });
 
