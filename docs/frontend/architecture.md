@@ -2,50 +2,56 @@
 
 > **Status:** Active.
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)) — the outer architecture it states is a rule, not a report of the current tree.
-> **Authority:** The authoritative source for the frontend's **outer architecture** — the feature-sliced layout (`app/` · `modules/` · `shared/`), the dependency boundaries between those zones, the module contract, the composition root, and the thin platform utilities no other document owns — and for the **capability structure**, the one internal organisation every capability shares. It owns the **structure between subsystems** and the layers a capability is organised in, not any subsystem's mechanism: each platform subsystem's mechanism is owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
+> **Authority:** The authoritative source for the frontend's **outer architecture** — the four zones (`app/` · `pages/` · `features/` · `shared/`), the dependency boundaries between them, the page-group contract, the composition root, and the thin platform utilities no other document owns — and for the **capability structure**, the one internal organisation every capability shares. It owns the **structure between subsystems** and the layers a capability is organised in, not any subsystem's mechanism: each platform subsystem's mechanism is owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, where features meet the platform, and how each capability inside them is organised.
 > **Maturity:** This document describes the **intended and settled** architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The capability structure was written once authentication, recovery, the session and channel verification had been built in two different shapes, and reconciles them ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
-> **Superseded in part:** the **outer architecture** this document states — the three zones, the dependency rule, and the module contract — is superseded by [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md), which decides four zones (`app` · `pages` · `features` · `shared`) and moves the route-subtree rule from the feature to the page group. **Where this document and that ADR disagree, the ADR governs.** What is written below describes the architecture the code was built to, not the one it is moving to; it is restated in its new operative form as the structure lands ([ADR 0012](../architecture/decisions/0012-foundation-contract-independent-of-consumer-adoption.md) Decision 5). The composition root, the platform index, the thin-utility rule and the capability structure are unaffected; the last is written to the four zones.
-> **Version:** 2.3
-> **Last Updated:** 2026-09-12
+> **Version:** 3.0
+> **Last Updated:** 2026-09-15
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
 
 The frontend is divided so that **things that change together live together, and things that change for different reasons cannot reach into each other**. Product features churn with product decisions; the platform evolves slowly behind stable surfaces; assembly changes only when the application's composition changes. Giving each kind of change its own zone — with dependencies allowed in only one direction — bounds the blast radius of every change: a feature can be added, reworked, or removed without touching its neighbors, the platform can evolve without knowing who consumes it, and all wiring is absorbed by a single place instead of leaking everywhere.
 
-## The shape: three zones
+## The shape: four zones
 
-The frontend is **feature-sliced** into three zones with distinct roles:
+The frontend is divided into four zones with distinct roles ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 1):
 
-- **`app/` — the composition root.** The only place where the application is assembled: the store is composed, shared infrastructure is wired to app-layer dependencies, and the router mounts the features. It holds no business logic and no UI beyond the app shell.
-- **`modules/` — the feature slices.** One self-contained folder per product feature (currently `auth`). A feature owns its own pages, components, state, and domain logic, and **composes** platform subsystems rather than re-implementing them.
-- **`shared/` — the platform.** Domain-agnostic subsystems every feature may use (transport, errors, forms, design system, data layer) plus a few thin utilities. The platform has **zero knowledge of any feature**.
+- **`app/` — the composition root.** The only place where the application is assembled: the store is composed, shared infrastructure is wired to app-layer dependencies, and the router mounts the route subtrees. It holds no business logic and no UI beyond the app shell.
+- **`pages/` — the composition.** One folder per **page group**: a URL subtree with the layout its routes share. A page group arranges capabilities, holds the route and the layout, and owns the loading, error and empty states of the arrangement. It is the only zone permitted to import several features, and it owns no fact.
+- **`features/` — the capabilities.** One folder per capability: a fact and the operations on it. A feature owns no route, no layout and no other feature, and it may legitimately have no UI at all.
+- **`shared/` — the platform.** Mechanisms and vocabulary no single feature owns — transport, errors, forms, the design system, the query cache — plus the platform capabilities that meet [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6, product content, cross-tier definitions, and a few thin utilities. `shared/` may know the product's nouns and its words; it may never know a **feature**.
 
 The whole document in one line:
 
 ```text
-app assembles  ·  modules compose  ·  shared provides
+app assembles  ·  pages compose  ·  features own  ·  shared provides
 ```
-
-`app` wires the pieces together, `modules` build features *out of* platform pieces, and `shared` supplies those pieces while knowing nothing about who uses them.
 
 ## The dependency rule
 
 Dependencies point in **one direction**:
 
 ```text
-app  →  modules  →  shared
+app  →  pages  →  features  →  shared
 ```
 
-- **`shared/` imports nothing** from `modules/` or `app/` — the platform never depends on a feature or on the application that hosts it.
-- **`modules/` import `shared/`**, never `app/`, and **never each other** — cross-feature needs are met by promoting the shared piece to the platform, not by coupling two features.
-- **`app/` may import both** — composing features and platform is precisely its job.
+Each zone may import the zones below it and never a zone above.
 
-Two mechanisms carry the boundaries:
+- **`shared/` imports nothing** from `features/`, `pages/` or `app/` — the platform never depends on a feature, on a composition, or on the application that hosts it.
+- **`features/` import `shared/`**, never `pages/` or `app/`.
+- **`pages/` import `features/` and `shared/`**, never `app/`. A page may not reach transport directly and may not own state.
+- **`app/` may import all three** — composing them is precisely its job.
 
-- **Path aliases** — `@app/*`, `@modules/*`, `@shared/*` — declare an import's zone explicitly at the call site.
-- **Designated public barrels** — a module or platform subsystem is consumed only through its **designated public barrels**: its root `index.ts`, plus any sub-barrel it deliberately exposes (e.g. a module's `hooks/`). Anything not exported through a designated barrel is private.
+**A slice never imports a sibling in its own zone**: one feature never imports another, and one page group never imports another. **The rule does not reach `shared/`**, which is divided by mechanism rather than by domain, so its parts compose one another freely; what bounds them is the direction above ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 1, as revised).
+
+**Story files are exempt from the zone direction** — a story renders a thing in the composition a reader actually meets, and that composition is a page (Decision 9). Production code is not exempt.
+
+Three mechanisms carry the boundaries:
+
+- **Path aliases** — `@app/*`, `@pages/*`, `@features/*`, `@shared/*` — declare an import's zone explicitly at the call site.
+- **The root barrel** — a capability or page group is consumed only through its root `index.ts`. Anything not exported there is private.
+- **Checks rather than review** — the direction, the sibling rule and a page's transport boundary are held by `apps/web/src/zones.test.ts`, and each capability and page group holds its own rules in its `boundary.test.ts`.
 
 Where shared infrastructure genuinely needs app-layer knowledge (the auth client needs the store's token), the dependency is **inverted** rather than allowed to point backwards: the platform exposes a setup seam and the composition root injects the dependency (the mechanism is the [frontend API client](api-client.md)'s). This layout is the frontend application of the layering, acyclicity, and platform-vs-feature principles ([Engineering Principles §3](../development/engineering-principles.md)).
 
@@ -58,25 +64,26 @@ These rules are the **intended architecture**. An import that violates them is a
 Assembly happens once, at the edge, in a fixed order:
 
 1. **Bootstrap** — before anything renders, the entry point runs the bootstrap step, which wires shared infrastructure to app-layer dependencies (injecting the token getter and session callbacks into the auth client — the inversion described above).
-2. **Providers** — one component nests every provider the application mounts, so the entry point holds a single child and the nesting order lives in one place rather than at the edge. The composed Redux store is among them, itself a composition: each feature contributes its slice, and the shared data layer contributes its API slice and middleware, under one store.
-3. **The app shell** — the router mounts feature pages under their routes, and starts session restore without gating first render on it (a hook the auth feature provides).
+2. **Providers** — one component nests every provider the application mounts, so the entry point holds a single child and the nesting order lives in one place rather than at the edge. The composed Redux store is among them, itself a composition: each capability that owns state contributes its slice — a feature's or the platform's, since the platform may own one ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) — and the shared data layer contributes its API slice and middleware, under one store.
+3. **The app shell** — the router mounts each page group's route subtree, and starts session restore without gating first render on it (a hook the platform's session provides).
 
 The design system's foundations (tokens and themes) are loaded once at the entry as a side effect, so every feature renders against the same visual base. **Which** theme, and the direction the document reads in, are settled before any of that: both are resolved by the Design System and *selected* by the application ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 4), and the selection is stamped on the document from the markup, ahead of the first paint, because a module cannot run early enough to avoid a flash.
 
 The composition root is deliberately **thin**: it wires and constructs the dependencies it injects, but implements no feature behavior of its own. Any logic found in `app/` beyond assembly is misplaced.
 
-## The module contract (outer)
+## The page-group contract (outer)
 
-The contract exists to **protect a feature's independence and hide its internals**: because nothing outside a module can see past its barrel, no other code can couple to how the feature is built — which keeps every feature independently developable, reworkable, and removable, and is precisely what leaves its internals free to evolve within the [capability structure](#the-capability-structure).
+**A page group publishes a route subtree; a capability publishes none** ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 2). The rule sits on the thing that owns routes, so a capability that owns none — liking, following, editing a profile — is not pushed out of the zone by the wording.
 
-What a feature module promises the rest of the application:
+What a page group promises the rest of the application:
 
-- It is a **self-contained folder** under `modules/` — everything feature-specific lives inside it.
-- Its **designated public barrels are its only public surface** — currently the root barrel (the feature's **route subtree** and its store slice) and the `hooks/` sub-barrel (the flow and session hooks the app shell consumes). Everything else is private. A feature exposing its screens one by one would let the composition root learn which screens exist and what they are called; exposing the subtree instead means the composition root decides **whether and where** a feature is mounted while the feature keeps **what is inside it**, and a new screen never widens the surface.
-- It **composes the platform** — forms through the form engine, controls through the design system, requests through the transport layer — and never re-implements a platform concern.
-- It depends **only downward** (on `shared/`), never on another feature or on `app/`.
+- It is a **self-contained folder** under `pages/` — everything the composition owns lives inside it.
+- Its **root barrel is its only public surface**, and what it offers is the **route subtree**. A group exposing its screens one by one would let the composition root learn which screens exist and what they are called; exposing the subtree instead means the composition root decides **whether and where** the group is mounted while the group keeps **what is inside it**, and a new screen never widens the surface.
+- It **composes capabilities** and holds none of their logic, reaching each only through its root barrel.
+- It **owns no fact**: it may not reach transport directly, and it may not own state.
+- A group is a **routing and layout unit, never a domain claim**. One may hold routes with opposite access modes, so an access guard belongs visibly at each route and is never inherited from the group.
 
-**Inside, a feature is organised by the [capability structure](#the-capability-structure)**, which follows.
+What a capability promises is the [capability structure](#the-capability-structure), which follows — and it applies to a page group only in spirit: a group is organised for the same reasons, but the layers below are a capability's.
 
 ## The capability structure
 
@@ -102,7 +109,7 @@ It does not govern the platform's **mechanisms** — the design system, the form
 
 ### The rules
 
-- **The root barrel is the only way in.** Nothing outside a capability imports past its `index.ts`, and nothing inside it imports itself through its own alias. A capability exposes no second barrel; this replaces the sub-barrel allowed above.
+- **The root barrel is the only way in.** Nothing outside a capability imports past its `index.ts`, and nothing inside it imports itself through its own alias. A capability exposes no second barrel.
 - **Each layer carries its own `index.ts`.** It declares what the layer offers the rest of the capability: a file reaches another layer through that barrel, and a sibling in its own layer directly. A layer barrel is internal — nothing outside the capability imports one, so it is not a second way in.
 - **Dependencies inside a capability run downward.** `screens` use `hooks`; `hooks` use `services`, `forms`, `store` and `gateway`; `services` use `store` and `gateway`; every layer may use `model`. Nothing imports a layer that uses it.
 - **A screen presents.** It renders what its hooks return and calls what they expose. It composes no gateway, runs no orchestration, and holds no rule the server also states ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 6); a route or a step that belongs to someone else reaches it from the page that mounts it (Decisions 2 and 4).
@@ -114,17 +121,24 @@ The rules above state the target. Which capabilities do not yet meet them is the
 
 ## The platform index
 
-Each platform subsystem is owned by its own document — this index is the map, not the content:
+`shared/` admits four kinds of thing, and nothing that is a feature's ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 5): **platform mechanisms**, **platform capabilities** that meet [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6, **cross-tier deterministic definitions**, and **product content**. Each is owned by its own document where it has one — this index is the map, not the content:
 
-| Subsystem (`shared/…`) | What it is | Owning document |
-|---|---|---|
-| `api/` + `rtk-query/` (transport) | how requests leave the frontend | [Frontend API Client](api-client.md) |
-| `errors/` | the error-normalization pipeline | [Frontend Error Handling](error-handling.md) |
-| `schema-form/` | the schema-driven form engine | [Frontend Forms](forms.md) |
-| `design-system/` | tokens, theming, component conventions | [Frontend Design System](design-system/README.md) |
-| `preferences/` | which resolution of the design language is active — theme selection and the document's direction | this document, until it has a stable core |
-| `session/` | the session — who is signed in, with what token, whether that is settled, and its restore, refresh and ending ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) | [Frontend API Client](api-client.md) for the token's residence; the lifecycle awaits its own document |
-| `rtk-query/` (cache/data layer) | the RTK Query cache and data layer | the frontend state-and-data document *(deferred until the data layer matures)* |
+| `shared/…` | Kind | What it is | Owning document |
+|---|---|---|---|
+| `api/` | mechanism | how a request leaves the frontend | [Frontend API Client](api-client.md) |
+| `rtk-query/` | mechanism | the second transport, and the cache built on it | [Frontend API Client](api-client.md) for the transport; the frontend state-and-data document *(deferred)* for the cache |
+| `errors/` | mechanism | the error-normalization pipeline | [Frontend Error Handling](error-handling.md) |
+| `schema-form/` | mechanism | the schema-driven form engine | [Frontend Forms](forms.md) |
+| `design-system/` | mechanism | tokens, theming, component conventions | [Frontend Design System](design-system/README.md) |
+| `routing/` | mechanism | the navigating element the Design System takes, and what a destination carries with it | this document, until it has a stable core |
+| `one-time-code/` | mechanism | how a typed code is normalised before anything reads it | this document, until it has a stable core |
+| `preferences/` | mechanism | which resolution of the design language is active — theme selection and the document's direction | this document, until it has a stable core |
+| `session/` | capability | who is signed in, with what token, whether that is settled, and its restore, refresh and ending ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) | [Frontend API Client](api-client.md) for the token's residence; the lifecycle awaits its own document |
+| `channel-verification/` | capability | proof of control over a communication channel, on this tier ([ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md)) | [Channel Verification](../backend/channel-verification.md) owns the subsystem; the client half awaits its own document |
+| `validation/` | cross-tier definition | rules the server also states, mirrored here and reconciled by hand | this document, until it has a stable core |
+| `copy/` | product content | user-facing text addressed by key, namespaced by surface, and never imported outward by a platform capability | this document, until it has a stable core |
+
+**Content and definitions are not mechanisms**, and the distinction is the ADR's: one is data the server also states, the other is words a reader meets, and only the second is translated.
 
 ### Thin utilities (owned here)
 
@@ -146,4 +160,4 @@ This document describes the **intended** structure; the code remains the source 
 
 ---
 
-> This document owns the frontend's outer architecture — the zones, their boundaries, the module contract, the composition root, and the thin utilities — and the capability structure every capability shares. Each platform subsystem's mechanism is owned by its document (see the platform index), per-feature behavior by the feature documents, the topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the principles by [Engineering Principles §3](../development/engineering-principles.md) — linked here, never duplicated. Current deviations from the intended structure are recorded in the [findings register](../architecture/findings/).
+> This document owns the frontend's outer architecture — the four zones, their boundaries, the page-group contract, the composition root, and the thin utilities — and the capability structure every capability shares. Each platform subsystem's mechanism is owned by its document (see the platform index), per-feature behavior by the feature documents, the topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the principles by [Engineering Principles §3](../development/engineering-principles.md) — linked here, never duplicated. Current deviations from the intended structure are recorded in the [findings register](../architecture/findings/).
