@@ -27,3 +27,46 @@ export const journeyAdvancesTo = (phase: string, profileOutcome: string | null =
 /** A read left open, so the screen stays on the state it shows while waiting. */
 export const journeyNeverAnswers = () =>
   http.get(JOURNEY, () => new Promise<never>(() => {}));
+
+/**
+ * A move that keeps what it was sent. What a capability carries to the server
+ * is its own behaviour, and the wire is where that is observable — a double
+ * would only report what the caller handed it.
+ */
+export const recordingMoves = (phase = "profile", profileOutcome: string | null = null) => {
+  const moves: unknown[] = [];
+
+  return {
+    moves,
+    handler: http.post(ADVANCE, async ({ request }) => {
+      moves.push(await request.json());
+      return HttpResponse.json({ success: true, data: { phase, profileOutcome } });
+    }),
+  };
+};
+
+/** A move left open, so a caller that does not wait for it can be seen not to. */
+export const moveNeverAnswers = () =>
+  http.post(ADVANCE, () => new Promise<never>(() => {}));
+
+export const moveRefuses = (status = 400) =>
+  http.post(ADVANCE, () => new HttpResponse(null, { status }));
+
+/** Counts the reads that actually reached the network, which is what "asked
+ *  once" means: a double counts calls, and this counts requests. */
+export const countingReads = () => {
+  const seen: string[] = [];
+
+  return {
+    get count() {
+      return seen.length;
+    },
+    handler: http.get(JOURNEY, ({ request }) => {
+      seen.push(request.url);
+      return HttpResponse.json({
+        success: true,
+        data: { phase: "profile", profileOutcome: null },
+      });
+    }),
+  };
+};

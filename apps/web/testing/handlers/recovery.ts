@@ -74,3 +74,37 @@ export const recoveryApplyRefuses = (status = 400, type = "bad_request") =>
 
 export const recoveryApplyNeverAnswers = () =>
   http.post(APPLY, () => new Promise<never>(() => {}));
+
+/**
+ * Counts the reads that actually reached the network, and answers with whatever
+ * the position is *now* — so a test can show that a step is taken from a fresh
+ * read rather than assumed from an earlier call succeeding.
+ */
+export const countingPositions = (now: () => Position = () => ({})) => {
+  const seen: string[] = [];
+
+  return {
+    get count() {
+      return seen.length;
+    },
+    handler: http.get(SESSION, ({ request }) => {
+      seen.push(request.url);
+      return answering(now());
+    }),
+  };
+};
+
+export const countingConfirms = (onConfirm: () => void = () => {}) => {
+  const seen: string[] = [];
+
+  return {
+    get count() {
+      return seen.length;
+    },
+    handler: http.post(CONFIRM, ({ request }) => {
+      seen.push(request.url);
+      onConfirm();
+      return HttpResponse.json({ success: true, data: null });
+    }),
+  };
+};

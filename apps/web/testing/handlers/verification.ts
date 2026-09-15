@@ -17,6 +17,11 @@ export const verificationIs = (
     HttpResponse.json({ success: true, data: { status, resendAvailableInSeconds } }),
   );
 
+/** A read that failed. The screen stays usable: a code can still be typed and
+ *  a resend still offered, because neither depends on knowing the window. */
+export const verificationReadRefuses = (status = 400) =>
+  http.get(CURRENT, () => new HttpResponse(null, { status }));
+
 export const verificationIssues = (resendAvailableInSeconds = 60) =>
   http.post(ISSUE, () =>
     HttpResponse.json({
