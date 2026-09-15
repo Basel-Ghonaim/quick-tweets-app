@@ -163,4 +163,26 @@ describe("the frontend zones", () => {
 
     expect(violations.sort()).toEqual([]);
   });
+
+  /**
+   * Test support lives outside `src` and is reached by an alias of its own, so
+   * it belongs to no zone and the direction above says nothing about it. This
+   * says the thing the direction cannot: production never imports it. Without
+   * that, a stray import puts the interception library in the bundle, which is
+   * the inverse of the rule the lanes were rebuilt to honour.
+   */
+  const isTestArtifact = (file: string) => /\.(test|spec)\.tsx?$|\.stories\.tsx$/.test(file);
+
+  test("production never reaches the test support", () => {
+    const production = sources.filter((file) => !isTestArtifact(file));
+    expect(production.length).toBeGreaterThan(250);
+
+    const violations = production.flatMap((file) =>
+      specifiersIn(file)
+        .filter((s) => s === "@testing" || s.startsWith("@testing/"))
+        .map((s) => `${label(file)} — ${s}`),
+    );
+
+    expect(violations.sort()).toEqual([]);
+  });
 });
