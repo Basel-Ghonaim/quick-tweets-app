@@ -3,44 +3,40 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
-import { createAppError } from "@shared/errors";
 import { AUTH_COPY } from "@shared/copy";
 import { sessionReducer } from "@shared/session";
+import { server } from "@testing/server";
+import {
+  recoveryPositionIs,
+  recoveryPositionRefuses,
+  recoveryRequests,
+} from "@testing/handlers/recovery";
 import { Recovery } from "./Recovery";
-import type { RecoveryPosition } from "../model";
-import type { RecoveryGateway } from "../gateway";
 
-const at = (over: Partial<RecoveryPosition> = {}): RecoveryPosition => ({
-  step: "code",
-  maskedAddress: "h•••••@example.test",
-  resendAvailableIn: 0,
+/** The steps a reader can stand on, as the server reports them. */
+const AT_REQUEST = { step: "request" as const };
+const AT_CODE = {
+  step: "code" as const,
+  maskedEndpoint: "h•••••@example.test",
   canResend: true,
-  ...over,
-});
-
-const gatewayOf = (over: Partial<RecoveryGateway> = {}): RecoveryGateway => ({
-  position: async () => at(),
-  request: async () => at(),
-  resend: async () => at(),
-  confirm: async () => {},
-  apply: async () => {},
-  ...over,
-});
+};
+const AT_PASSWORD = { step: "password" as const };
 
 /* The flow dispatches on a completed reset and its links read the search
    params, so a store and a router are what this screen needs to mount. */
-const mount = (repo: RecoveryGateway) =>
+const mount = () =>
   render(
     <Provider store={configureStore({ reducer: { session: sessionReducer } })}>
       <MemoryRouter initialEntries={["/auth/recovery"]}>
-        <Recovery repo={repo} />
+        <Recovery />
       </MemoryRouter>
     </Provider>,
   );
 
 describe("the step chooses the screen", () => {
   it("renders the step the position reports, not the one the client assumes", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "request" }) }));
+    server.use(recoveryPositionIs(AT_REQUEST));
+    mount();
 
     expect(
       await screen.findByRole("heading", { name: AUTH_COPY.recovery.requestTitle }),
@@ -50,13 +46,8 @@ describe("the step chooses the screen", () => {
 
 describe("a failed read offers a retry", () => {
   it("says the recovery is unavailable and offers a retry, never the first screen", async () => {
-    mount(
-      gatewayOf({
-        position: async () => {
-          throw createAppError("network", "offline");
-        },
-      }),
-    );
+    server.use(recoveryPositionRefuses());
+    mount();
 
     expect(await screen.findByText(AUTH_COPY.recovery.unavailable)).toBeTruthy();
     expect(screen.getByRole("button", { name: AUTH_COPY.recovery.retry })).toBeTruthy();
@@ -75,9 +66,15 @@ const typeAddress = async (scope: ReturnType<typeof within>, typed: string) => {
   fireEvent.click(scope.getByRole("button", { name: AUTH_COPY.recovery.send }));
 };
 
+/** The address step, where asking moves the reader on to the code. */
+const askingMovesOn = () => {
+  server.use(recoveryPositionIs(AT_REQUEST), recoveryRequests(AT_CODE));
+};
+
 describe("a reload keeps the place", () => {
   it("lands on the step the server reports, with the mask it gave", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "code" }) }));
+    server.use(recoveryPositionIs(AT_CODE));
+    mount();
 
     await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
     // The address the reader sees is the server's mask, never what they typed.
@@ -87,7 +84,8 @@ describe("a reload keeps the place", () => {
 
 describe("a reload at the password step can still finish", () => {
   it("offers the reset rather than only showing it", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "password" }) }));
+    server.use(recoveryPositionIs(AT_PASSWORD));
+    mount();
 
     await screen.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle });
     const submit = screen.getByRole("button", { name: AUTH_COPY.recovery.submitPassword });
@@ -98,10 +96,8 @@ describe("a reload at the password step can still finish", () => {
 describe("neither address is echoed back", () => {
   it("renders alike for two different addresses, because the mask is the server's", async () => {
     const shown = async (typed: string) => {
-      const { container, unmount } = mount(gatewayOf({
-        position: async () => at({ step: "request" }),
-        request: async () => at({ step: "code" }),
-      }));
+      askingMovesOn();
+      const { container, unmount } = mount();
       const scope = within(container);
 
       await typeAddress(scope, typed);
@@ -118,10 +114,8 @@ describe("neither address is echoed back", () => {
 
 describe("the confirmation says nothing about the account", () => {
   it("announces politely, and without saying whether an account holds the address", async () => {
-    const { container } = mount(gatewayOf({
-        position: async () => at({ step: "request" }),
-        request: async () => at({ step: "code" }),
-      }));
+    askingMovesOn();
+    const { container } = mount();
 
     await typeAddress(within(container), "someone@example.test");
 
@@ -133,7 +127,8 @@ describe("the confirmation says nothing about the account", () => {
 
 describe("the resend window is the server's own", () => {
   it("offers no resend while the window it reported is open", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "code", resendAvailableIn: 42 }) }));
+    server.use(recoveryPositionIs({ ...AT_CODE, retryAfterSeconds: 42 }));
+    mount();
 
     const resend = await screen.findByRole("button", {
       name: AUTH_COPY.recovery.resendIn(42),
@@ -144,7 +139,8 @@ describe("the resend window is the server's own", () => {
 
 describe("a spent bound still has a way out", () => {
   it("says the bound is spent in text, and leaves the way out usable", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "code", canResend: false }) }));
+    server.use(recoveryPositionIs({ ...AT_CODE, canResend: false }));
+    mount();
 
     expect(await screen.findByText(AUTH_COPY.recovery.resendSpent)).not.toBeNull();
     const out = screen.getByRole("button", { name: AUTH_COPY.recovery.startOver });
@@ -156,7 +152,8 @@ describe("a spent bound still has a way out", () => {
 
 describe("a mistyped address can be corrected", () => {
   it("returns to the address form without throwing the attempt away", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "code" }) }));
+    server.use(recoveryPositionIs(AT_CODE));
+    mount();
 
     await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
     fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
@@ -168,10 +165,8 @@ describe("a mistyped address can be corrected", () => {
 
 describe("the address comes back when correcting", () => {
   it("costs one character to fix rather than the whole address", async () => {
-    const { container } = mount(gatewayOf({
-        position: async () => at({ step: "request" }),
-        request: async () => at({ step: "code" }),
-      }));
+    askingMovesOn();
+    const { container } = mount();
     const typed = "holder@example.test";
 
     await typeAddress(within(container), typed);
@@ -186,10 +181,8 @@ describe("the address comes back when correcting", () => {
 
 describe("a corrected address returns to the code", () => {
   it("abandons the attempt rather than moving a step, and the server says where", async () => {
-    const { container } = mount(gatewayOf({
-        position: async () => at({ step: "request" }),
-        request: async () => at({ step: "code" }),
-      }));
+    askingMovesOn();
+    const { container } = mount();
 
     await typeAddress(within(container), "holder@example.test");
     await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
@@ -206,7 +199,8 @@ describe("a corrected address returns to the code", () => {
 
 describe("every step can be left", () => {
   it("offers a link out, because sign in has an address of its own", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "code" }) }));
+    server.use(recoveryPositionIs(AT_CODE));
+    mount();
 
     await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
     expect(
@@ -217,7 +211,8 @@ describe("every step can be left", () => {
 
 describe("the password step can be left but not restarted", () => {
   it("keeps the way out and offers no way back to the address", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "password" }) }));
+    server.use(recoveryPositionIs(AT_PASSWORD));
+    mount();
 
     await screen.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle });
     expect(screen.getByRole("link", { name: AUTH_COPY.recovery.backToLogin })).not.toBeNull();
@@ -227,7 +222,8 @@ describe("the password step can be left but not restarted", () => {
 
 describe("the password step shows no address", () => {
   it("holds no mask, because the mask belongs to the step that asks for a code", async () => {
-    mount(gatewayOf({ position: async () => at({ step: "password" }) }));
+    server.use(recoveryPositionIs(AT_PASSWORD));
+    mount();
 
     await screen.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle });
     expect(screen.queryByText(/•/)).toBeNull();

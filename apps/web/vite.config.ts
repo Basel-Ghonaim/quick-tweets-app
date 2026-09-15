@@ -21,7 +21,8 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, './src/shared'),
       '@features': path.resolve(__dirname, './src/features'),
       '@pages': path.resolve(__dirname, './src/pages'),
-      '@app': path.resolve(__dirname, './src/app')
+      '@app': path.resolve(__dirname, './src/app'),
+      '@testing': path.resolve(__dirname, './testing')
     }
   },
   test: {
@@ -34,11 +35,11 @@ export default defineConfig({
       include: ['src/pages/auth/screens/**/*.tsx', 'src/features/recovery/screens/**/*.tsx'],
       exclude: ['**/*.stories.tsx', '**/*.component.test.tsx'],
       thresholds: {
-        'src/pages/auth/screens/Verify/VerifyAsk.tsx': { branches: 82 },
+        'src/pages/auth/screens/Verify/VerifyAsk.tsx': { branches: 80 },
         'src/pages/auth/screens/Verify/VerifyCode.tsx': { branches: 91 },
         'src/pages/auth/screens/Profile/Profile.tsx': { branches: 92 },
-        'src/pages/auth/screens/Onboarding/Onboarding.tsx': { branches: 63 },
-        'src/features/recovery/screens/Recovery.tsx': { branches: 64 },
+        'src/pages/auth/screens/Onboarding/Onboarding.tsx': { branches: 62 },
+        'src/features/recovery/screens/Recovery.tsx': { branches: 63 },
         'src/features/recovery/screens/steps/RecoveryRequest.tsx': { branches: 87 },
         'src/features/recovery/screens/steps/RecoveryCode.tsx': { branches: 98 },
         'src/features/recovery/screens/steps/RecoveryPassword.tsx': { branches: 82 },

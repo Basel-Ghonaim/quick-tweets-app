@@ -59,7 +59,7 @@ describe("profile's public surface", () => {
     expect(violations.sort()).toEqual([]);
   });
 
-  test("the barrel offers the hook and its port, and nothing else", () => {
+  test("the barrel offers the hook, and nothing else", () => {
     const barrel = readFileSync(join(CAPABILITY, "index.ts"), "utf8");
     const offered = [...barrel.matchAll(/export (?:type )?\{([^}]+)\}/g)].flatMap((m) =>
       m[1]
@@ -68,7 +68,9 @@ describe("profile's public surface", () => {
         .filter(Boolean),
     );
 
-    expect(offered.sort()).toEqual(["ProfileGateway", "useProfileFlow"]);
+    // One spokesperson: profile publishes a hook and no port, because nothing
+    // outside it has a reason to name how it reaches the server.
+    expect(offered.sort()).toEqual(["useProfileFlow"]);
   });
 });
 

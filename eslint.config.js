@@ -10,7 +10,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 // `**/dist`, not `dist`: build output now sits under apps/*, which a
 // root-relative pattern no longer matches.
-export default defineConfig([globalIgnores(['**/dist', '**/storybook-static']), {
+export default defineConfig([globalIgnores(['**/dist', '**/storybook-static', '**/mockServiceWorker.js']), {
   files: ['**/*.{ts,tsx}'],
   extends: [
     js.configs.recommended,

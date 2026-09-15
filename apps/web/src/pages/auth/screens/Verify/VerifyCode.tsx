@@ -1,6 +1,6 @@
 import { Button, Input, MessageRegion, Typography } from "@shared/design-system";
 import { AUTH_COPY } from "@shared/copy";
-import { useCodeFlow, type VerificationGateway } from "@shared/channel-verification";
+import { useCodeFlow } from "@shared/channel-verification";
 import { VERIFICATION_MESSAGES } from "./messages";
 import { RouteLink } from "@shared/routing";
 import styles from "./Verify.module.css";
@@ -8,10 +8,9 @@ import styles from "./Verify.module.css";
 interface VerifyCodeProps {
   onVerified: () => void;
   onLater: () => void;
-  repo?: VerificationGateway;
 }
 
-export const VerifyCode = ({ onVerified, onLater, repo }: VerifyCodeProps) => {
+export const VerifyCode = ({ onVerified, onLater }: VerifyCodeProps) => {
   const {
     code,
     setCode,
@@ -25,7 +24,6 @@ export const VerifyCode = ({ onVerified, onLater, repo }: VerifyCodeProps) => {
     submit,
   } = useCodeFlow({
     onVerified,
-    repo,
     messages: VERIFICATION_MESSAGES,
     resendReadyMessage: AUTH_COPY.verify.resendReady,
   });

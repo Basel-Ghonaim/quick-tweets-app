@@ -68,7 +68,7 @@ describe("the capability's public surface", () => {
     expect(violations.sort()).toEqual([]);
   });
 
-  test("the barrel offers the two flows, its port and the wording it is given", async () => {
+  test("the barrel offers the two flows and the wording it is given", async () => {
     const barrel = await import("./index");
     const types = [
       ...readFileSync(join(CAPABILITY, "index.ts"), "utf8").matchAll(/export type \{([^}]+)\}/g),
@@ -80,7 +80,8 @@ describe("the capability's public surface", () => {
     );
 
     expect(Object.keys(barrel).sort()).toEqual(["useAskFlow", "useCodeFlow"]);
-    expect(types.sort()).toEqual(["VerificationGateway", "VerificationMessages"]);
+    // The wording is passed in by whoever renders it; the port stays inside.
+    expect(types.sort()).toEqual(["VerificationMessages"]);
   });
 });
 

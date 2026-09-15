@@ -3,10 +3,14 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
-import { createAppError } from "@shared/errors";
 import { AUTH_COPY } from "@shared/copy";
 import { sessionReducer } from "@shared/session";
-import type { ProfileGateway } from "@features/profile";
+import { server } from "@testing/server";
+import {
+  avatarNeverUploads,
+  profileNeverSaves,
+  profileRefuses,
+} from "@testing/handlers/profile";
 import { JourneyLayout } from "../../layout";
 import { stepStates } from "../../services";
 import { Profile } from "./Profile";
@@ -16,11 +20,11 @@ const noop = () => {};
 /* `RouteLink` reads the search params and the flow reads the session, so a
    router and a store are what this screen needs to mount. The layout and the
    stepper around it are the browser lane's business. */
-const mount = (repo?: ProfileGateway) =>
+const mount = () =>
   render(
     <Provider store={configureStore({ reducer: { session: sessionReducer } })}>
       <MemoryRouter initialEntries={["/auth/onboarding"]}>
-        <Profile onSettled={noop} repo={repo} />
+        <Profile onSettled={noop} />
       </MemoryRouter>
     </Provider>,
   );
@@ -35,13 +39,8 @@ const choose = (input: HTMLInputElement, file: File) => {
 
 describe("a server error is announced", () => {
   it("reaches the reader in an alert region, in the wording profile settled on", async () => {
-    const refusal = createAppError("validation", "raw");
-    mount({
-      uploadAvatar: async () => "token",
-      updateProfile: async () => {
-        throw refusal;
-      },
-    });
+    server.use(profileRefuses());
+    mount();
 
     fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.profile.submit }));
 
@@ -58,10 +57,8 @@ describe("a server error is announced", () => {
 
 describe("saving is reported in place", () => {
   it("names the wait on the control that started it", async () => {
-    mount({
-      uploadAvatar: async () => "token",
-      updateProfile: () => new Promise(() => {}),
-    });
+    server.use(profileNeverSaves());
+    mount();
 
     fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.profile.submit }));
 
@@ -85,6 +82,9 @@ describe("skipping issues no request", () => {
 
 describe("choosing a picture starts the upload", () => {
   it("reaches the upload on selection, and says so, without a submit", async () => {
+    // Left in flight: what is asserted is that the upload started, not what it
+    // answered, and an unhandled request would refuse rather than reach a server.
+    server.use(avatarNeverUploads());
     mount();
 
     const input = document.querySelector<HTMLInputElement>("input[type='file']")!;

@@ -12,7 +12,10 @@
       "@shared/*": ["./src/shared/*"],
       "@features/*": ["./src/features/*"],
       "@pages/*": ["./src/pages/*"],
-      "@app/*": ["./src/app/*"]
+      "@app/*": ["./src/app/*"],
+      /* Test support. Outside `src`, so it belongs to no zone and production
+         never reaches it — the lanes do. */
+      "@testing/*": ["./testing/*"]
     },
     "skipLibCheck": true,
 
@@ -32,5 +35,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src", "testing"]
 }

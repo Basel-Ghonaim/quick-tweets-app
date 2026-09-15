@@ -1,5 +1,8 @@
 import type { Preview } from "@storybook/react-vite";
 import { useEffect } from "react";
+import { setupWorker, type SetupWorkerApi } from "msw/browser";
+import type { RequestHandler } from "msw";
+import { setupAuthClient } from "../src/shared/api";
 import {
   DEFAULT_THEME,
   THEME_ATTRIBUTE,
@@ -7,7 +10,47 @@ import {
   type ThemeName,
 } from "../src/shared/design-system";
 
+// What app/bootstrap.ts does for the application, done once for the lane, so
+// this lane answers a given response exactly as the component lane does.
+setupAuthClient(() => null, {
+  refreshToken: async () => {
+    throw new Error("no session to refresh in this lane");
+  },
+  onTokenRefreshed: () => {},
+  onSessionExpired: () => {},
+});
+
+let worker: SetupWorkerApi | undefined;
+let starting: Promise<unknown> | undefined;
+
+/**
+ * A browser loads its own assets, the dev client and its fonts, so refusing
+ * every unhandled request would fail every story. Refuse only the ones that
+ * reach the API: there, an unhandled request is a story that forgot to say what
+ * the server answers, and passing it through would let a real failed request
+ * render a state the story then reports as intended.
+ */
+const refuseOnlyTheApi: Parameters<SetupWorkerApi["start"]>[0] = {
+  quiet: true,
+  onUnhandledRequest(request, print) {
+    if (new URL(request.url).pathname.startsWith("/api/")) print.error();
+  },
+};
+
+const mswLoader = async (context: {
+  parameters: { msw?: { handlers?: RequestHandler[] } };
+}) => {
+  worker ??= setupWorker();
+  starting ??= worker.start(refuseOnlyTheApi);
+  await starting;
+
+  worker.resetHandlers();
+  const handlers = context.parameters.msw?.handlers ?? [];
+  if (handlers.length) worker.use(...handlers);
+};
+
 const preview: Preview = {
+  loaders: [mswLoader],
   parameters: {
     controls: {
       matchers: {

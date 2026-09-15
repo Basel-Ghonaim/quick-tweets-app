@@ -4,13 +4,18 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
 import { ThemeProvider } from "@shared/preferences";
-import { createAppError } from "@shared/errors";
+import {
+  verificationIs,
+  verificationNeverConfirms,
+  verificationNeverIssues,
+  verificationRefusesConfirm,
+  verificationRefusesIssue,
+} from "@testing/handlers/verification";
 import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { stepStates } from "../../services";
-import type { VerificationGateway } from "@shared/channel-verification";
 import { sessionReducer } from "@shared/session";
 import { AUTH_COPY } from "@shared/copy";
 
@@ -62,17 +67,11 @@ const showing = (screen: React.ReactElement) => {
 };
 
 const ASK = <VerifyAsk onSent={noop} onLater={noop} />;
+const CODE = <VerifyCode onVerified={noop} onLater={noop} />;
 
 /* The code screen asks where the holder stands when it mounts, so every story
    of it answers that read rather than letting one reach the network. */
-const standing = (seconds: number): VerificationGateway => ({
-  current: async () => ({
-    status: "pending",
-    resendAvailableAt: seconds > 0 ? Date.now() + seconds * 1000 : null,
-  }),
-  issue: async () => ({ resendAvailableAt: Date.now() + 60_000 }),
-  confirm: async () => {},
-});
+const nothingRunning = verificationIs("pending", 0);
 
 export const Compact: Story = {
   decorators: [showing(ASK)],
@@ -89,18 +88,9 @@ export const Compact: Story = {
    one state on screen so axe evaluates it, and asserts only that the state is
    there — what the state means is the component lane's. */
 
-const refusing = (type: "too_many_requests" | "rate_limit"): VerificationGateway => ({
-  current: async () => ({ status: "pending", resendAvailableAt: null }),
-  issue: async () => {
-    throw createAppError(type, "raw");
-  },
-  confirm: async () => {},
-});
-
 export const TheAskRefused: Story = {
-  decorators: [
-    showing(<VerifyAsk onSent={noop} onLater={noop} repo={refusing("too_many_requests")} />),
-  ],
+  decorators: [showing(ASK)],
+  parameters: { msw: { handlers: [nothingRunning, verificationRefusesIssue()] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -110,19 +100,8 @@ export const TheAskRefused: Story = {
 };
 
 export const TheAskSending: Story = {
-  decorators: [
-    showing(
-      <VerifyAsk
-        onSent={noop}
-        onLater={noop}
-        repo={{
-          current: async () => ({ status: "pending", resendAvailableAt: null }),
-          issue: () => new Promise(() => {}),
-          confirm: async () => {},
-        }}
-      />,
-    ),
-  ],
+  decorators: [showing(ASK)],
+  parameters: { msw: { handlers: [nothingRunning, verificationNeverIssues()] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -132,21 +111,8 @@ export const TheAskSending: Story = {
 };
 
 export const TheCodeRefused: Story = {
-  decorators: [
-    showing(
-      <VerifyCode
-        repo={{
-          current: async () => ({ status: "pending", resendAvailableAt: null }),
-          issue: async () => ({ resendAvailableAt: null }),
-          confirm: async () => {
-            throw createAppError("bad_request", "raw");
-          },
-        }}
-        onVerified={noop}
-        onLater={noop}
-      />,
-    ),
-  ],
+  decorators: [showing(CODE)],
+  parameters: { msw: { handlers: [nothingRunning, verificationRefusesConfirm()] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -157,7 +123,8 @@ export const TheCodeRefused: Story = {
 };
 
 export const TheResendHeld: Story = {
-  decorators: [showing(<VerifyCode repo={standing(60)} onVerified={noop} onLater={noop} />)],
+  decorators: [showing(CODE)],
+  parameters: { msw: { handlers: [verificationIs("pending", 60)] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -166,19 +133,8 @@ export const TheResendHeld: Story = {
 };
 
 export const TheCodeSubmitting: Story = {
-  decorators: [
-    showing(
-      <VerifyCode
-        repo={{
-          current: async () => ({ status: "pending", resendAvailableAt: null }),
-          issue: async () => ({ resendAvailableAt: null }),
-          confirm: () => new Promise(() => {}),
-        }}
-        onVerified={noop}
-        onLater={noop}
-      />,
-    ),
-  ],
+  decorators: [showing(CODE)],
+  parameters: { msw: { handlers: [nothingRunning, verificationNeverConfirms()] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
