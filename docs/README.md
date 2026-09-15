@@ -30,7 +30,7 @@ This is the **map** of the project's documentation — every document, what it o
 - [password-reset.md](backend/password-reset.md) — the Password Reset subsystem: why it publishes nothing, custody of the momentary credential, the request/confirm/apply lifecycle, how the neutral response is achieved and where it is only mitigated, the single-failure discipline, session revocation, the sweep and the startup guard that earns it, and the concurrency invariants.
 
 ### `frontend/` — client platform subsystems
-- [architecture.md](frontend/architecture.md) — the zones, the dependency rule, the composition root, the thin utilities, and the capability structure every feature and platform capability is organised in. Its **outer architecture is superseded by [ADR 0018](architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md)** and is restated in its new form as the structure lands.
+- [architecture.md](frontend/architecture.md) — the four zones, the dependency rule between them, the page-group contract, the composition root, the thin utilities, and the capability structure every feature and platform capability is organised in.
 - [api-client.md](frontend/api-client.md) — the transport layer (Axios + RTK Query base), token attachment, and the refresh flow.
 - [error-handling.md](frontend/error-handling.md) — the `AppError` normalization pipeline.
 - [forms.md](frontend/forms.md) — the schema-driven form engine.
