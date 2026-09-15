@@ -135,7 +135,7 @@ docs/
     security.md                  ← JWT, password hashing, cookies, rate limiting, helmet/CORS mechanisms
 
   frontend/
-    architecture.md              ← feature-sliced layout, module pattern, platform index, thin utilities (storage, hooks, types)
+    architecture.md              ← the four zones, the page-group contract, the capability structure, platform index, thin utilities
     api-client.md                ← Axios clients, interceptors, retry, 401-refresh flow, base config
     state-and-data.md            ← Redux and RTK Query strategy
     error-handling.md            ← AppError normalization pipeline

@@ -2,25 +2,25 @@
 
 > **Status:** Active.
 > **Authority:** The authoritative source for the frontend's **transport layer** — how an HTTP request leaves the frontend and reaches the backend: the transport clients in use, how each is selected, how the access token is attached, and how the refresh cookie participates. It owns the *transport*, not a library. It does **not** own the wire contract (the endpoints, payloads, and error shapes are the [API contract](../api/api-contract.md)'s), the **error-normalization pipeline** (the [frontend error handling](error-handling.md) document), the **RTK Query cache/data layer** (the frontend state-and-data document, deferred), or the **server** side of the token model ([Backend Security](../backend/security.md)).
-> **Scope:** The shared transport mechanisms in `apps/web/src/shared/api/` and `apps/web/src/shared/rtk-query/`. Per-feature data access lives in the feature documents; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
-> **Version:** 1.2
-> **Last Updated:** 2026-09-10
+> **Scope:** The shared transport mechanisms in `apps/web/src/shared/api/` and `apps/web/src/shared/rtk-query/`. Each capability's own calls live in its `gateway/`, not here; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
+> **Version:** 1.3
+> **Last Updated:** 2026-09-15
 > **Owner:** Basel Ghonaim
 
 ## Current transport architecture
 
 The frontend reaches the backend through **two transport stacks**, kept in strictly separate folders:
 
-- **Axios** (`apps/web/src/shared/api/`) — used by the **Authentication** feature, and by the platform capabilities it composes.
-- **RTK Query `fetchBaseQuery`** (`apps/web/src/shared/rtk-query/`) — used by **all other features** (tweets, comments, likes, …).
+- **Axios** (`apps/web/src/shared/api/`) — the clients every capability's gateway reaches the server through today.
+- **RTK Query `fetchBaseQuery`** (`apps/web/src/shared/rtk-query/`) — wired, and serving nothing: `baseApi` injects no endpoints yet.
 
-The selection rule is therefore by feature: Authentication is served by the Axios stack; every newer feature is served by RTK Query. This split — Axios for Authentication, RTK Query for everything else — reflects the **current implementation**, not a permanent architectural constraint. Both attach the same access token and rely on the same `HttpOnly` refresh cookie issued by the backend.
+**A capability's calls to the server live in its own `gateway/`** ([frontend architecture](architecture.md#the-capability-structure)); this layer supplies the clients, the envelope and the interceptors, and holds no capability's endpoints. So there is no selection *rule* to state — every gateway in the tree chooses an Axios client, and the second stack waits for the first consumer that wants a cache. That reflects the **current implementation**, not a permanent architectural constraint. Both attach the same access token and rely on the same `HttpOnly` refresh cookie issued by the backend.
 
 ## How a request leaves the frontend
 
 Whichever stack issues it, an outgoing request carries the **access token** as an `Authorization: Bearer <token>` header when one is present, and targets the backend under `/api/v1`. Every response — success or failure — is funnelled through error normalization so a caller only ever sees one typed `AppError` (the normalization pipeline is owned by the [frontend error handling](error-handling.md) document).
 
-Responsibility transitions by feature: an Authentication call goes through the Axios `authClient`; a feature data request goes through an RTK Query endpoint injected on the shared `baseApi`. **In the current implementation, session renewal happens only through the Axios stack** (below) — because Authentication is still implemented on Axios; the RTK Query stack carries the current token but performs no refresh of its own. This reflects where Authentication currently lives, not a rule that the RTK Query stack must never refresh.
+Every capability reaches the server through its own gateway over one of the three Axios clients below. **Session renewal happens only through the Axios stack** (below), because the session is what renews and its gateway is there; the RTK Query stack carries the current token and performs no refresh of its own. That reflects where the session currently lives, not a rule that the RTK Query stack must never refresh.
 
 ## The Axios stack
 
@@ -54,14 +54,14 @@ When `authClient` receives a `401`, it refreshes **once** and replays: the refre
 
 ### Decoupling (`setupAuthClient`)
 
-`shared/` imports nothing from `app/` or the feature modules. `authClient` exposes `setupAuthClient(getAccessToken, callbacks)`, wired once from `app/bootstrap.ts`, which injects the token getter and the refresh/expiry callbacks. The dependency direction is always `app → shared`, never the reverse — the dependency-inversion principle ([Engineering Principles §2, §3](../development/engineering-principles.md)).
+`shared/` imports nothing from `app/`, `pages/` or `features/`. `authClient` exposes `setupAuthClient(getAccessToken, callbacks)`, wired once from `app/bootstrap.ts`, which injects the token getter and the refresh/expiry callbacks. The dependency direction is always `app → shared`, never the reverse — the dependency-inversion principle ([Engineering Principles §2, §3](../development/engineering-principles.md)).
 
 ## The RTK Query stack (transport)
 
-Feature requests go through `fetchBaseQuery`, wrapped by `unifiedBaseQuery`:
+When a consumer arrives, its requests go through `fetchBaseQuery`, wrapped by `unifiedBaseQuery`:
 
-- **Token attachment** — `prepareHeaders` reads the access token from the auth slice and sets the `Authorization` header. State is read inline (not via a typed `RootState` import) to avoid a store ↔ `baseApi` cycle; the rule and the cache/data layer it protects are owned by the state-and-data document (deferred).
-- **No refresh of its own (current implementation)** — this stack neither sends credentials nor performs a `401` refresh; it relies on the access token kept current by the Axios authentication flow. This follows from Authentication currently living on the Axios stack — it is not a permanent constraint on RTK Query.
+- **Token attachment** — `prepareHeaders` reads the access token from the **session**'s slice, through that capability's own selector rather than a guess at the state's shape. The platform reads the session as a peer ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 7); the cache/data layer built on this is the state-and-data document's (deferred).
+- **No refresh of its own (current implementation)** — this stack neither sends credentials nor performs a `401` refresh; it relies on the access token kept current by the session's own refresh over Axios. It is not a permanent constraint on RTK Query.
 - **Normalization** — `unifiedBaseQuery` converts any `fetchBaseQuery` error to an `AppError` before it reaches a hook, so components stay agnostic of the transport (pipeline owned by the [frontend error handling](error-handling.md) document).
 
 The cache/data layer built on top — `createApi`, `injectEndpoints`, tag invalidation, and the generated hooks — is owned by the **state-and-data document** (deferred), not here.

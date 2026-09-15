@@ -39,7 +39,7 @@ Documentation captures the **intended** architecture and the **why**; the **code
 
 ## Documentation architecture
 
-This project has a **constitutional documentation architecture**: a small set of governing documents (the *constitution*) defines how documentation, engineering, and execution work, and all authoritative documentation lives under a single root — `docs/` — organized by responsibility (`project/`, `architecture/` including ADRs in `decisions/` and `findings/`, `api/`, `backend/`, `frontend/`, `features/`, `development/`).
+This project has a **constitutional documentation architecture**: a small set of governing documents (the *constitution*) defines how documentation, engineering, and execution work, and all authoritative documentation lives under a single root — `docs/` — organized by responsibility (`project/`, `architecture/` including ADRs in `decisions/` and `findings/`, `api/`, `backend/`, `frontend/`, `features/`, `development/`, `plans/`).
 
 **Always consult the authoritative document for a topic; never infer intended behavior from repository structure or from a non-authoritative document.** The **Documentation Strategy** is the constitution for documentation — the authority on structure, ownership, and how documentation changes.
 

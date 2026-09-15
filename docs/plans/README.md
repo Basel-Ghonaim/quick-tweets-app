@@ -66,4 +66,4 @@ A new plan is drafted outside the tracked tree — under `.project/`, or whereve
 | [auth-first-grant-retirement.md](auth-first-grant-retirement.md) | Migration | Historical | [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357) |
 | [documentation-migration-plan.md](documentation-migration-plan.md) | Migration | Historical | [#215](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/215) |
 | [frontend-zone-migration.md](frontend-zone-migration.md) | Migration | Historical | [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) |
-| [frontend-capability-structure.md](frontend-capability-structure.md) | Refactoring | Active | [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) |
+| [frontend-capability-structure.md](frontend-capability-structure.md) | Refactoring | Historical | [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) |

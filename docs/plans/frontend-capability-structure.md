@@ -1,13 +1,13 @@
 # Frontend Capability Structure — Execution Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Refactoring
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-14
+> **Last Updated:** 2026-09-15
 > **Parent Issue:** [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678)
 > **Supersedes:** [Frontend Zone Migration](frontend-zone-migration.md)
 
-**Active.** Drafted outside the tracked tree and adopted here in the first branch of its first Work Item, per [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 2. It continues the effort #678 tracks, whose first plan it supersedes. It governs the effort's strategy and sequencing; it governs no Work Item's contents.
+**Historical.** Drafted outside the tracked tree and adopted in the first branch of its first Work Item, per [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 2; it continued the effort #678 tracks, whose first plan it superseded. **Every phase has run**, and the plan is archived and read-only. Two clauses of Phase 5 did not land whole, and that phase says which. Where the durable knowledge landed is §10; what outlives the effort is carried by the Findings and Issues named there, not by this plan. It governed the effort's strategy and sequencing; it governed no Work Item's contents.
 
 ---
 
@@ -100,6 +100,8 @@ How each capability gets there, and the questions in §5 that bear on it, are se
 
 **Objective:** the composition root imports the new zones directly; the legacy zone is retired; the zone direction, the two rules a page must not break, and the capability structure become checks.
 
+**What landed, and what did not.** The cutover landed with #733. The zone direction and the sibling rule became a repository-wide check in #737, and with them a page's transport boundary. **The other two clauses did not land whole, and the plan says so rather than closing over it.** A page *owning state* is not expressible as an import and no check sees it ([Finding 0033](../architecture/findings/0033-a-page-owning-state-is-not-checkable-by-imports.md)). **Capability-structure conformance was excluded by ruling**: telling a capability from a platform mechanism inside `shared/` needs either a hard-coded list, which invariant 5 forbids, or a new convention — a decision, and not one an enforcement Work Item had a mandate to take. Each capability's own rules are held by its `boundary.test.ts`; that its *layers* match the structure is still held by review.
+
 ### Phase 6 — Documentation
 
 **Objective:** the frontend architecture's outer rules are restated to four zones, and the feature documentation follows the capabilities that now exist.
@@ -127,7 +129,7 @@ How each capability gets there, and the questions in §5 that bear on it, are se
 
 **C has since been answered**, on 2026-09-12, and its row stays for the record. Profile wrote its own wording in #713: it maps `validation` and `unauthorized` in its own catalogue words and carries no conflict message, because the screen sends no username and can never cause the `409` that endpoint answers.
 
-**F is recorded and not answered.** It was cited by three of Finding 0030's addenda before it had a row here, which is the defect the row fixes. #733 moved the route table into the page group and left the nine literals where they are: how a screen learns a destination it does not own is a mechanism no ruling has settled, and a restructure is not where one gets invented.
+**F is recorded and not answered**, and it leaves this plan that way. It was cited by three of Finding 0030's addenda before it had a row here, which is the defect the row fixes. #733 moved the route table into the page group and left the nine literals where they are: how a screen learns a destination it does not own is a mechanism no ruling has settled, and a restructure is not where one gets invented. On 2026-09-15 it became [#739](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/739), open on its own terms with no approach adopted — it gated nothing here, and it gates nothing now.
 
 **B has since been answered**, on 2026-09-12, and its row stays for the record. The window is the server's and it is now readable: `GET /channel-verification/challenges/current` answers what remains of it, so the code screen asks on arrival ([#711](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/711)). The sequence is still two lifecycles, and nothing crosses the page between them.
 
@@ -180,4 +182,12 @@ Named so no Work Item has to decide whether they belong:
 
 ## 10 · Reconciliation
 
-*Added as the effort approaches `Historical`: where the durable knowledge landed, which Findings were recorded, and the forward links.*
+**Where the durable knowledge landed.** The **capability structure** is the [frontend architecture](../frontend/architecture.md)'s, recorded in Phase 0 ahead of the work it governs and unchanged by any of it — every capability was brought to the structure rather than the structure to a capability. That document's **outer** rules were restated to four zones in Phase 6, which is what ADR 0018 deferred until the structure landed. The **page-group contract** replaced the module contract there, on the thing that owns routes. Authentication's document narrowed to the capability ADR 0019 left it.
+
+**What became a check rather than a convention.** Each capability and the page group hold their own rules in a `boundary.test.ts`; the zone direction, the sibling rule and a page's transport boundary are held repository-wide by `apps/web/src/zones.test.ts` — the enforcement Phase 5 named, landing once no exemption list was needed. Proof moved with it: the seam that let a test hand a screen its answerer is gone, and both lanes state what the server answers instead.
+
+**Findings recorded along the way.** [0030](../architecture/findings/0030-the-capabilities-predate-the-structure-they-share.md) tracked the six capabilities to conformance across nine addenda and stays open for what outlives the effort. [0031](../architecture/findings/0031-the-proofs-predate-the-topology-they-share.md) did the same for proof. [0032](../architecture/findings/0032-a-check-on-lane-infrastructure-has-no-lane.md), [0033](../architecture/findings/0033-a-page-owning-state-is-not-checkable-by-imports.md) and [0034](../architecture/findings/0034-four-capabilities-are-described-by-a-document-that-does-not-own-them.md) record three things this effort could not close without deciding something it had no mandate to decide.
+
+**Forward links.** Question F is [#739](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/739). Where Media's upload belongs, and where profile lives once a Users capability exists, remain Finding 0030's. Whether each of the four capabilities earns a document is Finding 0034's, and the Stable-Core rule's to answer.
+
+**What this plan never decided, and deliberately.** It owned sequencing, not contents: every architectural question a phase met was ruled in that Work Item's Execution Preparation, and the ones nobody ruled left as questions rather than as answers invented under momentum.
