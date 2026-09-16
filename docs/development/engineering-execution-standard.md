@@ -3,8 +3,8 @@
 > **Status:** Active standard.
 > **Authority:** The authoritative source for **how work is executed** in this repository — work items, the Git lifecycle, commits, scope control, review, and the authority to make decisions. Binding on all contributors, human and AI.
 > **Scope:** Owns *process and execution*. It does **not** own *code design* ([Engineering Principles](engineering-principles.md)) or *documentation governance* ([Documentation Strategy](../architecture/documentation-strategy.md)).
-> **Version:** 1.3
-> **Last Updated:** 2026-09-13
+> **Version:** 1.4
+> **Last Updated:** 2026-09-16
 > **Owner:** Basel Ghonaim
 
 ## How to read this document
@@ -196,7 +196,7 @@ Every action falls into one of three levels:
 | Authority level | Actions |
 |---|---|
 | **AI-autonomous** — no approval needed | Authoring and editing within an agreed Work Item on its branch; self-review; atomic commits; drafting Issue and PR content; **recording a finding** (always allowed); read-only analysis and review. |
-| **Propose → approve** — the AI proposes; a human approves before it takes effect | The Work Item's contract and decomposition (scope + acceptance criteria); an **architectural decision** (an ADR); any **scope change**; creating the **Issue** that represents a substantial Work Item; editing an authoritative document — drafted by the AI, it becomes canonical only on merge. |
+| **Propose → approve** — the AI proposes; a human approves before it takes effect | The Work Item's contract and decomposition (scope + acceptance criteria); an **architectural decision with no natural document owner** (an ADR; see [Documentation Strategy §8](../architecture/documentation-strategy.md) and [ADR 0002](../architecture/decisions/0002-refined-adr-threshold.md)); any **scope change**; creating the **Issue** that represents a substantial Work Item; editing an authoritative document — drafted by the AI, it becomes canonical only on merge. |
 | **Human-only** — only a human may authorize it | Approving the **merge** of a PR, **closing** an Issue, and **deleting** a branch — the decisions that complete a Work Item (§4) and make a change canonical. The AI never authorizes its own merge; whether a human or an automation then *performs* the authorized action does not change who decided it. |
 
 Two rules bind the matrix:
@@ -209,7 +209,7 @@ Two rules bind the matrix:
 Execution surfaces things the Work Item did not plan for — a latent bug, a design flaw, unrelated debt, an ambiguity, an architectural fork. Stop Rules route each one **without expanding the current Work Item**; scope control (§7) forbids absorbing it into this branch. When you discover something outside the Work Item's scope, classify it and route it — do not act on it here:
 
 - **An observation worth recording, but not acting on now** (a latent bug, tech debt, a code-versus-document divergence) → **record a finding** (always allowed, §10) and continue.
-- **A choice with lasting architectural consequence** → **stop and propose an ADR** (propose → approve, §10); do not decide it yourself.
+- **A choice with lasting architectural consequence and no natural document owner** → **stop and propose an ADR** (propose → approve, §10; see [Documentation Strategy §8](../architecture/documentation-strategy.md) and [ADR 0002](../architecture/decisions/0002-refined-adr-threshold.md)); do not decide it yourself. When a natural platform, contract, or feature document owns the choice, capture it and its rationale there without an ADR.
 - **Separable work with its own contract** → **propose a new Work Item** (§2) for it (propose → approve, §10); do not fold it into this branch, and do not start it yourself.
 - **Something that blocks the contract** — you cannot complete the Work Item correctly without resolving it → **stop and escalate**: the Work Item is mis-defined or blocked, and continuing would either break scope or guess at a decision you do not own.
 - **A behavior no testing lane owns** → **stop and raise it** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 8); never place it in the nearest lane that happens to be able to run it. A lane is assigned, and a missing one is a gap to be decided rather than worked around.
@@ -225,7 +225,7 @@ Most Work Items are planned *inside* Execution Preparation (§3) and need no sep
 
 - A **strategy** or **migration plan** — when the work spans many Work Items and needs a shared, durable reference. Persistent execution plans live in [`docs/plans/`](../plans/README.md) and follow the `Draft → Active → Historical` lifecycle defined there.
 - A **blueprint** — when one substantial deliverable must have its **knowledge ownership and boundaries** resolved before authoring: which section owns which fact, and how each overlap with existing documents is settled. Structure follows from that partition. The blueprint is transient — discarded once the deliverable lands.
-- An **ADR** — when a decision carries lasting architectural consequence and must be recorded with its rationale and alternatives.
+- An **ADR** — when a decision carries lasting architectural consequence and either has no natural document owner or must be preserved independently (see [Documentation Strategy §8](../architecture/documentation-strategy.md) and [ADR 0002](../architecture/decisions/0002-refined-adr-threshold.md)).
 - A **finding** — when an observation must persist but is not acted on now (§11).
 
 The *definitions, format, and location* of ADRs and findings are owned by the [Documentation Strategy](../architecture/documentation-strategy.md); this section decides only *when* to reach for one, and documentation-migration phasing remains the strategy's. A planning artifact that is a **document** is then authored as a **Documentation** Work Item (§1); the planning *activity* that decides to create it is not a Work Item and has no branch of its own.
