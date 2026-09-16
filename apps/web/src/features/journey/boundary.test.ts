@@ -80,9 +80,8 @@ describe("what the journey holds", () => {
   test("no interface: no component, no stylesheet, no story", () => {
     expect(capabilityFiles.length).toBeGreaterThan(5);
 
-    /* A test that mounts a hook is `.tsx` and is not an interface. It is the
-       only `.tsx` this capability admits, and it must live here: a hook's
-       double belongs to the capability that owns the dependency. */
+    /* A test that mounts a hook is `.tsx` but is not an interface, so it is
+       the only `.tsx` this capability admits. */
     const ui = capabilityFiles
       .filter((f) => !f.endsWith(".component.test.tsx"))
       .filter((f) => /\.(tsx|module\.css|stories\.tsx)$/.test(f))
