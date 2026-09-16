@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for **running the project locally** — prerequisites, installation, environment, database, and the run/build scripts. It owns *how to run it*, not *how it works*: the architecture is the [system overview](../architecture/system-overview.md)'s and the frontend/backend documents', and the HTTP surface is the [API contract](../api/api-contract.md)'s.
 > **Scope:** Developer environment and scripts for both halves of the monorepo. It documents the current configuration; it does not restate mechanisms owned elsewhere.
-> **Version:** 1.2
-> **Last Updated:** 2026-08-14
+> **Version:** 1.3
+> **Last Updated:** 2026-09-16
 > **Owner:** Basel Ghonaim
 
 ## The monorepo
@@ -40,13 +40,64 @@ cp apps/api/.env.example apps/api/.env
 | Variable | Required | Default | Notes |
 |---|---|---|---|
 | `PORT` | no | `4000` | Backend HTTP port |
-| `NODE_ENV` | no | `development` | `development` \| `production` \| `test` — gates production behaviors (e.g. the `Secure` cookie flag) |
 | `DATABASE_URL` | **yes** | — | PostgreSQL connection string |
 | `JWT_SECRET` | **yes** | — | Access-token signing secret; **at least 16 characters** |
 | `JWT_EXPIRES_IN` | no | `15m` | Access-token lifetime (short-lived by design — see [Backend Security](../backend/security.md)) |
+| `NODE_ENV` | no | `development` | `development` \| `production` \| `test`; gates production behaviors such as secure cookies |
 | `CORS_ORIGIN` | no | `http://localhost:5173` | The single allowed frontend origin |
 
-> [**Outdated** — the in-flight Media work (M4 onward, continuing through M11) introduced backend environment requirements not fully reflected in this table. The authoritative list is the env schema at `apps/api/src/config/env.ts`; the server fails fast at startup and names anything missing. To be reconciled at M12.]
+### Media
+
+| Variable | Required | Default | Notes |
+|---|---|---|---|
+| `UPLOAD_DIR` | no | `./uploads` | Local disk directory for uploaded bytes |
+| `MEDIA_RECLAMATION_MODE` | no | `report` | Use `destructive` only after its deletion gate is met; all other values are safe report-only mode |
+| `RECLAMATION_GRACE_MS` | no | `86400000` | Grace period before reclaiming an unreferenced object (24h) |
+| `RECLAMATION_INTERVAL_MS` | no | `21600000` | Reclamation cadence (6h) |
+| `RECLAMATION_BATCH` | no | `100` | Maximum objects examined per reclamation pass |
+
+### Mail
+
+| Variable | Required | Default | Notes |
+|---|---|---|---|
+| `MAIL_MODE` | no | `inert` | Local default: logs and discards mail, with no SMTP credentials needed. Use `capture` to write full messages to `.mail-capture/` for local inspection. Use `smtp` only with the required SMTP settings below; production must use a deliverable mode. |
+| `SMTP_HOST` | with `MAIL_MODE=smtp` | — | SMTP host; otherwise leave unset |
+| `SMTP_PORT` | no | `587` | SMTP submission port; `587` normally uses STARTTLS |
+| `SMTP_SECURE` | no | `false` | `false` uses STARTTLS; `true` selects implicit TLS, normally on `465` |
+| `SMTP_USER` | with `MAIL_MODE=smtp` | — | SMTP account; otherwise leave unset |
+| `SMTP_PASSWORD` | with `MAIL_MODE=smtp` | — | SMTP password or app password; never commit a real value |
+| `MAIL_FROM` | with `MAIL_MODE=smtp` | — | Sender address, commonly the authenticated identity |
+| `MAIL_SEND_TIMEOUT_MS` | no | `10000` | Per-send timeout in milliseconds |
+| `MAIL_RECIPIENT_CAP` | no | `20` | Per-recipient rolling send cap reserved for account recovery |
+| `MAIL_RECIPIENT_CAP_GENERAL` | no | `15` | Per-recipient rolling cap for other consumers; must remain below `MAIL_RECIPIENT_CAP` |
+| `MAIL_RECIPIENT_CAP_WINDOW_MS` | no | `86400000` | Recipient-cap rolling window (24h) |
+| `MAIL_OUTBOUND_CEILING` | no | `200` | Sender-wide rolling outbound ceiling |
+| `MAIL_OUTBOUND_CEILING_WINDOW_MS` | no | `86400000` | Sender-wide ceiling window (24h) |
+| `MAIL_ATTEMPT_SWEEP_INTERVAL_MS` | no | `21600000` | Mail-attempt cleanup cadence (6h) |
+| `MAIL_ATTEMPT_RETENTION_MS` | no | `604800000` | Mail-attempt retention (7d); cannot be shorter than either mail window |
+
+### Channel Verification
+
+| Variable | Required | Default | Notes |
+|---|---|---|---|
+| `CHANNEL_VERIFICATION_CODE_ALPHABET` | no | `0123456789ABCDEFGHJKMNPQRSTVWXYZ` | Code alphabet; excludes ambiguous letters |
+| `CHANNEL_VERIFICATION_CODE_LENGTH` | no | `12` | Verification-code length |
+| `CHANNEL_VERIFICATION_CHALLENGE_TTL_MS` | no | `900000` | Challenge lifetime (15m) |
+| `CHANNEL_VERIFICATION_RESEND_COOLDOWN_MS` | no | `60000` | Minimum interval between resends (60s) |
+| `CHANNEL_VERIFICATION_SWEEP_INTERVAL_MS` | no | `21600000` | Cleanup cadence (6h) |
+| `CHANNEL_VERIFICATION_CHALLENGE_RETENTION_MS` | no | `604800000` | Closed-challenge retention (7d) |
+
+### Password Reset
+
+| Variable | Required | Default | Notes |
+|---|---|---|---|
+| `RESET_CODE_TTL_MS` | no | `600000` | Reset-code lifetime (10m) |
+| `RESET_RESEND_COOLDOWN_MS` | no | `60000` | Minimum interval between requests for one account (60s); must be shorter than the code lifetime |
+| `RESET_CODE_ALPHABET` | no | `0123456789ABCDEFGHJKMNPQRSTVWXYZ` | Code alphabet; excludes ambiguous letters |
+| `RESET_CODE_LENGTH` | no | `12` | Reset-code length |
+| `RESET_CHALLENGE_SWEEP_INTERVAL_MS` | no | `21600000` | Cleanup cadence (6h) |
+| `RESET_CHALLENGE_RETENTION_MS` | no | `604800000` | Spent or expired challenge retention (7d); cannot be shorter than the resend cooldown |
+| `RESET_MAX_RESENDS` | no | `3` | Maximum resends for one active password-reset challenge |
 
 `apps/api/.env` is gitignored — never commit it.
 
