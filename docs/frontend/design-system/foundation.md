@@ -5,8 +5,8 @@
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.4
-> **Last Updated:** 2026-08-28
+> **Version:** 1.5
+> **Last Updated:** 2026-09-16
 > **Owner:** Basel Ghonaim
 
 ## What the language is for
@@ -17,15 +17,17 @@ The language **precedes its consumers**. A rule here is not made valid by the nu
 
 ## The tiers
 
-Every visual value is a CSS custom property, and every family sits at one of two tiers.
+Every visual value is a CSS custom property, organized across three tiers: **Primitive → Semantic → Component** ([ADR 0010](../../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 3, [ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md) Decisions 4 & 9).
 
 **Primitive** — a curated scale. A step on it has no meaning beyond its position: a palette entry, a spacing step, a type size. Primitives exist so that the values a designer chooses are finite and deliberate.
 
-**Intent** — a named role. It says what a value is *for*, not what it is, and it is the tier a consumer normally binds. A family reaches this tier only by earning it ([ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md)); **a family that earns no intent tier is a result, not a gap**.
+**Semantic** (expressing **Intent**) — a named role. It says what a value is *for*, not what it is (e.g. background, text, border roles), and it is the tier a consumer normally binds. A family reaches this tier only by earning it ([ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md)); **a family that earns no semantic intent tier is a result, not a gap**.
+
+**Component** — component-scoped tokens derived from semantic or primitive tokens, permitted for component-specific overrides or local variants ([ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md) Decision 4).
 
 ### Which tier a consumer binds
 
-Bind the **intent** tier wherever the family has one. That is the whole point of the tier: it survives a change of value, and it is what makes the system re-themeable.
+Bind the **semantic (intent)** tier wherever the family has one. That is the whole point of the tier: it survives a change of value, and it is what makes the system re-themeable.
 
 Bind a **curated scale directly** only where the family carries its tier on the scale itself — where a step *is* the vocabulary and no role could add meaning. Composing internal layout from a spacing scale is the ordinary case; reaching into the palette is not, because colour always has a role.
 
