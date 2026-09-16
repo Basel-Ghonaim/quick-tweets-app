@@ -22,6 +22,7 @@
 |---|---|
 | Tweet responses: `image` removed, superseded by the ordered `media` array | The field was documented as *"Reserved for future use. Always null in v1"* and never had a write path, so it never carried a value anything could depend on. No client reads it — the tweets UI has not been built. |
 | `POST /channel-verification/challenges`: the boolean `delivered` removed, superseded by the three-state `delivery` | The boolean asserted something no sender can promise. A relay's acceptance is not arrival, and a timeout leaves the outcome genuinely undetermined, so the field was **renamed rather than redefined** — a shape that kept its name while losing its meaning is the failure that makes a contract untrustworthy. No client reads it: no frontend calls channel verification. |
+| `AuthorEmbed`, the follower and following list items, and the user profile: `profileImage` removed, superseded by `avatar` | The field was deprecated and always `null` once the avatar became a Media Reference, so it never carried a value anything could depend on. No client reads it: nothing in the frontend references the field. |
 
 ---
 
@@ -134,8 +135,7 @@ interface AuthorEmbed {
   id: number;
   username: string;
   name: string | null;         // optional profile data; when null, presentation falls back to username
-  profileImage: string | null; // DEPRECATED (always null) — author-avatar display migrates
-                               // to the Media Reference model in a later Work Item.
+  avatar: { token: string } | null; // the read token (render via GET /media/:token); null when unset or unservable
 }
 ```
 
@@ -377,10 +377,10 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 > self-service rename (`PATCH /users/me`) changes the handle but never the `id`, so clients key
 > sessions and references on `id`, never on the handle. The authenticated user's full profile is served by the **User** domain,
 > `GET /users/me` — the single canonical current-user resource. (`GET /auth/me` was retired: it
-> returned only User-owned state and duplicated `/users/me`.) The public `GET /users/:username` (and
-> the embedded author shape, [AuthorEmbed](#authorembed)) carry `avatar: { token } | null`, the read
-> token resolved at the boundary from an internal numeric Media Reference; `profileImage` is retained
-> only for backward compatibility (always `null`) and is retired with the author-avatar migration.
+> returned only User-owned state and duplicated `/users/me`.) The public `GET /users/:username`, the
+> embedded author shape ([AuthorEmbed](#authorembed)) and the follow lists' items carry
+> `avatar: { token } | null`, the read token resolved at the boundary from an internal numeric Media
+> Reference.
 
 ---
 
@@ -404,7 +404,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
         "id": 1,
         "username": "basel",
         "name": "Basel",
-        "profileImage": null
+        "avatar": null
       },
       "likesCount": 3,
       "commentsCount": 2,
@@ -460,7 +460,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "id": 5,
     "body": "Hello world!",
     "media": [],
-    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "avatar": null },
     "likesCount": 3,
     "commentsCount": 2,
     "isLiked": true,
@@ -476,7 +476,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "id": 5,
     "body": "Hello world!",
     "media": [],
-    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "avatar": null },
     "likesCount": 3,
     "commentsCount": 2,
     "isLiked": false,
@@ -512,7 +512,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "id": 13,
     "body": "Hello world!",
     "media": [],                // Ordered media attachments — see TweetMediaEmbed.
-    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "avatar": null },
     "likesCount": 0,
     "commentsCount": 0,
     "isLiked": false,
@@ -551,7 +551,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "id": 5,
     "body": "Updated tweet!",
     "media": [],
-    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "avatar": null },
     "likesCount": 3,
     "commentsCount": 2,
     "isLiked": true,
@@ -638,7 +638,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
         "id": 2,
         "username": "ahmed",
         "name": "Ahmed",
-        "profileImage": null
+        "avatar": null
       },
       "tweetId": 5,
       "createdAt": "2026-05-10T12:05:00.000Z"
@@ -687,7 +687,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "id": 8,
     "body": "Nice tweet!",
     "media": { "token": "<token>" },  // the attached file, or null
-    "author": { "id": 1, "username": "basel", "name": "Basel", "profileImage": null },
+    "author": { "id": 1, "username": "basel", "name": "Basel", "avatar": null },
     "tweetId": 5,
     "createdAt": "2026-05-10T14:35:00.000Z"
   }
@@ -726,7 +726,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "id": 1,
     "body": "Updated comment!",
     "media": null,                // the comment's single media file, or null
-    "author": { "id": 2, "username": "ahmed", "name": "Ahmed", "profileImage": null },
+    "author": { "id": 2, "username": "ahmed", "name": "Ahmed", "avatar": null },
     "tweetId": 5,
     "createdAt": "2026-05-10T12:05:00.000Z"
   }
@@ -783,7 +783,6 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "id": 1,
     "username": "basel",
     "name": "Basel",
-    "profileImage": null,                 // DEPRECATED (always null) — superseded by "avatar"
     "avatar": { "token": "Nk3v9qYw1kPz-XG27RODaQ" },  // null when unset; render via GET /media/:token
     "bio": "",
     "tweetsCount": 12,
@@ -804,7 +803,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 ```
 
 **Notes:**
-- `avatar`: `{ token } | null` — the resolved avatar read token (ADR 0008); `profileImage` is retained `null` for backward compatibility and is removed with the #335 tail.
+- `avatar`: `{ token } | null` — the resolved avatar read token (ADR 0008).
 - `tweetsCount`: total tweets authored by this user
 - `likesCount`: total likes received across all their tweets
 - `followersCount` / `followingCount`: computed via `COUNT()` on follows table
@@ -918,7 +917,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
       "id": 2,
       "username": "ahmed",
       "name": "Ahmed",
-      "profileImage": null,
+      "avatar": null,
       "bio": "Developer"
     }
   ],
@@ -949,7 +948,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
       "id": 3,
       "username": "sara",
       "name": "Sara",
-      "profileImage": null,
+      "avatar": null,
       "bio": "Designer"
     }
   ],
