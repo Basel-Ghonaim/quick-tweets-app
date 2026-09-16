@@ -30,7 +30,7 @@ Ask what the answer depends on:
 | what a real server returns | **integration** |
 | the system end to end | **E2E**, or the manual harness |
 
-**The tie-breaker:** if you must supply something that answers the way a server answers, you are not in the browser lane.
+**The tie-breaker:** if you must supply an answerer — something that decides an outcome in the server's place, rather than what the server would send at the network boundary — you are not in the browser lane.
 
 ## One behavior, one lane
 
