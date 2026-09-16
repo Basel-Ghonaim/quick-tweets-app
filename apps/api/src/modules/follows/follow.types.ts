@@ -15,6 +15,7 @@
  */
 
 import type { CursorMeta, CursorParams } from "../../shared/types/index.js";
+import type { AuthorRow } from "../../shared/utils/index.js";
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
@@ -29,18 +30,23 @@ export interface FollowUserItem {
   id: number;
   username: string;
   name: string | null;
-  profileImage: string | null;
+  avatar: { token: string } | null;
   bio: string;
 }
 
 // ─── Raw DB Types ────────────────────────────────────────────────────────────
 
+/** A listed user as selected, before its avatar reference is resolved. */
+export interface FollowUserRow extends AuthorRow {
+  bio: string;
+}
+
 /** Follow record with the related user data for list queries.
  *  Each query only includes one side (follower OR following). */
 export interface FollowWithUser {
   id: number;
-  follower?: FollowUserItem;
-  following?: FollowUserItem;
+  follower?: FollowUserRow;
+  following?: FollowUserRow;
 }
 
 // ─── Repository Interface ────────────────────────────────────────────────────

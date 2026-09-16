@@ -28,7 +28,7 @@ const userSelect = {
   id: true,
   username: true,
   name: true,
-  profileImage: true,
+  avatarMediaId: true,
   bio: true,
 } as const;
 
