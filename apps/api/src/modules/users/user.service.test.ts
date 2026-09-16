@@ -32,7 +32,6 @@ const rawUser = (over: Partial<UserWithCounts> = {}): UserWithCounts => ({
   username: "ada",
   name: "Ada",
   email: "ada@example.com",
-  profileImage: null,
   avatarMediaId: null,
   bio: "",
   createdAt: new Date(),
@@ -251,6 +250,22 @@ describe("user profile reads resolve the avatar", () => {
     const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
 
     expect((await svc.getMe(USER)).avatar).toBeNull();
+  });
+
+  it("a profile response carries exactly its contract's fields, and no reference", async () => {
+    const w = makeWorld(77);
+    const { media } = makeMedia({});
+    const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
+    const publicFields = [
+      "avatar", "bio", "createdAt", "followersCount", "followingCount",
+      "id", "isFollowing", "likesCount", "name", "tweetsCount", "username",
+    ];
+    const selfFields = [...publicFields, "email", "emailVerification"].sort();
+    const keys = (response: object) => Object.keys(response).sort();
+
+    expect(keys(await svc.getProfile("ada"))).toEqual(publicFields);
+    expect(keys(await svc.getMe(USER))).toEqual(selfFields);
+    expect(keys(await svc.updateMe(USER, { bio: "hello" }))).toEqual(selfFields);
   });
 });
 

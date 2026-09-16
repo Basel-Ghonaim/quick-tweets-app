@@ -32,7 +32,6 @@ model User {
   name          String?
   email         String   @unique
   passwordHash  String   @map("password_hash")
-  profileImage  String?  @map("profile_image")     // DEPRECATED (always null) — superseded by avatarMediaId; retired with the later author-avatar migration
   // Avatar as a bare numeric Media Reference (MediaObject.id): deliberately NO
   // Prisma relation and NO DB foreign key. MediaObject stays unaware of its
   // referrers (ADR 0005 Decision 9), and Media owns reference integrity and

@@ -28,7 +28,6 @@ const profileSelect = {
   username: true,
   name: true,
   email: true,
-  profileImage: true,
   avatarMediaId: true,
   bio: true,
   createdAt: true,

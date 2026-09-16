@@ -39,7 +39,7 @@ const makeRes = () => {
 
 const user = {
   id: 1, username: "ada", name: "Ada", email: "a@x.com",
-  profileImage: null, bio: "", createdAt: new Date(),
+  bio: "", createdAt: new Date(),
 };
 const authResult = { user, accessToken: "a", refreshToken: "r" };
 

@@ -26,7 +26,7 @@ beforeAll(async () => {
 const makeSvc = () => {
   const user = {
     id: 1, username: "basel_a", name: "Basel", email: "basel@example.com",
-    passwordHash: hash, profileImage: null, avatarMediaId: null,
+    passwordHash: hash, avatarMediaId: null,
     bio: "", createdAt: new Date(), updatedAt: new Date(),
   };
   const calls = { byUsername: [] as string[], byEmail: [] as string[] };

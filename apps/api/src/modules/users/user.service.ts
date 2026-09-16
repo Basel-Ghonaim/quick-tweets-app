@@ -104,7 +104,6 @@ export const createUserService = (
     id: user.id,
     username: user.username,
     name: user.name,
-    profileImage: user.profileImage,
     avatar: avatarToken === null ? null : { token: avatarToken },
     bio: user.bio,
     tweetsCount: user._count.tweets,

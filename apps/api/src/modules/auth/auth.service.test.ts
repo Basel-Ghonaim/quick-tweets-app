@@ -17,7 +17,7 @@ const REG = { username: "alice1", email: "a@example.com", password: "Passw0rd!" 
 
 interface StoredUser {
   id: number; username: string; name: string | null; email: string; passwordHash: string;
-  profileImage: string | null; avatarMediaId: number | null;
+  avatarMediaId: number | null;
   bio: string; createdAt: Date; updatedAt: Date;
 }
 
@@ -37,7 +37,7 @@ const makeWorld = (existingUsernames: string[] = []) => {
     create: async (data) => {
       const u: StoredUser = {
         id: nextId++, username: data.username, name: null, email: data.email,
-        passwordHash: data.passwordHash, profileImage: null, avatarMediaId: null,
+        passwordHash: data.passwordHash, avatarMediaId: null,
         bio: "", createdAt: new Date(), updatedAt: new Date(),
       };
       users.push(u);
