@@ -13,6 +13,7 @@
 
 import type { DbClient } from "../../shared/database/index.js";
 import type { AuthorEmbed } from "../../shared/types/index.js";
+import type { AuthorRow } from "../../shared/utils/index.js";
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
@@ -61,12 +62,7 @@ export interface CommentWithRelations {
   /** Internal media reference (MediaObject.id) or null; resolved to a token at the boundary. */
   mediaId: number | null;
   createdAt: Date;
-  author: {
-    id: number;
-    username: string;
-    name: string | null;
-    profileImage: string | null;
-  };
+  author: AuthorRow;
 }
 
 // ─── Repository Interface ────────────────────────────────────────────────────

@@ -14,6 +14,7 @@
  * Principle: SRP — only transforms data, no business logic.
  */
 
+import { toAuthorEmbed } from "../../shared/utils/index.js";
 import type { TweetWithRelations, TweetResponse } from "./tweet.types.js";
 
 /**
@@ -21,7 +22,7 @@ import type { TweetWithRelations, TweetResponse } from "./tweet.types.js";
  * caller rather than looked up here: resolution is one batched query per page,
  * and the mapper stays pure and synchronous.
  *
- * A reference missing from the map is **omitted** from the response — Media
+ * A media reference missing from the map is **omitted** from the response — Media
  * only resolves servable objects, so surfacing it would hand the client a token
  * that cannot be read.
  */
@@ -37,7 +38,7 @@ export const toTweetResponse = (
     const token = tokens.get(ref.mediaId);
     return token === undefined ? [] : [{ token }];
   }),
-  author: tweet.author,
+  author: toAuthorEmbed(tweet.author, tokens),
   likesCount: tweet._count.likes,
   commentsCount: tweet._count.comments,
   isLiked: (tweet.likes?.length ?? 0) > 0,

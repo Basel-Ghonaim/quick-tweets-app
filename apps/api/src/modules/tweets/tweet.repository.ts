@@ -32,7 +32,7 @@ const buildTweetInclude = (userId?: number) => ({
       id: true,
       username: true,
       name: true,
-      profileImage: true,
+      avatarMediaId: true,
     },
   },
   _count: {

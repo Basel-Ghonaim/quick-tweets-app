@@ -7,7 +7,7 @@
  * callback throws, so "it rolled back" is a real assertion.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { AppError } from "../../shared/errors/index.js";
 import { MediaAttachError } from "../media/index.js";
@@ -26,7 +26,7 @@ const rawComment = (over: Partial<CommentWithRelations> = {}): CommentWithRelati
   tweetId: TWEET,
   mediaId: null,
   createdAt: new Date(),
-  author: { id: AUTHOR, username: "ada", name: "Ada", profileImage: null },
+  author: { id: AUTHOR, username: "ada", name: "Ada", avatarMediaId: null },
   ...over,
 });
 
@@ -44,7 +44,9 @@ const makeWorld = (ownerMediaId: number | null = null) => {
     },
     update: async (id, data) => {
       updates.push({ id, data });
-      return rawComment({ id, body: data.body ?? "nice", mediaId: data.mediaId ?? ownerMediaId });
+      // As the real update does: `null` is written, only an omitted mediaId keeps the old one.
+      const mediaId = data.mediaId === undefined ? ownerMediaId : data.mediaId;
+      return rawComment({ id, body: data.body ?? "nice", mediaId });
     },
     delete: async (id, client) => {
       deletes.push({ id, client });
@@ -272,5 +274,89 @@ describe("comment delete — coordination", () => {
       { mediaId: 200, referrer: "comment:11", client: TX },
     ]);
     expect(w.deletedByTweet).toEqual([{ tweetId: TWEET, client: TX }]);
+  });
+});
+
+describe("comment responses — the author's avatar", () => {
+  const AVATAR = 90;
+  const withAvatar = (comment: CommentWithRelations): CommentWithRelations => ({
+    ...comment,
+    author: { ...comment.author, avatarMediaId: AVATAR },
+  });
+
+  /** A world whose repository answers with an author who has an avatar. */
+  const makeAvatarWorld = (ownerMediaId: number | null = null) => {
+    const w = makeWorld(ownerMediaId);
+    const { create, update } = w.repo;
+    w.repo.create = async (...args) => withAvatar(await create(...args));
+    w.repo.update = async (...args) => withAvatar(await update(...args));
+    return w;
+  };
+
+  /** A media port whose resolution records every batch it is asked for. */
+  const recording = (refs: Record<string, number> = {}) => {
+    const { media } = makeMedia(refs);
+    const batches: number[][] = [];
+    media.resolution.resolveTokens = async (ids) => {
+      batches.push([...ids]);
+      return new Map(ids.map((id) => [id, `tok-${id}` as never]));
+    };
+    return { media, batches };
+  };
+
+  it("a page resolves its media and its authors' avatars in one batch", async () => {
+    const w = makeAvatarWorld();
+    const { media, batches } = recording();
+    w.repo.findMany = async () => [withAvatar(rawComment({ id: 1, mediaId: 100 })), rawComment({ id: 2 })];
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    const { data } = await svc.getComments(TWEET, { page: 1, limit: 20 });
+
+    expect(data.map((comment) => comment.author.avatar)).toEqual([{ token: "tok-90" }, null]);
+    expect(batches).toEqual([[100, AVATAR]]);
+  });
+
+  it("creating a comment answers with the author's avatar, with or without media", async () => {
+    const w = makeAvatarWorld();
+    const { media, batches } = recording({ tok: 55 });
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    const plain = await svc.create(AUTHOR, TWEET, "nice");
+    const attached = await svc.create(AUTHOR, TWEET, "nice", "tok");
+
+    expect(plain.author.avatar).toEqual({ token: "tok-90" });
+    expect(attached.author.avatar).toEqual({ token: "tok-90" });
+    expect(attached.media).toEqual({ token: "tok" }); // the attach's own token is kept
+    expect(batches).toEqual([[AVATAR], [AVATAR]]);
+  });
+
+  it("editing a comment answers with the author's avatar, on both edit paths", async () => {
+    const w = makeAvatarWorld(44);
+    const { media, batches } = recording({ tok: 55 });
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    const bodyOnly = await svc.update(1, AUTHOR, { body: "edited" });
+    const mediaEdit = await svc.update(1, AUTHOR, { media: { token: "tok" } });
+
+    expect(bodyOnly.author.avatar).toEqual({ token: "tok-90" });
+    expect(mediaEdit.author.avatar).toEqual({ token: "tok-90" });
+    // The body-only edit resolves its existing media in the same batch as the avatar.
+    expect(batches).toEqual([[44, AVATAR], [AVATAR]]);
+  });
+
+  it("an avatar that does not resolve is null, and nothing is logged", async () => {
+    const w = makeAvatarWorld();
+    const { media } = makeMedia({});
+    media.resolution.resolveTokens = async () => new Map();
+    w.repo.findMany = async () => [withAvatar(rawComment({ id: 1 }))];
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const { data } = await svc.getComments(TWEET, { page: 1, limit: 20 });
+    const logged = errors.mock.calls.length;
+    errors.mockRestore();
+
+    expect(data[0]!.author.avatar).toBeNull();
+    expect(logged).toBe(0);
   });
 });

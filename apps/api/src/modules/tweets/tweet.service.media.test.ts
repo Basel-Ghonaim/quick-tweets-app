@@ -18,13 +18,13 @@ import type { ITweetRepository, TweetMediaRef } from "./tweet.types";
 const TX = { __tx: true } as never; // opaque sentinel for the transaction client
 const AUTHOR = 7;
 
-const rawTweet = (id: number, media: TweetMediaRef[] = []) => ({
+const rawTweet = (id: number, media: TweetMediaRef[] = [], avatarMediaId: number | null = null) => ({
   id,
   body: "hello",
   authorId: AUTHOR,
   createdAt: new Date(),
   updatedAt: new Date(),
-  author: { id: AUTHOR, username: "ada", name: "Ada", profileImage: null },
+  author: { id: AUTHOR, username: "ada", name: "Ada", avatarMediaId },
   _count: { likes: 0, comments: 0 },
   media,
 });
@@ -297,5 +297,54 @@ describe("tweet create — no-media path", () => {
 
     expect(opened).toBe(0); // no media, no transaction
     expect(began).toHaveLength(0);
+  });
+});
+
+describe("tweet responses — the author's avatar", () => {
+  /** A media port whose resolution records every batch it is asked for. */
+  const recording = () => {
+    const { media } = makeMedia({});
+    const batches: number[][] = [];
+    media.resolution.resolveTokens = async (ids) => {
+      batches.push([...ids]);
+      return new Map(ids.map((id) => [id, `tok-${id}` as never]));
+    };
+    return { media, batches };
+  };
+
+  it("a page resolves its media and its authors' avatars in one batch", async () => {
+    const w = makeWorld();
+    const { media, batches } = recording();
+    const page = [rawTweet(1, [{ mediaId: 11, position: 0 }], 90), rawTweet(2, [], 91), rawTweet(3)];
+    w.repo.findMany = async () => page as never;
+    w.repo.findByAuthor = async () => page as never;
+    w.repo.findAuthorIdByUsername = async () => AUTHOR;
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    const feed = await svc.getFeed({ limit: 20 });
+    const timeline = await svc.getByAuthorUsername("ada", { limit: 20 });
+
+    const avatars = [{ token: "tok-90" }, { token: "tok-91" }, null];
+    expect(feed.data.map((tweet) => tweet.author.avatar)).toEqual(avatars);
+    expect(timeline.data.map((tweet) => tweet.author.avatar)).toEqual(avatars);
+    expect(batches).toEqual([[11, 90, 91], [11, 90, 91]]);
+  });
+
+  it("every single-tweet response carries the resolved avatar", async () => {
+    const w = makeWorld();
+    const { media, batches } = recording();
+    w.repo.findById = async () => rawTweet(1, [], 90) as never;
+    w.repo.create = async () => rawTweet(1, [], 90) as never;
+    w.repo.update = async () => rawTweet(1, [], 90) as never;
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    const responses = [
+      await svc.getById(1),
+      await svc.create(AUTHOR, "hello"),
+      await svc.update(1, AUTHOR, { body: "edited" }),
+    ];
+
+    expect(responses.map((tweet) => tweet.author.avatar)).toEqual(Array(3).fill({ token: "tok-90" }));
+    expect(batches).toEqual([[90], [90], [90]]);
   });
 });

@@ -11,7 +11,7 @@ const rawTweet = (over: Partial<TweetWithRelations> = {}): TweetWithRelations =>
   authorId: 42,
   createdAt: new Date(),
   updatedAt: new Date(),
-  author: { id: 42, username: "ada", name: "Ada", profileImage: null },
+  author: { id: 42, username: "ada", name: "Ada", avatarMediaId: null },
   _count: { likes: 2, comments: 1 },
   media: [],
   ...over,
@@ -58,6 +58,23 @@ describe("toTweetResponse — media", () => {
       likesCount: 2,
       commentsCount: 1,
       isLiked: true,
+    });
+  });
+});
+
+describe("toTweetResponse — author", () => {
+  it("embeds the author with the avatar resolved from the same tokens", () => {
+    const tweet = rawTweet({
+      author: { id: 42, username: "ada", name: "Ada", avatarMediaId: 90 },
+      media: [{ mediaId: 11, position: 0 }],
+    });
+    const tokens = new Map([[11, "tok-a"], [90, "tok-avatar"]]);
+
+    expect(toTweetResponse(tweet, tokens).author).toEqual({
+      id: 42,
+      username: "ada",
+      name: "Ada",
+      avatar: { token: "tok-avatar" },
     });
   });
 });

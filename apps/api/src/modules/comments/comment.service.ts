@@ -30,6 +30,7 @@ import {
   type IMediaReferences,
   type IMediaResolution,
 } from "../media/index.js";
+import { avatarReferencesOf, toAuthorEmbed } from "../../shared/utils/index.js";
 import { createCommentRepository } from "./comment.repository.js";
 import type {
   ICommentRepository,
@@ -73,27 +74,29 @@ const asAttachFailure = (err: unknown): unknown =>
 // ─── DTO Transformer ─────────────────────────────────────────────────────────
 
 /**
- * Transforms a raw DB comment into the frontend DTO. `token` is the resolved
- * public read token for the comment's media (or `null`) — supplied by the
- * caller, so the mapper stays pure and Media owns identity.
+ * Transforms a raw DB comment into the frontend DTO. The caller supplies the
+ * resolved tokens, so the mapper stays pure and Media owns identity.
  */
 const toCommentResponse = (
   comment: CommentWithRelations,
-  token: string | null = null,
-): CommentResponse => ({
-  id: comment.id,
-  body: comment.body,
-  media: token !== null ? { token } : null,
-  author: comment.author,
-  tweetId: comment.tweetId,
-  createdAt: comment.createdAt,
-});
+  tokens: ReadonlyMap<number, string>,
+): CommentResponse => {
+  const token = comment.mediaId === null ? undefined : tokens.get(comment.mediaId);
+  return {
+    id: comment.id,
+    body: comment.body,
+    media: token === undefined ? null : { token },
+    author: toAuthorEmbed(comment.author, tokens),
+    tweetId: comment.tweetId,
+    createdAt: comment.createdAt,
+  };
+};
 
 /**
- * Resolve every media reference across a page of comments in **one** query,
+ * Resolve every media and avatar reference on a page of comments in **one** query,
  * then map. Resolving per comment would be an N+1 over a page. An unresolvable
- * reference (non-servable) is surfaced as `null` — Media resolves only servable
- * objects, so a referenced-but-unservable object is a divergence, logged.
+ * media reference is surfaced as `null` — Media resolves only servable objects,
+ * so a referenced-but-unservable attachment is a divergence, logged.
  */
 const toResponses = async (
   media: CommentMediaPort,
@@ -102,18 +105,38 @@ const toResponses = async (
   const referenceIds = comments
     .map((comment) => comment.mediaId)
     .filter((id): id is number => id !== null);
-  const tokens = await media.resolution.resolveTokens(referenceIds);
+  const tokens = await media.resolution.resolveTokens([
+    ...referenceIds,
+    ...avatarReferencesOf(comments.map((comment) => comment.author)),
+  ]);
   return comments.map((comment) => {
-    if (comment.mediaId === null) return toCommentResponse(comment);
-    const token = tokens.get(comment.mediaId);
-    if (token === undefined) {
+    if (comment.mediaId !== null && !tokens.has(comment.mediaId)) {
       console.error("[comments] a referenced media object did not resolve (divergence)", {
         commentId: comment.id,
         mediaId: comment.mediaId,
       });
     }
-    return toCommentResponse(comment, token ?? null);
+    return toCommentResponse(comment, tokens);
   });
+};
+
+/**
+ * One comment, resolved through the same batched path. A token the attach already
+ * returned is kept, so only the author's avatar is asked for.
+ */
+const toResponse = async (
+  media: CommentMediaPort,
+  comment: CommentWithRelations,
+  attachedToken: string | null = null,
+): Promise<CommentResponse> => {
+  if (attachedToken === null || comment.mediaId === null) {
+    return (await toResponses(media, [comment]))[0]!;
+  }
+  const tokens = new Map<number, string>(
+    await media.resolution.resolveTokens(avatarReferencesOf([comment.author])),
+  );
+  tokens.set(comment.mediaId, attachedToken);
+  return toCommentResponse(comment, tokens);
 };
 
 // ─── Service Factory ─────────────────────────────────────────────────────────
@@ -185,7 +208,7 @@ export const createCommentService = (
 
     // 2a. No media — the plain path, no transaction.
     if (mediaToken === undefined) {
-      return toCommentResponse(await repo.create(authorId, tweetId, body));
+      return toResponse(media, await repo.create(authorId, tweetId, body));
     }
 
     // 2b. With media — the comment, its reference, and Media's record of that
@@ -203,7 +226,7 @@ export const createCommentService = (
         );
         return { comment: created, token };
       });
-      return toCommentResponse(comment, token);
+      return toResponse(media, comment, token);
     } catch (err) {
       throw asAttachFailure(err);
     }
@@ -230,10 +253,7 @@ export const createCommentService = (
     // 3a. Body-only edit (media omitted) — media untouched, no transaction. The
     //     existing reference is resolved for the response.
     if (data.media === undefined) {
-      const updated = await repo.update(commentId, { body: data.body });
-      const token =
-        owner.mediaId === null ? null : await media.resolution.resolveToken(owner.mediaId);
-      return toCommentResponse(updated, token);
+      return toResponse(media, await repo.update(commentId, { body: data.body }));
     }
 
     // 3b. Media edit (set / replace / remove) — coordinate in one transaction.
@@ -268,7 +288,7 @@ export const createCommentService = (
         const updated = await repo.update(commentId, { body: data.body, mediaId: newMediaId }, tx);
         return { updated, token };
       });
-      return toCommentResponse(updated, token);
+      return toResponse(media, updated, token);
     } catch (err) {
       throw asAttachFailure(err);
     }
