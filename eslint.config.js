@@ -25,6 +25,6 @@ export default defineConfig([globalIgnores(['**/dist', '**/storybook-static', '*
   rules: {
     // A leading underscore is the declaration that a binding is deliberately
     // unused — a stream drained for its side effect still needs one to iterate.
-    '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
   },
 }, ...storybook.configs["flat/recommended"]])
