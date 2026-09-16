@@ -168,6 +168,7 @@ model PasswordResetSession {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@index([userId])
+  @@index([expiresAt])
   @@map("password_reset_sessions")
 }
 
