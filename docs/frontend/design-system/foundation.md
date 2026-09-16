@@ -5,7 +5,7 @@
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.5
+> **Version:** 1.6
 > **Last Updated:** 2026-09-16
 > **Owner:** Basel Ghonaim
 
@@ -23,7 +23,7 @@ Every visual value is a CSS custom property, organized across three tiers: **Pri
 
 **Semantic** (expressing **Intent**) — a named role. It says what a value is *for*, not what it is (e.g. background, text, border roles), and it is the tier a consumer normally binds. A family reaches this tier only by earning it ([ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md)); **a family that earns no semantic intent tier is a result, not a gap**.
 
-**Component** — component-scoped tokens derived from semantic or primitive tokens, permitted for component-specific overrides or local variants ([ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md) Decision 4).
+**Component** — optional and scoped: a token **derived** for one component, naming that component's local concerns and never a new appearance or a new intent ([ADR 0010](../../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 3, [ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md) Decision 4).
 
 ### Which tier a consumer binds
 
