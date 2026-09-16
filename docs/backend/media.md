@@ -5,7 +5,7 @@
 > It does **not** own: the wire contract (endpoints, payloads, error shapes — the [API contract](../api/api-contract.md)'s), the field-level schema ([`schema.prisma`](../../apps/api/prisma/schema.prisma)) or the relationship/cascade/indexing rationale (the [data model](../architecture/data-model.md)'s), the shared HTTP-hardening and auth-guard mechanisms (the [Backend Security](security.md)'s), or the boundary **decision** itself — recorded in [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md), which this document now implements per the Stable-Core rule ([ADR 0004](../architecture/decisions/0004-stable-core-platform-document-rule.md)).
 > **Scope:** The server-side Media platform module (`apps/api/src/modules/media/`) and its mechanisms. Feature-specific bindings (how tweets, comments, and the profile avatar attach media) belong to those features and link here.
 > **Version:** 1.0
-> **Last Updated:** 2026-08-14
+> **Last Updated:** 2026-09-16
 > **Owner:** Basel Ghonaim
 
 ## Purpose & boundary
@@ -18,7 +18,7 @@ The **dependency rule** is fixed and one-directional: feature modules depend on 
 
 Media exposes exactly one feature-facing surface and keeps everything else internal.
 
-- **`media/index.ts` is the sole feature-consumer public API.** It publishes the attach/ownership, reference-coordination, and resolution surfaces, the error types features catch, and the identifier constructors — nothing more. The tweets, comments, and users features import Media only from here. The registry repository, the ingest/read service, the controllers, the validation policy, the storage backend, and the reclamation subsystem are **not** exported.
+- **`media/index.ts` is the sole feature-consumer public API.** It publishes the attach/ownership, reference-coordination, and resolution surfaces, the error types features catch, and the identifier constructors — nothing more. The tweets, comments, users, and follows features import Media only from here. The registry repository, the ingest/read service, the controllers, the validation policy, the storage backend, and the reclamation subsystem are **not** exported.
 - **Composition-root wiring is a separate, legitimate path — not a boundary bypass.** The application assembly wires Media's *transport and background entry points* directly: the app mounts Media's HTTP routes, and the server registers the reclamation job with the background scheduler by importing the job module directly. This is composition-root wiring (the same pattern the auth refresh-token cleanup job uses), distinct from a feature consuming Media's logic through `index.ts`. Two intentional entry points — the feature-facing barrel and direct composition-root wiring — coexist by design.
 - **Two internal submodules with their own boundaries.** *Storage* owns the byte backend and its factory. *Reclamation* is a self-contained internal submodule — the collector, its registry-only query repository, its scheduler job, and its controlled-verification harness. Reclamation has **no public barrel**; its encapsulation is a dependency rule (**core Media never imports the reclamation submodule** — only the composition root wires its job, and its own verification consumes it). This keeps the reclamation lifecycle changeable in one place and unreachable by accident.
 
