@@ -110,49 +110,9 @@ Until a subsystem has a stable core, its document is **deferred**: its durable m
 
 ## 4. Documentation Directory Structure
 
-There is **one** authoritative documentation root: `docs/` at the repository level. No documentation tree exists anywhere else.
+There is **one** authoritative documentation root: `docs/` at the repository level. No documentation tree exists anywhere else. The canonical map of all documents and their ownership is [`docs/README.md`](../README.md) (§11.6).
 
-```
-docs/
-  README.md                      ← documentation map, navigation, ownership + update-trigger rules
-
-  project/
-    overview.md                  ← product scope: what exists, and what the product is committed to
-    glossary.md                  ← canonical project vocabulary
-
-  architecture/
-    documentation-strategy.md    ← this document (the documentation constitution)
-    system-overview.md           ← topology and request lifecycle across frontend/backend/database
-    data-model.md                ← schema rationale (relationships, cascade, indexing); refers to schema.prisma
-    decisions/                   ← ADRs: one file per architectural decision
-    findings/                    ← architecture findings, tech debt, and design concerns (one file per finding)
-
-  api/
-    api-contract.md              ← the single source for endpoints, payloads, and error shapes
-
-  backend/
-    conventions.md               ← layering, response wrapper, error model, validation, pagination patterns
-    security.md                  ← JWT, password hashing, cookies, rate limiting, helmet/CORS mechanisms
-
-  frontend/
-    architecture.md              ← the four zones, the page-group contract, the capability structure, platform index, thin utilities
-    api-client.md                ← Axios clients, interceptors, retry, 401-refresh flow, base config
-    state-and-data.md            ← Redux and RTK Query strategy
-    error-handling.md            ← AppError normalization pipeline
-    forms.md                     ← schema-driven form engine (validation, form state, field inference) + SchemaField seam
-    design-system/               ← the Design System: boundary, Foundation contract, authoring contract
-
-  features/
-    <feature>.md                 ← one document per implemented feature capability
-
-  development/
-    setup.md                     ← running the project locally (environment, scripts)
-    engineering-principles.md          ← code-design principles (SOLID, patterns, naming)
-    engineering-execution-standard.md  ← how work is executed (Git lifecycle, commits, scope, review, decision authority)
-
-  plans/
-    <plan>.md                    ← execution-oriented plans (migration, execution, refactoring, release); a lifecycle-governed class, not permanent reference docs
-```
+The documentation set is organized into top-level functional directories (`project/`, `architecture/`, `api/`, `backend/`, `frontend/`, `features/`, `development/`, and `plans/`). Each directory corresponds to a distinct domain responsibility (§5), while individual file membership and navigation are owned authoritatively by [`docs/README.md`](../README.md) rather than an inline file inventory.
 
 ### Single-root rule and the code-adjacent exemption
 `docs/` is the only authoritative documentation root. A `README.md` may remain beside code **only** when all of the following hold: it documents the usage of a single code unit **or navigates to the authoritative sources for a subsystem**, it contains no feature or contract material, and it is reachable from `docs/README.md` (§11.6). Such a file is a usage pointer or a map, never an authoritative source; the authoritative source remains the relevant document under `docs/`. A map is admitted because a document that states no rules cannot become a competing authority ([ADR 0012](decisions/0012-foundation-contract-independent-of-consumer-adoption.md)).
