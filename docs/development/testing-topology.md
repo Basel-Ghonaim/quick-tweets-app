@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **where a behavior is proven** — the lanes that exist, what each one owns, what each one is forbidden, and the rule that assigns a behavior to exactly one of them. It owns the **placement** of proof and never its **quality**, which is [Engineering Principles §8](engineering-principles.md)'s. The decision that gives it this ownership, and the reasoning behind it, are [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md)'s — cited here, never restated.
 > **Scope:** Every lane in this repository, both tiers, automated and manual. It does **not** own any lane's configuration, which is code; nor the [manual verification harness](verification/README.md)'s contents, which that directory owns; nor whether a particular Work Item has proved enough, which is its acceptance criteria's.
-> **Version:** 1.4
-> **Last Updated:** 2026-09-14
+> **Version:** 1.5
+> **Last Updated:** 2026-09-16
 > **Owner:** Basel Ghonaim
 
 ## Why placement has an owner
@@ -30,7 +30,7 @@ Ask what the answer depends on:
 | what a real server returns | **integration** |
 | the system end to end | **E2E**, or the manual harness |
 
-**The tie-breaker:** if you must supply something that answers the way a server answers, you are not in the browser lane.
+**The tie-breaker:** if you must supply an answerer — something that decides an outcome in the server's place, rather than what the server would send at the network boundary — you are not in the browser lane.
 
 ## One behavior, one lane
 
@@ -54,7 +54,7 @@ A case whose **only** subject belongs to another lane is **deleted rather than r
 | **Manual harness** | the running system | what no automated lane can reach; owned by [verification/](verification/README.md) | being a gate |
 | **E2E** | — | a reader's journey across more than one page group | anything a narrower lane already proves |
 
-**The browser lane is given the answer, never the answerer** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 5). An *answerer* is anything supplied to a story that decides an outcome: a gateway, a client, a promise whose resolution the story controls to manufacture timing, or an error thrown to stand in for a server's refusal. Values, callbacks that only receive, and presentation settings are answers, and remain permitted.
+**The browser lane is given the answer, never the answerer** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 5). An *answerer* is anything supplied to a story that decides an outcome: a gateway, a client, a promise whose resolution the story controls to manufacture timing, or an error thrown to stand in for a server's refusal. Values, callbacks that only receive, and presentation settings are answers, and remain permitted. So is what the server would send, given at the network boundary — a response, a refusal carried by its status, or a response withheld.
 
 ## Every state is rendered under the accessibility check
 

@@ -24,7 +24,6 @@ export const errorHandler = (
   err: Error,
   _req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next: NextFunction,
 ) => {
   // Known application error — send typed response

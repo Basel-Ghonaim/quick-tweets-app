@@ -3,6 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-09-13
 > **Deciders:** Basel Ghonaim
+> **Revised:** 2026-09-16 — Decision 5 states that what the server would send, given at the network boundary, is an answer, and transport-level request mocking is no longer a rejected alternative. Every Decision stands.
 
 ## Context
 
@@ -50,7 +51,7 @@ This is *one owner per fact*, which has governed documentation here since [ADR 0
 
 A browser lane proves what cannot be established outside a real browser — rendered layout, visual state, responsive behaviour, the accessibility tree as computed, contrast, focus as painted. Anything a renderer without a browser could establish belongs to the cheaper lane.
 
-Governing it: **a story is given the answer, never the answerer.** An *answerer* is anything supplied to a story that decides an outcome — a gateway, a client, a promise whose resolution the story controls to manufacture timing, or an error thrown to stand in for a server's refusal. Values, callbacks that only receive, and presentation settings are answers and remain permitted.
+Governing it: **a story is given the answer, never the answerer.** An *answerer* is anything supplied to a story that decides an outcome — a gateway, a client, a promise whose resolution the story controls to manufacture timing, or an error thrown to stand in for a server's refusal. Values, callbacks that only receive, and presentation settings are answers and remain permitted. **So is what the server would send, given at the network boundary** — a response, a refusal carried by its status, or a response withheld, which is a server that has not yet replied. Production's own transport and capability run against it and decide the outcome; an answerer is what is supplied to a story *inside* that boundary in their place.
 
 It follows that a story knows nothing of a capability's `gateway/` layer, manages no state machine and implements none, and is never the source of proof for a service's or a gateway's behaviour.
 
@@ -87,7 +88,7 @@ The list is a **record of debt, not an exemption from a check** — no check run
 
 - **Ratify the gateway prop and give it a name matching its type.** Rejected: it would write a migration artefact into the capability structure as a rule, and preserve a parameter that no production path has ever supplied. It treats the visible end of the problem as the problem.
 - **Exempt story files from the barrel rule, as [ADR 0018](0018-composition-has-a-home-four-frontend-zones.md) Decision 9 exempts them from the zone direction.** Rejected as the answer, though it is sound as far as it goes: it unpublishes the ports, but leaves the dead parameter with no pressure on it at all, and leaves production still shaped by a tool. The barrel rule was only ever an oblique detector of a misplacement; the remedy is to state the rule directly, not to keep a poor detector for its side effects.
-- **Transport-level request mocking.** Rejected: it adds a dependency, it proves the wire rather than the capability, and it cannot vary per story case without the same per-case configuration Decision 5 forbids.
+- **Transport-level request mocking.** Rejected when this ADR was decided, and no longer rejected on revision: none of the three objections survived the work that removed the seam. The dependency never enters the application's bundle, so Decision 6's first clause holds. It exercises more of the capability, not less: the gateway, the transport and the error normaliser all run where a double used to stand in for them. And varying it per case configures what the server answers, which Decision 5 counts as an answer. It is also a boundary the component and browser lanes share and the application does not own, which is what lets both put a screen whose whole input is a hook in a state without changing production.
 - **A context provider per capability, read by the hook.** Rejected on cost rather than principle. [ADR 0019](0019-authentication-is-a-feature-and-the-session-is-platform.md) rejected a React context over the store for two reasons that do not reach here — a second read path over state the store already holds, and callers that are not React — but the provider remains a test-only affordance moved from a prop to a context, which is machinery the case does not need.
 - **Give each capability a store, so a story seeds state as the one feature with a slice already does.** Rejected on the capability structure's own terms: a `store/` is present when state outlives the component that reads it, and none of these does.
 - **Name the document *Testing Strategy*, absorbing Engineering Principles §8.** Rejected as wider than the gap, and recorded because it remains the consistent choice if the line between quality and placement later proves to be a seam rather than a boundary.

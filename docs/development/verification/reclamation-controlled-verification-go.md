@@ -103,10 +103,10 @@ From `server/`:
 
 ```
 # 51 controlled-verification integration tests (disposable DB required)
-npx vitest run --config vitest.integration.config.ts src/modules/media/verification/
+npx vitest run --config vitest.integration.config.ts src/modules/media/reclamation/verification/
 
 # process-scoped mode semantics (unit; part of the 178-test unit suite)
-npx vitest run src/modules/media/verification/reclamation-verify.mode.test.ts
+npx vitest run src/modules/media/reclamation/verification/reclamation-verify.mode.test.ts
 ```
 
 At time of certification: **51/51** integration + **14/14** mode-unit pass;

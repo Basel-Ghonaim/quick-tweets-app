@@ -3,7 +3,7 @@
 > **Status:** Active standard.
 > **Authority:** The authoritative source for **how work is executed** in this repository — work items, the Git lifecycle, commits, scope control, review, and the authority to make decisions. Binding on all contributors, human and AI.
 > **Scope:** Owns *process and execution*. It does **not** own *code design* ([Engineering Principles](engineering-principles.md)) or *documentation governance* ([Documentation Strategy](../architecture/documentation-strategy.md)).
-> **Version:** 1.4
+> **Version:** 1.5
 > **Last Updated:** 2026-09-16
 > **Owner:** Basel Ghonaim
 
@@ -196,7 +196,7 @@ Every action falls into one of three levels:
 | Authority level | Actions |
 |---|---|
 | **AI-autonomous** — no approval needed | Authoring and editing within an agreed Work Item on its branch; self-review; atomic commits; drafting Issue and PR content; **recording a finding** (always allowed); read-only analysis and review. |
-| **Propose → approve** — the AI proposes; a human approves before it takes effect | The Work Item's contract and decomposition (scope + acceptance criteria); an **architectural decision with no natural document owner** (an ADR; see [Documentation Strategy §8](../architecture/documentation-strategy.md) and [ADR 0002](../architecture/decisions/0002-refined-adr-threshold.md)); any **scope change**; creating the **Issue** that represents a substantial Work Item; editing an authoritative document — drafted by the AI, it becomes canonical only on merge. |
+| **Propose → approve** — the AI proposes; a human approves before it takes effect | The Work Item's contract and decomposition (scope + acceptance criteria); an **architectural decision**, whether an ADR or the document that owns it records it ([Documentation Strategy §8](../architecture/documentation-strategy.md)); any **scope change**; creating the **Issue** that represents a substantial Work Item; editing an authoritative document — drafted by the AI, it becomes canonical only on merge. |
 | **Human-only** — only a human may authorize it | Approving the **merge** of a PR, **closing** an Issue, and **deleting** a branch — the decisions that complete a Work Item (§4) and make a change canonical. The AI never authorizes its own merge; whether a human or an automation then *performs* the authorized action does not change who decided it. |
 
 Two rules bind the matrix:
@@ -209,7 +209,7 @@ Two rules bind the matrix:
 Execution surfaces things the Work Item did not plan for — a latent bug, a design flaw, unrelated debt, an ambiguity, an architectural fork. Stop Rules route each one **without expanding the current Work Item**; scope control (§7) forbids absorbing it into this branch. When you discover something outside the Work Item's scope, classify it and route it — do not act on it here:
 
 - **An observation worth recording, but not acting on now** (a latent bug, tech debt, a code-versus-document divergence) → **record a finding** (always allowed, §10) and continue.
-- **A choice with lasting architectural consequence and no natural document owner** → **stop and propose an ADR** (propose → approve, §10; see [Documentation Strategy §8](../architecture/documentation-strategy.md) and [ADR 0002](../architecture/decisions/0002-refined-adr-threshold.md)); do not decide it yourself. When a natural platform, contract, or feature document owns the choice, capture it and its rationale there without an ADR.
+- **A choice with lasting architectural consequence** → **stop and propose it** (propose → approve, §10); do not decide it yourself. Where it is recorded — an ADR, or the document that naturally owns it — is [Documentation Strategy §8](../architecture/documentation-strategy.md)'s to settle ([ADR 0002](../architecture/decisions/0002-refined-adr-threshold.md)); that settles where the decision is written, never who may make it.
 - **Separable work with its own contract** → **propose a new Work Item** (§2) for it (propose → approve, §10); do not fold it into this branch, and do not start it yourself.
 - **Something that blocks the contract** — you cannot complete the Work Item correctly without resolving it → **stop and escalate**: the Work Item is mis-defined or blocked, and continuing would either break scope or guess at a decision you do not own.
 - **A behavior no testing lane owns** → **stop and raise it** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 8); never place it in the nearest lane that happens to be able to run it. A lane is assigned, and a missing one is a gap to be decided rather than worked around.
