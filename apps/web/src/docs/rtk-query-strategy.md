@@ -2,7 +2,7 @@
 
 ## Core Philosophy
 We are introducing RTK Query incrementally to avoid destabilizing the project.
-- **Axios & Legacy Auth:** The `auth` module and its API calls continue to use Axios. We will not refactor them in Phase 1.
+- **Axios & Legacy Auth:** Authentication and the session continue to use Axios, each from its own `gateway/`. We will not refactor them in Phase 1.
 - **New Features:** All new features (e.g., Tweets, Comments, Likes) will use RTK Query for data fetching and caching.
 
 ## Folder Structure
@@ -17,11 +17,11 @@ To achieve this, `unifiedBaseQuery.ts` wraps `fetchBaseQuery`. It intercepts any
 
 ## Adding New Endpoints (Code Splitting)
 1. **DO NOT** modify `baseApi.ts` to add endpoints directly.
-2. In your feature module, create a dedicated API file (e.g., `apps/web/src/modules/tweets/api.ts`).
+2. In the capability, declare the endpoints in its own `gateway/` (e.g., `apps/web/src/features/tweets/gateway/`), where the [capability structure](../../../../docs/frontend/architecture.md#the-capability-structure) places a capability's calls to the server.
 3. Inject the endpoints into the base API:
 
 ```typescript
-import { baseApi } from '../../shared/rtk-query/baseApi';
+import { baseApi } from '@shared/rtk-query';
 
 export const tweetsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -37,7 +37,9 @@ export const { useGetTweetsQuery } = tweetsApi;
 ## Circular Dependency Prevention
 Never import `RootState` from `apps/web/src/app/store/store.tsx` into any file inside `apps/web/src/shared/rtk-query`. This creates a fatal circular dependency because the store imports `baseApi.ts`. 
 
-If you need to access state inside a base query (e.g., to retrieve the auth token), cast `getState()` inline safely:
+To read the access token inside a base query, use the session's selector, as `unifiedBaseQuery.ts` does — it reads the session's slice without importing `RootState`:
 ```typescript
-const token = (getState() as { auth: { token: string | null } }).auth?.token;
+import { selectAccessToken, type WithSession } from '../session';
+
+const token = selectAccessToken(getState() as WithSession);
 ```
