@@ -4,8 +4,8 @@
 > **Class:** Contract (§3).
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.9
-> **Last Updated:** 2026-09-13
+> **Version:** 1.10
+> **Last Updated:** 2026-09-16
 > **Owner:** Basel Ghonaim
 
 
@@ -104,7 +104,7 @@ A Commitment answers a real need: an agent deciding today needs the product's kn
 ### When a platform document is created — the Stable-Core rule
 A platform document is created for a subsystem **only when that subsystem has a *stable core***: at least one fact that is real, settled, cross-cutting, non-obvious, and not already owned elsewhere. A stable **rule or decision** warrants a document; a volatile **inventory** does not. This **complements Principles 4 and 5 by introducing a whole-document eligibility criterion** for a platform document — the document-level counterpart to §4's section-level rule for a Description.
 
-The Stable-Core code-state condition governs platform documents of class **Description** (which document an existing mechanism in code). Until such a subsystem has a stable core in code, its document is **deferred**: its durable material is captured in an interim source and synthesized into the platform document later, and the deferral records a re-evaluation **trigger** as a *code-state condition* (the capability existing in the code), not a date. See [ADR 0004](decisions/0004-stable-core-platform-document-rule.md). Conversely, a platform **Contract** (such as [`foundation.md`](../frontend/design-system/foundation.md)) states architectural rules and conventions that precede adoption ([ADR 0012](decisions/0012-foundation-contract-independent-of-consumer-adoption.md)) and is not deferred on consumer adoption.
+Until a subsystem has a stable core, its document is **deferred**: its durable material is captured in an interim source and synthesized into the platform document later, and the deferral records a re-evaluation **trigger** as a *code-state condition* (the capability existing in the code), not a date. See [ADR 0004](decisions/0004-stable-core-platform-document-rule.md). The Design System's [Foundation contract](../frontend/design-system/foundation.md) is not deferred on consumer adoption: it is stable at zero adoption ([ADR 0012](decisions/0012-foundation-contract-independent-of-consumer-adoption.md) Decision 1).
 
 ---
 
