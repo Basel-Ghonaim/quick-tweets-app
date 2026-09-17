@@ -1,10 +1,8 @@
 # Manual Verification — Media Subsystem & Core Flows
 
-A permanent, hands-on verification harness for the running system. It exists so
-the paths added since the M6 hands-on pass — **M7 attach-authorization, M8
-`TweetMedia`, M8a/M9 Reference Coordination** — are validated against a real
-database **before** the destructive lifecycle work (M10 substrate, M11
-reclamation) is built.
+A permanent, hands-on verification harness for the running system. It validates
+**M7 attach-authorization, M8 `TweetMedia` and M8a/M9 Reference Coordination**
+against a real database, alongside the core flows.
 
 ## What is here
 
@@ -89,9 +87,8 @@ runbook's [Reset strategy](verification-runbook.md#reset-strategy). In short:
 - **Soft reset** — a `TRUNCATE` script that clears data and keeps the schema.
 - **Full reset** — `npx prisma migrate reset` for a pristine baseline.
 - **Bytes on disk** under `apps/api/uploads/` are **not** cleared by SQL — Media
-  owns physical deletion and M11 does not exist yet. Delete them by hand for a
-  truly clean slate. (Their accumulation is exactly what M11 will address; seeing
-  them pile up here is a preview of why reclamation is needed.)
+  owns physical deletion, and its reclamation runs report-only by default
+  ([Media](../../backend/media.md)). Delete them by hand for a truly clean slate.
 
 ## Test users
 
@@ -196,13 +193,10 @@ proven where it can be, in `recipientCapReserve.integration.test.ts`.
 
 This harness verifies **M1–M9**. It deliberately does **not**:
 
-- run any background execution or physical deletion (that is M10/M11, intentionally
-  unbuilt);
+- run any background execution or physical deletion — reclamation's destructive
+  path is certified by the automated suite below;
 - exercise the compose UI (M9b is deferred pending UI/UX) — the client's
   upload-then-submit-reference flow is simulated by the Postman request sequence.
-
-When every scenario passes — API assertions **and** DB checkpoints — the system is
-cleared to proceed to M10, then M11.
 
 ## Automated: M11 destructive-path certification
 

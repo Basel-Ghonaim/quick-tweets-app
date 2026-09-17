@@ -1,8 +1,8 @@
 # Verification Runbook — Media Subsystem & Core Flows (M1–M9 + Comment Media)
 
-> A **manual** verification pass over the running system, before the destructive
-> lifecycle work (**M11 reclamation**) runs. The M10 background substrate now
-> exists but performs no deletion, so the pass is still non-destructive. It exists
+> A **manual** verification pass over the running system. It deletes no stored
+> bytes: reclamation runs report-only by default ([Media](../../backend/media.md)),
+> and nothing here enables it. It exists
 > because the most important thing to verify — **Reference Coordination** — has no
 > API and is only observable in the database. Comment Media is the third reference
 > producer (after tweets and avatars); its scenarios live in folder 08.
@@ -638,7 +638,7 @@ TRUNCATE TABLE media_objects RESTART IDENTITY CASCADE;
 DELETE FROM users WHERE email LIKE '%@verify.local';
 ```
 > Uploaded **bytes on disk** (under `apps/api/uploads/`) are *not* removed by SQL —
-> Media owns physical deletion and M11 does not exist yet. Clearing the registry
+> Media owns physical deletion, and its reclamation runs report-only by default. Clearing the registry
 > rows leaves those files as orphaned bytes. For this manual phase that is
 > harmless; delete `apps/api/uploads/*` by hand if you want a truly clean slate.
 
@@ -655,7 +655,7 @@ generate the oversize / additional-type files locally.
 
 ## What this phase deliberately does not do
 
-- It does not run M10/M11 — no background execution, no physical deletion.
-- It does not delete uploaded bytes (there is no reclaimer yet; that is M11).
+- It exercises no background job and deletes no uploaded bytes — reclamation's
+  destructive path is certified by its [automated suite](README.md#automated-m11-destructive-path-certification).
 - It does not exercise the compose UI (M9b is deferred) — the client flow is
   simulated by the Postman upload-then-submit-reference sequence.

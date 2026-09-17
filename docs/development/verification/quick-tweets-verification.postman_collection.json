@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "qt-verification-collection",
     "name": "QuickTweets — Verification (M1–M9)",
-    "description": "Manual verification of the Media subsystem and core flows before M10/M11.\n\nIMPORTANT: Reference Coordination (the media_references ledger), TweetMedia rows, and MediaObject internals are NOT exposed by any API. This collection drives state; the DB checkpoints in verification-runbook.md verify coordination in pgAdmin. Run phase by phase, pausing at each checkpoint.\n\nAuth: the access token is captured from the body into {{accessTokenA/B}} and sent as Bearer. The refresh + qt_session cookies are handled by Postman's cookie jar automatically. Because two users share one cookie jar on localhost, always authorize with the per-user Bearer token, never the cookie.",
+    "description": "Manual verification of the Media subsystem and core flows.\n\nIMPORTANT: Reference Coordination (the media_references ledger), TweetMedia rows, and MediaObject internals are NOT exposed by any API. This collection drives state; the DB checkpoints in verification-runbook.md verify coordination in pgAdmin. Run phase by phase, pausing at each checkpoint.\n\nAuth: the access token is captured from the body into {{accessTokenA/B}} and sent as Bearer. The refresh + qt_session cookies are handled by Postman's cookie jar automatically. Because two users share one cookie jar on localhost, always authorize with the per-user Bearer token, never the cookie.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
