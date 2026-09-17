@@ -11,16 +11,6 @@ export const isRequired = (
   };
 };
 
-export const isEmailFormat = (
-  message: string = "Invalid email format",
-): ValidatorFn => {
-  return (value) => {
-    if (!value || typeof value !== "string") return null;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    return emailRegex.test(value) ? null : message;
-  };
-};
-
 export const isLengthChecked = (
   minLength?: {
     min: number;

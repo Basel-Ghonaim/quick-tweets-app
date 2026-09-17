@@ -13,4 +13,10 @@ describe("registration's fields compose the credential rules", () => {
       VALIDATION_MESSAGES.passwordCharacters,
     );
   });
+
+  it("refuses an address the server would refuse with the catalogue's message", () => {
+    expect(shownFor(authFormSchemas.registerFields.email, "\u0628\u0627\u0633\u0644@example.com")).toBe(
+      VALIDATION_MESSAGES.emailFormat,
+    );
+  });
 });

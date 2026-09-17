@@ -2,13 +2,12 @@ import type { FormFieldConfig } from "@shared/schema-form";
 import type { LoginCredentials, RegisterCredentials } from "../model";
 import {
   isRequired,
-  isEmailFormat,
   isLengthChecked,
   isMatch,
   matchesPattern,
 } from "@shared/schema-form";
 import { VALIDATION_MESSAGES } from "@shared/copy";
-import { newPasswordPolicy, usernameRules } from "@shared/validation";
+import { emailRules, newPasswordPolicy, usernameRules } from "@shared/validation";
 
 // ─── Login: identity check only ──────────────────────────────────────────────
 // Presence only — login checks an existing credential and must not apply the
@@ -88,7 +87,7 @@ const registerFields = {
     placeholder: "you@company.com",
     validators: [
       isRequired(VALIDATION_MESSAGES.required("Email")),
-      isEmailFormat(),
+      matchesPattern(emailRules.format, VALIDATION_MESSAGES.emailFormat),
     ],
   },
   confirmPassword: {
