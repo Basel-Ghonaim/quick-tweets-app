@@ -564,8 +564,8 @@ WHERE m.token IN (:cmCascadeTweetMedia, :cmCascadeCommentMedia);   -- both: stat
 -- the ON DELETE RESTRICT backstop guards a code path that ever forgets to.
 BEGIN;
 DELETE FROM tweets WHERE id = :cmRestrictTweetId;
--- Expect: ERROR: update or delete on table "tweets" violates foreign key
---         constraint "comments_tweet_id_fkey" on table "comments"
+-- Expect: an ERROR naming constraint "comments_tweet_id_fkey" on table "comments";
+--         the wording around it varies by PostgreSQL version.
 ROLLBACK;   -- leaves the tweet + comment intact
 ```
 > Likes still cascade (untouched by Comment Media); the restrict comment is
