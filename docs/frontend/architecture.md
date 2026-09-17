@@ -63,7 +63,7 @@ These rules are the **intended architecture**. An import that violates them is a
 
 Assembly happens once, at the edge, in a fixed order:
 
-1. **Bootstrap** — before anything renders, the entry point runs the bootstrap step, which wires shared infrastructure to app-layer dependencies (injecting the token getter and session callbacks into the auth client — the inversion described above) and hands the [error pipeline](error-handling.md) the product's words for its default messages, since no platform mechanism holds content of its own.
+1. **Bootstrap** — before anything renders, the entry point runs the bootstrap step, which wires shared infrastructure to app-layer dependencies (injecting the token getter and session callbacks into the auth client — the inversion described above), registers one catalogue per language with the localisation mechanism, and hands the [error pipeline](error-handling.md) the product's words for its default messages, since no platform mechanism holds content of its own.
 2. **Providers** — one component nests every provider the application mounts, so the entry point holds a single child and the nesting order lives in one place rather than at the edge. The composed Redux store is among them, itself a composition: each capability that owns state contributes its slice — a feature's or the platform's, since the platform may own one ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) — and the shared data layer contributes its API slice and middleware, under one store.
 3. **The app shell** — the router mounts each page group's route subtree, and starts session restore without gating first render on it (a hook the platform's session provides).
 
@@ -131,12 +131,13 @@ The rules above state the target. Which capabilities do not yet meet them is the
 | `schema-form/` | mechanism | the schema-driven form engine | [Frontend Forms](forms.md) |
 | `design-system/` | mechanism | tokens, theming, component conventions | [Frontend Design System](design-system/README.md) |
 | `routing/` | mechanism | the navigating element the Design System takes, and what a destination carries with it | this document, until it has a stable core |
+| `localisation/` | mechanism | which catalogue the active language reads from, and how a language writes numbers; it holds no catalogue of its own | this document, until it has a stable core |
 | `one-time-code/` | mechanism | how a typed code is normalised before anything reads it | this document, until it has a stable core |
 | `preferences/` | mechanism | the reader's preferences — which theme resolves the design language, and which language the interface is in, with the document's direction following it | this document, until it has a stable core |
 | `session/` | capability | who is signed in, with what token, whether that is settled, and its restore, refresh and ending ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) | [Frontend API Client](api-client.md) for the token's residence; the lifecycle awaits its own document |
 | `channel-verification/` | capability | proof of control over a communication channel, on this tier ([ADR 0009](../architecture/decisions/0009-channel-verification-platform-capability.md)) | [Channel Verification](../backend/channel-verification.md) owns the subsystem; the client half awaits its own document |
 | `validation/` | cross-tier definition | rules the server also states, mirrored here and reconciled by hand | this document, until it has a stable core |
-| `copy/` | product content | user-facing text addressed by key, namespaced by surface, and never imported outward by a platform capability | this document, until it has a stable core |
+| `copy/` | product content | user-facing text addressed by key, namespaced by surface, one catalogue per language in English's shape, read through its accessors and never imported outward by a platform capability | this document, until it has a stable core |
 
 **Content and definitions are not mechanisms**, and the distinction is the ADR's: one is data the server also states, the other is words a reader meets, and only the second is translated.
 

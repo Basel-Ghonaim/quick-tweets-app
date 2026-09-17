@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { CATALOGUES } from "@shared/copy";
 import { browserLanguages } from "./browserLanguages";
 import { directionOf, resolveLanguage } from "./language";
 import { readStoredLanguage } from "./languageStorage";
@@ -84,6 +85,10 @@ afterEach(() => {
 });
 
 describe("the language applied before first paint", () => {
+  test("it declares exactly the languages a catalogue is registered for", () => {
+    expect(declared(languageScript(), "LANGUAGES")).toEqual(Object.keys(CATALOGUES));
+  });
+
   test("it declares the module's fallback and right-to-left languages", () => {
     const script = languageScript();
     const fallback = declared(script, "FALLBACK") as string;
