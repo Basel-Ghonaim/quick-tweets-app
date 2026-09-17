@@ -1,5 +1,14 @@
 export const VALIDATION_MESSAGES = {
-  required: (fieldName: string) => `${fieldName} is required.`,
+  /* One whole line per field rather than a name slotted into a sentence: word
+     order and agreement are not shared between languages. */
+  required: {
+    identifier: "Username or email is required.",
+    password: "Password is required.",
+    username: "Username is required.",
+    email: "Email is required.",
+    confirmPassword: "Confirm Password is required.",
+    resetCode: "Reset code is required.",
+  },
   emailFormat: "Please enter a valid email address.",
   minLength: (min: number) => ({
     min,
@@ -9,7 +18,9 @@ export const VALIDATION_MESSAGES = {
     max,
     message: `Must be exactly or less than ${max} characters.`,
   }),
-  match: (fieldName: string) => `This field must match your ${fieldName}.`,
+  match: {
+    password: "This field must match your Password.",
+  },
   usernameCharset:
     "Username can only contain lowercase letters, numbers, and underscores.",
   passwordComplexity: {

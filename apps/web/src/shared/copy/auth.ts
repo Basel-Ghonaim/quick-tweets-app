@@ -49,6 +49,11 @@ export const AUTH_COPY = {
 
     forgotPassword: "Forgot password?",
 
+    identifierLabel: "Username or email",
+    identifierPlaceholder: "johndoe or you@company.com",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Your password",
+
     /* Where signing in ends and not having an account begins. Two controls
        stacked under a form state no relationship; this says what they are. */
     altLabel: "New to Quick Tweets?",
@@ -68,6 +73,23 @@ export const AUTH_COPY = {
     altLabel: "Already have an account?",
     backToLogin: "Back to login",
     browseAsGuest: "Browse without an account",
+
+    usernameLabel: "Username",
+    usernamePlaceholder: "johndoe",
+    emailLabel: "Email Address",
+    emailPlaceholder: "you@company.com",
+    passwordLabel: "Password",
+    passwordPlaceholder: "Min. 8 characters",
+    confirmPasswordLabel: "Confirm Password",
+    confirmPasswordPlaceholder: "Repeat your password",
+  },
+
+  /* Shared by sign-in and registration, which meet the same refusals. */
+  errors: {
+    unauthorized: "Incorrect username/email or password.",
+    validation: "Please review the highlighted fields to correct the errors.",
+    conflict: "This account is already registered. Try logging in.",
+    tooManyRequests: "Too many failed attempts. Please wait a few minutes.",
   },
 
   onboarding: {
@@ -85,6 +107,13 @@ export const AUTH_COPY = {
 
     avatarLabel: "Profile picture",
     avatarHint: "JPEG or PNG, up to 1 MB.",
+
+    nameLabel: "Display name",
+    namePlaceholder: "Your name",
+    nameTooLong: (max: number) => `Name must be at most ${max} characters`,
+    bioLabel: "Bio",
+    bioPlaceholder: "One line is plenty.",
+    bioTooLong: (max: number) => `Bio must be at most ${max} characters`,
 
     /* Announced rather than only drawn: the upload finishes while the reader is
        somewhere else on the form. */

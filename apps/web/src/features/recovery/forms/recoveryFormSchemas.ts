@@ -30,7 +30,7 @@ const requestFields = {
     placeholder: AUTH_COPY.recovery.emailPlaceholder,
     span: "full",
     validators: [
-      isRequired(VALIDATION_MESSAGES.required("Email")),
+      isRequired(VALIDATION_MESSAGES.required.email),
       matchesPattern(emailRules.format, VALIDATION_MESSAGES.emailFormat),
     ],
   },
@@ -47,7 +47,7 @@ const codeFields = {
     label: AUTH_COPY.recovery.codeLabel,
     placeholder: AUTH_COPY.recovery.codePlaceholder,
     span: "full",
-    validators: [isRequired(VALIDATION_MESSAGES.required("Reset code"))],
+    validators: [isRequired(VALIDATION_MESSAGES.required.resetCode)],
   },
 } satisfies Record<keyof RecoveryCodeValues, FormFieldConfig<RecoveryCodeValues>>;
 
@@ -61,7 +61,7 @@ const passwordFields = {
     placeholder: AUTH_COPY.recovery.newPasswordPlaceholder,
     span: "full",
     validators: [
-      isRequired(VALIDATION_MESSAGES.required("Password")),
+      isRequired(VALIDATION_MESSAGES.required.password),
       isLengthChecked(
         VALIDATION_MESSAGES.minLength(newPasswordPolicy.minLength),
         VALIDATION_MESSAGES.maxLength(newPasswordPolicy.maxLength),
@@ -80,8 +80,8 @@ const passwordFields = {
     placeholder: AUTH_COPY.recovery.confirmPasswordPlaceholder,
     span: "full",
     validators: [
-      isRequired(VALIDATION_MESSAGES.required("Confirm Password")),
-      isMatch("newPassword", VALIDATION_MESSAGES.match("Password")),
+      isRequired(VALIDATION_MESSAGES.required.confirmPassword),
+      isMatch("newPassword", VALIDATION_MESSAGES.match.password),
     ],
   },
 } satisfies Record<keyof RecoveryPasswordValues, FormFieldConfig<RecoveryPasswordValues>>;
