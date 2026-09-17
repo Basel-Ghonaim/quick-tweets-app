@@ -5039,7 +5039,8 @@
                       "  pm.expect(set).to.include(\"qt_reset=\");",
                       "  pm.expect(set).to.include(\"HttpOnly\");",
                       "});",
-                      "pm.test(\"still no second code — .mail-capture/ is unchanged\", () =>",
+                      "// Postman cannot read .mail-capture/; Checkpoint J query 2 shows no second credential.",
+                      "pm.test(\"answered 202\", () =>",
                       "  pm.expect(pm.response.code).to.eql(202));"
                     ]
                   }

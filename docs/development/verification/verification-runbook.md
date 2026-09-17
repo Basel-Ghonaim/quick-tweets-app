@@ -383,7 +383,7 @@ WHERE tc.table_name = 'password_reset_challenges'
   AND ccu.table_name LIKE 'channel_verification%';
 
 -- 2. The credential, and the shape it is stored in. After PWR-02 exactly one
---    row; after PWR-03 still exactly one (the cooldown minted nothing);
+--    row; after PWR-03 and PWR-03b still exactly one (the cooldown minted nothing);
 --    code_hash is a 64-character digest and never the code itself.
 SELECT id, user_id, length(code_hash) AS code_hash_length,
        expires_at, used_at, created_at
