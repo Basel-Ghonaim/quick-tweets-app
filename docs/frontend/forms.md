@@ -5,7 +5,7 @@
 > **Scope:** The shared engine in `apps/web/src/shared/schema-form/`. How a specific feature uses it lives in that feature's document; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Maturity:** This document describes the **currently implemented** engine. It will grow as the engine gains capabilities; anything not described here is not yet built, not architecturally rejected.
 > **Version:** 1.1
-> **Last Updated:** 2026-09-07
+> **Last Updated:** 2026-09-17
 > **Owner:** Basel Ghonaim
 
 ## Why the engine exists
@@ -65,7 +65,7 @@ The intended dependency is one-directional: the form engine *consumes* the desig
 
 ## Public API
 
-The public surface is deliberately **narrow**: one entry point (the controller hook), a schema-to-fields helper for rendering, the composable validator factories (required, email, length, cross-field match), and the handful of schema/payload/handler types a consumer needs. The narrowness is the design, not an accident. Everything else — the pure services, the type-inference internals, and the engine's own types — is kept private so it can change without breaking any consumer. A small surface means less to learn, fewer ways to couple to internals, and a clean line between the engine's **contract** and its **mechanism**: consumers depend on the contract, and the mechanism stays free to evolve.
+The public surface is deliberately **narrow**: one entry point (the controller hook), a schema-to-fields helper for rendering, the composable validator factories (required, length, cross-field match, pattern), and the handful of schema/payload/handler types a consumer needs. The narrowness is the design, not an accident. Everything else — the pure services, the type-inference internals, and the engine's own types — is kept private so it can change without breaking any consumer. A small surface means less to learn, fewer ways to couple to internals, and a clean line between the engine's **contract** and its **mechanism**: consumers depend on the contract, and the mechanism stays free to evolve.
 
 ## Relationship to feature documentation
 

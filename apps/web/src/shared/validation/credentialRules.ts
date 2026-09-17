@@ -14,6 +14,12 @@ export const newPasswordPolicy = {
   uppercase: /[A-Z]/,
   digit: /[0-9]/,
   special: /[@$!%*?&#]/,
+  characters: /^[\x20-\x7E]*$/,
+} as const;
+
+/** The address the server accepts: Zod's email rule, restated because this tier has no Zod. */
+export const emailRules = {
+  format: /^(?!\.)(?!.*\.\.)([A-Za-z0-9_'+\-.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9-]*\.)+[A-Za-z]{2,}$/,
 } as const;
 
 /** Enforced when a username is created (register); login checks presence only. */
@@ -24,4 +30,3 @@ export const usernameRules = {
   // the handle resolver's stored-username invariant requires.
   charset: /^[a-z0-9_]+$/,
 } as const;
-

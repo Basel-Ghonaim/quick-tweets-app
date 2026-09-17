@@ -38,6 +38,12 @@ export const registerSchema = z.object({
     .regex(
       /[@$!%*?&#]/,
       "Password must contain at least one special character (@$!%*?&#)",
+    )
+    // Printable ASCII keeps a password typeable on any English keyboard, and
+    // one byte per character keeps bcrypt's 72-byte input from truncating it.
+    .regex(
+      /^[\x20-\x7E]*$/,
+      "Password can only contain English letters, numbers, spaces and symbols",
     ),
 });
 

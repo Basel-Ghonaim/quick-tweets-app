@@ -1,12 +1,11 @@
 import type { FormFieldConfig } from "@shared/schema-form";
 import {
-  isEmailFormat,
   isLengthChecked,
   isMatch,
   isRequired,
   matchesPattern,
 } from "@shared/schema-form";
-import { newPasswordPolicy } from "@shared/validation";
+import { emailRules, newPasswordPolicy } from "@shared/validation";
 import { VALIDATION_MESSAGES } from "@shared/copy";
 import { AUTH_COPY } from "@shared/copy";
 
@@ -30,7 +29,10 @@ const requestFields = {
     label: AUTH_COPY.recovery.emailLabel,
     placeholder: AUTH_COPY.recovery.emailPlaceholder,
     span: "full",
-    validators: [isRequired(VALIDATION_MESSAGES.required("Email")), isEmailFormat()],
+    validators: [
+      isRequired(VALIDATION_MESSAGES.required("Email")),
+      matchesPattern(emailRules.format, VALIDATION_MESSAGES.emailFormat),
+    ],
   },
 } satisfies Record<keyof RecoveryRequestValues, FormFieldConfig<RecoveryRequestValues>>;
 
@@ -68,6 +70,7 @@ const passwordFields = {
       matchesPattern(newPasswordPolicy.uppercase, VALIDATION_MESSAGES.passwordComplexity.uppercase),
       matchesPattern(newPasswordPolicy.digit, VALIDATION_MESSAGES.passwordComplexity.digit),
       matchesPattern(newPasswordPolicy.special, VALIDATION_MESSAGES.passwordComplexity.special),
+      matchesPattern(newPasswordPolicy.characters, VALIDATION_MESSAGES.passwordCharacters),
     ],
   },
   confirmPassword: {

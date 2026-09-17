@@ -4,7 +4,6 @@ export { SchemaField } from "./components/SchemaField";
 export type { SchemaFieldProps } from "./components/SchemaField";
 export {
   isRequired,
-  isEmailFormat,
   isLengthChecked,
   isMatch,
   matchesPattern,

@@ -1,1 +1,1 @@
-export { newPasswordPolicy, usernameRules } from "./credentialRules";
+export { emailRules, newPasswordPolicy, usernameRules } from "./credentialRules";

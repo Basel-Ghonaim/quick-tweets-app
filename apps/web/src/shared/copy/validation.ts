@@ -18,4 +18,6 @@ export const VALIDATION_MESSAGES = {
     digit: "Password must contain a number.",
     special: "Password must contain a special character (@$!%*?&#).",
   },
+  passwordCharacters:
+    "Password can only contain English letters, numbers, spaces and symbols.",
 } as const;
