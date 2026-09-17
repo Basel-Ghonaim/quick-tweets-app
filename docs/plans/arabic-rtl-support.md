@@ -26,6 +26,7 @@ Approved. A decision changes only when implementation exposes a genuine technica
 | **D7** | Typed catalogues with native `Intl`; revisit on a third language, a vendor, or catalogue size |
 | **D8** | A reader preference like the theme: stored choice → browser languages; direction derived from language; `lang`/`dir` before first paint; no URL segment |
 | **O1** | The default follows the device/browser language, inside D8's order |
+| **O5** | When no browser language is a registered one, the interface is in English, the source language; a browser language matches on its base language |
 | **D9** | Western digits and the Gregorian calendar, both pinned in `Intl` |
 | **D10** | ADR 0010's second-locale condition is met; script-ordered font stacks with a `:lang(ar)` override; Google Fonts delivery |
 | **D11** | `dir="auto"` on user-authored text; identifiers isolated as LTR; script detection only where no element exists |
@@ -38,7 +39,6 @@ Approved. A decision changes only when implementation exposes a genuine technica
 
 | Input | Gates |
 |---|---|
-| The language used when no browser language is English or Arabic (O1 sets the order, not this case) | WI-3 |
 | O2 — the Arabic typeface from the D10 shortlist, and Arabic line-heights | WI-5 |
 | O3 — the named Arabic-content approver | WI-6 |
 | O4 — where the language control sits, and its name | WI-6 |
@@ -80,7 +80,7 @@ Approved. A decision changes only when implementation exposes a genuine technica
 |---|---|---|---|
 | **WI-1** [#755](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/755) | New passwords take English characters only; both tiers agree on email (D1–D4) | Decision | — |
 | **WI-2** | English content leaves the code | Move | WI-1 |
-| **WI-3** | The active language: preference, pre-paint `lang`/`dir`, content mechanism, formatting (D6–D9) | Decision | WI-2 · the unmatched-language case |
+| **WI-3** [#763](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/763) | The active language: preference, pre-paint `lang`/`dir`, content mechanism, formatting (D6–D9, O5) | Decision | WI-2 |
 | **WI-4** | RTL proof: the browser lane in both directions (D13) | Decision | WI-3 |
 | **WI-5** | Design System script and direction reactivity (D10, D11, D12 containment) | Decision | WI-4 · O2 |
 | **WI-6** | The Arabic catalogue and the language control (D15) | Decision | WI-5 · O3 · O4 |
