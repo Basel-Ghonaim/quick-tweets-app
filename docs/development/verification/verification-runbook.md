@@ -135,9 +135,10 @@ Against a server somewhere other than the default, append
 
 ## Rate-limit awareness (test-only friction, not a bug)
 
-- `authLimiter` = **10 requests / 15 min** on `register` + `login`. The auth
-  failure-path folder can trip this; a `429 rate_limit` there is the limiter
-  working, not a defect. Space them out or accept the window.
+- `authLimiter` = **10 requests / 15 min** per IP, counting every `register` and
+  `login` whatever it answers. Folders 01, 09 and 10 spend all ten between them
+  before CHV-12's restart clears the counter, so repeating any of them first
+  needs a restart. A `429 rate_limit` there is the limiter working, not a defect.
 
 ## DB checkpoints
 
