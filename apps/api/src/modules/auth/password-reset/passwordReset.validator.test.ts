@@ -83,6 +83,13 @@ describe("apply — the new password", () => {
     }
   });
 
+  it("refuses a new password outside printable ASCII, as registration does", () => {
+    const failure = applyResetSchema.safeParse({ newPassword: "Str0ng!Passw0rd\u0643" });
+
+    expect(failure.success).toBe(false);
+    expect(failure.error?.issues[0]?.path).toEqual(["newPassword"]);
+  });
+
   it("reuses registration's rules rather than restating them — the two cannot drift", async () => {
     const { registerSchema } = await import("../auth.validator.js");
     expect(applyResetSchema.shape.newPassword).toBe(registerSchema.shape.password);
