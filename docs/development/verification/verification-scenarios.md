@@ -86,7 +86,7 @@ no longer describe executable behavior and are retired rather than rewritten her
 | TWT-04 | TWT-03 | PATCH `media:[A2]` (drop A1) | 200; `media` = 1 | ledger: **A1 ended, A2 remains** (Checkpoint D) | — | |
 | TWT-05 | TWT-04 | PATCH `media:[]` | 200; `media` = 0 | ledger: **0 rows** for the tweet | — | |
 | TWT-06 | TWT-01 (2 media) | PATCH `body` only, **omit** `media` | 200; `media` unchanged | `tweet_media` and ledger **untouched** | — | |
-| TWT-07 | A owns media A1 | Create tweet, but include a token that fails attach | 422; whole request fails | **rollback**: no tweet, no `tweet_media`, no ledger row (Checkpoint G) | — | |
+| TWT-07 | TWT-08 (A1 owned by A, now unreferenced) | Create tweet with `media:[A1, <a token that fails attach>]` | 422; whole request fails | **rollback**: no tweet, no `tweet_media`, no ledger row for A1 (Checkpoint G) | — | |
 | TWT-08 | TWT-01 | Delete the tweet | 204 | tweet + `tweet_media` gone; **ledger rows gone**; objects survive `status=ready`, `uploader_id` set → **unreferenced** (Checkpoint E) | — | |
 | TWT-09 | A owns A1; B owns B1 | A creates tweet with `media:[B1]` (cross-principal) | 422; error **does not name** the token | rollback — nothing persisted | — | |
 | TWT-10 | Login A | Create tweet with the **same** token twice | 422 `validation` | no tweet | — | |
@@ -103,7 +103,7 @@ no longer describe executable behavior and are retired rather than rewritten her
 | CMT-03 | CMT-01 | Update own comment | 200; edited body | row updated | — | |
 | CMT-04 | CMT-01 | Delete own comment | 204 | `comments` row removed | — | |
 | CMT-05 | Comment by A; login B | B updates A's comment | 403 | unchanged | — | |
-| CMT-06 | Tweet T deleted | List comments for T | comments cascade-removed with the tweet | no `comments` rows for T | — | |
+| CMT-06 | Folder 08's cascade tweet, deleted with its comment (E5) | List comments for that tweet (E6) | **404** `not_found` — the tweet is gone | no `comments` rows for it (CM-5) | — | |
 
 ## 5b · Comment media — Attach, Coordination, Cascade (Comment Media)
 

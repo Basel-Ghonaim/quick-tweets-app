@@ -234,14 +234,17 @@ SELECT
 
 ### Checkpoint G — Rollback proof (after "cross-principal attach" failure)
 ```sql
--- The failed create must leave NOTHING: no tweet, no tweet_media, no ledger row
--- for the rejected object. Confirms the whole operation rolled back atomically.
+-- The failed creates (TWT-07, then the cross-principal attach) must leave NOTHING:
+-- no tweet, no tweet_media, no ledger row for either object they named.
 SELECT
   (SELECT count(*) FROM tweets WHERE body = 'should fail')                     AS stray_tweets,
   (SELECT count(*) FROM media_references
      WHERE media_id = (SELECT id FROM media_objects
+                       WHERE token = :mediaTokenA1))                           AS strays_for_A1_object,
+  (SELECT count(*) FROM media_references
+     WHERE media_id = (SELECT id FROM media_objects
                        WHERE token = :mediaTokenB1))                           AS strays_for_B_object;
--- Both = 0.
+-- All three = 0.
 ```
 
 ### Checkpoint H — Username rename & reservation (folder 09)
@@ -575,7 +578,7 @@ the whole collection at once — the point is to inspect state between steps.
 | 1 — Auth spine | 00, 01 | none (API-observable only) |
 | 2 — Media primitives | 02 | **A** |
 | 3 — Avatar | — | retired with the upload grant |
-| 4 — Tweet coordination | 04 | **C → D (×3) → E**, then **G** for the failure |
+| 4 — Tweet coordination | 04 | **C → D (×3) → E**, then **G** for the failures |
 | 5 — Social | 05, 06, 07 | none |
 | 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |
 | 7 — Username rename | 09 | **H** (after USR-01, USR-09, and USR-10) |
@@ -602,7 +605,7 @@ checkpoint is named.
 | **B** PATCH | B1 → … → B8 | `cmPatchCommentId`, `cmMediaSet`, `cmMediaReplace` | `cmTweetId` | 201 then 200 ×7 | **CM-2** after each of B4·B5·B6·B7 |
 | **C** Delete | C1 → C2 → C3 | `cmMediaDelete`, `cmDeleteCommentId` | `cmTweetId` | 201 / 201 / 204 | **CM-3** after C3 |
 | **D** Cross-principal | D1 | — | `cmTweetId`, `cmMediaB` | **422** (opaque) | **CM-4** after D1 |
-| **E** Cascade | E1 → E2 → E3 → E4 → E5 | `cmCascadeTweetMedia`, `cmCascadeTweetId`, `cmCascadeCommentMedia`, `cmCascadeCommentId` | — (fresh tweet) | 201×4 / 204 | **CM-5** after E5 |
+| **E** Cascade | E1 → E2 → E3 → E4 → E5 → E6 | `cmCascadeTweetMedia`, `cmCascadeTweetId`, `cmCascadeCommentMedia`, `cmCascadeCommentId` | — (fresh tweet) | 201×4 / 204 / 404 | **CM-5** after E5 |
 | **F** Restrict | F1 → F2 | `cmRestrictTweetId`, `cmRestrictCommentId` | — (fresh tweet) | 201 / 201 | **CM-6** in pgAdmin (raw `DELETE … ROLLBACK`) |
 | **Close** | — | — | — | — | **Checkpoint F** (extended) → all four = 0 |
 
