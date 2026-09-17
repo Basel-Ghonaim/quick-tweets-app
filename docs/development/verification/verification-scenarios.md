@@ -440,7 +440,7 @@ verifies, in one line each:
 | PWR-14 | Restart with a short `RESET_CODE_TTL_MS` and a shorter `RESET_RESEND_COOLDOWN_MS` (see the runbook); request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
 | PWR-14a | Restart with `RESET_MAX_RESENDS=1`; request a fresh code | resend once, then read the session | first resend **202**; the read then shows **`canResend:false`** | `resends_used` is **1** | — | ☐ |
 | PWR-14b | PWR-14a | resend again | **400**, identical to PWR-04 — the bound is spent, and the read had already said so | `resends_used` **unchanged at 1**, and `expires_at` **stops moving** | restart | ☐ |
-| PWR-15 | **Run last**, after a restart clearing the in-memory counter | six requests in a row | attempts 1–5 → **202**; **attempt 6 → 429** `rate_limit` | unchanged | wait 15 min or restart | ☐ |
+| PWR-15 | **Run last**, after a restart clearing the in-memory counter | eleven requests in a row | attempts 1–10 → **202**; **attempt 11 → 429** `rate_limit` | unchanged | wait 15 min or restart | ☐ |
 
 > **Why there is no `429` here that the capability itself produced.** Folder 10 has
 > two different `429`s — a per-address cooldown and a per-IP limiter — and reading

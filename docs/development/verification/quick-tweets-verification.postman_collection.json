@@ -5913,7 +5913,7 @@
         },
         {
           "name": "11.3 · The per-IP limiter (restart first)",
-          "description": "**Restart the API before this, and run it last.** Six requests exhaust the per-IP budget for fifteen minutes and would block everything above. Run it six times (`-n 6`): attempts 1-5 answer `202`, the sixth is the limiter.\n\nThe counter is in memory, so it starts from a restart rather than from an exact count of every request above it.",
+          "description": "**Restart the API before this, and run it last.** Eleven requests exhaust the per-IP budget for fifteen minutes and would block everything above. Run it eleven times (`-n 11`): attempts 1-10 answer `202`, the eleventh is the limiter.\n\nThe counter is in memory, so it starts from a restart rather than from an exact count of every request above it.",
           "item": [
             {
               "name": "PWR-15 · Request is rate-limited (RUN LAST · restart first)",
