@@ -22,7 +22,7 @@
 ## Legend
 
 - **Ledger** = `media_references` table (referrer + media_id).
-- **Referrer tags**: `tweet:{tweetId}`, `user-avatar:{userId}`.
+- **Referrer tags**: `tweet:{tweetId}`, `user-avatar:{userId}`, `comment:{commentId}`.
 - **Unreferenced** = an owned object (`uploader_id` set) with no ledger row — the
   single M11 reclamation target. (The pre-auth grant "abandoned" class was retired
   with the upload grant, ADR 0008.) See the runbook's terminology section.
@@ -92,7 +92,7 @@ no longer describe executable behavior and are retired rather than rewritten her
 | TWT-10 | Login A | Create tweet with the **same** token twice | 422 `validation` | no tweet | — | |
 | TWT-11 | Login A | Create tweet with 5 tokens (> MAX) | 422 `validation` | no tweet | — | |
 | TWT-12 | A owns tweet T; login B | B deletes A's tweet | 403 / 404 | A's tweet untouched | — | |
-| TWT-13 | After TWT-08 | Run the **global invariant** (Checkpoint F) | — | all three counts = 0 | — | |
+| TWT-13 | After TWT-08 | Run the **global invariant** (Checkpoint F) | — | all four counts = 0 | — | |
 
 ## 5 · Comments
 
