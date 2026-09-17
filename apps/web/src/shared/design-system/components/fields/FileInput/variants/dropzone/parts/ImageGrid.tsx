@@ -1,8 +1,10 @@
 import { XIcon, PlusIcon } from "../../../../../../icons";
 import { IconButton } from "../../../../../controls/IconButton";
 import styles from "../../../FileInput.module.css";
+import type { DropzoneFileInputContent } from "../../../FileInput.types";
 
 interface ImageGridProps {
+  content: Pick<DropzoneFileInputContent, "remove" | "addMoreImages" | "addMore">;
   files: File[];
   previews: string[];
   isAtCapacity: boolean;
@@ -18,6 +20,7 @@ interface ImageGridProps {
  * An "Add more" button sits as the last grid cell.
  */
 export const ImageGrid = ({
+  content,
   files,
   previews,
   isAtCapacity,
@@ -40,7 +43,7 @@ export const ImageGrid = ({
           icon={<XIcon />}
           onClick={(e) => onRemove(index, e)}
           disabled={disabled}
-          aria-label={`Remove ${file.name}`}
+          aria-label={content.remove(file.name)}
         />
       </div>
     ))}
@@ -52,10 +55,10 @@ export const ImageGrid = ({
         className={styles.addMoreBtn}
         onClick={onAddMore}
         disabled={disabled}
-        aria-label="Add more images"
+        aria-label={content.addMoreImages}
       >
         <PlusIcon size={20} />
-        <span>Add more</span>
+        <span>{content.addMore}</span>
       </button>
     )}
   </div>

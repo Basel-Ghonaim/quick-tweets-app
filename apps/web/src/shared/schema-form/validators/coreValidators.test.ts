@@ -19,7 +19,7 @@ describe("schema-form validators (harness smoke)", () => {
 });
 
 describe("isMatch — cross-field match (#249)", () => {
-  const matchPassword = isMatch("password");
+  const matchPassword = isMatch("password", "Fields do not match");
 
   it("passes while the field itself is still empty (presence is isRequired's job)", () => {
     expect(matchPassword("", { password: "secret" })).toBeNull();

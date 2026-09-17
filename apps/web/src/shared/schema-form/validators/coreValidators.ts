@@ -1,8 +1,9 @@
 import type { FormPayload, ValidatorFn } from "../types/schema.types";
 
-export const isRequired = (
-  message: string = "This field is required",
-): ValidatorFn => {
+// Every factory takes the message it reports: the engine holds no words, and a
+// default would be one language no caller is made to replace.
+
+export const isRequired = (message: string): ValidatorFn => {
   return (value) => {
     if (value === undefined || value === null) return message;
     if (typeof value === "string" && value.trim() === "") return message;
@@ -14,22 +15,20 @@ export const isRequired = (
 export const isLengthChecked = (
   minLength?: {
     min: number;
-    message?: string;
+    message: string;
   },
   maxLength?: {
     max: number;
-    message?: string;
+    message: string;
   },
 ): ValidatorFn => {
   return (value) => {
     if (!value || typeof value !== "string") return null;
     if (minLength && value.length < minLength.min) {
-      return (
-        minLength.message || `Must be at least ${minLength.min} characters`
-      );
+      return minLength.message;
     }
     if (maxLength && value.length > maxLength.max) {
-      return maxLength.message || `Must be at most ${maxLength.max} characters`;
+      return maxLength.message;
     }
     return null;
   };
@@ -37,7 +36,7 @@ export const isLengthChecked = (
 
 export const isMatch = <T extends FormPayload>(
   targetField: keyof T & string,
-  message: string = "Fields do not match",
+  message: string,
 ): ValidatorFn => {
   return (value, values) => {
     // Nothing to compare until this field itself has a value — presence is
@@ -59,7 +58,7 @@ export const isMatch = <T extends FormPayload>(
  */
 export const matchesPattern = (
   pattern: RegExp,
-  message: string = "Invalid format",
+  message: string,
 ): ValidatorFn => {
   const stateless =
     pattern.global || pattern.sticky

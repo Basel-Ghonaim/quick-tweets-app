@@ -13,6 +13,14 @@ const SHARED = {
   isInvalid: true,
 };
 
+/* The file control's own words, supplied as any consumer supplies them. */
+const FILE_CONTENT = {
+  choose: "Choose file",
+  nothingChosen: "No file chosen",
+  chosenCount: (count: number) => `${count} files selected`,
+  tooLarge: (fileName: string, limit: string) => `"${fileName}" exceeds the ${limit} limit`,
+};
+
 const meta = {
   title: "Design System/Fields/Field anatomy",
   parameters: {
@@ -48,7 +56,7 @@ export const EveryFieldSpeaksTheSame: StoryObj = {
         <Checkbox {...SHARED} />
       </div>
       <div data-field="file-input">
-        <FileInput {...SHARED} name="file" variant="standard" fullWidth />
+        <FileInput {...SHARED} name="file" variant="standard" content={FILE_CONTENT} fullWidth />
       </div>
     </div>
   ),

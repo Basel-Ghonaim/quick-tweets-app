@@ -3,6 +3,8 @@ import { EyeIcon, EyeOffIcon } from "../../../../icons";
 import { ToggleButton } from "../../../controls/ToggleButton";
 
 interface PasswordToggleProps {
+  /** Its accessible name, which stays fixed while `aria-pressed` reports the state. */
+  label: string;
   /** The id of the control whose visibility this toggles, for `aria-controls`. */
   controlId: string;
   disabled?: boolean;
@@ -19,6 +21,7 @@ interface PasswordToggleProps {
  * value is shown.
  */
 export const PasswordToggle = ({
+  label,
   controlId,
   disabled,
   className,
@@ -43,7 +46,7 @@ export const PasswordToggle = ({
       aria-controls={controlId}
       /* Fixed, because the pressed state already reports which way it is: a name
          that changed too would announce the same fact twice, in two vocabularies. */
-      aria-label="Show password"
+      aria-label={label}
     />
   );
 };

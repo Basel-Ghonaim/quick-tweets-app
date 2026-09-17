@@ -12,7 +12,7 @@ type Story = StoryObj<typeof meta>;
 
 /** A surface the product is committed to, standing in until it is built. */
 export const NamedSurface: Story = {
-  args: { surface: "Feed" },
+  args: { surface: "feed" },
   play: async ({ canvasElement }) => {
     await expect(canvasElement.textContent).toContain("Feed is not built yet");
     await expect(canvasElement.textContent).not.toContain("nothing at this address");

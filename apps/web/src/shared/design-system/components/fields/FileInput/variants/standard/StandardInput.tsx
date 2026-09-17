@@ -2,10 +2,12 @@ import { useState, type ReactNode } from "react";
 import { UploadIcon } from "../../../../../icons";
 import { formatSize } from "../../formatSize";
 import type { VariantContext } from "../variant.types";
+import type { StandardFileInputContent } from "../../FileInput.types";
 import styles from "../../FileInput.module.css";
 
 interface StandardInputProps {
   context: VariantContext;
+  content: StandardFileInputContent;
   multiple: boolean;
   /** Replaces the default trigger content. */
   trigger?: ReactNode;
@@ -19,6 +21,7 @@ interface StandardInputProps {
  */
 export const StandardInput = ({
   context,
+  content,
   multiple,
   trigger,
 }: StandardInputProps) => {
@@ -52,9 +55,7 @@ export const StandardInput = ({
     if (maxSize) {
       const oversized = files.find((file) => file.size > maxSize);
       if (oversized) {
-        onValidationError(
-          `"${oversized.name}" exceeds the ${formatSize(maxSize)} limit`,
-        );
+        onValidationError(content.tooLarge(oversized.name, formatSize(maxSize)));
         // Reset so the same file can be chosen again after the message is read.
         event.target.value = "";
         return;
@@ -63,7 +64,7 @@ export const StandardInput = ({
 
     onValidationError("");
     setDisplayName(
-      files.length === 1 ? files[0].name : `${files.length} files selected`,
+      files.length === 1 ? files[0].name : content.chosenCount(files.length),
     );
 
     onChange?.(event);
@@ -97,12 +98,12 @@ export const StandardInput = ({
         {trigger ?? (
           <>
             <UploadIcon size={16} />
-            <span>Choose file</span>
+            <span>{content.choose}</span>
           </>
         )}
       </button>
 
-      <span className={styles.fileName}>{displayName || "No file chosen"}</span>
+      <span className={styles.fileName}>{displayName || content.nothingChosen}</span>
     </div>
   );
 };

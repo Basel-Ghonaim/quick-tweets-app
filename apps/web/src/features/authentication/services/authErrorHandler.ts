@@ -1,11 +1,12 @@
 import { AppError, createAppError } from "@shared/errors";
+import { AUTH_COPY } from "@shared/copy";
 
 const AUTH_MESSAGES: Partial<Record<AppError["type"], string>> = {
   // Form-level, and deliberately does not say which field was wrong.
-  unauthorized: "Incorrect username/email or password.",
-  validation: "Please review the highlighted fields to correct the errors.",
-  conflict: "This account is already registered. Try logging in.",
-  too_many_requests: "Too many failed attempts. Please wait a few minutes.",
+  unauthorized: AUTH_COPY.errors.unauthorized,
+  validation: AUTH_COPY.errors.validation,
+  conflict: AUTH_COPY.errors.conflict,
+  too_many_requests: AUTH_COPY.errors.tooManyRequests,
 };
 
 export const authErrorHandler = (appError: AppError): AppError => {

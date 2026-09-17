@@ -1,6 +1,6 @@
 import { Button, MessageRegion } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
-import { AUTH_COPY } from "@shared/copy";
+import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
 import { useRequestForm } from "../../hooks";
 
@@ -40,6 +40,7 @@ export const RecoveryRequest = ({
           onChange={handleChange}
           span={field.span}
           autoFocus
+          controls={CONTROL_COPY}
         />
       ))}
 

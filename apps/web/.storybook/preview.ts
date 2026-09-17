@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { setupWorker, type SetupWorkerApi } from "msw/browser";
 import type { RequestHandler } from "msw";
 import { setupAuthClient } from "../src/shared/api";
+import { ERROR_COPY } from "../src/shared/copy";
+import { setupErrorMessages } from "../src/shared/errors";
 import {
   DEFAULT_THEME,
   THEME_ATTRIBUTE,
@@ -12,6 +14,7 @@ import {
 
 // What app/bootstrap.ts does for the application, done once for the lane, so
 // this lane answers a given response exactly as the component lane does.
+setupErrorMessages(ERROR_COPY);
 setupAuthClient(() => null, {
   refreshToken: async () => {
     throw new Error("no session to refresh in this lane");

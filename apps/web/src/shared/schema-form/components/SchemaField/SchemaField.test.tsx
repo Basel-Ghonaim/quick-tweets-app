@@ -32,6 +32,26 @@ const invoke = (props: Props) => {
   return { wrapper, child };
 };
 
+const controls: Props["controls"] = {
+  revealPassword: "Reveal",
+  file: {
+    upload: "Upload",
+    uploadCompact: "Up",
+    remove: "Remove",
+    removeTitle: "Rm",
+    replace: "Replace",
+    replaceTitle: "Rp",
+    notAccepted: (name) => `not accepted: ${name}`,
+    tooLarge: (name, limit) => `too large: ${name} ${limit}`,
+  },
+  files: {
+    choose: "Choose",
+    nothingChosen: "None",
+    chosenCount: (count) => `${count} chosen`,
+    tooLarge: (name, limit) => `too large: ${name} ${limit}`,
+  },
+};
+
 const base = {
   name: "email",
   label: "Email",
@@ -39,6 +59,7 @@ const base = {
   value: "" as unknown,
   error: null as string | null,
   onChange: () => {},
+  controls,
 };
 
 describe("SchemaField seam (#248, #249)", () => {
@@ -86,6 +107,12 @@ describe("SchemaField seam (#248, #249)", () => {
     expect(child?.props.multiple).toBe(true);
     expect(child?.props.onChange).toBe(base.onChange);
     expect(child?.props.fullWidth).toBe(true);
+  });
+
+  it("hands each composed control the words it was given, holding none of its own", () => {
+    expect(invoke({ ...base, type: "password" }).child?.props.revealLabel).toBe(controls.revealPassword);
+    expect(invoke({ ...base, type: "file" }).child?.props.content).toBe(controls.file);
+    expect(invoke({ ...base, type: "file-multiple" }).child?.props.content).toBe(controls.files);
   });
 
   it("renders a Textarea for the textarea field type", () => {

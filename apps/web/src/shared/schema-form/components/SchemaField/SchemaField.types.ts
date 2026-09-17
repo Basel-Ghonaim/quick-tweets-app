@@ -1,8 +1,22 @@
 import type {
+  AvatarFileInputContent,
+  StandardFileInputContent,
+} from "@shared/design-system";
+import type {
   FormChangeHandler,
   FieldType,
   FieldSpan,
 } from "../../types/schema.types";
+
+/** The words of the controls a field composes itself, which the engine holds none of. */
+export interface SchemaFieldControls {
+  /** The name of a password field's reveal toggle. */
+  revealPassword: string;
+  /** The single-file control a `file` field renders. */
+  file: AvatarFileInputContent;
+  /** The multi-file control a `file-multiple` field renders. */
+  files: StandardFileInputContent;
+}
 
 export interface SchemaFieldProps {
   name: string;
@@ -14,4 +28,5 @@ export interface SchemaFieldProps {
   onChange: FormChangeHandler;
   span?: FieldSpan;
   autoFocus?: boolean;
+  controls: SchemaFieldControls;
 }

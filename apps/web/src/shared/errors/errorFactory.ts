@@ -1,7 +1,7 @@
 // Factory functions for creating AppError instances.
 
 import { AppError } from "./AppError";
-import { errorConfigMap } from "./errorConfig";
+import { defaultMessageFor } from "./errorMessages";
 import type { ErrorPayload, ErrorType } from "./types";
 
 export const createAppError = <T extends ErrorType = ErrorType>(
@@ -15,6 +15,6 @@ export const createAppError = <T extends ErrorType = ErrorType>(
 
 export const createUnknownError = (error?: unknown): AppError<"unknown"> => {
   const message =
-    error instanceof Error ? error.message : errorConfigMap.unknown.defaultMessage;
+    error instanceof Error ? error.message : defaultMessageFor("unknown");
   return createAppError("unknown", message);
 };

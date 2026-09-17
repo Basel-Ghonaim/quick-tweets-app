@@ -37,8 +37,10 @@ export type HttpStatusCode =
 
 export interface ErrorConfig {
   status: number;
-  defaultMessage: string;
 }
+
+/** The default wording of every error type, supplied by the application. */
+export type ErrorMessages = Record<ErrorType, string>;
 
 export type ValidationErrorsPayload = Record<string, string[]>;
 

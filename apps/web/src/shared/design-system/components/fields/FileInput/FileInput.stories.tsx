@@ -2,7 +2,51 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 import { THEMES, THEME_ATTRIBUTE } from "../../../foundations";
 import { FileInput } from "./FileInput";
-import type { FileInputProps } from "./FileInput.types";
+import type {
+  AvatarFileInputContent,
+  DropzoneFileInputContent,
+  FileInputProps,
+  StandardFileInputContent,
+} from "./FileInput.types";
+
+/* The layer holds no words, so its stories supply them as a consumer would. */
+const tooLarge = (fileName: string, limit: string) => `"${fileName}" exceeds the ${limit} limit`;
+const notAccepted = (fileName: string) => `"${fileName}" is not an accepted file type`;
+
+const STANDARD_CONTENT: StandardFileInputContent = {
+  choose: "Choose file",
+  nothingChosen: "No file chosen",
+  chosenCount: (count) => `${count} files selected`,
+  tooLarge,
+};
+
+const DROPZONE_CONTENT: DropzoneFileInputContent = {
+  dragFiles: "Drag & drop files here",
+  dragImages: "Drag & drop images here",
+  dropFiles: "Drop files here",
+  dropImages: "Drop images here",
+  browse: "or click to browse",
+  remove: (fileName) => `Remove ${fileName}`,
+  addMoreFiles: "Add more files",
+  replaceFile: "Replace file",
+  addMoreImages: "Add more images",
+  addMore: "Add more",
+  tooMany: (max) => `Maximum ${max} files allowed`,
+  tooFew: (min) => `Minimum ${min} files required`,
+  notAccepted,
+  tooLarge,
+};
+
+const AVATAR_CONTENT: AvatarFileInputContent = {
+  upload: "Upload media",
+  uploadCompact: "Upload",
+  remove: "Delete file",
+  removeTitle: "Delete",
+  replace: "Replace file",
+  replaceTitle: "Replace",
+  notAccepted,
+  tooLarge,
+};
 
 const meta = {
   title: "Design System/Fields/FileInput",
@@ -82,6 +126,7 @@ export const Standard: Story = {
     name: "file-input",
     label: "Upload File",
     variant: "standard",
+    content: STANDARD_CONTENT,
     color: "primary",
   },
 };
@@ -91,6 +136,7 @@ export const Dropzone: DropzoneStory = {
     name: "file-input",
     label: "Upload Files",
     variant: "dropzone",
+    content: DROPZONE_CONTENT,
     color: "primary",
   },
   play: surfaceHoldingOneControl("Upload Files"),
@@ -101,6 +147,7 @@ export const Avatar: AvatarStory = {
     name: "file-input",
     label: "Profile Image",
     variant: "avatar",
+    content: AVATAR_CONTENT,
     color: "primary",
   },
   play: surfaceHoldingOneControl("Profile Image"),
@@ -292,6 +339,7 @@ export const AvatarCircle: AvatarStory = {
     name: "avatar",
     label: "Profile Picture",
     variant: "avatar",
+    content: AVATAR_CONTENT,
     avatarShape: "circle",
     avatarFill: "default",
     accept: "image/*",

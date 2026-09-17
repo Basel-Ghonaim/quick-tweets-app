@@ -2,6 +2,7 @@
 
 import { createAppError } from "../errorFactory";
 import { errorConfigMap, getErrorConfigByStatus } from "../errorConfig";
+import { defaultMessageFor } from "../errorMessages";
 import type { AppError } from "../AppError";
 import type { ErrorType, ValidationErrorsPayload } from "../types";
 
@@ -17,10 +18,10 @@ export interface BackendErrorBody {
 
 /**
  * Builds an AppError from an HTTP status code and optional backend response data.
- * Uses frontend-driven messages from errorConfigMap exclusively.
+ * Uses the frontend's own wording for the resolved type, never the backend's message.
  *
  * Priority:
- * 1. If backendType is a recognized ErrorType → use its config from errorConfigMap.
+ * 1. If backendType is a recognized ErrorType → use it.
  * 2. Otherwise → fall back to reverse-lookup by HTTP status code.
  * 3. Validation errors are always forwarded from the backend payload.
  */
@@ -48,7 +49,7 @@ export const buildAppError = (
 
     return createAppError(
       type,
-      errorConfigMap[type].defaultMessage,
+      defaultMessageFor(type),
       validationErrors,
       retryAfter,
     );
@@ -59,5 +60,5 @@ export const buildAppError = (
     status as Parameters<typeof getErrorConfigByStatus>[0],
   );
 
-  return createAppError(resolved.type, resolved.defaultMessage, validationErrors, retryAfter);
+  return createAppError(resolved.type, defaultMessageFor(resolved.type), validationErrors, retryAfter);
 };

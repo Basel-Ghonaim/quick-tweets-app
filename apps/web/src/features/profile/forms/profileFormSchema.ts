@@ -1,5 +1,6 @@
 import type { FormFieldConfig } from "@shared/schema-form";
 import { isLengthChecked } from "@shared/schema-form";
+import { AUTH_COPY } from "@shared/copy";
 
 export const NAME_MAX = 50;
 export const BIO_MAX = 160;
@@ -18,26 +19,26 @@ export const profileFormSchema = {
   name: {
     name: "name",
     type: "text",
-    label: "Display name",
-    placeholder: "Your name",
+    label: AUTH_COPY.profile.nameLabel,
+    placeholder: AUTH_COPY.profile.namePlaceholder,
     span: "full",
     validators: [
       isLengthChecked(undefined, {
         max: NAME_MAX,
-        message: `Name must be at most ${NAME_MAX} characters`,
+        message: AUTH_COPY.profile.nameTooLong(NAME_MAX),
       }),
     ],
   },
   bio: {
     name: "bio",
     type: "textarea",
-    label: "Bio",
-    placeholder: "One line is plenty.",
+    label: AUTH_COPY.profile.bioLabel,
+    placeholder: AUTH_COPY.profile.bioPlaceholder,
     span: "full",
     validators: [
       isLengthChecked(undefined, {
         max: BIO_MAX,
-        message: `Bio must be at most ${BIO_MAX} characters`,
+        message: AUTH_COPY.profile.bioTooLong(BIO_MAX),
       }),
     ],
   },

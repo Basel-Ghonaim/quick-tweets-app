@@ -5,17 +5,14 @@ interface DragOverlayProps {
   /** Whether the overlay is visible */
   visible: boolean;
   /** Text shown below the icon */
-  label?: string;
+  label: string;
 }
 
 /**
  * Translucent overlay shown when dragging files over the dropzone.
  * Shared by both image grid and file list modes.
  */
-export const DragOverlay = ({
-  visible,
-  label = "Drop files here",
-}: DragOverlayProps) => {
+export const DragOverlay = ({ visible, label }: DragOverlayProps) => {
   if (!visible) return null;
 
   return (

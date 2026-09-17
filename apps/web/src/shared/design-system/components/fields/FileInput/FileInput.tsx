@@ -74,6 +74,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           return (
             <DropzoneInput
               context={context}
+              content={props.content}
               multiple={props.multiple ?? false}
               maxFiles={props.maxFiles}
               minFiles={props.minFiles}
@@ -84,6 +85,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           return (
             <AvatarInput
               context={context}
+              content={props.content}
               avatarShape={props.avatarShape ?? "circle"}
               avatarFill={props.avatarFill ?? "default"}
               avatarBorder={props.avatarBorder ?? "dashed"}
@@ -95,6 +97,7 @@ export const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
           return (
             <StandardInput
               context={context}
+              content={props.content}
               multiple={props.multiple ?? false}
               trigger={props.children}
             />

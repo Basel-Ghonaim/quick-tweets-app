@@ -6,7 +6,7 @@ import {
   isMatch,
   matchesPattern,
 } from "@shared/schema-form";
-import { VALIDATION_MESSAGES } from "@shared/copy";
+import { AUTH_COPY, VALIDATION_MESSAGES } from "@shared/copy";
 import { emailRules, newPasswordPolicy, usernameRules } from "@shared/validation";
 
 // ─── Login: identity check only ──────────────────────────────────────────────
@@ -16,16 +16,16 @@ const loginFields = {
   identifier: {
     name: "identifier",
     type: "text",
-    label: "Username or email",
-    placeholder: "johndoe or you@company.com",
-    validators: [isRequired(VALIDATION_MESSAGES.required("Username or email"))],
+    label: AUTH_COPY.signIn.identifierLabel,
+    placeholder: AUTH_COPY.signIn.identifierPlaceholder,
+    validators: [isRequired(VALIDATION_MESSAGES.required.identifier)],
   },
   password: {
     name: "password",
     type: "password",
-    label: "Password",
-    placeholder: "Your password",
-    validators: [isRequired(VALIDATION_MESSAGES.required("Password"))],
+    label: AUTH_COPY.signIn.passwordLabel,
+    placeholder: AUTH_COPY.signIn.passwordPlaceholder,
+    validators: [isRequired(VALIDATION_MESSAGES.required.password)],
   },
 } satisfies Record<keyof LoginCredentials, FormFieldConfig<LoginCredentials>>;
 
@@ -36,10 +36,10 @@ const registerFields = {
   username: {
     name: "username",
     type: "text",
-    label: "Username",
-    placeholder: "johndoe",
+    label: AUTH_COPY.signUp.usernameLabel,
+    placeholder: AUTH_COPY.signUp.usernamePlaceholder,
     validators: [
-      isRequired(VALIDATION_MESSAGES.required("Username")),
+      isRequired(VALIDATION_MESSAGES.required.username),
       isLengthChecked(
         VALIDATION_MESSAGES.minLength(usernameRules.minLength),
         VALIDATION_MESSAGES.maxLength(usernameRules.maxLength),
@@ -50,10 +50,10 @@ const registerFields = {
   password: {
     name: "password",
     type: "password",
-    label: "Password",
-    placeholder: "Min. 8 characters",
+    label: AUTH_COPY.signUp.passwordLabel,
+    placeholder: AUTH_COPY.signUp.passwordPlaceholder,
     validators: [
-      isRequired(VALIDATION_MESSAGES.required("Password")),
+      isRequired(VALIDATION_MESSAGES.required.password),
       isLengthChecked(
         VALIDATION_MESSAGES.minLength(newPasswordPolicy.minLength),
         VALIDATION_MESSAGES.maxLength(newPasswordPolicy.maxLength),
@@ -83,21 +83,21 @@ const registerFields = {
   email: {
     name: "email",
     type: "email",
-    label: "Email Address",
-    placeholder: "you@company.com",
+    label: AUTH_COPY.signUp.emailLabel,
+    placeholder: AUTH_COPY.signUp.emailPlaceholder,
     validators: [
-      isRequired(VALIDATION_MESSAGES.required("Email")),
+      isRequired(VALIDATION_MESSAGES.required.email),
       matchesPattern(emailRules.format, VALIDATION_MESSAGES.emailFormat),
     ],
   },
   confirmPassword: {
     name: "confirmPassword",
     type: "password",
-    label: "Confirm Password",
-    placeholder: "Repeat your password",
+    label: AUTH_COPY.signUp.confirmPasswordLabel,
+    placeholder: AUTH_COPY.signUp.confirmPasswordPlaceholder,
     validators: [
-      isRequired(VALIDATION_MESSAGES.required("Confirm Password")),
-      isMatch("password", VALIDATION_MESSAGES.match("Password")),
+      isRequired(VALIDATION_MESSAGES.required.confirmPassword),
+      isMatch("password", VALIDATION_MESSAGES.match.password),
     ],
   },
 } satisfies Record<

@@ -6,7 +6,7 @@
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, where features meet the platform, and how each capability inside them is organised.
 > **Maturity:** This document describes the **intended and settled** architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The capability structure was written once authentication, recovery, the session and channel verification had been built in two different shapes, and reconciles them ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
 > **Version:** 3.0
-> **Last Updated:** 2026-09-15
+> **Last Updated:** 2026-09-17
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -63,7 +63,7 @@ These rules are the **intended architecture**. An import that violates them is a
 
 Assembly happens once, at the edge, in a fixed order:
 
-1. **Bootstrap** — before anything renders, the entry point runs the bootstrap step, which wires shared infrastructure to app-layer dependencies (injecting the token getter and session callbacks into the auth client — the inversion described above).
+1. **Bootstrap** — before anything renders, the entry point runs the bootstrap step, which wires shared infrastructure to app-layer dependencies (injecting the token getter and session callbacks into the auth client — the inversion described above) and hands the [error pipeline](error-handling.md) the product's words for its default messages, since no platform mechanism holds content of its own.
 2. **Providers** — one component nests every provider the application mounts, so the entry point holds a single child and the nesting order lives in one place rather than at the edge. The composed Redux store is among them, itself a composition: each capability that owns state contributes its slice — a feature's or the platform's, since the platform may own one ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) — and the shared data layer contributes its API slice and middleware, under one store.
 3. **The app shell** — the router mounts each page group's route subtree, and starts session restore without gating first render on it (a hook the platform's session provides).
 

@@ -1,6 +1,6 @@
 import { Button, FileInput, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
-import { AUTH_COPY } from "@shared/copy";
+import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
 import { useProfileFlow } from "@features/profile";
 import type { ProfileOutcome } from "@features/journey";
 import styles from "./Profile.module.css";
@@ -49,6 +49,7 @@ export const Profile = ({ onSettled }: ProfileProps) => {
         <div className={styles.avatar}>
           <FileInput
             variant="avatar"
+            content={CONTROL_COPY.file}
             name="avatar"
             label={AUTH_COPY.profile.avatarLabel}
             helperText={AUTH_COPY.profile.avatarHint}
@@ -79,6 +80,7 @@ export const Profile = ({ onSettled }: ProfileProps) => {
             error={errors[field.key]}
             onChange={handleChange}
             span={field.span}
+            controls={CONTROL_COPY}
           />
         ))}
 

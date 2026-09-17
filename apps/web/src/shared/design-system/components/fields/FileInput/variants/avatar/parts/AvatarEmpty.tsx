@@ -1,24 +1,25 @@
 import { CameraIcon, UserIcon } from "../../../../../../icons";
 import styles from "../../../FileInput.module.css";
-import type { AvatarFill } from "../../../FileInput.types";
+import type { AvatarFileInputContent, AvatarFill } from "../../../FileInput.types";
 
 interface AvatarEmptyProps {
   /** Background style — determines icon and text */
   fill: AvatarFill;
+  content: Pick<AvatarFileInputContent, "upload" | "uploadCompact">;
 }
 
 /**
  * Empty state content for the Avatar variant.
  *
- * - **default**: CameraIcon + "Upload media" — prompts the user to upload
- * - **outline**: UserIcon (profile silhouette) + "Upload" — pre-styled placeholder
+ * - **default**: CameraIcon + the upload prompt
+ * - **outline**: UserIcon (profile silhouette) + the compact prompt
  */
-export const AvatarEmpty = ({ fill }: AvatarEmptyProps) => {
+export const AvatarEmpty = ({ fill, content }: AvatarEmptyProps) => {
   if (fill === "outline") {
     return (
       <>
         <UserIcon size={32} />
-        <span className={styles.avatarText}>Upload</span>
+        <span className={styles.avatarText}>{content.uploadCompact}</span>
       </>
     );
   }
@@ -26,7 +27,7 @@ export const AvatarEmpty = ({ fill }: AvatarEmptyProps) => {
   return (
     <>
       <CameraIcon size={24} />
-      <span className={styles.avatarText}>Upload media</span>
+      <span className={styles.avatarText}>{content.upload}</span>
     </>
   );
 };
