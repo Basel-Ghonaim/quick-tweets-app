@@ -4438,7 +4438,7 @@
           }
         },
         {
-          "name": "CHV-10 · After the cooldown, a resend rotates (wait 60s first)",
+          "name": "CHV-10 · After the cooldown, a new challenge is issued (wait 60s first)",
           "event": [
             {
               "listen": "test",
@@ -4446,8 +4446,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 202\", () => pm.response.to.have.status(202));",
-                  "// Read the NEW code from the capture file. The previous one is now",
-                  "// superseded: confirming with it must fail, and with the new one succeed."
+                  "// CHV-06 closed the only open challenge, so this issue supersedes nothing;",
+                  "// Checkpoint I shows the verified challenge and the new open one side by side."
                 ]
               }
             }

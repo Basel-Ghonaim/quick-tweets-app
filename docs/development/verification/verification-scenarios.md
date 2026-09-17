@@ -321,7 +321,7 @@ each:
 | CHV-07 | CHV-06 | `GET /users/me` | 200; `emailVerification = "proven"` | **no verification column on `users`** (Checkpoint I) | — | ✅ |
 | CHV-08 | CHV-06 | confirm with the **same** code again | **byte-identical** to CHV-04 — a replay is indistinguishable from a wrong value (**G2**, **D5**) | unchanged | — | ✅ |
 | CHV-09 | — | `POST …/challenges` with **no** Bearer | **401** `unauthorized` | none | — | ✅ |
-| CHV-10 | CHV-06; wait out the 60s cooldown | issue again, then confirm with the **superseded** code, then the **current** one | superseded → **400**; current → **204** (**D2** rotation) | prior challenge `closed_reason = 'superseded'` | via reset | ✅ |
+| CHV-10 | CHV-06; wait out the 60s cooldown | issue again | **202** — a new challenge after the cooldown; rotation itself is proven in the API unit lane | the verified challenge **still present**, the new one **open** beside it; nothing reads `superseded`, since CHV-06 left none open (Checkpoint I) | via reset | ✅ |
 | CHV-11 | CHV-06 (`proven`) | move `users.email` (see the runbook — no endpoint exists), then `GET /users/me` | 200; `emailVerification = "unproven"` (**G3**) | capability rows **unchanged** — reading wrote nothing | restore address | ✅ |
 | CHV-12 | Restart with a short TTL; a fresh unproven address | issue, wait past expiry, `GET /users/me` — **run no sweep** | `pending` → **`unproven`** (**G4**, **I8**) | the expired challenge row is **still present**, unswept — no writer was needed | via reset | ✅ |
 | CHV-13 | **Run last**, and **after CHV-12's restart** — six confirmations are already spent | eleven confirmations in a row | attempts 1–10 → 400; **attempt 11 → 429** `rate_limit` (**D5**) | unchanged | wait 15 min or restart | ✅ |
