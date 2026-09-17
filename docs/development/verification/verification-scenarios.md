@@ -155,7 +155,7 @@ no longer describe executable behavior and are retired rather than rewritten her
 | FOL-03 | FOL-01 | List B's following | 200; A present | — | — | |
 | FOL-04 | FOL-01 | GET /users/A (as B) | 200; `isFollowing:true`, counts present | — | — | |
 | FOL-05 | FOL-01 | B unfollows A | 200; `isFollowing:false` | `follows` row removed | — | |
-| FOL-06 | login B | B follows A **twice** | idempotent / no duplicate | single `follows` row (unique pair) | — | |
+| FOL-06 | login B | B follows A **twice** | **409** `conflict` — already following; no duplicate | single `follows` row (unique pair) | — | |
 
 ## 8 · Username rename & locator stability (WI-F)
 

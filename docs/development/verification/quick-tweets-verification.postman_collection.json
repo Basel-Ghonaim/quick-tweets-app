@@ -1891,7 +1891,7 @@
           ]
         },
         {
-          "name": "B follows A again (idempotent)",
+          "name": "B follows A again (409, no duplicate)",
           "request": {
             "method": "POST",
             "header": [],
@@ -1922,7 +1922,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"no duplicate — still following (200/409)\", () => pm.expect([200, 409]).to.include(pm.response.code));"
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"error type conflict\", () => pm.expect(pm.response.json().error.type).to.eql(\"conflict\"));"
                 ]
               }
             }
