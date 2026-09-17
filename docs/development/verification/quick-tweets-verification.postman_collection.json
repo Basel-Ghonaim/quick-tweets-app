@@ -936,7 +936,7 @@
                 "exec": [
                   "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
                   "pm.environment.set(\"tweetId\", pm.response.json().data.id);",
-                  "pm.test(\"2 media, in order\", () => pm.expect(pm.response.json().data.media.length).to.eql(2));"
+                  "pm.test(\"2 media, in order\", () => pm.expect(pm.response.json().data.media.map((m) => m.token)).to.eql([pm.environment.get(\"mediaTokenA1\"), pm.environment.get(\"mediaTokenA2\")]));"
                 ]
               }
             }
@@ -975,7 +975,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"media surfaced\", () => pm.expect(pm.response.json().data.media.length).to.eql(2));"
+                  "pm.test(\"media surfaced, in order\", () => pm.expect(pm.response.json().data.media.map((m) => m.token)).to.eql([pm.environment.get(\"mediaTokenA1\"), pm.environment.get(\"mediaTokenA2\")]));"
                 ]
               }
             }
@@ -1023,7 +1023,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"media unchanged when omitted (still 2)\", () => pm.expect(pm.response.json().data.media.length).to.eql(2));"
+                  "pm.test(\"media unchanged when omitted\", () => pm.expect(pm.response.json().data.media.map((m) => m.token)).to.eql([pm.environment.get(\"mediaTokenA1\"), pm.environment.get(\"mediaTokenA2\")]));"
                 ]
               }
             }
@@ -1071,7 +1071,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"still 2 media, order swapped\", () => { const m = pm.response.json().data.media; pm.expect(m.length).to.eql(2); });"
+                  "pm.test(\"still 2 media, order swapped\", () => pm.expect(pm.response.json().data.media.map((m) => m.token)).to.eql([pm.environment.get(\"mediaTokenA2\"), pm.environment.get(\"mediaTokenA1\")]));"
                 ]
               }
             }
