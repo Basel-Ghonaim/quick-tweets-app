@@ -1,6 +1,11 @@
 import styles from "../../FileInput.module.css";
 import type { VariantContext } from "../variant.types";
-import type { AvatarBorder, AvatarFill, AvatarShape } from "../../FileInput.types";
+import type {
+  AvatarBorder,
+  AvatarFileInputContent,
+  AvatarFill,
+  AvatarShape,
+} from "../../FileInput.types";
 import { customProperties } from "../../../../shared";
 import { useAvatarFile } from "./useAvatarFile";
 import { AvatarEmpty } from "./parts/AvatarEmpty";
@@ -21,6 +26,7 @@ import { AvatarOverlay } from "./parts/AvatarOverlay";
  */
 interface AvatarInputProps {
   context: VariantContext;
+  content: AvatarFileInputContent;
   avatarShape: AvatarShape;
   avatarFill: AvatarFill;
   avatarBorder: AvatarBorder;
@@ -29,6 +35,7 @@ interface AvatarInputProps {
 
 export const AvatarInput = ({
   context,
+  content,
   avatarShape,
   avatarFill,
   avatarBorder,
@@ -50,6 +57,7 @@ export const AvatarInput = ({
 
   const avatar = useAvatarFile({
     inputRef,
+    content,
     accept,
     maxSize,
     disabled,
@@ -126,6 +134,7 @@ export const AvatarInput = ({
 
         {/* Hover overlay with Delete / Replace */}
         <AvatarOverlay
+          content={content}
           onDelete={avatar.removeFile}
           onReplace={avatar.replaceFile}
           disabled={disabled}
@@ -144,7 +153,7 @@ export const AvatarInput = ({
       {...dragProps}
     >
       {hiddenInput}
-      <AvatarEmpty fill={avatarFill} />
+      <AvatarEmpty fill={avatarFill} content={content} />
     </div>
   );
 };

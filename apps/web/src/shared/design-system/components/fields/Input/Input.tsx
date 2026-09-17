@@ -25,6 +25,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       disabled,
       id,
       type,
+      revealLabel,
       ...props
     },
     ref,
@@ -49,6 +50,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <>
         {isPassword && (
           <PasswordToggle
+            label={revealLabel ?? ""}
             controlId={controlId}
             disabled={disabled}
             className={styles.passwordToggle}

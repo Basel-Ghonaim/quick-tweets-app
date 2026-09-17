@@ -1,2 +1,8 @@
 export { FileInput } from "./FileInput";
-export type { FileInputProps } from "./FileInput.types";
+export type {
+  AvatarFileInputContent,
+  DropzoneFileInputContent,
+  FileInputProps,
+  FileSelectionContent,
+  StandardFileInputContent,
+} from "./FileInput.types";

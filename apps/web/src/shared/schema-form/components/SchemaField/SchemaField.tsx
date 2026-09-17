@@ -18,6 +18,7 @@ export const SchemaField = ({
   onChange,
   span = "full",
   autoFocus,
+  controls,
 }: SchemaFieldProps) => {
   const isInvalid = !!error;
 
@@ -35,9 +36,25 @@ export const SchemaField = ({
           />
         );
 
+      case "password":
+        return (
+          <Input
+            name={name}
+            type="password"
+            revealLabel={controls.revealPassword}
+            label={label}
+            placeholder={placeholder}
+            value={value as string}
+            onChange={onChange}
+            isInvalid={isInvalid}
+            errorMessage={error ?? undefined}
+            autoFocus={autoFocus}
+            fullWidth
+          />
+        );
+
       case "text":
       case "email":
-      case "password":
       case "number":
         return (
           <Input
@@ -58,6 +75,7 @@ export const SchemaField = ({
         return (
           <FileInput
             variant="avatar"
+            content={controls.file}
             name={name}
             label={label}
             onChange={onChange}
@@ -71,6 +89,7 @@ export const SchemaField = ({
         return (
           <FileInput
             variant="standard"
+            content={controls.files}
             multiple
             name={name}
             label={label}

@@ -6,8 +6,10 @@ import {
 import { IconButton } from "../../../../../controls/IconButton";
 import { formatSize } from "../../../formatSize";
 import styles from "../../../FileInput.module.css";
+import type { DropzoneFileInputContent } from "../../../FileInput.types";
 
 interface FileListProps {
+  content: Pick<DropzoneFileInputContent, "remove" | "addMoreFiles" | "replaceFile">;
   files: File[];
   previews: string[];
   multiple: boolean;
@@ -25,6 +27,7 @@ interface FileListProps {
  * "Add more files" / "Replace file" row at the bottom.
  */
 export const FileList = ({
+  content,
   files,
   previews,
   multiple,
@@ -57,7 +60,7 @@ export const FileList = ({
             icon={<TrashIcon />}
             onClick={(e) => onRemove(index, e)}
             disabled={disabled}
-            aria-label={`Remove ${file.name}`}
+            aria-label={content.remove(file.name)}
           />
         </div>
       );
@@ -70,10 +73,10 @@ export const FileList = ({
         className={styles.addMoreRow}
         onClick={onAddMore}
         disabled={disabled}
-        aria-label="Add more files"
+        aria-label={content.addMoreFiles}
       >
         <PlusIcon size={16} />
-        <span>{multiple ? "Add more files" : "Replace file"}</span>
+        <span>{multiple ? content.addMoreFiles : content.replaceFile}</span>
       </button>
     )}
   </>

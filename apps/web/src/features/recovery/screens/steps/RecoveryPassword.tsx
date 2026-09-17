@@ -1,6 +1,6 @@
 import { Button, MessageRegion } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
-import { AUTH_COPY } from "@shared/copy";
+import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
 import { usePasswordForm } from "../../hooks";
 
@@ -32,6 +32,7 @@ export const RecoveryPassword = ({ onSubmit }: RecoveryPasswordProps) => {
           onChange={handleChange}
           span={field.span}
           autoFocus={index === 0}
+          controls={CONTROL_COPY}
         />
       ))}
 

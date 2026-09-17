@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
 import { useLoginFlow } from "../../hooks";
-import { AUTH_COPY } from "@shared/copy";
+import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
 import { RouteLink, useRouteNavigate } from "@shared/routing";
 import styles from "./SignIn.module.css";
 
@@ -48,6 +48,7 @@ export const SignIn = () => {
             onChange={handleChange}
             span={field.span}
             autoFocus={index === 0}
+            controls={CONTROL_COPY}
           />
         ))}
 

@@ -68,7 +68,7 @@ export const Loading: Story = {
 };
 
 export const Password: Story = {
-  args: { ...Default.args, label: "Password", type: "password" },
+  args: { ...Default.args, label: "Password", type: "password", revealLabel: "Show password" },
 };
 
 export const Disabled: Story = {
@@ -132,7 +132,7 @@ export const SpinnerInheritsFromAdornment: Story = {
  * an outward ring would be cut off.
  */
 export const PasswordToggleMeetsTheTarget: Story = {
-  args: { ...Default.args, label: "Password", type: "password" },
+  args: { ...Default.args, label: "Password", type: "password", revealLabel: "Show password" },
   play: async ({ canvasElement }) => {
     const previous = document.documentElement.getAttribute(THEME_ATTRIBUTE);
 
@@ -167,7 +167,7 @@ export const PasswordToggleMeetsTheTarget: Story = {
  * match whichever comes first here.
  */
 export const LoadingPasswordKeepsItsToggle: Story = {
-  args: { ...Default.args, label: "Password", type: "password", isLoading: true },
+  args: { ...Default.args, label: "Password", type: "password", revealLabel: "Show password", isLoading: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -205,7 +205,7 @@ export const RevealSurvivesALoadCycle: Story = {
       </>
     );
   },
-  args: { ...Default.args, label: "Password", type: "password" },
+  args: { ...Default.args, label: "Password", type: "password", revealLabel: "Show password" },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvasElement.querySelector("input")!;

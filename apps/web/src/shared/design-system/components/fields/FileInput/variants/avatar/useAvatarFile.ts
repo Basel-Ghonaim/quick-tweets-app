@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { validateSelection } from "../validateSelection";
+import type { FileSelectionContent } from "../../FileInput.types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface UseAvatarFileOptions {
   inputRef: React.RefObject<HTMLInputElement | null>;
+  /** The words a refused selection is reported in. */
+  content: FileSelectionContent;
   accept?: string;
   maxSize?: number;
   disabled: boolean;
@@ -48,6 +51,7 @@ export interface UseAvatarFileReturn {
  */
 export function useAvatarFile({
   inputRef,
+  content,
   accept,
   maxSize,
   disabled,
@@ -149,7 +153,7 @@ export function useAvatarFile({
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
-      const result = validateSelection(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize }, content);
       if (result.error) {
         onValidationError(result.error);
         e.target.value = "";
@@ -159,7 +163,7 @@ export function useAvatarFile({
       selectFile(result.valid[0]);
       onChange?.(e);
     },
-    [accept, maxSize, onValidationError, selectFile, onChange],
+    [accept, maxSize, content, onValidationError, selectFile, onChange],
   );
 
   // ── Drop handler ──
@@ -174,7 +178,7 @@ export function useAvatarFile({
       const files = e.dataTransfer.files;
       if (!files || files.length === 0) return;
 
-      const result = validateSelection(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize }, content);
       if (result.error) {
         onValidationError(result.error);
         return;
@@ -182,7 +186,7 @@ export function useAvatarFile({
 
       selectFile(result.valid[0]);
     },
-    [disabled, accept, maxSize, onValidationError, selectFile],
+    [disabled, accept, maxSize, content, onValidationError, selectFile],
   );
 
   const handleDragEnter = useCallback(

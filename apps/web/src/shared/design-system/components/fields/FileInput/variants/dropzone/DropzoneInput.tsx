@@ -1,5 +1,6 @@
 import styles from "../../FileInput.module.css";
 import type { VariantContext } from "../variant.types";
+import type { DropzoneFileInputContent } from "../../FileInput.types";
 import { useDropzoneFiles } from "./useDropzoneFiles";
 import { DragOverlay } from "./parts/DragOverlay";
 import { DropzoneEmpty } from "./parts/DropzoneEmpty";
@@ -19,6 +20,7 @@ import { FileList } from "./parts/FileList";
  */
 interface DropzoneInputProps {
   context: VariantContext;
+  content: DropzoneFileInputContent;
   multiple: boolean;
   maxFiles?: number;
   minFiles?: number;
@@ -26,6 +28,7 @@ interface DropzoneInputProps {
 
 export const DropzoneInput = ({
   context,
+  content,
   multiple,
   maxFiles,
   minFiles,
@@ -46,6 +49,7 @@ export const DropzoneInput = ({
 
   const dropzone = useDropzoneFiles({
     inputRef,
+    content,
     accept,
     maxSize,
     multiple,
@@ -104,7 +108,7 @@ export const DropzoneInput = ({
           {...dragProps}
         >
           {hiddenInput}
-          <DropzoneEmpty mode="image" isDragOver={dropzone.isDragOver} />
+          <DropzoneEmpty mode="image" isDragOver={dropzone.isDragOver} content={content} />
         </div>
       );
     }
@@ -116,8 +120,9 @@ export const DropzoneInput = ({
         {...dragProps}
       >
         {hiddenInput}
-        <DragOverlay visible={dropzone.isDragOver} label="Drop images here" />
+        <DragOverlay visible={dropzone.isDragOver} label={content.dropImages} />
         <ImageGrid
+          content={content}
           files={dropzone.fileList}
           previews={dropzone.previews}
           isAtCapacity={dropzone.isAtCapacity}
@@ -142,7 +147,7 @@ export const DropzoneInput = ({
         {...dragProps}
       >
         {hiddenInput}
-        <DropzoneEmpty mode="file" isDragOver={dropzone.isDragOver} />
+        <DropzoneEmpty mode="file" isDragOver={dropzone.isDragOver} content={content} />
       </div>
     );
   }
@@ -154,8 +159,9 @@ export const DropzoneInput = ({
       {...dragProps}
     >
       {hiddenInput}
-      <DragOverlay visible={dropzone.isDragOver} />
+      <DragOverlay visible={dropzone.isDragOver} label={content.dropFiles} />
       <FileList
+        content={content}
         files={dropzone.fileList}
         previews={dropzone.previews}
         multiple={multiple}

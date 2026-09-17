@@ -1,7 +1,7 @@
 import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
 import { useRegisterFlow } from "../../hooks";
-import { AUTH_COPY } from "@shared/copy";
+import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
 import { RouteLink, useRouteNavigate } from "@shared/routing";
 import styles from "./SignUp.module.css";
 
@@ -45,6 +45,7 @@ export const SignUp = () => {
             onChange={handleChange}
             span={field.span}
             autoFocus={index === 0}
+            controls={CONTROL_COPY}
           />
         ))}
 

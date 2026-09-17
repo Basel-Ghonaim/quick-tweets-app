@@ -1,4 +1,5 @@
 import { formatSize } from "../formatSize";
+import type { FileSelectionContent } from "../FileInput.types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,7 @@ interface ValidationResult {
 export function validateSelection(
   files: FileList,
   options: ValidationOptions,
+  content: FileSelectionContent,
 ): ValidationResult {
   const fileArray = Array.from(files);
 
@@ -51,7 +53,7 @@ export function validateSelection(
     if (rejected) {
       return {
         valid: [],
-        error: `"${rejected.name}" is not an accepted file type`,
+        error: content.notAccepted(rejected.name),
       };
     }
   }
@@ -62,7 +64,7 @@ export function validateSelection(
     if (oversized) {
       return {
         valid: [],
-        error: `"${oversized.name}" exceeds the ${formatSize(options.maxSize)} limit`,
+        error: content.tooLarge(oversized.name, formatSize(options.maxSize)),
       };
     }
   }

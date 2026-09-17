@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { validateSelection } from "../validateSelection";
+import type { DropzoneFileInputContent } from "../../FileInput.types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface UseDropzoneFilesOptions {
   inputRef: React.RefObject<HTMLInputElement | null>;
+  /** The words a refused selection is reported in. */
+  content: Pick<DropzoneFileInputContent, "notAccepted" | "tooLarge" | "tooMany" | "tooFew">;
   accept?: string;
   maxSize?: number;
   multiple: boolean;
@@ -48,6 +51,7 @@ export interface UseDropzoneFilesReturn {
  */
 export function useDropzoneFiles({
   inputRef,
+  content,
   accept,
   maxSize,
   multiple,
@@ -113,7 +117,7 @@ export function useDropzoneFiles({
       if (multiple) {
         const merged = [...fileList, ...newFiles];
         if (maxFiles && merged.length > maxFiles) {
-          onValidationError(`Maximum ${maxFiles} files allowed`);
+          onValidationError(content.tooMany(maxFiles));
           return null;
         }
         setFileList(merged);
@@ -125,7 +129,7 @@ export function useDropzoneFiles({
         return newFiles;
       }
     },
-    [multiple, fileList, maxFiles, onValidationError],
+    [multiple, fileList, maxFiles, content, onValidationError],
   );
 
   // ── Input change handler ──
@@ -135,7 +139,7 @@ export function useDropzoneFiles({
       const files = e.target.files;
       if (!files || files.length === 0) return;
 
-      const result = validateSelection(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize }, content);
       if (result.error) {
         onValidationError(result.error);
         e.target.value = "";
@@ -151,7 +155,7 @@ export function useDropzoneFiles({
       onChange?.(e);
       forwardFiles(accumulated);
     },
-    [accept, maxSize, onValidationError, accumulateFiles, onChange, forwardFiles],
+    [accept, maxSize, content, onValidationError, accumulateFiles, onChange, forwardFiles],
   );
 
   // ── Drop handler ──
@@ -166,7 +170,7 @@ export function useDropzoneFiles({
       const files = e.dataTransfer.files;
       if (!files || files.length === 0) return;
 
-      const result = validateSelection(files, { accept, maxSize });
+      const result = validateSelection(files, { accept, maxSize }, content);
       if (result.error) {
         onValidationError(result.error);
         return;
@@ -176,7 +180,7 @@ export function useDropzoneFiles({
       if (!accumulated) return;
       forwardFiles(accumulated);
     },
-    [disabled, isAtCapacity, accept, maxSize, onValidationError, accumulateFiles, forwardFiles],
+    [disabled, isAtCapacity, accept, maxSize, content, onValidationError, accumulateFiles, forwardFiles],
   );
 
   const handleDragEnter = useCallback(
@@ -213,7 +217,7 @@ export function useDropzoneFiles({
       const updated = fileList.filter((_, i) => i !== index);
 
       if (minFiles && updated.length < minFiles) {
-        onValidationError(`Minimum ${minFiles} files required`);
+        onValidationError(content.tooFew(minFiles));
         return;
       }
 
@@ -221,7 +225,7 @@ export function useDropzoneFiles({
       onValidationError("");
       forwardFiles(updated);
     },
-    [disabled, fileList, minFiles, onValidationError, forwardFiles],
+    [disabled, fileList, minFiles, content, onValidationError, forwardFiles],
   );
 
   return {

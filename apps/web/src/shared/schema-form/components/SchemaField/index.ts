@@ -1,2 +1,2 @@
 export { SchemaField } from "./SchemaField";
-export type { SchemaFieldProps } from "./SchemaField.types";
+export type { SchemaFieldControls, SchemaFieldProps } from "./SchemaField.types";
