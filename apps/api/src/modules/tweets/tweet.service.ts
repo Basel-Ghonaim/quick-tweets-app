@@ -38,7 +38,7 @@ import type {
   TweetWithRelations,
 } from "./tweet.types.js";
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
-import { isPrismaError } from "../../shared/utils/index.js";
+import { avatarReferencesOf, isPrismaError } from "../../shared/utils/index.js";
 import { toTweetResponse } from "./tweet.mapper.js";
 
 // ─── Media port ──────────────────────────────────────────────────────────────
@@ -113,14 +113,17 @@ const coordinateRefChange = async (
 };
 
 /**
- * Resolve every media reference across a page of tweets in **one** query, then
- * map. Resolving per tweet — or per object — would be an N+1 over a feed.
+ * Resolve every media and avatar reference on a page of tweets in **one** query,
+ * then map. Resolving per tweet — or per object — would be an N+1 over a feed.
  */
 const toResponses = async (
   media: TweetMediaPort,
   tweets: TweetWithRelations[],
 ): Promise<TweetResponse[]> => {
-  const referenceIds = tweets.flatMap((tweet) => tweet.media.map((ref) => ref.mediaId));
+  const referenceIds = [
+    ...tweets.flatMap((tweet) => tweet.media.map((ref) => ref.mediaId)),
+    ...avatarReferencesOf(tweets.map((tweet) => tweet.author)),
+  ];
   const tokens = await media.resolution.resolveTokens(referenceIds);
   return tweets.map((tweet) => toTweetResponse(tweet, tokens));
 };

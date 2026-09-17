@@ -13,6 +13,7 @@
 
 import type { DbClient } from "../../shared/database/index.js";
 import type { AuthorEmbed, CursorParams, CursorMeta } from "../../shared/types/index.js";
+import type { AuthorRow } from "../../shared/utils/index.js";
 
 /**
  * The maximum media objects one tweet may carry.
@@ -68,12 +69,7 @@ export interface TweetWithRelations {
   authorId: number;
   createdAt: Date;
   updatedAt: Date;
-  author: {
-    id: number;
-    username: string;
-    name: string | null;
-    profileImage: string | null;
-  };
+  author: AuthorRow;
   _count: {
     likes: number;
     comments: number;

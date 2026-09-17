@@ -29,7 +29,7 @@ const commentInclude = {
       id: true,
       username: true,
       name: true,
-      profileImage: true,
+      avatarMediaId: true,
     },
   },
 } as const;

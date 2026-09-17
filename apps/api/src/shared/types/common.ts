@@ -21,7 +21,7 @@ export interface AuthorEmbed {
   id: number;
   username: string;
   name: string | null;
-  profileImage: string | null;
+  avatar: { token: string } | null;
 }
 
 // ─── Cursor Pagination ──────────────────────────────────────────────────────

@@ -18,16 +18,18 @@
  */
 
 import { AppError } from "../../shared/errors/index.js";
+import { mediaResolution, type IMediaResolution } from "../media/index.js";
 import { createFollowRepository } from "./follow.repository.js";
 import type {
   IFollowRepository,
   IFollowService,
   FollowActionResponse,
   FollowUserItem,
+  FollowUserRow,
   FollowWithUser,
 } from "./follow.types.js";
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
-import { isPrismaError } from "../../shared/utils/index.js";
+import { avatarReferencesOf, isPrismaError, toAuthorEmbed } from "../../shared/utils/index.js";
 
 // ─── Helper: Resolve username to userId or throw 404 ─────────────────────────
 
@@ -42,15 +44,26 @@ const resolveUser = async (
   return userId;
 };
 
+/** A page's avatars resolve in one batch, as a page of tweets or comments does. */
+const toItems = async (
+  resolution: IMediaResolution,
+  users: FollowUserRow[],
+): Promise<FollowUserItem[]> => {
+  const tokens = await resolution.resolveTokens(avatarReferencesOf(users));
+  return users.map((user) => ({ ...toAuthorEmbed(user, tokens), bio: user.bio }));
+};
+
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
  * Creates an IFollowService with injected repository dependency.
  *
  * @param repo - Follow database operations (defaults to Prisma implementation)
+ * @param resolution - Media's reference resolution (defaults to the published one)
  */
 export const createFollowService = (
   repo: IFollowRepository = createFollowRepository(),
+  resolution: IMediaResolution = mediaResolution,
 ): IFollowService => ({
   // ─── Follow ─────────────────────────────────────────────────────────
 
@@ -126,7 +139,7 @@ export const createFollowService = (
     const sliced = hasMore ? follows.slice(0, limit) : follows;
 
     // 3. Map to FollowUserItem (extract the follower side)
-    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.follower!);
+    const data = await toItems(resolution, sliced.map((f: FollowWithUser) => f.follower!));
 
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {
@@ -155,7 +168,7 @@ export const createFollowService = (
     const sliced = hasMore ? follows.slice(0, limit) : follows;
 
     // 3. Map to FollowUserItem (extract the following side)
-    const data: FollowUserItem[] = sliced.map((f: FollowWithUser) => f.following!);
+    const data = await toItems(resolution, sliced.map((f: FollowWithUser) => f.following!));
 
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {

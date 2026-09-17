@@ -21,8 +21,6 @@ export interface UserProfileResponse {
   username: string;
   /** Optional profile data; `null` when unset — presentation falls back to `username`. */
   name: string | null;
-  /** @deprecated Always `null`. Superseded by `avatar`; removed with the #335 tail. */
-  profileImage: string | null;
   /** The resolved avatar read token, or `null`. Set/changed via `PATCH /users/me`. */
   avatar: { token: string } | null;
   bio: string;
@@ -69,7 +67,6 @@ export interface UserWithCounts {
   username: string;
   name: string | null;
   email: string;
-  profileImage: string | null;
   /** Bare Media Reference (MediaObject.id) — resolved to a token at the boundary. */
   avatarMediaId: number | null;
   bio: string;
