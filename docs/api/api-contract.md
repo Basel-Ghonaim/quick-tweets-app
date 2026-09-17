@@ -23,6 +23,7 @@
 | Tweet responses: `image` removed, superseded by the ordered `media` array | The field was documented as *"Reserved for future use. Always null in v1"* and never had a write path, so it never carried a value anything could depend on. No client reads it — the tweets UI has not been built. |
 | `POST /channel-verification/challenges`: the boolean `delivered` removed, superseded by the three-state `delivery` | The boolean asserted something no sender can promise. A relay's acceptance is not arrival, and a timeout leaves the outcome genuinely undetermined, so the field was **renamed rather than redefined** — a shape that kept its name while losing its meaning is the failure that makes a contract untrustworthy. No client reads it: no frontend calls channel verification. |
 | `AuthorEmbed`, the follower and following list items, and the user profile: `profileImage` removed, superseded by `avatar` | The field was deprecated and always `null` once the avatar became a Media Reference, so it never carried a value anything could depend on. No client reads it: nothing in the frontend references the field. |
+| `POST /auth/register` and `POST /auth/password-reset/apply`: a password containing any character outside printable ASCII is refused with `422` | A rule tightened on input rather than a shape removed, but a request valid before is refused after, so it is recorded. No consumer can depend on the wider rule: `v1` has no released consumer, the only client applies the same rule in the same change, and login still accepts any password set before it. |
 
 ---
 
@@ -274,8 +275,11 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 // Request body
 {
   "username": "basel",      // 4-20 chars, lowercase alphanumeric/underscores (uppercase rejected, not normalized)
-  "email": "test@test.com", // valid email
-  "password": "Password1!"  // 8-72 chars, upper, lower, digit, special char
+  "email": "test@test.com", // ASCII only: letters, digits and _ ' + - . before the @ (no leading,
+                            // trailing or doubled dot); ASCII domain labels (punycode allowed)
+                            // under a letters-only top-level domain
+  "password": "Password1!"  // 8-72 chars, printable ASCII only (space allowed, never trimmed);
+                            // upper, lower, digit, special char
 }
 // Registration is account-only: no `name`. name is optional profile data set later
 // via PATCH /users/me (absent = NULL, never derived from username).
@@ -326,6 +330,8 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 // Response 401 — unknown username, unknown email, or wrong password: one generic message, no enumeration
 { "success": false, "error": { "type": "unauthorized", "message": "Invalid credentials" } }
 ```
+
+> **The password is checked for presence only.** Registration's password rules bind where a password is set — `POST /auth/register` and `POST /auth/password-reset/apply` — and never at login, so a password set under an earlier rule still signs in.
 
 ### `POST /auth/logout` — Invalidate current session
 
