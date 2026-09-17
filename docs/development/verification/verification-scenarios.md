@@ -33,17 +33,17 @@
 
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
 |----|---------------|--------|---------------------|-------------------|---------|----------------|
-| AUTH-01 | Clean DB | Register User A | 201; `{user, accessToken}`; `user.avatar = null`; refresh + `qt_session` cookies set | `users` row for A; a `refresh_tokens` row | — | |
+| AUTH-01 | Clean DB | Register User A | 201; `{user, accessToken}`; `user` carries no profile fields; refresh + `qt_session` cookies set | `users` row for A; a `refresh_tokens` row | — | |
 | AUTH-02 | AUTH-01 | Register User B | 201; distinct user | second `users` row | — | |
 | AUTH-03 | AUTH-01 | Login A (correct) | 200; new `accessToken`; refresh cookie rotated | new `refresh_tokens` row | — | |
-| AUTH-04 | AUTH-03 | GET /me with Bearer A | 200; identity matches A | — | — | |
+| AUTH-04 | AUTH-03 | `GET /users/me` with Bearer A | 200; identity matches A | — | — | |
 | AUTH-05 | AUTH-03 | POST /refresh (cookie) | 200; new `accessToken`; cookie rotated | old refresh token replaced by new | — | |
 | AUTH-06 | AUTH-03 | Logout | 204; cookies cleared | A's current `refresh_tokens` row removed | — | |
 | AUTH-07 | AUTH-03 (multi-session) | Logout-all | 204 | **all** A's `refresh_tokens` rows removed | — | |
 | AUTH-08 | AUTH-01 | Register duplicate username | 409 `conflict` | no new row | — | |
 | AUTH-09 | AUTH-01 | Login wrong password | 401 `unauthorized` | no new refresh token | — | |
 | AUTH-10 | Logged out | Refresh with no cookie | 401 | — | — | |
-| AUTH-11 | — | GET /me with no token | 401 `unauthorized` | — | — | |
+| AUTH-11 | — | `GET /users/me` with no token | 401 `unauthorized` | — | — | |
 | AUTH-12 | — | Register with short password | 422 `validation` | no new row | — | |
 
 ## 2 · Media primitives

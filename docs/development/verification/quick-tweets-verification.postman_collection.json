@@ -67,7 +67,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{userA_username}}\",\n  \"name\": \"{{userA_name}}\",\n  \"email\": \"{{userA_email}}\",\n  \"password\": \"{{userA_password}}\"\n}",
+              "raw": "{\n  \"username\": \"{{userA_username}}\",\n  \"email\": \"{{userA_email}}\",\n  \"password\": \"{{userA_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -86,7 +86,7 @@
                   "const d = pm.response.json().data;",
                   "pm.environment.set(\"accessTokenA\", d.accessToken);",
                   "pm.environment.set(\"userAId\", d.user.id);",
-                  "pm.test(\"no avatar for a plain register\", () => pm.expect(d.user.avatar).to.eql(null));",
+                  "pm.test(\"the auth response carries no profile fields\", () => pm.expect(d.user).to.not.have.any.keys(\"name\", \"email\", \"avatar\", \"bio\"));",
                   "pm.test(\"refresh cookie set\", () => pm.expect(pm.cookies.has(\"refreshToken\")).to.be.true);"
                 ]
               }
@@ -113,7 +113,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{userB_username}}\",\n  \"name\": \"{{userB_name}}\",\n  \"email\": \"{{userB_email}}\",\n  \"password\": \"{{userB_password}}\"\n}",
+              "raw": "{\n  \"username\": \"{{userB_username}}\",\n  \"email\": \"{{userB_email}}\",\n  \"password\": \"{{userB_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -132,7 +132,7 @@
                   "const d = pm.response.json().data;",
                   "pm.environment.set(\"accessTokenB\", d.accessToken);",
                   "pm.environment.set(\"userBId\", d.user.id);",
-                  "pm.test(\"no avatar for a plain register\", () => pm.expect(d.user.avatar).to.eql(null));",
+                  "pm.test(\"the auth response carries no profile fields\", () => pm.expect(d.user).to.not.have.any.keys(\"name\", \"email\", \"avatar\", \"bio\"));",
                   "pm.test(\"refresh cookie set\", () => pm.expect(pm.cookies.has(\"refreshToken\")).to.be.true);"
                 ]
               }
@@ -159,7 +159,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"{{userA_username}}\",\n  \"password\": \"{{userA_password}}\"\n}",
+              "raw": "{\n  \"identifier\": \"{{userA_username}}\",\n  \"password\": \"{{userA_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -175,7 +175,7 @@
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
                   "pm.test(\"success envelope\", () => pm.expect(pm.response.json().success).to.eql(true));",
-                  "pm.environment.set(\"accessTokenA\", pm.response.json().data.accessToken);",
+                  "if (pm.response.code === 200) pm.environment.set(\"accessTokenA\", pm.response.json().data.accessToken);",
                   "pm.test(\"refresh cookie rotated in\", () => pm.expect(pm.cookies.has(\"refreshToken\")).to.be.true);"
                 ]
               }
@@ -249,7 +249,10 @@
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
                   "pm.test(\"new access token issued\", () => pm.expect(pm.response.json().data.accessToken).to.be.a(\"string\"));",
-                  "pm.environment.set(\"accessTokenA\", pm.response.json().data.accessToken);"
+                  "// Both users share one cookie jar, so a refresh proves whose session it renewed.",
+                  "const refreshedA = pm.response.code === 200 && String(pm.response.json().data.user.id) === String(pm.environment.get(\"userAId\"));",
+                  "pm.test(\"the refreshed session is User A's\", () => pm.expect(refreshedA).to.be.true);",
+                  "if (refreshedA) pm.environment.set(\"accessTokenA\", pm.response.json().data.accessToken);"
                 ]
               }
             }
@@ -351,7 +354,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"username\": \"{{userA_username}}\",\n  \"name\": \"Dupe\",\n  \"email\": \"dupe@verify.local\",\n  \"password\": \"{{userA_password}}\"\n}",
+                  "raw": "{\n  \"username\": \"{{userA_username}}\",\n  \"email\": \"dupe@verify.local\",\n  \"password\": \"{{userA_password}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -392,7 +395,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"username\": \"{{userA_username}}\",\n  \"password\": \"wrong-password-xx\"\n}",
+                  "raw": "{\n  \"identifier\": \"{{userA_username}}\",\n  \"password\": \"wrong-password-xx\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -505,7 +508,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"username\": \"shortpw_user\",\n  \"name\": \"X\",\n  \"email\": \"x@verify.local\",\n  \"password\": \"x\"\n}",
+                  "raw": "{\n  \"username\": \"shortpw_user\",\n  \"email\": \"x@verify.local\",\n  \"password\": \"x\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
