@@ -1,8 +1,8 @@
 # Verification Runbook — Media Subsystem & Core Flows (M1–M9 + Comment Media)
 
-> A **manual** verification pass over the running system, before the destructive
-> lifecycle work (**M11 reclamation**) runs. The M10 background substrate now
-> exists but performs no deletion, so the pass is still non-destructive. It exists
+> A **manual** verification pass over the running system. It deletes no stored
+> bytes: reclamation runs report-only by default ([Media](../../backend/media.md)),
+> and nothing here enables it. It exists
 > because the most important thing to verify — **Reference Coordination** — has no
 > API and is only observable in the database. Comment Media is the third reference
 > producer (after tweets and avatars); its scenarios live in folder 08.
@@ -26,7 +26,6 @@ verification: the ledger, `TweetMedia` rows, and `MediaObject` internals
 | What you are verifying | Postman sees | Only pgAdmin sees |
 |---|---|---|
 | Object stored & servable | `GET /media/:token` → 200 | `status`, `uploader_id` |
-| Avatar attached | `avatar:{token}` on the user | the `user-avatar:{id}` ledger row |
 | Tweet media | `media:[{token}]` on the tweet | `tweet_media` rows + `tweet:{id}` ledger rows |
 | **Reference began / ended** | *(nothing)* | **the ledger delta — the whole point** |
 | Unreferenced (M11 target) | *(nothing)* | the reclamation target state (see terminology) |
@@ -114,7 +113,7 @@ Against a server somewhere other than the default, append
 > secrets, for the same reason captured mail is ignored.
 
 **PWR-14 has no script**, and cannot: it needs a restart at a short
-`RESET_CODE_TTL_MS` and a wait. It stays a hand-run step — see its note below.
+`RESET_CODE_TTL_MS` with a shorter `RESET_RESEND_COOLDOWN_MS`, and a wait. It stays a hand-run step — see its note below.
 
 ## How auth is handled
 
@@ -136,9 +135,10 @@ Against a server somewhere other than the default, append
 
 ## Rate-limit awareness (test-only friction, not a bug)
 
-- `authLimiter` = **10 requests / 15 min** on `register` + `login`. The auth
-  failure-path folder can trip this; a `429 rate_limit` there is the limiter
-  working, not a defect. Space them out or accept the window.
+- `authLimiter` = **10 requests / 15 min** per IP, counting every `register` and
+  `login` whatever it answers. Folders 01, 09 and 10 spend all ten between them
+  before CHV-12's restart clears the counter, so repeating any of them first
+  needs a restart. A `429 rate_limit` there is the limiter working, not a defect.
 
 ## DB checkpoints
 
@@ -155,19 +155,9 @@ ORDER BY id DESC
 LIMIT 10;
 ```
 
-### Checkpoint B — Avatar (authenticated User/Profile action)
-```sql
--- An avatar set via PATCH /users/me: uploader_id is the owning user, and a
--- ledger row exists under user-avatar:{id}.
-SELECT u.id AS user_id, u.avatar_media_id, m.status, m.uploader_id,
-       r.referrer
-FROM users u
-JOIN media_objects m ON m.id = u.avatar_media_id
-LEFT JOIN media_references r
-       ON r.media_id = u.avatar_media_id AND r.referrer = 'user-avatar:' || u.id
-WHERE u.username = 'verify_avatar';
--- Expect: uploader_id = user_id, status='ready', referrer='user-avatar:{id}' (NOT NULL).
-```
+### Checkpoint B — retired
+
+It checked the avatar of the account the pre-auth avatar folder created, and was retired with that folder and the upload grant (ADR 0008). Where the authenticated avatar is proven is the [catalogue's §3](verification-scenarios.md#3--avatar--retired-pre-auth-adoption-removed).
 
 ### Checkpoint C — Tweet create with media (after "Create tweet with 2 media")
 ```sql
@@ -245,14 +235,17 @@ SELECT
 
 ### Checkpoint G — Rollback proof (after "cross-principal attach" failure)
 ```sql
--- The failed create must leave NOTHING: no tweet, no tweet_media, no ledger row
--- for the rejected object. Confirms the whole operation rolled back atomically.
+-- The failed creates (TWT-07, then the cross-principal attach) must leave NOTHING:
+-- no tweet, no tweet_media, no ledger row for either object they named.
 SELECT
   (SELECT count(*) FROM tweets WHERE body = 'should fail')                     AS stray_tweets,
   (SELECT count(*) FROM media_references
      WHERE media_id = (SELECT id FROM media_objects
+                       WHERE token = :mediaTokenA1))                           AS strays_for_A1_object,
+  (SELECT count(*) FROM media_references
+     WHERE media_id = (SELECT id FROM media_objects
                        WHERE token = :mediaTokenB1))                           AS strays_for_B_object;
--- Both = 0.
+-- All three = 0.
 ```
 
 ### Checkpoint H — Username rename & reservation (folder 09)
@@ -323,10 +316,11 @@ FROM channel_verifications WHERE user_id = :cvUserId;
 -- 5. AFTER CHV-12 (a challenge expired, with no sweep run): the expired row is
 --    STILL HERE, and the self-view still reads unproven. That is the point —
 --    status is derived, so no writer is needed for expiry to be correct.
+--    Timestamps are stored in UTC without a zone, so now() is read in UTC too.
 SELECT count(*) AS expired_but_unswept
 FROM channel_verification_challenges ch
 JOIN channel_verifications v ON v.id = ch.verification_id
-WHERE v.user_id = :cvUserId AND ch.closed_at IS NULL AND ch.expires_at < now();
+WHERE v.user_id = :cvUserId AND ch.closed_at IS NULL AND ch.expires_at < now() AT TIME ZONE 'UTC';
 ```
 > **CHV-11 moves `users.email` directly**, because no endpoint does. That changes
 > an *input* the capability is asked about; the capability's own state is
@@ -389,7 +383,7 @@ WHERE tc.table_name = 'password_reset_challenges'
   AND ccu.table_name LIKE 'channel_verification%';
 
 -- 2. The credential, and the shape it is stored in. After PWR-02 exactly one
---    row; after PWR-03 still exactly one (the cooldown minted nothing);
+--    row; after PWR-03 and PWR-03b still exactly one (the cooldown minted nothing);
 --    code_hash is a 64-character digest and never the code itself.
 SELECT id, user_id, length(code_hash) AS code_hash_length,
        expires_at, used_at, created_at
@@ -406,7 +400,8 @@ WHERE user_id = :pwrUserId;
 -- 4. DERIVED, NOT STORED (I8): after PWR-14 the expired row is still present
 --    and still unspent. Nothing had to write for confirm to refuse it, and no
 --    sweep has run. MUST return the row, with used_at NULL and expires_at past.
-SELECT id, expires_at, used_at, expires_at < now() AS is_expired
+--    Timestamps are stored in UTC without a zone, so now() is read in UTC too.
+SELECT id, expires_at, used_at, expires_at < now() AT TIME ZONE 'UTC' AS is_expired
 FROM password_reset_challenges
 WHERE user_id = :pwrUserId
 ORDER BY created_at DESC
@@ -455,7 +450,7 @@ WHERE table_name = 'password_reset_sessions' AND column_name = 'user_id';
 SELECT id, challenge_id, user_id, resends_used, masked_endpoint,
        last_asked_at, expires_at, created_at
 FROM password_reset_sessions
-WHERE expires_at > now()
+WHERE expires_at > now() AT TIME ZONE 'UTC'
 ORDER BY created_at DESC;
 
 -- 8. THE MASK IS WHAT IS STORED (D5). Masking happens where the address is
@@ -483,7 +478,8 @@ WHERE masked_endpoint NOT LIKE '%•%';
 > **PWR-14 is a runbook step, not a request.** The default `RESET_CODE_TTL_MS` is
 > ten minutes, which is not waitable by hand, and shortening it for the whole
 > folder would expire codes before they can be pasted. Restart the API with
-> `RESET_CODE_TTL_MS=5000`, run PWR-02 again to mint a fresh code, wait past five
+> `RESET_CODE_TTL_MS=5000` and `RESET_RESEND_COOLDOWN_MS=1000` (both, as
+> [local setup](../setup.md#password-reset) requires), run PWR-02 again to mint a fresh code, wait past five
 > seconds, then confirm it. The answer must be the same `400` as PWR-04, and
 > query 4 above must still find the row — the point being that **no writer had to
 > run** for an expired credential to stop working.
@@ -568,8 +564,8 @@ WHERE m.token IN (:cmCascadeTweetMedia, :cmCascadeCommentMedia);   -- both: stat
 -- the ON DELETE RESTRICT backstop guards a code path that ever forgets to.
 BEGIN;
 DELETE FROM tweets WHERE id = :cmRestrictTweetId;
--- Expect: ERROR: update or delete on table "tweets" violates foreign key
---         constraint "comments_tweet_id_fkey" on table "comments"
+-- Expect: an ERROR naming constraint "comments_tweet_id_fkey" on table "comments";
+--         the wording around it varies by PostgreSQL version.
 ROLLBACK;   -- leaves the tweet + comment intact
 ```
 > Likes still cascade (untouched by Comment Media); the restrict comment is
@@ -585,8 +581,8 @@ the whole collection at once — the point is to inspect state between steps.
 |---|---|---|
 | 1 — Auth spine | 00, 01 | none (API-observable only) |
 | 2 — Media primitives | 02 | **A** |
-| 3 — Avatar (authenticated) | 03 | **B** |
-| 4 — Tweet coordination | 04 | **C → D (×3) → E**, then **G** for the failure |
+| 3 — Avatar | — | retired with the upload grant |
+| 4 — Tweet coordination | 04 | **C → D (×3) → E**, then **G** for the failures |
 | 5 — Social | 05, 06, 07 | none |
 | 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |
 | 7 — Username rename | 09 | **H** (after USR-01, USR-09, and USR-10) |
@@ -613,7 +609,7 @@ checkpoint is named.
 | **B** PATCH | B1 → … → B8 | `cmPatchCommentId`, `cmMediaSet`, `cmMediaReplace` | `cmTweetId` | 201 then 200 ×7 | **CM-2** after each of B4·B5·B6·B7 |
 | **C** Delete | C1 → C2 → C3 | `cmMediaDelete`, `cmDeleteCommentId` | `cmTweetId` | 201 / 201 / 204 | **CM-3** after C3 |
 | **D** Cross-principal | D1 | — | `cmTweetId`, `cmMediaB` | **422** (opaque) | **CM-4** after D1 |
-| **E** Cascade | E1 → E2 → E3 → E4 → E5 | `cmCascadeTweetMedia`, `cmCascadeTweetId`, `cmCascadeCommentMedia`, `cmCascadeCommentId` | — (fresh tweet) | 201×4 / 204 | **CM-5** after E5 |
+| **E** Cascade | E1 → E2 → E3 → E4 → E5 → E6 | `cmCascadeTweetMedia`, `cmCascadeTweetId`, `cmCascadeCommentMedia`, `cmCascadeCommentId` | — (fresh tweet) | 201×4 / 204 / 404 | **CM-5** after E5 |
 | **F** Restrict | F1 → F2 | `cmRestrictTweetId`, `cmRestrictCommentId` | — (fresh tweet) | 201 / 201 | **CM-6** in pgAdmin (raw `DELETE … ROLLBACK`) |
 | **Close** | — | — | — | — | **Checkpoint F** (extended) → all four = 0 |
 
@@ -642,7 +638,7 @@ TRUNCATE TABLE media_objects RESTART IDENTITY CASCADE;
 DELETE FROM users WHERE email LIKE '%@verify.local';
 ```
 > Uploaded **bytes on disk** (under `apps/api/uploads/`) are *not* removed by SQL —
-> Media owns physical deletion and M11 does not exist yet. Clearing the registry
+> Media owns physical deletion, and its reclamation runs report-only by default. Clearing the registry
 > rows leaves those files as orphaned bytes. For this manual phase that is
 > harmless; delete `apps/api/uploads/*` by hand if you want a truly clean slate.
 
@@ -659,7 +655,7 @@ generate the oversize / additional-type files locally.
 
 ## What this phase deliberately does not do
 
-- It does not run M10/M11 — no background execution, no physical deletion.
-- It does not delete uploaded bytes (there is no reclaimer yet; that is M11).
+- It exercises no background job and deletes no uploaded bytes — reclamation's
+  destructive path is certified by its [automated suite](README.md#automated-m11-destructive-path-certification).
 - It does not exercise the compose UI (M9b is deferred) — the client flow is
   simulated by the Postman upload-then-submit-reference sequence.

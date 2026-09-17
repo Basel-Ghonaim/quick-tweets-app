@@ -21,12 +21,6 @@
       "enabled": true
     },
     {
-      "key": "userA_name",
-      "value": "Alice Verify",
-      "type": "default",
-      "enabled": true
-    },
-    {
       "key": "userA_email",
       "value": "alice@verify.local",
       "type": "default",
@@ -41,12 +35,6 @@
     {
       "key": "userB_username",
       "value": "verify_bob",
-      "type": "default",
-      "enabled": true
-    },
-    {
-      "key": "userB_name",
-      "value": "Bob Verify",
       "type": "default",
       "enabled": true
     },
@@ -82,18 +70,6 @@
     },
     {
       "key": "userBId",
-      "value": "",
-      "type": "default",
-      "enabled": true
-    },
-    {
-      "key": "avatarGrant",
-      "value": "",
-      "type": "secret",
-      "enabled": true
-    },
-    {
-      "key": "avatarToken",
       "value": "",
       "type": "default",
       "enabled": true

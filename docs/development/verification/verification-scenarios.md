@@ -22,7 +22,7 @@
 ## Legend
 
 - **Ledger** = `media_references` table (referrer + media_id).
-- **Referrer tags**: `tweet:{tweetId}`, `user-avatar:{userId}`.
+- **Referrer tags**: `tweet:{tweetId}`, `user-avatar:{userId}`, `comment:{commentId}`.
 - **Unreferenced** = an owned object (`uploader_id` set) with no ledger row — the
   single M11 reclamation target. (The pre-auth grant "abandoned" class was retired
   with the upload grant, ADR 0008.) See the runbook's terminology section.
@@ -33,17 +33,17 @@
 
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
 |----|---------------|--------|---------------------|-------------------|---------|----------------|
-| AUTH-01 | Clean DB | Register User A | 201; `{user, accessToken}`; `user.avatar = null`; refresh + `qt_session` cookies set | `users` row for A; a `refresh_tokens` row | — | |
+| AUTH-01 | Clean DB | Register User A | 201; `{user, accessToken}`; `user` carries no profile fields; refresh + `qt_session` cookies set | `users` row for A; a `refresh_tokens` row | — | |
 | AUTH-02 | AUTH-01 | Register User B | 201; distinct user | second `users` row | — | |
 | AUTH-03 | AUTH-01 | Login A (correct) | 200; new `accessToken`; refresh cookie rotated | new `refresh_tokens` row | — | |
-| AUTH-04 | AUTH-03 | GET /me with Bearer A | 200; identity matches A | — | — | |
+| AUTH-04 | AUTH-03 | `GET /users/me` with Bearer A | 200; identity matches A | — | — | |
 | AUTH-05 | AUTH-03 | POST /refresh (cookie) | 200; new `accessToken`; cookie rotated | old refresh token replaced by new | — | |
 | AUTH-06 | AUTH-03 | Logout | 204; cookies cleared | A's current `refresh_tokens` row removed | — | |
 | AUTH-07 | AUTH-03 (multi-session) | Logout-all | 204 | **all** A's `refresh_tokens` rows removed | — | |
 | AUTH-08 | AUTH-01 | Register duplicate username | 409 `conflict` | no new row | — | |
 | AUTH-09 | AUTH-01 | Login wrong password | 401 `unauthorized` | no new refresh token | — | |
 | AUTH-10 | Logged out | Refresh with no cookie | 401 | — | — | |
-| AUTH-11 | — | GET /me with no token | 401 `unauthorized` | — | — | |
+| AUTH-11 | — | `GET /users/me` with no token | 401 `unauthorized` | — | — | |
 | AUTH-12 | — | Register with short password | 422 `validation` | no new row | — | |
 
 ## 2 · Media primitives
@@ -86,13 +86,13 @@ no longer describe executable behavior and are retired rather than rewritten her
 | TWT-04 | TWT-03 | PATCH `media:[A2]` (drop A1) | 200; `media` = 1 | ledger: **A1 ended, A2 remains** (Checkpoint D) | — | |
 | TWT-05 | TWT-04 | PATCH `media:[]` | 200; `media` = 0 | ledger: **0 rows** for the tweet | — | |
 | TWT-06 | TWT-01 (2 media) | PATCH `body` only, **omit** `media` | 200; `media` unchanged | `tweet_media` and ledger **untouched** | — | |
-| TWT-07 | A owns media A1 | Create tweet, but include a token that fails attach | 422; whole request fails | **rollback**: no tweet, no `tweet_media`, no ledger row (Checkpoint G) | — | |
+| TWT-07 | TWT-08 (A1 owned by A, now unreferenced) | Create tweet with `media:[A1, <a token that fails attach>]` | 422; whole request fails | **rollback**: no tweet, no `tweet_media`, no ledger row for A1 (Checkpoint G) | — | |
 | TWT-08 | TWT-01 | Delete the tweet | 204 | tweet + `tweet_media` gone; **ledger rows gone**; objects survive `status=ready`, `uploader_id` set → **unreferenced** (Checkpoint E) | — | |
 | TWT-09 | A owns A1; B owns B1 | A creates tweet with `media:[B1]` (cross-principal) | 422; error **does not name** the token | rollback — nothing persisted | — | |
 | TWT-10 | Login A | Create tweet with the **same** token twice | 422 `validation` | no tweet | — | |
 | TWT-11 | Login A | Create tweet with 5 tokens (> MAX) | 422 `validation` | no tweet | — | |
 | TWT-12 | A owns tweet T; login B | B deletes A's tweet | 403 / 404 | A's tweet untouched | — | |
-| TWT-13 | After TWT-08 | Run the **global invariant** (Checkpoint F) | — | all three counts = 0 | — | |
+| TWT-13 | After TWT-08 | Run the **global invariant** (Checkpoint F) | — | all four counts = 0 | — | |
 
 ## 5 · Comments
 
@@ -103,7 +103,7 @@ no longer describe executable behavior and are retired rather than rewritten her
 | CMT-03 | CMT-01 | Update own comment | 200; edited body | row updated | — | |
 | CMT-04 | CMT-01 | Delete own comment | 204 | `comments` row removed | — | |
 | CMT-05 | Comment by A; login B | B updates A's comment | 403 | unchanged | — | |
-| CMT-06 | Tweet T deleted | List comments for T | comments cascade-removed with the tweet | no `comments` rows for T | — | |
+| CMT-06 | Folder 08's cascade tweet, deleted with its comment (E5) | List comments for that tweet (E6) | **404** `not_found` — the tweet is gone | no `comments` rows for it (CM-5) | — | |
 
 ## 5b · Comment media — Attach, Coordination, Cascade (Comment Media)
 
@@ -155,7 +155,7 @@ no longer describe executable behavior and are retired rather than rewritten her
 | FOL-03 | FOL-01 | List B's following | 200; A present | — | — | |
 | FOL-04 | FOL-01 | GET /users/A (as B) | 200; `isFollowing:true`, counts present | — | — | |
 | FOL-05 | FOL-01 | B unfollows A | 200; `isFollowing:false` | `follows` row removed | — | |
-| FOL-06 | login B | B follows A **twice** | idempotent / no duplicate | single `follows` row (unique pair) | — | |
+| FOL-06 | login B | B follows A **twice** | **409** `conflict` — already following; no duplicate | single `follows` row (unique pair) | — | |
 
 ## 8 · Username rename & locator stability (WI-F)
 
@@ -321,7 +321,7 @@ each:
 | CHV-07 | CHV-06 | `GET /users/me` | 200; `emailVerification = "proven"` | **no verification column on `users`** (Checkpoint I) | — | ✅ |
 | CHV-08 | CHV-06 | confirm with the **same** code again | **byte-identical** to CHV-04 — a replay is indistinguishable from a wrong value (**G2**, **D5**) | unchanged | — | ✅ |
 | CHV-09 | — | `POST …/challenges` with **no** Bearer | **401** `unauthorized` | none | — | ✅ |
-| CHV-10 | CHV-06; wait out the 60s cooldown | issue again, then confirm with the **superseded** code, then the **current** one | superseded → **400**; current → **204** (**D2** rotation) | prior challenge `closed_reason = 'superseded'` | via reset | ✅ |
+| CHV-10 | CHV-06; wait out the 60s cooldown | issue again | **202** — a new challenge after the cooldown; rotation itself is proven in the API unit lane | the verified challenge **still present**, the new one **open** beside it; nothing reads `superseded`, since CHV-06 left none open (Checkpoint I) | via reset | ✅ |
 | CHV-11 | CHV-06 (`proven`) | move `users.email` (see the runbook — no endpoint exists), then `GET /users/me` | 200; `emailVerification = "unproven"` (**G3**) | capability rows **unchanged** — reading wrote nothing | restore address | ✅ |
 | CHV-12 | Restart with a short TTL; a fresh unproven address | issue, wait past expiry, `GET /users/me` — **run no sweep** | `pending` → **`unproven`** (**G4**, **I8**) | the expired challenge row is **still present**, unswept — no writer was needed | via reset | ✅ |
 | CHV-13 | **Run last**, and **after CHV-12's restart** — six confirmations are already spent | eleven confirmations in a row | attempts 1–10 → 400; **attempt 11 → 429** `rate_limit` (**D5**) | unchanged | wait 15 min or restart | ✅ |
@@ -399,7 +399,7 @@ verifies, in one line each:
 > system. Read that as a missing migration, never as a defect.
 >
 > **Two ordering constraints, both consequences rather than preferences.**
-> **PWR-14 needs a restart** with a short `RESET_CODE_TTL_MS`, because the default
+> **PWR-14 needs a restart** with a short `RESET_CODE_TTL_MS` and a shorter `RESET_RESEND_COOLDOWN_MS`, because the default
 > ten minutes is not waitable by hand and shortening it for the whole folder would
 > expire codes before they can be pasted. **PWR-15 must run last, and after its
 > own restart** — it exhausts the per-IP mint budget for fifteen minutes and
@@ -437,10 +437,10 @@ verifies, in one line each:
 | PWR-12 | PWR-10 | login with the **old** password | **401** `unauthorized`, the generic credential error | unchanged | — | ☐ |
 | PWR-13 | PWR-10 | apply again, the position now cleared | **byte-identical** to PWR-04 — a replay is indistinguishable from a value that never existed (**G2**) | unchanged | — | ☐ |
 | PWR-13a | PWR-10 | `POST …/resend` with the position cleared | **byte-identical** to PWR-04 — no position, past the step, and out of asks are one outcome (**G2**) | unchanged | — | ☐ |
-| PWR-14 | Restart with a short `RESET_CODE_TTL_MS`; request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
+| PWR-14 | Restart with a short `RESET_CODE_TTL_MS` and a shorter `RESET_RESEND_COOLDOWN_MS` (see the runbook); request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
 | PWR-14a | Restart with `RESET_MAX_RESENDS=1`; request a fresh code | resend once, then read the session | first resend **202**; the read then shows **`canResend:false`** | `resends_used` is **1** | — | ☐ |
 | PWR-14b | PWR-14a | resend again | **400**, identical to PWR-04 — the bound is spent, and the read had already said so | `resends_used` **unchanged at 1**, and `expires_at` **stops moving** | restart | ☐ |
-| PWR-15 | **Run last**, after a restart clearing the in-memory counter | six requests in a row | attempts 1–5 → **202**; **attempt 6 → 429** `rate_limit` | unchanged | wait 15 min or restart | ☐ |
+| PWR-15 | **Run last**, after a restart clearing the in-memory counter | eleven requests in a row | attempts 1–10 → **202**; **attempt 11 → 429** `rate_limit` | unchanged | wait 15 min or restart | ☐ |
 
 > **Why there is no `429` here that the capability itself produced.** Folder 10 has
 > two different `429`s — a per-address cooldown and a per-IP limiter — and reading
