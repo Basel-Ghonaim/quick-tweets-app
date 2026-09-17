@@ -195,6 +195,17 @@ describe("tweet edit — full replacement", () => {
     expect(began).toEqual([{ mediaId: 33, referrer: "tweet:1", client: TX }]);
   });
 
+  it("answers with the media it now holds, in submitted order", async () => {
+    const w = makeWorld();
+    w.stored.set(1, [{ mediaId: 11, position: 0 }]);
+    const { media } = makeMedia({ tokA: 11, tokC: 33 });
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    const tweet = await svc.update(1, AUTHOR, { media: ["tokC", "tokA"] });
+
+    expect(tweet.media).toEqual([{ token: "tok-33" }, { token: "tok-11" }]);
+  });
+
   it("signals nothing when media is only reordered", async () => {
     // Rows are rewritten wholesale, but a reordered object never stopped being
     // referenced — ending and re-beginning it would misrepresent what happened.
