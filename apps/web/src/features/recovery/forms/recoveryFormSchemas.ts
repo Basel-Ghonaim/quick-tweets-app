@@ -68,6 +68,7 @@ const passwordFields = {
       matchesPattern(newPasswordPolicy.uppercase, VALIDATION_MESSAGES.passwordComplexity.uppercase),
       matchesPattern(newPasswordPolicy.digit, VALIDATION_MESSAGES.passwordComplexity.digit),
       matchesPattern(newPasswordPolicy.special, VALIDATION_MESSAGES.passwordComplexity.special),
+      matchesPattern(newPasswordPolicy.characters, VALIDATION_MESSAGES.passwordCharacters),
     ],
   },
   confirmPassword: {

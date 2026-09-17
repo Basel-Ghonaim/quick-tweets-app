@@ -75,6 +75,10 @@ const registerFields = {
         newPasswordPolicy.special,
         VALIDATION_MESSAGES.passwordComplexity.special,
       ),
+      matchesPattern(
+        newPasswordPolicy.characters,
+        VALIDATION_MESSAGES.passwordCharacters,
+      ),
     ],
   },
   email: {
