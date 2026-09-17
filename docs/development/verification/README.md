@@ -178,7 +178,7 @@ rather than by trusting the endpoint; and **spent/expired is derived**, so an
 expired credential is refused with its row still sitting there unswept.
 
 **Two** ordering constraints, both consequences: **PWR-14 needs a restart** with a
-short `RESET_CODE_TTL_MS`, since the default ten minutes is not waitable by hand;
+short `RESET_CODE_TTL_MS` and a shorter `RESET_RESEND_COOLDOWN_MS`, since the default ten minutes is not waitable by hand;
 and **PWR-15 runs last, after its own restart**, because it exhausts the per-IP
 request budget for fifteen minutes. PWR-15 starts from a cleared counter on
 purpose — folder 10's CHV-13 has to document exactly how many attempts precede it

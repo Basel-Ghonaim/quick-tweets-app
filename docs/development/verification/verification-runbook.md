@@ -113,7 +113,7 @@ Against a server somewhere other than the default, append
 > secrets, for the same reason captured mail is ignored.
 
 **PWR-14 has no script**, and cannot: it needs a restart at a short
-`RESET_CODE_TTL_MS` and a wait. It stays a hand-run step — see its note below.
+`RESET_CODE_TTL_MS` with a shorter `RESET_RESEND_COOLDOWN_MS`, and a wait. It stays a hand-run step — see its note below.
 
 ## How auth is handled
 
@@ -475,7 +475,8 @@ WHERE masked_endpoint NOT LIKE '%•%';
 > **PWR-14 is a runbook step, not a request.** The default `RESET_CODE_TTL_MS` is
 > ten minutes, which is not waitable by hand, and shortening it for the whole
 > folder would expire codes before they can be pasted. Restart the API with
-> `RESET_CODE_TTL_MS=5000`, run PWR-02 again to mint a fresh code, wait past five
+> `RESET_CODE_TTL_MS=5000` and `RESET_RESEND_COOLDOWN_MS=1000` (both, as
+> [local setup](../setup.md#password-reset) requires), run PWR-02 again to mint a fresh code, wait past five
 > seconds, then confirm it. The answer must be the same `400` as PWR-04, and
 > query 4 above must still find the row — the point being that **no writer had to
 > run** for an expired credential to stop working.

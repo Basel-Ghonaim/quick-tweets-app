@@ -399,7 +399,7 @@ verifies, in one line each:
 > system. Read that as a missing migration, never as a defect.
 >
 > **Two ordering constraints, both consequences rather than preferences.**
-> **PWR-14 needs a restart** with a short `RESET_CODE_TTL_MS`, because the default
+> **PWR-14 needs a restart** with a short `RESET_CODE_TTL_MS` and a shorter `RESET_RESEND_COOLDOWN_MS`, because the default
 > ten minutes is not waitable by hand and shortening it for the whole folder would
 > expire codes before they can be pasted. **PWR-15 must run last, and after its
 > own restart** — it exhausts the per-IP mint budget for fifteen minutes and
@@ -437,7 +437,7 @@ verifies, in one line each:
 | PWR-12 | PWR-10 | login with the **old** password | **401** `unauthorized`, the generic credential error | unchanged | — | ☐ |
 | PWR-13 | PWR-10 | apply again, the position now cleared | **byte-identical** to PWR-04 — a replay is indistinguishable from a value that never existed (**G2**) | unchanged | — | ☐ |
 | PWR-13a | PWR-10 | `POST …/resend` with the position cleared | **byte-identical** to PWR-04 — no position, past the step, and out of asks are one outcome (**G2**) | unchanged | — | ☐ |
-| PWR-14 | Restart with a short `RESET_CODE_TTL_MS`; request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
+| PWR-14 | Restart with a short `RESET_CODE_TTL_MS` and a shorter `RESET_RESEND_COOLDOWN_MS` (see the runbook); request a fresh code | wait past expiry, then confirm — **run no sweep** | **400**, identical to PWR-04 (**G5**, **I8**) | the expired row is **still present**, unswept — no writer was needed | via reset | ☐ |
 | PWR-14a | Restart with `RESET_MAX_RESENDS=1`; request a fresh code | resend once, then read the session | first resend **202**; the read then shows **`canResend:false`** | `resends_used` is **1** | — | ☐ |
 | PWR-14b | PWR-14a | resend again | **400**, identical to PWR-04 — the bound is spent, and the read had already said so | `resends_used` **unchanged at 1**, and `expires_at` **stops moving** | restart | ☐ |
 | PWR-15 | **Run last**, after a restart clearing the in-memory counter | six requests in a row | attempts 1–5 → **202**; **attempt 6 → 429** `rate_limit` | unchanged | wait 15 min or restart | ☐ |
