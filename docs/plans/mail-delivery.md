@@ -1,15 +1,16 @@
 # Mail Delivery — Execution Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-04
+> **Last Updated:** 2026-09-17
 > **Parent Issue:** [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)
 > **Supersedes:** —
+> **Archived:** 2026-09-17 — completed, the human Postman gate on folder 10 and the real-inbox delivery check having been run by hand and passed, as the owner reported that day. Its durable facts now live in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), [`backend/mail.md`](../backend/mail.md), the [data model](../architecture/data-model.md), the [API contract](../api/api-contract.md), [Backend Security](../backend/security.md) and the [system overview](../architecture/system-overview.md); this plan is retained as provenance.
 
-**Implementation status: Complete** · **Engineering work: Complete** · **Closure status: Pending Human Gate** · **Human Postman Gate: Deferred — Not Run**
+**Implementation status: Complete** · **Engineering work: Complete** · **Human Postman Gate (folder 10): Run and passed** · **Closure status: Complete**
 
-All six Work Items are merged and the mechanism is code-complete — every criterion recorded, criterion by criterion, in [§9](#9--reconciliation). The plan stays `Active` for **one** reason: the human Postman gate is a completion criterion, it is deferred, and it has not been run. It is **not** marked passed, and an automated pass of folder 10 is not a substitute for it — **D11** is unchanged. When that gate is performed, the plan transitions to `Historical`; the only other item §9 leaves open is the defining outcome, which was reported as executed by hand and is cited there as testimony rather than as something this repository verifies.
+All six Work Items are merged and the mechanism is code-complete — every criterion recorded, criterion by criterion, in [§9](#9--reconciliation). The two criteria only a person could meet — the human Postman gate, and the defining outcome of a code received in a real inbox — were performed by hand, as the owner reported on 2026-09-17. No repository artefact reproduces either; this record states them as that report.
 
 This plan sequences the implementation of a **real outbound mail mechanism** into six independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), which owns the boundary, the production posture, the abuse controls and the result semantics, and which this plan never reopens. The mechanism as it exists today is owned by [`backend/mail.md`](../backend/mail.md).
 
@@ -256,8 +257,8 @@ Two consequences follow. Its **WI-8 criterion is retired, not met** (**D11**), a
 
 - **Met.** All six Work Items merged, each green under the real gate · production refuses to boot on a mode that cannot deliver, development unchanged · three outcomes, each with a producer, and a wire field that asserts no delivery · the controls enforced over every backend, fail-closed, the ceiling's trip alarmed and distinguishable in diagnostics only · retention cannot fall below the longest window · cap state references no consumer and is pruned on its own schedule · `shared/mail/` is gone and no module under `shared/` owns a model · `mail.md`, `api-contract.md` and `data-model.md` co-versioned, and `security.md` cedes the cap by name.
 - **Not verifiable from the repository.** *"The ceiling sits below the provider's own limit"* — no provider is named anywhere in the code, by design (**D1**); the default is set against a general free-tier allowance rather than a named one, so this is a configuration claim an operator confirms, not a repository fact.
-- **Outstanding.** Two, and both need a person.
-  - **The defining outcome** — a code requested for a real personal address, **received in that inbox**, read and used successfully. It was reported as executed by hand during WI-1. That is testimony from the session that performed it; no artefact in this repository reproduces it, and this record does not restate it as something verified here.
+- **Met by a person.** Two, as the owner reported on 2026-09-17; no artefact in this repository reproduces either, and this record states them as that report rather than as something verified here.
+  - **The defining outcome** — a code requested for a real personal address, **received in that inbox**, read and used successfully; first reported as executed by hand during WI-1.
   - **The human Postman gate** — see below.
 
 ### The harness run
@@ -266,7 +267,7 @@ Folder 10 was executed under **Newman** against the collection as it stands afte
 
 **What it does not cover:** CHV-11 and CHV-12 are runbook steps rather than requests; CHV-13 ran once where the scenario is eleven attempts. The two steps the collection documents as manual — reading the code from the capture file, and waiting out the cooldown — were performed by the driver.
 
-**The human Postman gate is `Deferred — Not Run`**, and an automated pass is not a substitute for it. **D11** stands unchanged: the gate is run once, by a person, on the final harness, and Channel Verification's WI-8 criterion ([#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450)) is **retired rather than met** — never presented as a retrospective pass, and no more so for an automated run having gone green.
+**The human Postman gate has been run by a person and passed**, as the owner reported on 2026-09-17. The automated pass above was never a substitute for it, and is not counted as one. **D11** is met as it was written: the gate was run once, by a person, and Channel Verification's WI-8 criterion ([#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450)) stays **retired rather than met** — never presented as a retrospective pass.
 
 ### Findings and follow-ups recorded
 
@@ -274,4 +275,4 @@ A closing review of this effort recorded, and deliberately did not fix: the code
 
 ### Status
 
-This plan stays **`Active`** until the human gate is run. Everything the effort set out to build is built, merged and recorded above; what remains is a person's act, and archiving before it would claim a completion the plan itself defines as theirs to give.
+This plan is **`Historical`** as of 2026-09-17. Everything the effort set out to build is built, merged and recorded above, and the person's act the plan defined as its last criterion has been given, as the owner reported.
