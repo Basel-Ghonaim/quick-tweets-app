@@ -2,7 +2,7 @@
 // hands the error pipeline the words it reports failures in.
 
 import { setupAuthClient } from "@shared/api";
-import { CATALOGUES, ERROR_COPY } from "@shared/copy";
+import { CATALOGUES, currentCopy } from "@shared/copy";
 import { setupErrorMessages } from "@shared/errors";
 import { setupLocalisation } from "@shared/localisation";
 import { reduxStore } from "./store/store";
@@ -10,7 +10,7 @@ import { sessionActions, refreshSession, selectAccessToken } from "@shared/sessi
 
 export const bootstrap = () => {
   setupLocalisation(CATALOGUES);
-  setupErrorMessages(ERROR_COPY);
+  setupErrorMessages(() => currentCopy().errors);
 
   setupAuthClient(
     () => selectAccessToken(reduxStore.getState()),

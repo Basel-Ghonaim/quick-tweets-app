@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { Button, Input, MessageRegion, Typography } from "@shared/design-system";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { useCodeFlow } from "@shared/channel-verification";
-import { VERIFICATION_MESSAGES } from "./messages";
+import { verificationMessages } from "./messages";
 import { RouteLink } from "@shared/routing";
 import styles from "./Verify.module.css";
 
@@ -11,6 +12,8 @@ interface VerifyCodeProps {
 }
 
 export const VerifyCode = ({ onVerified, onLater }: VerifyCodeProps) => {
+  const copy = useCopy();
+  const messages = useMemo(() => verificationMessages(copy), [copy]);
   const {
     code,
     setCode,
@@ -24,17 +27,17 @@ export const VerifyCode = ({ onVerified, onLater }: VerifyCodeProps) => {
     submit,
   } = useCodeFlow({
     onVerified,
-    messages: VERIFICATION_MESSAGES,
-    resendReadyMessage: AUTH_COPY.verify.resendReady,
+    messages,
+    resendReadyMessage: copy.auth.verify.resendReady,
   });
 
   return (
     <div className={styles.root}>
       <Typography variant="heading-large" as="h1">
-        {AUTH_COPY.verify.codeTitle}
+        {copy.auth.verify.codeTitle}
       </Typography>
       <Typography variant="body-medium" tone="secondary">
-        {AUTH_COPY.verify.codeSubtitle}
+        {copy.auth.verify.codeSubtitle}
       </Typography>
 
       {error && <MessageRegion tone="error">{error.message}</MessageRegion>}
@@ -42,8 +45,8 @@ export const VerifyCode = ({ onVerified, onLater }: VerifyCodeProps) => {
       <form className={styles.form} onSubmit={submit} noValidate>
         <Input
           name="code"
-          label={AUTH_COPY.verify.codeLabel}
-          helperText={AUTH_COPY.verify.codeHint}
+          label={copy.auth.verify.codeLabel}
+          helperText={copy.auth.verify.codeHint}
           value={code}
           onChange={(event) => setCode(event.target.value)}
           autoComplete="one-time-code"
@@ -63,7 +66,7 @@ export const VerifyCode = ({ onVerified, onLater }: VerifyCodeProps) => {
             disabled={!canResend || isResending}
             onClick={resend}
           >
-            {canResend ? AUTH_COPY.verify.resend : AUTH_COPY.verify.resendIn(secondsLeft)}
+            {canResend ? copy.auth.verify.resend : copy.auth.verify.resendIn(secondsLeft)}
           </Button>
         </p>
 
@@ -77,15 +80,15 @@ export const VerifyCode = ({ onVerified, onLater }: VerifyCodeProps) => {
           type="submit"
           fullWidth
           isLoading={isSubmitting}
-          loadingText={AUTH_COPY.verify.submitting}
+          loadingText={copy.auth.verify.submitting}
         >
-          {AUTH_COPY.verify.submit}
+          {copy.auth.verify.submit}
         </Button>
       </form>
 
       <p className={styles.aside}>
         <RouteLink href="/feed" tone="muted" onClick={onLater}>
-          {AUTH_COPY.verify.later}
+          {copy.auth.verify.later}
         </RouteLink>
       </p>
     </div>

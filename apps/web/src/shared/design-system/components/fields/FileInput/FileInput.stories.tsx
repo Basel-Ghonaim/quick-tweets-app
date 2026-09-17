@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 import { THEMES, THEME_ATTRIBUTE } from "../../../foundations";
+import { formatsFor } from "@shared/localisation";
 import { FileInput } from "./FileInput";
 import type {
   AvatarFileInputContent,
@@ -12,12 +13,19 @@ import type {
 /* The layer holds no words, so its stories supply them as a consumer would. */
 const tooLarge = (fileName: string, limit: string) => `"${fileName}" exceeds the ${limit} limit`;
 const notAccepted = (fileName: string) => `"${fileName}" is not an accepted file type`;
+const size = (bytes: number) =>
+  formatsFor("en").fileSize(bytes, {
+    bytes: (amount) => `${amount} B`,
+    kilobytes: (amount) => `${amount} KB`,
+    megabytes: (amount) => `${amount} MB`,
+  });
 
 const STANDARD_CONTENT: StandardFileInputContent = {
   choose: "Choose file",
   nothingChosen: "No file chosen",
   chosenCount: (count) => `${count} files selected`,
   tooLarge,
+  size,
 };
 
 const DROPZONE_CONTENT: DropzoneFileInputContent = {
@@ -35,6 +43,7 @@ const DROPZONE_CONTENT: DropzoneFileInputContent = {
   tooFew: (min) => `Minimum ${min} files required`,
   notAccepted,
   tooLarge,
+  size,
 };
 
 const AVATAR_CONTENT: AvatarFileInputContent = {
@@ -46,6 +55,7 @@ const AVATAR_CONTENT: AvatarFileInputContent = {
   replaceTitle: "Replace",
   notAccepted,
   tooLarge,
+  size,
 };
 
 const meta = {

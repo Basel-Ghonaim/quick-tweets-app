@@ -1,6 +1,6 @@
 import type { AppError } from "@shared/errors";
 import type { RequestState } from "@shared/types";
-import { profileErrorHandler } from "./profileErrorHandler";
+import { profileErrorHandler, type ProfileWords } from "./profileErrorHandler";
 import type { UpdatedProfile } from "../model";
 
 /**
@@ -11,6 +11,7 @@ import type { UpdatedProfile } from "../model";
 export const executeProfileUpdate = async (
   setState: (next: RequestState) => void,
   apiCall: () => Promise<UpdatedProfile>,
+  words: ProfileWords,
 ): Promise<void> => {
   setState({ status: "loading", error: null });
 
@@ -18,7 +19,7 @@ export const executeProfileUpdate = async (
     await apiCall();
     setState({ status: "success", error: null });
   } catch (error) {
-    const handled = profileErrorHandler(error as AppError);
+    const handled = profileErrorHandler(error as AppError, words);
     setState({ status: "error", error: handled.toSerialized() });
     throw handled;
   }

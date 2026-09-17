@@ -1,11 +1,12 @@
 import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
 import { useRegisterFlow } from "../../hooks";
-import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { RouteLink, useRouteNavigate } from "@shared/routing";
 import styles from "./SignUp.module.css";
 
 export const SignUp = () => {
+  const copy = useCopy();
   const navigate = useRouteNavigate();
 
   const {
@@ -22,10 +23,10 @@ export const SignUp = () => {
   return (
     <div className={styles.root}>
       <Typography variant="heading-large" as="h1">
-        {AUTH_COPY.signUp.title}
+        {copy.auth.signUp.title}
       </Typography>
       <Typography variant="body-medium" tone="secondary">
-        {AUTH_COPY.signUp.subtitle}
+        {copy.auth.signUp.subtitle}
       </Typography>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -45,7 +46,7 @@ export const SignUp = () => {
             onChange={handleChange}
             span={field.span}
             autoFocus={index === 0}
-            controls={CONTROL_COPY}
+            controls={copy.controls}
           />
         ))}
 
@@ -53,9 +54,9 @@ export const SignUp = () => {
           type="submit"
           fullWidth
           isLoading={isSubmitting}
-          loadingText={AUTH_COPY.signUp.submitting}
+          loadingText={copy.auth.signUp.submitting}
         >
-          {AUTH_COPY.signUp.submit}
+          {copy.auth.signUp.submit}
         </Button>
       </form>
 
@@ -63,13 +64,13 @@ export const SignUp = () => {
           they already have one, or they only came to read. */}
       <div className={styles.alternatives}>
         <Typography variant="body-small" tone="muted" className={styles.altLabel}>
-          {AUTH_COPY.signUp.altLabel}
+          {copy.auth.signUp.altLabel}
         </Typography>
 
-        <RouteLink href="/auth/signin">{AUTH_COPY.signUp.backToLogin}</RouteLink>
+        <RouteLink href="/auth/signin">{copy.auth.signUp.backToLogin}</RouteLink>
 
         <RouteLink href="/feed" tone="muted">
-          {AUTH_COPY.signUp.browseAsGuest}
+          {copy.auth.signUp.browseAsGuest}
         </RouteLink>
       </div>
     </div>

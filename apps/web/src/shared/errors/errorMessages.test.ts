@@ -6,10 +6,10 @@ beforeEach(() => {
   vi.resetModules();
 });
 
-const wordsFor = async (): Promise<ErrorMessages> => {
+const wordsFor = async (prefix = "words for"): Promise<ErrorMessages> => {
   const { errorConfigMap } = await import("./errorConfig");
   const types = Object.keys(errorConfigMap) as ErrorType[];
-  return Object.fromEntries(types.map((type) => [type, `words for ${type}`])) as ErrorMessages;
+  return Object.fromEntries(types.map((type) => [type, `${prefix} ${type}`])) as ErrorMessages;
 };
 
 describe("the error pipeline's default wording", () => {
@@ -17,10 +17,24 @@ describe("the error pipeline's default wording", () => {
     const { setupErrorMessages } = await import("./errorMessages");
     const { buildAppError } = await import("./parsers/parserUtils");
 
-    setupErrorMessages(await wordsFor());
+    const words = await wordsFor();
+    setupErrorMessages(() => words);
 
     expect(buildAppError(503).message).toBe("words for service_unavailable");
     expect(buildAppError(400, "conflict").message).toBe("words for conflict");
+  });
+
+  it("reads the wording when a failure happens, not when it was handed over", async () => {
+    const { setupErrorMessages } = await import("./errorMessages");
+    const { buildAppError } = await import("./parsers/parserUtils");
+    const before = await wordsFor();
+    const after = await wordsFor("later words for");
+    let current = before;
+
+    setupErrorMessages(() => current);
+    current = after;
+
+    expect(buildAppError(503).message).toBe("later words for service_unavailable");
   });
 
   it("holds no words of its own: an unsupplied type is reported by its name", async () => {

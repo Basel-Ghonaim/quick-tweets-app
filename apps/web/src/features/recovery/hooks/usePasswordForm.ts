@@ -1,13 +1,12 @@
+import { useMemo } from "react";
 import { toFieldEntries } from "@shared/schema-form";
-import { recoveryFormSchemas } from "../forms";
+import { useRecoverySchemas } from "./useRecoverySchemas";
 import { useRecoveryForm } from "./useRecoveryForm";
 
-const fields = toFieldEntries(recoveryFormSchemas.passwordFields);
-
 export const usePasswordForm = (onSubmit: (newPassword: string) => Promise<void>) => {
-  const form = useRecoveryForm(recoveryFormSchemas.passwordFields, ({ newPassword }) =>
-    onSubmit(newPassword),
-  );
+  const { passwordFields } = useRecoverySchemas();
+  const fields = useMemo(() => toFieldEntries(passwordFields), [passwordFields]);
+  const form = useRecoveryForm(passwordFields, ({ newPassword }) => onSubmit(newPassword));
 
   return { fields, ...form };
 };

@@ -8,6 +8,7 @@ import { sessionReducer, type AuthResponse } from "@shared/session";
 import { authenticationReducer } from "../../store";
 import { executeAuthFlow } from "./executeAuthFlow";
 import { createAppError } from "@shared/errors";
+import { CATALOGUES } from "@shared/copy";
 import type { AuthUser } from "@shared/types";
 
 const makeStore = () =>
@@ -22,7 +23,7 @@ describe("executeAuthFlow — success is the server response, no persistence gat
   it("commits the session and marks the slot on a successful server response", async () => {
     const store = makeStore();
 
-    await executeAuthFlow(store.dispatch, () => Promise.resolve(response), "login");
+    await executeAuthFlow(store.dispatch, () => Promise.resolve(response), "login", CATALOGUES.en.auth.errors);
 
     const { session, authentication } = store.getState();
     expect(authentication.login).toEqual({ status: "success", error: null });
@@ -36,7 +37,7 @@ describe("executeAuthFlow — success is the server response, no persistence gat
     const serverError = createAppError("unknown", "bad credentials");
 
     await expect(
-      executeAuthFlow(store.dispatch, () => Promise.reject(serverError), "login"),
+      executeAuthFlow(store.dispatch, () => Promise.reject(serverError), "login", CATALOGUES.en.auth.errors),
     ).rejects.toBeTruthy();
 
     const { session, authentication } = store.getState();

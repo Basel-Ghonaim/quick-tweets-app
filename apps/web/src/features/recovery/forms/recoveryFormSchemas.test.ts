@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { VALIDATION_MESSAGES } from "@shared/copy";
+import { CATALOGUES, VALIDATION_MESSAGES } from "@shared/copy";
 import type { ValidatorFn } from "@shared/schema-form";
-import { recoveryFormSchemas } from "./recoveryFormSchemas";
+import { recoveryFormSchemas as schemasFor } from "./recoveryFormSchemas";
+
+const recoveryFormSchemas = schemasFor(CATALOGUES.en);
 
 /** What a field shows for a value: its first failing validator's message, as the engine reports it. */
 const shownFor = (field: { validators?: ValidatorFn[] }, value: string) =>

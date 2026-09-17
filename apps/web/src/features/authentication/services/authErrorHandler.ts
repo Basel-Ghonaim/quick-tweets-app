@@ -1,17 +1,20 @@
 import { AppError, createAppError } from "@shared/errors";
-import { AUTH_COPY } from "@shared/copy";
+import type { Catalogue } from "@shared/copy";
 
-const AUTH_MESSAGES: Partial<Record<AppError["type"], string>> = {
-  // Form-level, and deliberately does not say which field was wrong.
-  unauthorized: AUTH_COPY.errors.unauthorized,
-  validation: AUTH_COPY.errors.validation,
-  conflict: AUTH_COPY.errors.conflict,
-  too_many_requests: AUTH_COPY.errors.tooManyRequests,
-};
+/** The words sign-in and registration refuse in, handed in from the active catalogue. */
+export type AuthRefusals = Catalogue["auth"]["errors"];
 
-export const authErrorHandler = (appError: AppError): AppError => {
+export const authErrorHandler = (appError: AppError, refusals: AuthRefusals): AppError => {
+  const messages: Partial<Record<AppError["type"], string>> = {
+    // Form-level, and deliberately does not say which field was wrong.
+    unauthorized: refusals.unauthorized,
+    validation: refusals.validation,
+    conflict: refusals.conflict,
+    too_many_requests: refusals.tooManyRequests,
+  };
+
   const { type, errors } = appError;
-  const customMessage = AUTH_MESSAGES[type];
+  const customMessage = messages[type];
 
   if (customMessage) {
     return createAppError(type, customMessage, errors);

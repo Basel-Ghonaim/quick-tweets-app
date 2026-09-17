@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { JourneyLayout } from "../../layout";
 import { useRouteNavigate } from "@shared/routing";
 import { useJourney } from "@features/journey";
@@ -15,6 +15,7 @@ import styles from "./Onboarding.module.css";
  * reload, a second tab and a typed path all resolve the same way.
  */
 export const Onboarding = () => {
+  const copy = useCopy();
   const { read, state, advance, leave, retry } = useJourney();
   const navigate = useRouteNavigate();
   const destination = destinationFor(read);
@@ -42,9 +43,9 @@ export const Onboarding = () => {
 
       {destination === "retry" && (
         <div className={styles.pending}>
-          <MessageRegion tone="error">{AUTH_COPY.onboarding.unavailable}</MessageRegion>
+          <MessageRegion tone="error">{copy.auth.onboarding.unavailable}</MessageRegion>
           <Button type="button" onClick={retry}>
-            {AUTH_COPY.onboarding.retry}
+            {copy.auth.onboarding.retry}
           </Button>
         </div>
       )}

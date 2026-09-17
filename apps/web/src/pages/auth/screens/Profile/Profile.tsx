@@ -1,6 +1,6 @@
 import { Button, FileInput, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
-import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { useProfileFlow } from "@features/profile";
 import type { ProfileOutcome } from "@features/journey";
 import styles from "./Profile.module.css";
@@ -10,6 +10,7 @@ interface ProfileProps {
 }
 
 export const Profile = ({ onSettled }: ProfileProps) => {
+  const copy = useCopy();
   const {
     fields,
     bioMax,
@@ -24,7 +25,7 @@ export const Profile = ({ onSettled }: ProfileProps) => {
     skip,
   } = useProfileFlow(onSettled);
 
-  const uploadMessage = AUTH_COPY.profile[
+  const uploadMessage = copy.auth.profile[
     avatar.status === "uploading"
       ? "uploading"
       : avatar.status === "uploaded"
@@ -35,10 +36,10 @@ export const Profile = ({ onSettled }: ProfileProps) => {
   return (
     <div className={styles.root}>
       <Typography variant="heading-large" as="h1">
-        {AUTH_COPY.profile.title}
+        {copy.auth.profile.title}
       </Typography>
       <Typography variant="body-medium" tone="secondary">
-        {AUTH_COPY.profile.subtitle}
+        {copy.auth.profile.subtitle}
       </Typography>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -49,10 +50,10 @@ export const Profile = ({ onSettled }: ProfileProps) => {
         <div className={styles.avatar}>
           <FileInput
             variant="avatar"
-            content={CONTROL_COPY.file}
+            content={copy.controls.file}
             name="avatar"
-            label={AUTH_COPY.profile.avatarLabel}
-            helperText={AUTH_COPY.profile.avatarHint}
+            label={copy.auth.profile.avatarLabel}
+            helperText={copy.auth.profile.avatarHint}
             accept={avatar.accept}
             maxSize={avatar.maxBytes}
             onFilesChange={(files) => avatar.select(files[0] ?? null)}
@@ -64,7 +65,7 @@ export const Profile = ({ onSettled }: ProfileProps) => {
 
           {avatar.status === "failed" && (
             <Button variant="ghost" size="small" type="button" onClick={avatar.retry}>
-              {AUTH_COPY.profile.uploadRetry}
+              {copy.auth.profile.uploadRetry}
             </Button>
           )}
         </div>
@@ -80,26 +81,26 @@ export const Profile = ({ onSettled }: ProfileProps) => {
             error={errors[field.key]}
             onChange={handleChange}
             span={field.span}
-            controls={CONTROL_COPY}
+            controls={copy.controls}
           />
         ))}
 
         <p className={styles.count} aria-hidden="true">
-          {AUTH_COPY.profile.bioCount(values.bio.length, bioMax)}
+          {copy.auth.profile.bioCount(values.bio.length, bioMax)}
         </p>
 
         <Button
           type="submit"
           fullWidth
           isLoading={isSubmitting}
-          loadingText={AUTH_COPY.profile.submitting}
+          loadingText={copy.auth.profile.submitting}
         >
-          {AUTH_COPY.profile.submit}
+          {copy.auth.profile.submit}
         </Button>
 
         <p className={styles.aside}>
           <Button variant="ghost" size="small" type="button" onClick={skip}>
-            {AUTH_COPY.profile.skip}
+            {copy.auth.profile.skip}
           </Button>
         </p>
       </form>

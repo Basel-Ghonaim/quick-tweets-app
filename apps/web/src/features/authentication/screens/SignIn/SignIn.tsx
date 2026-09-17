@@ -2,11 +2,12 @@ import { useLocation } from "react-router-dom";
 import { Button, MessageRegion, Typography } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
 import { useLoginFlow } from "../../hooks";
-import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { RouteLink, useRouteNavigate } from "@shared/routing";
 import styles from "./SignIn.module.css";
 
 export const SignIn = () => {
+  const copy = useCopy();
   const navigate = useRouteNavigate();
   const { notice } = (useLocation().state ?? {}) as { notice?: string };
 
@@ -24,10 +25,10 @@ export const SignIn = () => {
   return (
     <div className={styles.root}>
       <Typography variant="heading-large" as="h1">
-        {AUTH_COPY.signIn.title}
+        {copy.auth.signIn.title}
       </Typography>
       <Typography variant="body-medium" tone="secondary">
-        {AUTH_COPY.signIn.subtitle}
+        {copy.auth.signIn.subtitle}
       </Typography>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -48,7 +49,7 @@ export const SignIn = () => {
             onChange={handleChange}
             span={field.span}
             autoFocus={index === 0}
-            controls={CONTROL_COPY}
+            controls={copy.controls}
           />
         ))}
 
@@ -56,14 +57,14 @@ export const SignIn = () => {
           type="submit"
           fullWidth
           isLoading={isSubmitting}
-          loadingText={AUTH_COPY.signIn.submitting}
+          loadingText={copy.auth.signIn.submitting}
         >
-          {AUTH_COPY.signIn.submit}
+          {copy.auth.signIn.submit}
         </Button>
 
         <p className={styles.aside}>
           <RouteLink href="/auth/recovery" tone="muted">
-            {AUTH_COPY.signIn.forgotPassword}
+            {copy.auth.signIn.forgotPassword}
           </RouteLink>
         </p>
       </form>
@@ -72,15 +73,15 @@ export const SignIn = () => {
           account: make one, or read without one. */}
       <div className={styles.alternatives}>
         <Typography variant="body-small" tone="muted" className={styles.altLabel}>
-          {AUTH_COPY.signIn.altLabel}
+          {copy.auth.signIn.altLabel}
         </Typography>
 
         <RouteLink href="/auth/signup">
-          {AUTH_COPY.signIn.createAccount}
+          {copy.auth.signIn.createAccount}
         </RouteLink>
 
         <RouteLink href="/feed" tone="muted">
-          {AUTH_COPY.signIn.browseAsGuest}
+          {copy.auth.signIn.browseAsGuest}
         </RouteLink>
       </div>
     </div>

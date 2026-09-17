@@ -1,3 +1,5 @@
+import { ENGLISH_FORMATS } from "./englishFormats";
+
 /**
  * Four rules keep these translatable, and none of them is visible from a value:
  * a key addresses a whole line rather than a fragment, a varying value takes
@@ -110,10 +112,10 @@ export const AUTH_COPY = {
 
     nameLabel: "Display name",
     namePlaceholder: "Your name",
-    nameTooLong: (max: number) => `Name must be at most ${max} characters`,
+    nameTooLong: (max: number) => `Name must be at most ${ENGLISH_FORMATS.count(max)} characters`,
     bioLabel: "Bio",
     bioPlaceholder: "One line is plenty.",
-    bioTooLong: (max: number) => `Bio must be at most ${max} characters`,
+    bioTooLong: (max: number) => `Bio must be at most ${ENGLISH_FORMATS.count(max)} characters`,
 
     /* Announced rather than only drawn: the upload finishes while the reader is
        somewhere else on the form. */
@@ -128,7 +130,8 @@ export const AUTH_COPY = {
 
     /* The count is a live number, so it is read by sight; the limit is
        announced once through the field's own description. */
-    bioCount: (used: number, limit: number) => `${used} / ${limit}`,
+    bioCount: (used: number, limit: number) =>
+      `${ENGLISH_FORMATS.count(used)} / ${ENGLISH_FORMATS.count(limit)}`,
   },
 
   verify: {
@@ -154,7 +157,7 @@ export const AUTH_COPY = {
     codeHint: "Letters and digits. Case and spacing do not matter.",
 
     resend: "Resend code",
-    resendIn: (seconds: number) => `Resend in ${seconds}s`,
+    resendIn: (seconds: number) => `Resend in ${ENGLISH_FORMATS.count(seconds)}s`,
     resendReady: "You can request a new code now.",
 
     cooldownRefused: "A code was sent moments ago. Wait a little before asking for another.",
@@ -198,7 +201,7 @@ export const AUTH_COPY = {
     backToLogin: "Back to login",
 
     resend: "Resend code",
-    resendIn: (seconds: number) => `Resend in ${seconds}s`,
+    resendIn: (seconds: number) => `Resend in ${ENGLISH_FORMATS.count(seconds)}s`,
     resendReady: "You can ask for a new code now.",
     resendSpent: "You have asked for a new code as often as this attempt allows.",
     startOver: "Wrong address? Start over",

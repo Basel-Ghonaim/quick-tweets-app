@@ -6,6 +6,7 @@ import {
   type FormPayload,
   type FormValue,
 } from "@shared/schema-form";
+import { useCopy } from "@shared/copy";
 import { recoveryErrorHandler } from "../services";
 
 /**
@@ -18,6 +19,7 @@ export const useRecoveryForm = <TSchema extends Record<string, FormFieldConfig<F
   initialValues?: Partial<FormValue<TSchema>>,
 ) => {
   const [serverError, setServerError] = useState<SerializedAppError | null>(null);
+  const copy = useCopy();
 
   const submit = useCallback(
     async (values: FormValue<TSchema>) => {
@@ -27,9 +29,12 @@ export const useRecoveryForm = <TSchema extends Record<string, FormFieldConfig<F
     [action],
   );
 
-  const onError = useCallback((error: unknown) => {
-    setServerError(recoveryErrorHandler(errorNormalizer(error)).toSerialized());
-  }, []);
+  const onError = useCallback(
+    (error: unknown) => {
+      setServerError(recoveryErrorHandler(errorNormalizer(error), copy.auth.recovery).toSerialized());
+    },
+    [copy],
+  );
 
   const form = useSchemaForm(schema, submit, onError, initialValues);
 

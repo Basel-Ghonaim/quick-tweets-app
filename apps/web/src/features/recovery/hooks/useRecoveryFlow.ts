@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { screenFor } from "../services";
 import { useRecovery } from "./useRecovery";
 import type { RecoveryPosition, RecoveryScreen } from "../model";
@@ -27,6 +27,7 @@ export interface RecoveryFlow {
 export const useRecoveryFlow = (
   onComplete?: () => void,
 ): RecoveryFlow => {
+  const copy = useCopy();
   const { read, position, request, resend, confirm, apply, retry } = useRecovery();
   const [asked, setAsked] = useState("");
   const [restarting, setRestarting] = useState(false);
@@ -53,8 +54,8 @@ export const useRecoveryFlow = (
   return {
     screen: screenFor(read, restarting),
     position,
-    notice: asked && !restarting ? AUTH_COPY.recovery.lapsed : undefined,
-    confirmation: asked ? AUTH_COPY.recovery.sent : undefined,
+    notice: asked && !restarting ? copy.auth.recovery.lapsed : undefined,
+    confirmation: asked ? copy.auth.recovery.sent : undefined,
     initialEmail: asked,
     ask,
     restart,

@@ -1,9 +1,9 @@
 import type { VerificationMessages } from "@shared/channel-verification";
-import { AUTH_COPY } from "@shared/copy";
+import type { Catalogue } from "@shared/copy";
 
-/** Held as a module constant so the hooks that key callbacks on it stay stable. */
-export const VERIFICATION_MESSAGES: VerificationMessages = {
-  too_many_requests: AUTH_COPY.verify.cooldownRefused,
-  rate_limit: AUTH_COPY.verify.rateLimited,
-  bad_request: AUTH_COPY.verify.codeRejected,
-};
+/** Built from the active catalogue; the screens hold it per language, so the hooks keyed on it stay stable. */
+export const verificationMessages = (copy: Catalogue): VerificationMessages => ({
+  too_many_requests: copy.auth.verify.cooldownRefused,
+  rate_limit: copy.auth.verify.rateLimited,
+  bad_request: copy.auth.verify.codeRejected,
+});

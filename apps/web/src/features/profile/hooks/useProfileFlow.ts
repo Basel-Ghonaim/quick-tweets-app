@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { toFieldEntries, useSchemaForm } from "@shared/schema-form";
+import { useCopy } from "@shared/copy";
 import type { SerializedAppError } from "@shared/errors";
 import { useRequestState } from "@shared/hooks";
 import type { RequestState } from "@shared/types";
@@ -11,9 +12,11 @@ import { AVATAR_ACCEPT, AVATAR_MAX_BYTES } from "../model";
 import { useAvatarUpload } from "./useAvatarUpload";
 import { composeEdits } from "../services";
 
+type ProfileSchema = ReturnType<typeof profileFormSchema>;
+
 interface ProfileFlow {
   /** What the screen renders, so it names no schema of its own. */
-  fields: typeof fields;
+  fields: ReturnType<typeof toFieldEntries<ProfileSchema>>;
   bioMax: number;
   values: { name: string; bio: string };
   errors: Record<"name" | "bio", string | null>;
@@ -32,8 +35,6 @@ interface ProfileFlow {
   skip: () => void;
 }
 
-const fields = toFieldEntries(profileFormSchema);
-
 /**
  * Composes the two requests behind one submit: the picture is already uploaded
  * by the time Save runs, so the update carries its reference rather than bytes.
@@ -43,6 +44,9 @@ export const useProfileFlow = (
 ): ProfileFlow => {
   // Held across renders: the upload effect is keyed on the call it is given.
   const repo = useMemo(() => restProfile(), []);
+  const copy = useCopy();
+  const schema = useMemo(() => profileFormSchema(copy), [copy]);
+  const fields = useMemo(() => toFieldEntries(schema), [schema]);
 
   const [request, setRequest] = useState<RequestState>({ status: "idle", error: null });
   const { isLoading, isError, error: serverError } = useRequestState(request);
@@ -52,13 +56,13 @@ export const useProfileFlow = (
     async (values: { name: string; bio: string }) => {
       const edits = composeEdits(values, avatar.token);
 
-      await executeProfileUpdate(setRequest, () => repo.updateProfile(edits));
+      await executeProfileUpdate(setRequest, () => repo.updateProfile(edits), copy.auth.profile);
       onSettled?.("saved");
     },
-    [avatar.token, onSettled, repo],
+    [avatar.token, copy, onSettled, repo],
   );
 
-  const form = useSchemaForm(profileFormSchema, submit, () => {});
+  const form = useSchemaForm(schema, submit, () => {});
 
   /** Skipping is the absence of a request, and the outcome is what says so. */
   const skip = useCallback(() => onSettled?.("skipped"), [onSettled]);
