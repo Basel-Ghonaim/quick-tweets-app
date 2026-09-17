@@ -10,11 +10,19 @@
  * repeated runs never collide and nothing pre-existing is touched.
  */
 
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { prisma } from "../../shared/database/index.js";
+import { PrismaClient } from "../../generated/prisma/client.js";
+import { prisma, type DbClient, type RunInTransaction } from "../../shared/database/index.js";
 import type { MailAdapter, MailMessage } from "../mail-delivery/index.js";
 import { createUserService } from "../users/user.service.js";
+import { createChannelVerificationRepository } from "./channelVerification.repository.js";
 import { createChannelVerificationService } from "./channelVerification.service.js";
 import { createChannelVerificationSweepJob } from "./channelVerification.sweep.job.js";
 import type { ChallengeCodeFormat } from "./channelVerification.types.js";
@@ -225,9 +233,142 @@ describe("custody — the account presents a fact it does not hold", () => {
   });
 });
 
+/** A database holding only this run's rows, so a sweep run in it can remove nothing else. */
+interface ThrowawayDatabase {
+  readonly name: string;
+  readonly configuredName: string;
+  readonly prisma: PrismaClient;
+  readonly runInTransaction: RunInTransaction;
+  drop(): Promise<void>;
+}
+
+const MIGRATIONS = fileURLToPath(new URL("../../../prisma/migrations", import.meta.url));
+
+const createThrowawayDatabase = async (): Promise<ThrowawayDatabase> => {
+  const configured = new URL(process.env.DATABASE_URL ?? "");
+  const name = `cv_sweep_verify_${process.pid}_${process.hrtime.bigint()}`;
+  const url = new URL(configured);
+  url.pathname = `/${name}`;
+  const admin = async (sql: string) => {
+    const client = new pg.Client({ connectionString: configured.toString() });
+    await client.connect();
+    try {
+      await client.query(sql);
+    } finally {
+      await client.end();
+    }
+  };
+  const dropDatabase = () => admin(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
+
+  await admin(`CREATE DATABASE "${name}"`);
+  try {
+    const migrator = new pg.Client({ connectionString: url.toString() });
+    await migrator.connect();
+    try {
+      const dirs = (await readdir(MIGRATIONS, { withFileTypes: true }))
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => entry.name)
+        .sort();
+      for (const dir of dirs) {
+        await migrator.query(await readFile(path.join(MIGRATIONS, dir, "migration.sql"), "utf8"));
+      }
+    } finally {
+      await migrator.end();
+    }
+    const client = new PrismaClient({ adapter: new PrismaPg({ connectionString: url.toString() }) });
+    return {
+      name,
+      configuredName: decodeURIComponent(configured.pathname.slice(1)),
+      prisma: client,
+      runInTransaction: (fn) => client.$transaction((tx) => fn(tx as unknown as DbClient)),
+      drop: async () => {
+        try {
+          await client.$disconnect();
+        } finally {
+          await dropDatabase();
+        }
+      },
+    };
+  } catch (err) {
+    await dropDatabase().catch((dropErr) => {
+      throw new AggregateError(
+        [err, dropErr],
+        `could not build "${name}" (${String(err)}), then could not drop it (${String(dropErr)})`,
+      );
+    });
+    throw err;
+  }
+};
+
+// Checked on the very client the job is handed, so binding the sweep to any other
+// database fails here instead of deleting that database's challenges.
+const guardedSweep = async (own: ThrowawayDatabase, client: PrismaClient) => {
+  const [bound] = await client.$queryRaw<{ name: string }[]>`SELECT current_database() AS name`;
+  if (bound?.name !== own.name || bound.name === own.configuredName) {
+    throw new Error(`refusing to sweep "${bound?.name}": only this run's throwaway database may be swept`);
+  }
+  // Retention of 1ms: everything already closed is past the window.
+  await createChannelVerificationSweepJob({
+    repo: createChannelVerificationRepository(client),
+    retentionMs: 1,
+    log: () => {},
+  }).handler();
+};
+
 describe("the sweep, against real rows", () => {
+  // The sweep removes every spent challenge in the database it is handed, so these
+  // proofs run in a throwaway database of their own, and fail if none can be made.
+  let own: ThrowawayDatabase | undefined;
+  let ownUserId = 0;
+  let unavailable: unknown;
+
+  beforeAll(async () => {
+    if (!reachable) return;
+    try {
+      own = await createThrowawayDatabase();
+      const user = await own.prisma.user.create({
+        data: {
+          username: `cv${RUN}`.replace(/[^a-z0-9_]/g, "").slice(0, 20),
+          email: ENDPOINT,
+          passwordHash: "integration-test-only",
+        },
+        select: { id: true },
+      });
+      ownUserId = user.id;
+    } catch (err) {
+      unavailable = err;
+    }
+  }, 60_000);
+
+  afterAll(async () => {
+    await own?.drop();
+  }, 30_000);
+
+  // Under the names the proofs already use, so their assertions read exactly as before.
+  const inOwnDatabase = () => {
+    if (!own || unavailable !== undefined) {
+      throw new Error(`the sweep proofs' throwaway database is unavailable: ${String(unavailable)}`);
+    }
+    const db = own;
+    return {
+      prisma: db.prisma,
+      userId: ownUserId,
+      serviceWith: (mail: MailAdapter) =>
+        createChannelVerificationService({
+          mail,
+          format: FORMAT,
+          challengeTtlMs: TTL,
+          resendCooldownMs: COOLDOWN,
+          repo: createChannelVerificationRepository(db.prisma),
+          runInTransaction: db.runInTransaction,
+        }),
+      sweep: () => guardedSweep(db, db.prisma),
+    };
+  };
+
   it("removes spent challenges and leaves the proof standing", async () => {
     if (!reachable) return;
+    const { prisma, userId, serviceWith, sweep } = inOwnDatabase();
     const endpoint = `sweep-${ENDPOINT}`;
     const mail = capturingMail();
     const service = serviceWith(mail.adapter);
@@ -236,11 +377,7 @@ describe("the sweep, against real rows", () => {
     await service.confirm({ userId, endpoint, code: codeIn(mail.sent[0]!) });
     expect(await service.statusOf(userId, endpoint)).toBe("proven");
 
-    // Retention of 1ms: everything already closed is past the window.
-    await createChannelVerificationSweepJob({
-      retentionMs: 1,
-      log: () => {},
-    }).handler();
+    await sweep();
 
     const record = await prisma.channelVerification.findUnique({
       where: { userId_endpoint: { userId, endpoint } },
@@ -259,6 +396,7 @@ describe("the sweep, against real rows", () => {
 
   it("changes no answer: a lapsed challenge reads the same swept or unswept", async () => {
     if (!reachable) return;
+    const { prisma, userId, serviceWith, sweep } = inOwnDatabase();
     const endpoint = `lapsed-${ENDPOINT}`;
     const service = serviceWith(capturingMail().adapter);
 
@@ -281,7 +419,7 @@ describe("the sweep, against real rows", () => {
       await prisma.channelVerificationChallenge.count({ where: { verificationId: record.id } }),
     ).toBe(1);
 
-    await createChannelVerificationSweepJob({ retentionMs: 1, log: () => {} }).handler();
+    await sweep();
 
     // The row is genuinely gone, so the comparison below means something.
     expect(
