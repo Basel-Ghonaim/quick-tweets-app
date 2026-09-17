@@ -1,0 +1,155 @@
+# Arabic and RTL/LTR Support
+
+> **Status:** Active
+> **Type:** Execution
+> **Owner:** Basel Ghonaim
+> **Last Updated:** 2026-09-17
+> **Parent Issue:** [#754](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/754)
+> **Supersedes:** —
+
+## 1. Purpose
+
+The product is committed to English and Arabic, with right-to-left as a first-class direction ([overview](../project/overview.md)). The Design System already authors direction-agnostically and can mirror icons; nothing else a reader meets can yet change language or direction. This effort makes the web interface readable in either language, in the direction that language reads, and proves every rendered state in both directions.
+
+## 2. Settled decisions
+
+Approved. A decision changes only when implementation exposes a genuine technical conflict, which is raised on #754 before anything is decided.
+
+| | Settled as |
+|---|---|
+| **D1** | New passwords allow printable ASCII including space; the four required classes stay; never trimmed |
+| **D2** | The tighter password rule is a Pre-release Contract Exception |
+| **D3** | Forward-only: enforced where a password is set; login stays presence-only |
+| **D4** | ASCII email only (punycode domains), as the server enforces; the client is aligned to it |
+| **D5** | Web interface only; server-side language and localised mail are the next effort |
+| **D6** | Selection in `shared/preferences`, catalogues in `shared/copy`, a new `shared/` mechanism resolves and formats |
+| **D7** | Typed catalogues with native `Intl`; revisit on a third language, a vendor, or catalogue size |
+| **D8** | A reader preference like the theme: stored choice → browser languages; direction derived from language; `lang`/`dir` before first paint; no URL segment |
+| **O1** | The default follows the device/browser language, inside D8's order |
+| **D9** | Western digits and the Gregorian calendar, both pinned in `Intl` |
+| **D10** | ADR 0010's second-locale condition is met; script-ordered font stacks with a `:lang(ar)` override; Google Fonts delivery |
+| **D11** | `dir="auto"` on user-authored text; identifiers isolated as LTR; script detection only where no element exists |
+| **D12** | Render containment now; server-side NFC and bidi-control refusal later (deferred) |
+| **D13** | The browser lane runs in both directions; coverage floors stay on the LTR run |
+| **D14** | A frontend localisation platform document, plus the Strategy §6 row, the map, an RTL section in the UX direction, glossary links |
+| **D15** | A named native-Arabic approver signs off Arabic content; English is the source |
+
+**Inputs still owed**, each gating one Work Item:
+
+| Input | Gates |
+|---|---|
+| The language used when no browser language is English or Arabic (O1 sets the order, not this case) | WI-3 |
+| O2 — the Arabic typeface from the D10 shortlist, and Arabic line-heights | WI-5 |
+| O3 — the named Arabic-content approver | WI-6 |
+| O4 — where the language control sits, and its name | WI-6 |
+
+## 3. Scope
+
+**In:** the credential rules; every user-facing word moved into the catalogue; the language preference and pre-paint signal; the content mechanism and formatting; the browser lane in both directions; the Design System's typography seam, Arabic face and bidi rules; the Arabic catalogue and language control; the documentation each of these owes.
+
+**Out:** Arabic in usernames and passwords · Arabic-Indic digit display, Hijri dates, locale URLs, account-stored language · E2E · surfaces not yet built.
+
+**Deferred**, each with its trigger:
+
+| Item | Trigger |
+|---|---|
+| Server-side language and localised mail | The next effort, after WI-6 |
+| Server-side NFC and bidi-control refusal | Before the first surface renders other users' text |
+| Arabic-Indic digits in the one-time code | Human ruling |
+| A translation library or vendor | A third language, a vendor, or catalogue size |
+| Self-hosted fonts | Decided for every face together, outside this effort |
+
+## 4. Strategy
+
+**Content before language, language before direction proof, proof before Arabic.** Each step makes the next checkable: a word cannot be translated while code holds it, a language cannot be proven until the signal exists, and Arabic should land into a lane that already renders right-to-left.
+
+**Constraints the Work Items honour:**
+
+- **Content travels inward.** No platform mechanism or Design System component imports the catalogue; they take their words as input ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 6, [ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 8).
+- **No content is frozen at import.** Anything that holds words — form schemas, error handlers — resolves them against the active language.
+- **Direction follows language.** No separate direction choice exists anywhere.
+- **Proof stays in its lane** ([testing topology](../development/testing-topology.md)): rules in the unit lanes, provider lifecycle in the component lane, rendering, fonts and accessibility in the browser lane.
+
+**One Work Item at a time.** Each Issue opens after the previous Work Item merges and the human says to proceed.
+
+## 5. Work Items
+
+`WI-1 → WI-2 → WI-3 → WI-4 → WI-5 → WI-6`
+
+| WI | Objective | Kind | Needs |
+|---|---|---|---|
+| **WI-1** [#755](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/755) | New passwords take English characters only; both tiers agree on email (D1–D4) | Decision | — |
+| **WI-2** | English content leaves the code | Move | WI-1 |
+| **WI-3** | The active language: preference, pre-paint `lang`/`dir`, content mechanism, formatting (D6–D9) | Decision | WI-2 · the unmatched-language case |
+| **WI-4** | RTL proof: the browser lane in both directions (D13) | Decision | WI-3 |
+| **WI-5** | Design System script and direction reactivity (D10, D11, D12 containment) | Decision | WI-4 · O2 |
+| **WI-6** | The Arabic catalogue and the language control (D15) | Decision | WI-5 · O3 · O4 |
+
+**WI-1.** Enforces the password allow-list in both tiers, aligns the client email rule with the server, and records the rules and the exception in the API contract. Done when both tiers accept and reject one shared fixture set identically, and login is unchanged.
+
+**WI-2.** Every user-facing word — including the Design System's, the form engine's defaults and the error pipeline's defaults — comes from `shared/copy`, and messages are whole lines. Rendered text is unchanged. Done when a check finds no user-facing literal outside the catalogue, and every lane equals its base.
+
+**WI-3.** The reader's language is resolved from their stored choice, then their browser, and stamped with its direction before the first paint; a new mechanism serves the active catalogue and formats with pinned `Intl`; every consumer reads through it. Only English is registered. Done when the inline script and the module provably agree, a switch re-renders every consumer without a reload, and catalogue parity is a compile-time error.
+
+**WI-4.** Every story also renders right-to-left, under the same accessibility check, with coverage floors still measured on the LTR run. Done when both runs are green and a violation injected only under RTL fails only the RTL run.
+
+**WI-5.** The Design System reacts to script as well as direction: Arabic text renders in the Arabic face wherever it appears, fields read `dir="auto"`, identifiers stay LTR, and the physical-direction check reaches inline styles. Done when each is proven in the browser lane in both directions.
+
+**WI-6.** A complete Arabic catalogue, approved by the named approver, is registered and selectable from the language control. Done when every screen and state renders in Arabic right-to-left without an accessibility regression, and Arabic plurals are proven.
+
+## 6. Milestones
+
+| Milestone | Reached when | Work Items |
+|---|---|---|
+| **M1** — the credential rules hold | English-only passwords and one email rule, in both tiers | WI-1 |
+| **M2** — the interface is language-ready | Every word is content, and the active language is a signal | WI-2, WI-3 |
+| **M3** — right-to-left is proven | Every state renders in both directions, and the Design System reacts to script | WI-4, WI-5 |
+| **M4** — Arabic ships | A reader can choose Arabic and read the whole interface in it | WI-6 |
+
+## 7. Acceptance and proof
+
+The effort is complete when:
+
+- a reader's language and direction are correct from the first paint, by stored choice or browser language;
+- no user-facing word lives outside a catalogue, and the catalogues cannot drift apart;
+- every rendered state passes the accessibility check in both directions;
+- Arabic text renders in its face and identifiers stay readable left-to-right in every direction;
+- the documents named in §9 state what was built, and every deferral in §3 is tracked.
+
+**Proof bites.** Every new check or rule is shown to fail on an injected violation and pass once it is reverted.
+
+## 8. Verification strategy
+
+- **Baseline at the Start SHA** — every lane, before WI-1's first change, including the browser lane's count, which the last baseline missed. It is re-measured whenever `main` moves before a Work Item branches.
+- **After every Work Item** — every lane again. A count or size that moves is a named delta in the Issue and the PR; anything unnamed is a regression.
+- **Ungated lanes** — the browser lane, the API integration lane and the manual harness run whenever a Work Item can affect them, and the result is stated either way.
+- **Databases** — the API integration lane and the harness run on a throwaway database, never on shared data.
+
+## 9. Documentation
+
+Each change lands with the Work Item that makes it true.
+
+| Owner | Carries | WI |
+|---|---|---|
+| API contract | the password and email rules, the exception row, login's presence-only statement | WI-1 |
+| Design System components contract · forms · error handling | words arrive as input; validators take their message; defaults are content | WI-2 |
+| New frontend localisation document · frontend architecture · Strategy §6 · the map · glossary links | the language policy, the mechanism, formatting, the approval rule; the platform index and the composition root | WI-3 |
+| Testing topology | the accessibility-rendering rule in both directions | WI-4 |
+| Design System foundation · components contract | the script-aware typography seam; `dir="auto"`, isolation, directional icons | WI-5 |
+| UX direction | the RTL section and the language control | WI-6 |
+
+No ADR is created or edited.
+
+## 10. Risks
+
+| Risk | Mitigation |
+|---|---|
+| A string moved in WI-2 changes what a reader sees | WI-2 is a Move: every assertion and count must equal base |
+| The browser lane's runtime doubles in WI-4 | Accepted; the lane is not a CI gate, so merges are not slowed |
+| A right-to-left defect exposed in WI-4 is outside a rule the effort owns | It stops the Work Item and is recorded, not absorbed |
+| Arabic content is published unreviewed | WI-6 cannot merge without the named approver's recorded approval |
+| This plan goes stale as execution teaches something | §11 |
+
+## 11. Updating this plan
+
+It changes in the branch where the need was found, never in a branch of its own. When an implementation detail moves, the Work Item's Issue is updated; when strategy, sequencing, scope or a decision moves, this plan is. Nothing stale is left in either.
