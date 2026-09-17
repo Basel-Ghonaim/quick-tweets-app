@@ -1,7 +1,7 @@
 import type { AxiosError } from "axios";
 import type { AppError } from "../AppError";
 import { createAppError } from "../errorFactory";
-import { errorConfigMap } from "../errorConfig";
+import { defaultMessageFor } from "../errorMessages";
 import { buildAppError, retryAfterSeconds, type BackendErrorBody } from "./parserUtils";
 
 export const parseAxiosError = (
@@ -25,11 +25,11 @@ export const parseAxiosError = (
   // No response — handle Axios-specific network/transport codes
   switch (code) {
     case "ERR_CANCELED":
-      return createAppError("canceled", errorConfigMap.canceled.defaultMessage);
+      return createAppError("canceled", defaultMessageFor("canceled"));
     case "ERR_NETWORK":
-      return createAppError("network", errorConfigMap.network.defaultMessage);
+      return createAppError("network", defaultMessageFor("network"));
     case "ECONNABORTED":
-      return createAppError("timeout", errorConfigMap.timeout.defaultMessage);
+      return createAppError("timeout", defaultMessageFor("timeout"));
   }
 
   return null;

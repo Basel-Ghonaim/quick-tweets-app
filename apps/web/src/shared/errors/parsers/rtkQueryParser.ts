@@ -1,7 +1,7 @@
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import type { AppError } from "../AppError";
 import { createAppError, createUnknownError } from "../errorFactory";
-import { errorConfigMap } from "../errorConfig";
+import { defaultMessageFor } from "../errorMessages";
 import { buildAppError, type BackendErrorBody } from "./parserUtils";
 
 /**
@@ -25,9 +25,9 @@ export const rtkQueryParser = (error: FetchBaseQueryError): AppError | null => {
   if (typeof error.status === "string") {
     switch (error.status) {
       case "FETCH_ERROR":
-        return createAppError("network", errorConfigMap.network.defaultMessage);
+        return createAppError("network", defaultMessageFor("network"));
       case "TIMEOUT_ERROR":
-        return createAppError("timeout", errorConfigMap.timeout.defaultMessage);
+        return createAppError("timeout", defaultMessageFor("timeout"));
       case "PARSING_ERROR":
         return createUnknownError(new Error(error.error));
       case "CUSTOM_ERROR":
