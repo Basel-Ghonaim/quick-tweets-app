@@ -3477,7 +3477,7 @@
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
                   "const d = pm.response.json().data;",
                   "pm.test(\"handle is the new one\", () => pm.expect(d.username).to.eql(pm.environment.get(\"rnNewUsername\")));",
-                  "pm.test(\"identity id is unchanged (session key is the id)\", () => pm.expect(String(d.id)).to.eql(pm.environment.get(\"rnUserId\")));"
+                  "pm.test(\"identity id is unchanged (session key is the id)\", () => pm.expect(d.id).to.eql(Number(pm.environment.get(\"rnUserId\"))));"
                 ]
               }
             }
@@ -3518,7 +3518,7 @@
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
                   "const d = pm.response.json().data;",
-                  "pm.test(\"same token resolves the renamed account\", () => pm.expect(String(d.id)).to.eql(pm.environment.get(\"rnUserId\")));",
+                  "pm.test(\"same token resolves the renamed account\", () => pm.expect(d.id).to.eql(Number(pm.environment.get(\"rnUserId\"))));",
                   "pm.test(\"and returns the new handle\", () => pm.expect(d.username).to.eql(pm.environment.get(\"rnNewUsername\")));"
                 ]
               }
