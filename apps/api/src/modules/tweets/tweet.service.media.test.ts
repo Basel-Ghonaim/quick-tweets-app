@@ -132,6 +132,16 @@ describe("tweet create with media", () => {
     expect(w.calls.replace[0]!.client).toBe(TX);
   });
 
+  it("answers with the media it attached, in submitted order", async () => {
+    const w = makeWorld();
+    const { media } = makeMedia({ tokA: 11, tokB: 22 });
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    const tweet = await svc.create(AUTHOR, "hello", ["tokB", "tokA"]);
+
+    expect(tweet.media).toEqual([{ token: "tok-22" }, { token: "tok-11" }]);
+  });
+
   it("rolls everything back when one reference is not attachable", async () => {
     const w = makeWorld();
     const { media, began } = makeMedia({ tokA: 11 }); // tokB is not the author's
@@ -183,6 +193,17 @@ describe("tweet edit — full replacement", () => {
 
     expect(ended).toEqual([{ mediaId: 11, referrer: "tweet:1", client: TX }]);
     expect(began).toEqual([{ mediaId: 33, referrer: "tweet:1", client: TX }]);
+  });
+
+  it("answers with the media it now holds, in submitted order", async () => {
+    const w = makeWorld();
+    w.stored.set(1, [{ mediaId: 11, position: 0 }]);
+    const { media } = makeMedia({ tokA: 11, tokC: 33 });
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    const tweet = await svc.update(1, AUTHOR, { media: ["tokC", "tokA"] });
+
+    expect(tweet.media).toEqual([{ token: "tok-33" }, { token: "tok-11" }]);
   });
 
   it("signals nothing when media is only reordered", async () => {

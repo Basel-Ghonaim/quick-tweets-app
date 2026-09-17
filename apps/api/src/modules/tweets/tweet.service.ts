@@ -280,7 +280,8 @@ export const createTweetService = (
             tx,
           );
         }
-        return created;
+        // `created` was read before its media rows existed.
+        return { ...created, media: await repo.findMediaRefs(created.id, tx) };
       });
       return toResponse(media, tweet);
     } catch (err) {

@@ -511,7 +511,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
   "data": {
     "id": 13,
     "body": "Hello world!",
-    "media": [],                // Ordered media attachments — see TweetMediaEmbed.
+    "media": [{ "token": "<token>" }], // Ordered media attachments — see TweetMediaEmbed.
     "author": { "id": 1, "username": "basel", "name": "Basel", "avatar": null },
     "likesCount": 0,
     "commentsCount": 0,
@@ -550,7 +550,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
   "data": {
     "id": 5,
     "body": "Updated tweet!",
-    "media": [],
+    "media": [{ "token": "<token>" }],
     "author": { "id": 1, "username": "basel", "name": "Basel", "avatar": null },
     "likesCount": 3,
     "commentsCount": 2,
