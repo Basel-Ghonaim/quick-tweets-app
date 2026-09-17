@@ -315,10 +315,11 @@ FROM channel_verifications WHERE user_id = :cvUserId;
 -- 5. AFTER CHV-12 (a challenge expired, with no sweep run): the expired row is
 --    STILL HERE, and the self-view still reads unproven. That is the point —
 --    status is derived, so no writer is needed for expiry to be correct.
+--    Timestamps are stored in UTC without a zone, so now() is read in UTC too.
 SELECT count(*) AS expired_but_unswept
 FROM channel_verification_challenges ch
 JOIN channel_verifications v ON v.id = ch.verification_id
-WHERE v.user_id = :cvUserId AND ch.closed_at IS NULL AND ch.expires_at < now();
+WHERE v.user_id = :cvUserId AND ch.closed_at IS NULL AND ch.expires_at < now() AT TIME ZONE 'UTC';
 ```
 > **CHV-11 moves `users.email` directly**, because no endpoint does. That changes
 > an *input* the capability is asked about; the capability's own state is
@@ -398,7 +399,8 @@ WHERE user_id = :pwrUserId;
 -- 4. DERIVED, NOT STORED (I8): after PWR-14 the expired row is still present
 --    and still unspent. Nothing had to write for confirm to refuse it, and no
 --    sweep has run. MUST return the row, with used_at NULL and expires_at past.
-SELECT id, expires_at, used_at, expires_at < now() AS is_expired
+--    Timestamps are stored in UTC without a zone, so now() is read in UTC too.
+SELECT id, expires_at, used_at, expires_at < now() AT TIME ZONE 'UTC' AS is_expired
 FROM password_reset_challenges
 WHERE user_id = :pwrUserId
 ORDER BY created_at DESC
@@ -447,7 +449,7 @@ WHERE table_name = 'password_reset_sessions' AND column_name = 'user_id';
 SELECT id, challenge_id, user_id, resends_used, masked_endpoint,
        last_asked_at, expires_at, created_at
 FROM password_reset_sessions
-WHERE expires_at > now()
+WHERE expires_at > now() AT TIME ZONE 'UTC'
 ORDER BY created_at DESC;
 
 -- 8. THE MASK IS WHAT IS STORED (D5). Masking happens where the address is
