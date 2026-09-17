@@ -26,7 +26,6 @@ verification: the ledger, `TweetMedia` rows, and `MediaObject` internals
 | What you are verifying | Postman sees | Only pgAdmin sees |
 |---|---|---|
 | Object stored & servable | `GET /media/:token` → 200 | `status`, `uploader_id` |
-| Avatar attached | `avatar:{token}` on the user | the `user-avatar:{id}` ledger row |
 | Tweet media | `media:[{token}]` on the tweet | `tweet_media` rows + `tweet:{id}` ledger rows |
 | **Reference began / ended** | *(nothing)* | **the ledger delta — the whole point** |
 | Unreferenced (M11 target) | *(nothing)* | the reclamation target state (see terminology) |
@@ -155,19 +154,9 @@ ORDER BY id DESC
 LIMIT 10;
 ```
 
-### Checkpoint B — Avatar (authenticated User/Profile action)
-```sql
--- An avatar set via PATCH /users/me: uploader_id is the owning user, and a
--- ledger row exists under user-avatar:{id}.
-SELECT u.id AS user_id, u.avatar_media_id, m.status, m.uploader_id,
-       r.referrer
-FROM users u
-JOIN media_objects m ON m.id = u.avatar_media_id
-LEFT JOIN media_references r
-       ON r.media_id = u.avatar_media_id AND r.referrer = 'user-avatar:' || u.id
-WHERE u.username = 'verify_avatar';
--- Expect: uploader_id = user_id, status='ready', referrer='user-avatar:{id}' (NOT NULL).
-```
+### Checkpoint B — retired
+
+It checked the avatar of the account the pre-auth avatar folder created, and was retired with that folder and the upload grant (ADR 0008). Where the authenticated avatar is proven is the [catalogue's §3](verification-scenarios.md#3--avatar--retired-pre-auth-adoption-removed).
 
 ### Checkpoint C — Tweet create with media (after "Create tweet with 2 media")
 ```sql
@@ -585,7 +574,7 @@ the whole collection at once — the point is to inspect state between steps.
 |---|---|---|
 | 1 — Auth spine | 00, 01 | none (API-observable only) |
 | 2 — Media primitives | 02 | **A** |
-| 3 — Avatar (authenticated) | 03 | **B** |
+| 3 — Avatar | — | retired with the upload grant |
 | 4 — Tweet coordination | 04 | **C → D (×3) → E**, then **G** for the failure |
 | 5 — Social | 05, 06, 07 | none |
 | 6 — Comment media | 08 | **CM-1 → CM-2 → CM-3 → CM-4 → CM-5 → CM-6** (see the execution map below) |

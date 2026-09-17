@@ -75,18 +75,6 @@
       "enabled": true
     },
     {
-      "key": "avatarGrant",
-      "value": "",
-      "type": "secret",
-      "enabled": true
-    },
-    {
-      "key": "avatarToken",
-      "value": "",
-      "type": "default",
-      "enabled": true
-    },
-    {
       "key": "mediaTokenA1",
       "value": "",
       "type": "default",

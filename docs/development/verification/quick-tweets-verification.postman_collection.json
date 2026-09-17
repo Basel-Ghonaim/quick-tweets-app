@@ -535,88 +535,8 @@
     },
     {
       "name": "02 · Media — primitives",
-      "description": "The two upload paths (grant and Bearer), read, and the failure grid. A grant is single-use (GRANT_MAX_OBJECTS=1): mint one per grant-upload.",
+      "description": "Upload under Bearer, read, and the failure grid. Upload is authenticated-only (ADR 0008).",
       "item": [
-        {
-          "name": "Mint grant",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/media/grants",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "media",
-                "grants"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
-                  "pm.environment.set(\"avatarGrant\", pm.response.json().data.grant);",
-                  "pm.test(\"grant + expiry returned\", () => { const d = pm.response.json().data; pm.expect(d.grant).to.be.a(\"string\"); pm.expect(d.expiresAt).to.be.a(\"string\"); });"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Upload under grant → avatar token",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "X-Upload-Grant",
-                "value": "{{avatarGrant}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/media",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "media"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": "fixtures/sample.png"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
-                  "pm.environment.set(\"avatarToken\", pm.response.json().data.token);",
-                  "pm.test(\"content-derived type\", () => pm.expect(pm.response.json().data.contentType).to.eql(\"image/png\"));"
-                ]
-              }
-            }
-          ]
-        },
         {
           "name": "Upload under Bearer (User A) → media token A1",
           "request": {
@@ -666,18 +586,18 @@
           ]
         },
         {
-          "name": "Read /media/:token (avatar)",
+          "name": "Read /media/:token (A1)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{mediaOrigin}}/media/{{avatarToken}}",
+              "raw": "{{mediaOrigin}}/media/{{mediaTokenA1}}",
               "host": [
                 "{{mediaOrigin}}"
               ],
               "path": [
                 "media",
-                "{{avatarToken}}"
+                "{{mediaTokenA1}}"
               ]
             },
             "auth": {
@@ -703,7 +623,7 @@
           "description": "Upload and read failures.",
           "item": [
             {
-              "name": "Upload — no auth, no grant",
+              "name": "Upload — no auth",
               "request": {
                 "method": "POST",
                 "header": [],
@@ -738,51 +658,6 @@
                     "exec": [
                       "pm.test(\"status 401\", () => pm.response.to.have.status(401));",
                       "pm.test(\"error type unauthorized\", () => pm.expect(pm.response.json().error.type).to.eql(\"unauthorized\"));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Upload — invalid grant",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "X-Upload-Grant",
-                    "value": "not.a.valid.grant"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/media",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "media"
-                  ]
-                },
-                "auth": {
-                  "type": "noauth"
-                },
-                "body": {
-                  "mode": "formdata",
-                  "formdata": [
-                    {
-                      "key": "file",
-                      "type": "file",
-                      "src": "fixtures/sample.png"
-                    }
-                  ]
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
                     ]
                   }
                 }
@@ -862,302 +737,6 @@
                     "type": "text/javascript",
                     "exec": [
                       "pm.test(\"not served (404/410)\", () => pm.expect([404, 410]).to.include(pm.response.code));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Upload — reuse a spent grant (single-use)",
-              "request": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "X-Upload-Grant",
-                    "value": "{{avatarGrant}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/media",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "media"
-                  ]
-                },
-                "auth": {
-                  "type": "noauth"
-                },
-                "body": {
-                  "mode": "formdata",
-                  "formdata": [
-                    {
-                      "key": "file",
-                      "type": "file",
-                      "src": "fixtures/sample.png"
-                    }
-                  ]
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"grant is single-use — refused (403/401)\", () => pm.expect([403, 401]).to.include(pm.response.code));"
-                    ]
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "03 · Avatar (pre-auth adoption)",
-      "description": "The register-with-avatar vertical: grant → upload → register{avatar}. DB CHECKPOINT after the happy path (see runbook §Avatar): a user-avatar:{id} ledger row must exist.",
-      "item": [
-        {
-          "name": "1 · Mint grant",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/media/grants",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "media",
-                "grants"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
-                  "pm.environment.set(\"avatarGrant\", pm.response.json().data.grant);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "2 · Upload avatar under grant",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "X-Upload-Grant",
-                "value": "{{avatarGrant}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/media",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "media"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": "fixtures/sample.png"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
-                  "pm.environment.set(\"avatarToken\", pm.response.json().data.token);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "3 · Register with avatar (adopt)",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
-            },
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"verify_avatar\",\n  \"name\": \"Avatar User\",\n  \"email\": \"avatar@verify.local\",\n  \"password\": \"{{userA_password}}\",\n  \"avatar\": {\n    \"token\": \"{{avatarToken}}\",\n    \"grant\": \"{{avatarGrant}}\"\n  }\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
-                  "pm.test(\"avatar resolved on the user\", () => pm.expect(pm.response.json().data.user.avatar.token).to.be.a(\"string\"));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "✗ Failure paths",
-          "description": "Adoption guards. These reuse the spent token/grant from the happy path above.",
-          "item": [
-            {
-              "name": "Replay — same user, spent grant+token",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/auth/register",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "auth",
-                    "register"
-                  ]
-                },
-                "auth": {
-                  "type": "noauth"
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"username\": \"verify_replay\",\n  \"name\": \"Replay\",\n  \"email\": \"replay@verify.local\",\n  \"password\": \"{{userA_password}}\",\n  \"avatar\": {\n    \"token\": \"{{avatarToken}}\",\n    \"grant\": \"{{avatarGrant}}\"\n  }\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"replay refused (409/422)\", () => pm.expect([409, 422]).to.include(pm.response.code));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Token without a valid grant (not adoptable)",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/auth/register",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "auth",
-                    "register"
-                  ]
-                },
-                "auth": {
-                  "type": "noauth"
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"username\": \"verify_nogrant\",\n  \"name\": \"NoGrant\",\n  \"email\": \"nogrant@verify.local\",\n  \"password\": \"{{userA_password}}\",\n  \"avatar\": {\n    \"token\": \"{{avatarToken}}\",\n    \"grant\": \"not.a.valid.grant\"\n  }\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"a leaked token alone is not adoptable (422)\", () => pm.expect([422, 401]).to.include(pm.response.code));"
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "name": "Adopt an already-adopted object (different user)",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "url": {
-                  "raw": "{{baseUrl}}/auth/register",
-                  "host": [
-                    "{{baseUrl}}"
-                  ],
-                  "path": [
-                    "auth",
-                    "register"
-                  ]
-                },
-                "auth": {
-                  "type": "noauth"
-                },
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"username\": \"verify_other\",\n  \"name\": \"Other\",\n  \"email\": \"other@verify.local\",\n  \"password\": \"{{userA_password}}\",\n  \"avatar\": {\n    \"token\": \"{{avatarToken}}\",\n    \"grant\": \"{{avatarGrant}}\"\n  }\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                }
-              },
-              "event": [
-                {
-                  "listen": "test",
-                  "script": {
-                    "type": "text/javascript",
-                    "exec": [
-                      "pm.test(\"already-adopted refused (409/422)\", () => pm.expect([409, 422]).to.include(pm.response.code));"
                     ]
                   }
                 }
