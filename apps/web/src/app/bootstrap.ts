@@ -4,10 +4,12 @@
 import { setupAuthClient } from "@shared/api";
 import { ERROR_COPY } from "@shared/copy";
 import { setupErrorMessages } from "@shared/errors";
+import { setupLanguages } from "@shared/preferences";
 import { reduxStore } from "./store/store";
 import { sessionActions, refreshSession, selectAccessToken } from "@shared/session";
 
 export const bootstrap = () => {
+  setupLanguages(["en"]);
   setupErrorMessages(ERROR_COPY);
 
   setupAuthClient(

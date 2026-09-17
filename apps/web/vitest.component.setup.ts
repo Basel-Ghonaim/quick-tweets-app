@@ -3,10 +3,12 @@ import { cleanup } from "@testing-library/react";
 import { setupAuthClient } from "./src/shared/api";
 import { ERROR_COPY } from "./src/shared/copy";
 import { setupErrorMessages } from "./src/shared/errors";
+import { setupLanguages } from "./src/shared/preferences";
 import { server } from "./testing/server";
 
-// The words an unmapped failure is reported in, supplied as app/bootstrap.ts
-// supplies them, so this lane shows a refusal as the application does.
+// The languages and the words an unmapped failure is reported in, supplied as
+// app/bootstrap.ts supplies them, so this lane reads as the application does.
+setupLanguages(["en"]);
 setupErrorMessages(ERROR_COPY);
 
 // What app/bootstrap.ts does for the application, done once for the lane. The

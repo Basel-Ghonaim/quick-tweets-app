@@ -32,6 +32,42 @@
           .setAttribute("content", THEMES[theme]);
       })();
     </script>
+    <!-- The language and its direction, settled before the first paint so a page
+         never turns around after it is drawn. A check holds this to the module. -->
+    <script>
+      (function () {
+        var LANGUAGES = ["en"];
+        var RIGHT_TO_LEFT = ["ar"];
+        var FALLBACK = "en";
+        var stored = null;
+        try {
+          stored = localStorage.getItem("quick-tweets:language");
+        } catch (error) {
+          /* Unreadable storage is not a reason to fail to paint. */
+        }
+        var browser =
+          navigator.languages && navigator.languages.length
+            ? navigator.languages
+            : [navigator.language];
+        var language = FALLBACK;
+        if (stored !== null && LANGUAGES.indexOf(stored) !== -1) {
+          language = stored;
+        } else {
+          for (var i = 0; i < browser.length; i++) {
+            var base = String(browser[i]).toLowerCase().split("-")[0];
+            if (LANGUAGES.indexOf(base) !== -1) {
+              language = base;
+              break;
+            }
+          }
+        }
+        document.documentElement.setAttribute("lang", language);
+        document.documentElement.setAttribute(
+          "dir",
+          RIGHT_TO_LEFT.indexOf(language) !== -1 ? "rtl" : "ltr",
+        );
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

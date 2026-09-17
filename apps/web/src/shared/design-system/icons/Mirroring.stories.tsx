@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import { CheckIcon, SearchIcon } from "./components";
-import {
-  applyDirection,
-  DEFAULT_DIRECTION,
-  DIRECTION_ATTRIBUTE,
-} from "@shared/preferences";
+
+// The direction follows the language in the application; here the attribute is the whole subject.
+const stampDirection = (direction: string | null) =>
+  direction === null
+    ? document.documentElement.removeAttribute("dir")
+    : document.documentElement.setAttribute("dir", direction);
 
 /**
  * A glyph that declares it mirrors turns around with the reading direction, and
@@ -41,19 +42,19 @@ export const TurnsWithTheDirection: Story = {
     // Direction is a property of the document, so every other story shares it.
     // Restored in `finally`, or a failure here would leave the rest running
     // right-to-left and reporting it as their own.
-    const previous = document.documentElement.getAttribute(DIRECTION_ATTRIBUTE);
+    const previous = document.documentElement.getAttribute("dir");
     try {
       // Left to right, nothing is flipped.
-      applyDirection("ltr");
+      stampDirection("ltr");
       await expect(scaleX(mirrors)).toBe(1);
       await expect(scaleX(stays)).toBe(1);
 
       // Right to left, only the glyph that declared it turns.
-      applyDirection("rtl");
+      stampDirection("rtl");
       await expect(scaleX(mirrors)).toBe(-1);
       await expect(scaleX(stays)).toBe(1);
     } finally {
-      applyDirection((previous as "ltr" | "rtl") ?? DEFAULT_DIRECTION);
+      stampDirection(previous);
     }
   },
 };
