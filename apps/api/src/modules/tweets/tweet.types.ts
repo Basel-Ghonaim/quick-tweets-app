@@ -49,7 +49,7 @@ export interface TweetMediaResponse {
 export interface TweetResponse {
   id: number;
   body: string;
-  /** Ordered media attachments. Always empty until a write path exists (M9). */
+  /** Ordered media attachments. */
   media: TweetMediaResponse[];
   author: AuthorEmbed;
   likesCount: number;

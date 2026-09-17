@@ -132,6 +132,16 @@ describe("tweet create with media", () => {
     expect(w.calls.replace[0]!.client).toBe(TX);
   });
 
+  it("answers with the media it attached, in submitted order", async () => {
+    const w = makeWorld();
+    const { media } = makeMedia({ tokA: 11, tokB: 22 });
+    const svc = createTweetService(w.repo, media, w.runInTransaction);
+
+    const tweet = await svc.create(AUTHOR, "hello", ["tokB", "tokA"]);
+
+    expect(tweet.media).toEqual([{ token: "tok-22" }, { token: "tok-11" }]);
+  });
+
   it("rolls everything back when one reference is not attachable", async () => {
     const w = makeWorld();
     const { media, began } = makeMedia({ tokA: 11 }); // tokB is not the author's
