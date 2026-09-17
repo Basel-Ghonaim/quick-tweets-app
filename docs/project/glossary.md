@@ -4,7 +4,7 @@
 > **Authority:** The canonical source for the project's **domain vocabulary** — the product terms used across the code and documentation. Mechanism, process, and governance terms are owned by their documents and linked here, never redefined.
 > **Scope:** What the project's core nouns mean. A vocabulary reference, not a specification.
 > **Version:** 1.0
-> **Last Updated:** 2026-08-14
+> **Last Updated:** 2026-09-17
 > **Owner:** Basel Ghonaim
 
 ## Domain vocabulary
@@ -29,6 +29,7 @@ These appear across the project but are defined and owned by other documents —
 
 - **Access token, refresh token, JWT, rate limiting** — authentication mechanisms; see the [API contract](../api/api-contract.md) and [Backend Security](../backend/security.md).
 - **Response wrapper, cursor / offset pagination, error type, `AuthorEmbed`** — wire-level shapes; owned by the [API contract](../api/api-contract.md).
+- **Language, catalogue, direction** — the reader's interface language, the words served for it, and the reading direction that follows it; owned by [Frontend Localisation](../frontend/localisation.md).
 - **Work Item, branch, Pull Request, Definition of Done / Accepted** — execution process; owned by the [Engineering Execution Standard](../development/engineering-execution-standard.md).
 - **ADR, Finding, platform vs. feature document, one-owner-per-fact** — documentation governance; owned by the [Documentation Strategy](../architecture/documentation-strategy.md).
 
