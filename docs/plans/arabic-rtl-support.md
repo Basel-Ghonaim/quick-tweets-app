@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-17
+> **Last Updated:** 2026-09-18
 > **Parent Issue:** [#754](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/754)
 > **Supersedes:** —
 
@@ -79,9 +79,9 @@ Approved. A decision changes only when implementation exposes a genuine technica
 | WI | Objective | Kind | Needs |
 |---|---|---|---|
 | **WI-1** [#755](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/755) | New passwords take English characters only; both tiers agree on email (D1–D4) | Decision | — |
-| **WI-2** | English content leaves the code | Move | WI-1 |
+| **WI-2** [#757](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/757) | English content leaves the code | Move | WI-1 |
 | **WI-3** [#763](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/763) | The active language: preference, pre-paint `lang`/`dir`, content mechanism, formatting (D6–D9, O5) | Decision | WI-2 |
-| **WI-4** | RTL proof: the browser lane in both directions (D13) | Decision | WI-3 |
+| **WI-4** [#765](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/765) | RTL proof: the browser lane in both directions (D13) | Decision | WI-3 |
 | **WI-5** | Design System script and direction reactivity (D10, D11, D12 containment) | Decision | WI-4 · O2 |
 | **WI-6** | The Arabic catalogue and the language control (D15) | Decision | WI-5 · O3 · O4 |
 
