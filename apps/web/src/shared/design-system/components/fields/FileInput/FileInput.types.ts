@@ -5,14 +5,16 @@ export type AvatarShape = "circle" | "rectangle";
 export type AvatarFill = "default" | "outline";
 export type AvatarBorder = "dashed" | "solid" | "none";
 
-/** Why a chosen file was refused. `limit` arrives already formatted. */
+/** Why a chosen file was refused, and how a size is written. `limit` arrives written by `size`. */
 export interface FileSelectionContent {
   notAccepted: (fileName: string) => string;
   tooLarge: (fileName: string, limit: string) => string;
+  /** A byte count as the reader's language writes it, with its unit. */
+  size: (bytes: number) => string;
 }
 
 /** Every word the standard control shows; it checks size but not type. */
-export interface StandardFileInputContent extends Pick<FileSelectionContent, "tooLarge"> {
+export interface StandardFileInputContent extends Pick<FileSelectionContent, "tooLarge" | "size"> {
   choose: string;
   nothingChosen: string;
   chosenCount: (count: number) => string;

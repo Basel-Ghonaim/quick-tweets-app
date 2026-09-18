@@ -43,12 +43,14 @@ const controls: Props["controls"] = {
     replaceTitle: "Rp",
     notAccepted: (name) => `not accepted: ${name}`,
     tooLarge: (name, limit) => `too large: ${name} ${limit}`,
+    size: (bytes) => `${bytes} bytes`,
   },
   files: {
     choose: "Choose",
     nothingChosen: "None",
     chosenCount: (count) => `${count} chosen`,
     tooLarge: (name, limit) => `too large: ${name} ${limit}`,
+    size: (bytes) => `${bytes} bytes`,
   },
 };
 

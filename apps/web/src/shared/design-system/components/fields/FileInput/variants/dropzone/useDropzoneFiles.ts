@@ -7,7 +7,7 @@ import type { DropzoneFileInputContent } from "../../FileInput.types";
 interface UseDropzoneFilesOptions {
   inputRef: React.RefObject<HTMLInputElement | null>;
   /** The words a refused selection is reported in. */
-  content: Pick<DropzoneFileInputContent, "notAccepted" | "tooLarge" | "tooMany" | "tooFew">;
+  content: Pick<DropzoneFileInputContent, "notAccepted" | "tooLarge" | "size" | "tooMany" | "tooFew">;
   accept?: string;
   maxSize?: number;
   multiple: boolean;

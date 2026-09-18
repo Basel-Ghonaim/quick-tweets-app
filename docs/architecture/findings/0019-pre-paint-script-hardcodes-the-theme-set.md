@@ -39,3 +39,9 @@ The Work Item that surfaced it was giving theme selection an owner, and the fix 
 - **Move the chrome colour out of the script**, leaving only the theme name to duplicate. Narrows the problem without closing it, and costs a correct browser chrome on the first frame.
 
 The middle option is cheap enough to be tempting and is worth taking only as a stopgap; it makes a theme addition noisy rather than silent, which is a smaller claim than the ADR's.
+
+## Addendum — 2026-09-17, the language set joins it ([#763](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/763))
+
+**The markup now carries a second copy of a declared set.** The language, and the direction that follows it, have to be stamped before the first paint for the same reason the theme is, so a second inline script declares the registered languages, the fallback and the languages written right to left.
+
+**This copy is held by the middle option above, taken deliberately.** A check asserts that the script declares exactly the languages a catalogue is registered for and the same fallback, that it gives every language it names or can stamp the module's direction, and that it reaches the module's decision on every path. A new language therefore fails loudly until the script knows it. The duplication itself remains, as it does for the theme, and generating the script's data stays with [#554](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/554).

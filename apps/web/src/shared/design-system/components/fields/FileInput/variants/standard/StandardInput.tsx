@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from "react";
 import { UploadIcon } from "../../../../../icons";
-import { formatSize } from "../../formatSize";
 import type { VariantContext } from "../variant.types";
 import type { StandardFileInputContent } from "../../FileInput.types";
 import styles from "../../FileInput.module.css";
@@ -55,7 +54,7 @@ export const StandardInput = ({
     if (maxSize) {
       const oversized = files.find((file) => file.size > maxSize);
       if (oversized) {
-        onValidationError(content.tooLarge(oversized.name, formatSize(maxSize)));
+        onValidationError(content.tooLarge(oversized.name, content.size(maxSize)));
         // Reset so the same file can be chosen again after the message is read.
         event.target.value = "";
         return;

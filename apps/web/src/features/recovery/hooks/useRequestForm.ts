@@ -1,15 +1,16 @@
+import { useMemo } from "react";
 import { toFieldEntries } from "@shared/schema-form";
-import { recoveryFormSchemas } from "../forms";
+import { useRecoverySchemas } from "./useRecoverySchemas";
 import { useRecoveryForm } from "./useRecoveryForm";
-
-const fields = toFieldEntries(recoveryFormSchemas.requestFields);
 
 export const useRequestForm = (
   onSubmit: (email: string) => Promise<void>,
   initialEmail?: string,
 ) => {
+  const { requestFields } = useRecoverySchemas();
+  const fields = useMemo(() => toFieldEntries(requestFields), [requestFields]);
   const form = useRecoveryForm(
-    recoveryFormSchemas.requestFields,
+    requestFields,
     ({ email }) => onSubmit(email),
     initialEmail ? { email: initialEmail } : undefined,
   );

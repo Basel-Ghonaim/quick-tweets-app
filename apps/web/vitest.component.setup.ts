@@ -1,13 +1,15 @@
 import { afterAll, afterEach, beforeAll } from "vitest";
 import { cleanup } from "@testing-library/react";
 import { setupAuthClient } from "./src/shared/api";
-import { ERROR_COPY } from "./src/shared/copy";
+import { CATALOGUES, currentCopy } from "./src/shared/copy";
 import { setupErrorMessages } from "./src/shared/errors";
+import { setupLocalisation } from "./src/shared/localisation";
 import { server } from "./testing/server";
 
-// The words an unmapped failure is reported in, supplied as app/bootstrap.ts
-// supplies them, so this lane shows a refusal as the application does.
-setupErrorMessages(ERROR_COPY);
+// The catalogues and the words an unmapped failure is reported in, supplied as
+// app/bootstrap.ts supplies them, so this lane reads as the application does.
+setupLocalisation(CATALOGUES);
+setupErrorMessages(() => currentCopy().errors);
 
 // What app/bootstrap.ts does for the application, done once for the lane. The
 // client carries no interceptors until this runs, so nothing normalizes an

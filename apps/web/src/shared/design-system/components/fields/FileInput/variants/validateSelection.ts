@@ -1,4 +1,3 @@
-import { formatSize } from "../formatSize";
 import type { FileSelectionContent } from "../FileInput.types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -64,7 +63,7 @@ export function validateSelection(
     if (oversized) {
       return {
         valid: [],
-        error: content.tooLarge(oversized.name, formatSize(options.maxSize)),
+        error: content.tooLarge(oversized.name, content.size(options.maxSize)),
       };
     }
   }

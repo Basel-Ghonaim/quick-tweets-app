@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useAuthenticationSelector } from "../store";
 import { useRequestState } from "@shared/hooks";
 import type { SerializedAppError } from "@shared/errors";
@@ -10,6 +11,7 @@ import {
   type FormChangeHandler,
   type FormSubmitHandler,
 } from "@shared/schema-form";
+import { useCopy } from "@shared/copy";
 import { useAuthActions } from "./useAuthActions";
 import { authFormSchemas } from "../forms";
 import { afterSuccess } from "../services";
@@ -18,8 +20,11 @@ import type { AuthRequestType } from "../store";
 
 type AuthFlowType = AuthRequestType;
 
-const loginFields = toFieldEntries(authFormSchemas.loginFields);
-const registerFields = toFieldEntries(authFormSchemas.registerFields);
+/** The schemas in the active language, held until the language changes. */
+const useAuthFormSchemas = () => {
+  const copy = useCopy();
+  return useMemo(() => authFormSchemas(copy), [copy]);
+};
 
 export interface AuthFlowReturn<
   TSchema extends Record<string, FormFieldConfig<FormPayload>>,
@@ -74,22 +79,18 @@ const useAuthFormBase = <
 
 export const useLoginFlow = (onDone?: () => void) => {
   const { login } = useAuthActions();
-  const form = useAuthFormBase(
-    authFormSchemas.loginFields,
-    afterSuccess(login, onDone),
-    "login",
-  );
+  const { loginFields } = useAuthFormSchemas();
+  const fields = useMemo(() => toFieldEntries(loginFields), [loginFields]);
+  const form = useAuthFormBase(loginFields, afterSuccess(login, onDone), "login");
 
-  return { fields: loginFields, ...form };
+  return { fields, ...form };
 };
 
 export const useRegisterFlow = (onDone?: () => void) => {
   const { register } = useAuthActions();
-  const form = useAuthFormBase(
-    authFormSchemas.registerFields,
-    afterSuccess(register, onDone),
-    "register",
-  );
+  const { registerFields } = useAuthFormSchemas();
+  const fields = useMemo(() => toFieldEntries(registerFields), [registerFields]);
+  const form = useAuthFormBase(registerFields, afterSuccess(register, onDone), "register");
 
-  return { fields: registerFields, ...form };
+  return { fields, ...form };
 };

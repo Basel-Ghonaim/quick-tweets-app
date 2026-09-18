@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from "react";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import {
   canResend as windowIsOpen,
   resendCooldownInitial,
@@ -13,6 +13,7 @@ import type { RecoveryPosition } from "../model";
  * repeating the same number still restarts the window.
  */
 export const useResendWindow = (position: RecoveryPosition) => {
+  const copy = useCopy();
   const [state, tick] = useReducer(resendCooldownReducer, resendCooldownInitial);
 
   useEffect(() => {
@@ -31,6 +32,6 @@ export const useResendWindow = (position: RecoveryPosition) => {
   return {
     secondsLeft: state.secondsLeft,
     isOpen: windowIsOpen(state),
-    announcement: state.justEnded ? AUTH_COPY.recovery.resendReady : "",
+    announcement: state.justEnded ? copy.auth.recovery.resendReady : "",
   };
 };

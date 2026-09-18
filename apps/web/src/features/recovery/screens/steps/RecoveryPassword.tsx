@@ -1,6 +1,6 @@
 import { Button, MessageRegion } from "@shared/design-system";
 import { SchemaField } from "@shared/schema-form";
-import { AUTH_COPY, CONTROL_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
 import { usePasswordForm } from "../../hooks";
 
@@ -9,13 +9,14 @@ interface RecoveryPasswordProps {
 }
 
 export const RecoveryPassword = ({ onSubmit }: RecoveryPasswordProps) => {
+  const copy = useCopy();
   const { fields, values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
     usePasswordForm(onSubmit);
 
   return (
     <StepLayout
-      title={AUTH_COPY.recovery.passwordTitle}
-      subtitle={AUTH_COPY.recovery.passwordSubtitle}
+      title={copy.auth.recovery.passwordTitle}
+      subtitle={copy.auth.recovery.passwordSubtitle}
       onSubmit={handleSubmit}
     >
       {serverError && <MessageRegion tone="error">{serverError.message}</MessageRegion>}
@@ -32,7 +33,7 @@ export const RecoveryPassword = ({ onSubmit }: RecoveryPasswordProps) => {
           onChange={handleChange}
           span={field.span}
           autoFocus={index === 0}
-          controls={CONTROL_COPY}
+          controls={copy.controls}
         />
       ))}
 
@@ -40,9 +41,9 @@ export const RecoveryPassword = ({ onSubmit }: RecoveryPasswordProps) => {
         type="submit"
         fullWidth
         isLoading={isSubmitting}
-        loadingText={AUTH_COPY.recovery.submittingPassword}
+        loadingText={copy.auth.recovery.submittingPassword}
       >
-        {AUTH_COPY.recovery.submitPassword}
+        {copy.auth.recovery.submitPassword}
       </Button>
     </StepLayout>
   );

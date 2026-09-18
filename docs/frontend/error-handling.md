@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the frontend **error-normalization pipeline** — how any caught error, from either transport stack or from native code, becomes one typed `AppError` before it reaches the UI. It owns the *mechanism* of convergence. It does **not** own the wire error taxonomy, status codes, or error-body shape (the [API contract](../api/api-contract.md)), the transport **call sites** that invoke it (the [frontend API client](api-client.md)), the backend error model that produces the errors ([backend conventions](../backend/conventions.md)), or the one-typed-error **principle** ([Engineering Principles §4](../development/engineering-principles.md)).
 > **Scope:** The shared error layer in `apps/web/src/shared/errors/`. The end-to-end request lifecycle these errors travel lives in the [system overview](../architecture/system-overview.md).
 > **Maturity:** This document describes the **currently implemented** pipeline, which is mature. It extends only if a new error *source* or *type* is added; anything not covered here is not yet handled, not deliberately excluded.
-> **Version:** 1.1
+> **Version:** 1.2
 > **Last Updated:** 2026-09-17
 > **Owner:** Basel Ghonaim
 
@@ -24,7 +24,7 @@ Each transport reports failure in its own dialect — Axios distinguishes an HTT
 
 A single registry maps each error type to its HTTP status, and provides the reverse status→type lookup used when a response carries no recognizable type. It is the one source of truth for "what status each type carries." The important consequence is that **messages are frontend-driven**: the backend supplies the error *type* and any field-level validation errors — not display text — so the UI owns wording (consistent, localizable) and still degrades gracefully when only a status code is available.
 
-**The pipeline holds no words.** A type's **default message** — what a failure says when the screen that met it has nothing more specific — is product content, handed to the pipeline once through a setup seam by the [composition root](architecture.md#the-composition-root). Until it is handed, a type is reported by its own name, which is never mistaken for wording. The type set mirrors the contract's taxonomy plus a few types the client **synthesizes when no HTTP response is available** (network, timeout, cancellation) or when the error is unrecognized (unknown); the authoritative taxonomy and status codes remain the [API contract](../api/api-contract.md)'s.
+**The pipeline holds no words.** A type's **default message** — what a failure says when the screen that met it has nothing more specific — is product content. The [composition root](architecture.md#the-composition-root) hands the pipeline a way to read it through a setup seam, and the pipeline reads it as each failure happens, so a failure is worded in the language active at that moment. Until a way to read it is handed, a type is reported by its own name, which is never mistaken for wording. The type set mirrors the contract's taxonomy plus a few types the client **synthesizes when no HTTP response is available** (network, timeout, cancellation) or when the error is unrecognized (unknown); the authoritative taxonomy and status codes remain the [API contract](../api/api-contract.md)'s.
 
 ## The `AppError` shape and the public API
 

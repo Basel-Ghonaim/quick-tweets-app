@@ -1,12 +1,15 @@
 // authErrorHandler — auth-specific, form-level messages; field errors pass through.
 import { describe, it, expect } from "vitest";
 import { createAppError } from "@shared/errors";
+import { CATALOGUES } from "@shared/copy";
 
 import { authErrorHandler } from "./authErrorHandler";
 
+const refusals = CATALOGUES.en.auth.errors;
+
 describe("authErrorHandler", () => {
   it("maps unauthorized to a credentials message without naming a field", () => {
-    const mapped = authErrorHandler(createAppError("unauthorized", "Invalid credentials"));
+    const mapped = authErrorHandler(createAppError("unauthorized", "Invalid credentials"), refusals);
 
     expect(mapped.type).toBe("unauthorized");
     expect(mapped.message).toBe("Incorrect username/email or password.");
@@ -16,6 +19,7 @@ describe("authErrorHandler", () => {
   it("keeps field errors when overriding a validation message", () => {
     const mapped = authErrorHandler(
       createAppError("validation", "Validation failed", { password: ["too short"] }),
+      refusals,
     );
 
     expect(mapped.message).toBe("Please review the highlighted fields to correct the errors.");
@@ -24,6 +28,6 @@ describe("authErrorHandler", () => {
 
   it("passes through a type with no auth-specific message", () => {
     const original = createAppError("server", "boom");
-    expect(authErrorHandler(original)).toBe(original);
+    expect(authErrorHandler(original, refusals)).toBe(original);
   });
 });

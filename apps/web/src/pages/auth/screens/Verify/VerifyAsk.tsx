@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { Button, MessageRegion, Typography } from "@shared/design-system";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { useAskFlow } from "@shared/channel-verification";
-import { VERIFICATION_MESSAGES } from "./messages";
+import { verificationMessages } from "./messages";
 import { RouteLink } from "@shared/routing";
 import styles from "./Verify.module.css";
 
@@ -11,41 +12,43 @@ interface VerifyAskProps {
 }
 
 export const VerifyAsk = ({ onSent, onLater }: VerifyAskProps) => {
+  const copy = useCopy();
+  const messages = useMemo(() => verificationMessages(copy), [copy]);
   const { isSending, error, send } = useAskFlow({
     onSent,
-    messages: VERIFICATION_MESSAGES,
+    messages,
   });
 
   return (
     <div className={styles.root}>
       <Typography variant="heading-large" as="h1">
-        {AUTH_COPY.verify.askTitle}
+        {copy.auth.verify.askTitle}
       </Typography>
       <Typography variant="body-medium" tone="secondary">
-        {AUTH_COPY.verify.askSubtitle}
+        {copy.auth.verify.askSubtitle}
       </Typography>
 
       {error && <MessageRegion tone="error">{error.message}</MessageRegion>}
 
       <div className={styles.ask}>
         <Typography variant="body-small" tone="secondary">
-          {AUTH_COPY.verify.reason}
+          {copy.auth.verify.reason}
         </Typography>
 
         <Button
           type="button"
           fullWidth
           isLoading={isSending}
-          loadingText={AUTH_COPY.verify.sending}
+          loadingText={copy.auth.verify.sending}
           onClick={send}
         >
-          {AUTH_COPY.verify.send}
+          {copy.auth.verify.send}
         </Button>
       </div>
 
       <div className={styles.asides}>
         <RouteLink href="/feed" tone="muted" onClick={onLater}>
-          {AUTH_COPY.verify.later}
+          {copy.auth.verify.later}
         </RouteLink>
       </div>
     </div>

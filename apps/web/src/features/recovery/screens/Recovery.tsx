@@ -1,5 +1,5 @@
 import { Button, MessageRegion, Spinner } from "@shared/design-system";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { useRouteNavigate } from "@shared/routing";
 import { useRecoveryFlow } from "../hooks";
 import { RecoveryCode, RecoveryPassword, RecoveryRequest } from "./steps";
@@ -10,6 +10,7 @@ import styles from "./Recovery.module.css";
  * a second tab and a typed path all resolve the same way.
  */
 export const Recovery = () => {
+  const copy = useCopy();
   const navigate = useRouteNavigate();
 
   const {
@@ -25,7 +26,7 @@ export const Recovery = () => {
     apply,
     retry,
   } = useRecoveryFlow(() =>
-    navigate("/auth/signin", { state: { notice: AUTH_COPY.recovery.done } }),
+    navigate("/auth/signin", { state: { notice: copy.auth.recovery.done } }),
   );
 
   if (screen === "pending") {
@@ -39,9 +40,9 @@ export const Recovery = () => {
   if (screen === "retry") {
     return (
       <div className={styles.waiting}>
-        <MessageRegion tone="error">{AUTH_COPY.recovery.unavailable}</MessageRegion>
+        <MessageRegion tone="error">{copy.auth.recovery.unavailable}</MessageRegion>
         <Button type="button" onClick={retry}>
-          {AUTH_COPY.recovery.retry}
+          {copy.auth.recovery.retry}
         </Button>
       </div>
     );

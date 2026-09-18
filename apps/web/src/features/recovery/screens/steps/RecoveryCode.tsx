@@ -1,5 +1,5 @@
 import { Button, Input, MessageRegion, Typography } from "@shared/design-system";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import { StepLayout } from "./StepLayout";
 import styles from "./RecoveryCode.module.css";
 import { useCodeForm, useResendWindow } from "../../hooks";
@@ -23,6 +23,7 @@ export const RecoveryCode = ({
   onResend,
   onRestart,
 }: RecoveryCodeProps) => {
+  const copy = useCopy();
   const { values, errors, isSubmitting, serverError, handleChange, handleSubmit } =
     useCodeForm(onSubmit);
 
@@ -30,8 +31,8 @@ export const RecoveryCode = ({
 
   return (
     <StepLayout
-      title={AUTH_COPY.recovery.codeTitle}
-      subtitle={AUTH_COPY.recovery.codeSubtitle(position.maskedAddress ?? "")}
+      title={copy.auth.recovery.codeTitle}
+      subtitle={copy.auth.recovery.codeSubtitle(position.maskedAddress ?? "")}
       onSubmit={handleSubmit}
     >
       {serverError && <MessageRegion tone="error">{serverError.message}</MessageRegion>}
@@ -44,9 +45,9 @@ export const RecoveryCode = ({
           alphabet has letters so the keyboard must not be numeric. */}
       <Input
         name="code"
-        label={AUTH_COPY.recovery.codeLabel}
-        placeholder={AUTH_COPY.recovery.codePlaceholder}
-        helperText={AUTH_COPY.recovery.codeHint}
+        label={copy.auth.recovery.codeLabel}
+        placeholder={copy.auth.recovery.codePlaceholder}
+        helperText={copy.auth.recovery.codeHint}
         value={values.code}
         onChange={handleChange}
         isInvalid={!!errors.code}
@@ -63,7 +64,7 @@ export const RecoveryCode = ({
 
       <div className={styles.secondaries}>
         <Button type="button" variant="ghost" size="small" onClick={onRestart}>
-          {AUTH_COPY.recovery.startOver}
+          {copy.auth.recovery.startOver}
         </Button>
 
         {position.canResend && (
@@ -74,14 +75,14 @@ export const RecoveryCode = ({
             disabled={!isOpen}
             onClick={() => void onResend()}
           >
-            {isOpen ? AUTH_COPY.recovery.resend : AUTH_COPY.recovery.resendIn(secondsLeft)}
+            {isOpen ? copy.auth.recovery.resend : copy.auth.recovery.resendIn(secondsLeft)}
           </Button>
         )}
       </div>
 
       {!position.canResend && (
         <Typography variant="body-small" tone="muted">
-          {AUTH_COPY.recovery.resendSpent}
+          {copy.auth.recovery.resendSpent}
         </Typography>
       )}
 
@@ -95,9 +96,9 @@ export const RecoveryCode = ({
         type="submit"
         fullWidth
         isLoading={isSubmitting}
-        loadingText={AUTH_COPY.recovery.submittingCode}
+        loadingText={copy.auth.recovery.submittingCode}
       >
-        {AUTH_COPY.recovery.submitCode}
+        {copy.auth.recovery.submitCode}
       </Button>
     </StepLayout>
   );

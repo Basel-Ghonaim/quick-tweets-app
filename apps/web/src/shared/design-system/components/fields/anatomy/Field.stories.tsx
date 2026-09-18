@@ -19,6 +19,7 @@ const FILE_CONTENT = {
   nothingChosen: "No file chosen",
   chosenCount: (count: number) => `${count} files selected`,
   tooLarge: (fileName: string, limit: string) => `"${fileName}" exceeds the ${limit} limit`,
+  size: (bytes: number) => `${bytes} B`,
 };
 
 const meta = {

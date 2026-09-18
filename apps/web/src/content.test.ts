@@ -17,6 +17,9 @@ const ATTRIBUTES = new Set([
   "alt",
   "label",
   "helperText",
+  "revealLabel",
+  "errorMessage",
+  "loadingText",
 ]);
 
 const PROPERTIES = new Set([
@@ -212,6 +215,79 @@ const catalogueImportsIn = (l: string, text: string): string[] => {
     .map((spec) => `${l} — ${spec}`);
 };
 
+// A catalogue constant, or an accessor called while a module loads, would hold one language's words for the
+// life of the page; production reads through the accessors, and only the composition root holds the registry.
+const ACCESSORS = new Set(["useCopy", "currentCopy", "CATALOGUES", "Catalogue"]);
+const READERS = new Set(["useCopy", "currentCopy"]);
+
+// The mechanism's readers are generic, so only the catalogue that types them may call them. The check
+// sees direct calls only: a helper that reads, called while the module loads, is left to review.
+const LOCALISATION = "shared/localisation";
+const GENERIC_READERS = new Set(["currentCatalogue", "useCatalogue"]);
+const inLocalisation = (l: string) => l === LOCALISATION || l.startsWith(`${LOCALISATION}/`);
+
+const insideFunction = (node: ts.Node): boolean => {
+  for (let p = node.parent; p && !ts.isSourceFile(p); p = p.parent) if (ts.isFunctionLike(p)) return true;
+  return false;
+};
+
+const catalogueReadsIn = (l: string, text: string): string[] => {
+  if (inCatalogue(l)) return [];
+
+  const sf = parse(l, text);
+  const found: string[] = [];
+  const readers = new Set<string>();
+  const reachesCatalogue = (node: ts.Node | undefined) => {
+    const target = node && ts.isStringLiteral(node) ? targetOf(node.text, l) : null;
+    return target !== null && inCatalogue(target);
+  };
+  const reachesLocalisation = (node: ts.Node | undefined) => {
+    const target = node && ts.isStringLiteral(node) ? targetOf(node.text, l) : null;
+    return target !== null && inLocalisation(target) && !inLocalisation(l);
+  };
+  const genericReadersIn = (bindings: ts.NamedImports | ts.NamedExports) =>
+    bindings.elements
+      .map((element) => (element.propertyName ?? element.name).text)
+      .filter((name) => GENERIC_READERS.has(name))
+      .forEach((name) => found.push(`${l} — ${name}`));
+
+  sf.statements.filter(ts.isImportDeclaration).forEach((node) => {
+    if (reachesLocalisation(node.moduleSpecifier)) {
+      const bindings = node.importClause?.namedBindings;
+      if (bindings && ts.isNamespaceImport(bindings)) found.push(`${l} — the localisation mechanism as a whole`);
+      else if (bindings) genericReadersIn(bindings);
+      return;
+    }
+    if (!reachesCatalogue(node.moduleSpecifier)) return;
+    const bindings = node.importClause?.namedBindings;
+    if (!bindings || node.importClause?.name || ts.isNamespaceImport(bindings)) {
+      found.push(`${l} — the catalogue as a whole`);
+      return;
+    }
+    bindings.elements.forEach((element) => {
+      const imported = (element.propertyName ?? element.name).text;
+      if (!ACCESSORS.has(imported) || (imported === "CATALOGUES" && !l.startsWith("app/")))
+        found.push(`${l} — ${imported}`);
+      else if (READERS.has(imported)) readers.add(element.name.text);
+    });
+  });
+
+  const visit = (node: ts.Node): void => {
+    if (ts.isExportDeclaration(node) && reachesCatalogue(node.moduleSpecifier)) found.push(`${l} — re-exported`);
+    else if (ts.isExportDeclaration(node) && reachesLocalisation(node.moduleSpecifier)) {
+      if (node.exportClause && ts.isNamedExports(node.exportClause)) genericReadersIn(node.exportClause);
+      else found.push(`${l} — the localisation mechanism as a whole`);
+    } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword && reachesCatalogue(node.arguments[0]))
+      found.push(`${l} — the catalogue as a whole`);
+    else if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && readers.has(node.expression.text) && !insideFunction(node))
+      found.push(`${l} — ${node.expression.text}() while the module loads`);
+    ts.forEachChild(node, visit);
+  };
+
+  visit(sf);
+  return found;
+};
+
 describe("user-facing content", () => {
   test("no production file outside the catalogue holds a user-facing word", () => {
     // A clean result is only trustworthy if the scan saw the source.
@@ -226,6 +302,53 @@ describe("user-facing content", () => {
     expect(mechanisms.length).toBeGreaterThan(150);
 
     expect(mechanisms.flatMap((l) => catalogueImportsIn(l, read(l))).sort()).toEqual([]);
+  });
+
+  test("production reads the catalogue through its accessors, and never while a module loads", () => {
+    const consumers = production.filter((l) => !inCatalogue(l));
+    const reading = consumers.filter((l) => /\b(useCopy|currentCopy)\(/.test(read(l)));
+    expect(reading.length).toBeGreaterThan(25);
+
+    expect(consumers.flatMap((l) => catalogueReadsIn(l, read(l))).sort()).toEqual([]);
+  });
+
+  test("a constant, the whole catalogue, or a read while loading is reported, and a read when needed is not", () => {
+    const f = "features/x/y.tsx";
+    const found = (source: string) => catalogueReadsIn(f, source);
+
+    expect(found(`import { AUTH_COPY } from "@shared/copy";`)).toEqual([`${f} — AUTH_COPY`]);
+    expect(found(`import { CATALOGUES } from "@shared/copy";`)).toEqual([`${f} — CATALOGUES`]);
+    expect(found(`import { CONTROL_COPY } from "../../shared/copy/controls";`)).toHaveLength(1);
+    expect(found(`import * as copy from "@shared/copy";`)).toHaveLength(1);
+    expect(found(`import copy from "@shared/copy";`)).toHaveLength(1);
+    expect(found(`export { ERROR_COPY } from "@shared/copy";`)).toHaveLength(1);
+    expect(found(`const load = () => import("@shared/copy");`)).toHaveLength(1);
+    expect(found(`import { currentCopy } from "@shared/copy";\nconst words = currentCopy().auth;`)).toHaveLength(1);
+    expect(found(`import { useCopy as copyOf } from "@shared/copy";\nconst words = copyOf();`)).toHaveLength(1);
+
+    expect(found(`import { useCopy, type Catalogue } from "@shared/copy";\nexport const A = () => useCopy().auth;`)).toHaveLength(0);
+    const root = `import { CATALOGUES, currentCopy } from "@shared/copy";\nexport function b() { return [CATALOGUES, currentCopy()]; }`;
+    expect(catalogueReadsIn("app/bootstrap.ts", root)).toHaveLength(0);
+    expect(catalogueReadsIn("shared/copy/catalogue.ts", `import { AUTH_COPY } from "./auth";`)).toHaveLength(0);
+  });
+
+  test("the mechanism's generic readers are reported outside the catalogue, and its other exports are not", () => {
+    const f = "features/x/y.tsx";
+    const found = (source: string) => catalogueReadsIn(f, source);
+
+    expect(found(`import { currentCatalogue } from "@shared/localisation";`)).toEqual([`${f} — currentCatalogue`]);
+    expect(found(`import { useCatalogue as words } from "../../shared/localisation";`)).toHaveLength(1);
+    expect(found(`import * as localisation from "@shared/localisation";`)).toHaveLength(1);
+    expect(found(`export { useCatalogue } from "@shared/localisation";`)).toHaveLength(1);
+    expect(found(`export * from "@shared/localisation";`)).toHaveLength(1);
+
+    expect(found(`import { formatsFor } from "@shared/localisation";`)).toHaveLength(0);
+    const root = `import { setupLocalisation } from "@shared/localisation";`;
+    expect(catalogueReadsIn("app/bootstrap.ts", root)).toHaveLength(0);
+    const typed = `import { currentCatalogue, useCatalogue } from "@shared/localisation";`;
+    expect(catalogueReadsIn("shared/copy/catalogue.ts", typed)).toHaveLength(0);
+    const own = `export { currentCatalogue, setupLocalisation, useCatalogue } from "./catalogues";`;
+    expect(catalogueReadsIn("shared/localisation/index.ts", own)).toHaveLength(0);
   });
 
   test("a word is reported wherever a reader meets it, and a token or a developer's string is not", () => {

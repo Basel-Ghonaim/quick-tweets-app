@@ -1,11 +1,7 @@
 import type { ReactNode } from "react";
 import { Provider as ReduxProvider } from "react-redux";
-import { applyDirection, ThemeProvider } from "@shared/preferences";
+import { ThemeProvider, useDocumentLanguage } from "@shared/preferences";
 import { reduxStore } from "../store";
-
-// Stamped rather than held: there is no state here, only a value the document
-// carries.
-applyDirection();
 
 /**
  * The composition root's second step, so the entry point holds one child and
@@ -14,8 +10,12 @@ applyDirection();
  * The theme sits above everything that renders, because everything below is
  * drawn in it.
  */
-export const AppProviders = ({ children }: { children: ReactNode }) => (
-  <ReduxProvider store={reduxStore}>
-    <ThemeProvider>{children}</ThemeProvider>
-  </ReduxProvider>
-);
+export const AppProviders = ({ children }: { children: ReactNode }) => {
+  useDocumentLanguage();
+
+  return (
+    <ReduxProvider store={reduxStore}>
+      <ThemeProvider>{children}</ThemeProvider>
+    </ReduxProvider>
+  );
+};

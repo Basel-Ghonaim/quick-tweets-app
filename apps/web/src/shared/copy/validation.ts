@@ -1,3 +1,5 @@
+import { ENGLISH_FORMATS } from "./englishFormats";
+
 export const VALIDATION_MESSAGES = {
   /* One whole line per field rather than a name slotted into a sentence: word
      order and agreement are not shared between languages. */
@@ -12,11 +14,11 @@ export const VALIDATION_MESSAGES = {
   emailFormat: "Please enter a valid email address.",
   minLength: (min: number) => ({
     min,
-    message: `Must be exactly or more than ${min} characters.`,
+    message: `Must be exactly or more than ${ENGLISH_FORMATS.count(min)} characters.`,
   }),
   maxLength: (max: number) => ({
     max,
-    message: `Must be exactly or less than ${max} characters.`,
+    message: `Must be exactly or less than ${ENGLISH_FORMATS.count(max)} characters.`,
   }),
   match: {
     password: "This field must match your Password.",

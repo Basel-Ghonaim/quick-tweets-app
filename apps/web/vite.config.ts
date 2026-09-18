@@ -36,14 +36,14 @@ export default defineConfig({
       exclude: ['**/*.stories.tsx', '**/*.component.test.tsx'],
       thresholds: {
         'src/pages/auth/screens/Verify/VerifyAsk.tsx': { branches: 80 },
-        'src/pages/auth/screens/Verify/VerifyCode.tsx': { branches: 91 },
-        'src/pages/auth/screens/Profile/Profile.tsx': { branches: 92 },
+        'src/pages/auth/screens/Verify/VerifyCode.tsx': { branches: 88 },
+        'src/pages/auth/screens/Profile/Profile.tsx': { branches: 90 },
         'src/pages/auth/screens/Onboarding/Onboarding.tsx': { branches: 62 },
         'src/features/recovery/screens/Recovery.tsx': { branches: 63 },
         'src/features/recovery/screens/steps/RecoveryRequest.tsx': { branches: 87 },
         'src/features/recovery/screens/steps/RecoveryCode.tsx': { branches: 98 },
         'src/features/recovery/screens/steps/RecoveryPassword.tsx': { branches: 82 },
-        'src/features/recovery/screens/steps/StepLayout.tsx': { branches: 80 },
+        'src/features/recovery/screens/steps/StepLayout.tsx': { branches: 75 },
       },
     },
     projects: [

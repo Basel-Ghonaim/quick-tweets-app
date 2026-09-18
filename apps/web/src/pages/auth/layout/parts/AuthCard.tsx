@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Typography } from "@shared/design-system";
 import { BrandMark } from "@shared/brand";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 import styles from "./AuthCard.module.css";
 
 /**
@@ -12,15 +12,19 @@ import styles from "./AuthCard.module.css";
  * It signs itself. The mark identifies the card rather than any one screen, so
  * a screen cannot forget it and giving it a prop later reaches one file.
  */
-export const AuthCard = ({ children }: { children: ReactNode }) => (
-  <div className={styles.root}>
-    {children}
+export const AuthCard = ({ children }: { children: ReactNode }) => {
+  const copy = useCopy();
 
-    <div className={styles.signature}>
-      <BrandMark size={16} />
-      <Typography variant="body-small" tone="muted">
-        {AUTH_COPY.brand.markLabel}
-      </Typography>
+  return (
+    <div className={styles.root}>
+      {children}
+
+      <div className={styles.signature}>
+        <BrandMark size={16} />
+        <Typography variant="body-small" tone="muted">
+          {copy.auth.brand.markLabel}
+        </Typography>
+      </div>
     </div>
-  </div>
-);
+  );
+};

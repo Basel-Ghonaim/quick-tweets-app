@@ -6,112 +6,115 @@ import {
   isMatch,
   matchesPattern,
 } from "@shared/schema-form";
-import { AUTH_COPY, VALIDATION_MESSAGES } from "@shared/copy";
+import type { Catalogue } from "@shared/copy";
 import { emailRules, newPasswordPolicy, usernameRules } from "@shared/validation";
 
-// ─── Login: identity check only ──────────────────────────────────────────────
-// Presence only — login checks an existing credential and must not apply the
-// account-creation policy (matches the backend loginSchema).
-const loginFields = {
-  identifier: {
-    name: "identifier",
-    type: "text",
-    label: AUTH_COPY.signIn.identifierLabel,
-    placeholder: AUTH_COPY.signIn.identifierPlaceholder,
-    validators: [isRequired(VALIDATION_MESSAGES.required.identifier)],
-  },
-  password: {
-    name: "password",
-    type: "password",
-    label: AUTH_COPY.signIn.passwordLabel,
-    placeholder: AUTH_COPY.signIn.passwordPlaceholder,
-    validators: [isRequired(VALIDATION_MESSAGES.required.password)],
-  },
-} satisfies Record<keyof LoginCredentials, FormFieldConfig<LoginCredentials>>;
+/** Built from the active catalogue, so every label and message is in the reader's language. */
+export const authFormSchemas = (copy: Catalogue) => {
+  // ─── Login: identity check only ──────────────────────────────────────────────
+  // Presence only — login checks an existing credential and must not apply the
+  // account-creation policy (matches the backend loginSchema).
+  const loginFields = {
+    identifier: {
+      name: "identifier",
+      type: "text",
+      label: copy.auth.signIn.identifierLabel,
+      placeholder: copy.auth.signIn.identifierPlaceholder,
+      validators: [isRequired(copy.validation.required.identifier)],
+    },
+    password: {
+      name: "password",
+      type: "password",
+      label: copy.auth.signIn.passwordLabel,
+      placeholder: copy.auth.signIn.passwordPlaceholder,
+      validators: [isRequired(copy.validation.required.password)],
+    },
+  } satisfies Record<keyof LoginCredentials, FormFieldConfig<LoginCredentials>>;
 
-// ─── Register: full field rules + the New Password Policy ─────────────────────
-// Deliberately not built from loginFields — that coupling is how the stale
-// max(16) leaked into login. The backend re-validates independently.
-const registerFields = {
-  username: {
-    name: "username",
-    type: "text",
-    label: AUTH_COPY.signUp.usernameLabel,
-    placeholder: AUTH_COPY.signUp.usernamePlaceholder,
-    validators: [
-      isRequired(VALIDATION_MESSAGES.required.username),
-      isLengthChecked(
-        VALIDATION_MESSAGES.minLength(usernameRules.minLength),
-        VALIDATION_MESSAGES.maxLength(usernameRules.maxLength),
-      ),
-      matchesPattern(usernameRules.charset, VALIDATION_MESSAGES.usernameCharset),
-    ],
-  },
-  password: {
-    name: "password",
-    type: "password",
-    label: AUTH_COPY.signUp.passwordLabel,
-    placeholder: AUTH_COPY.signUp.passwordPlaceholder,
-    validators: [
-      isRequired(VALIDATION_MESSAGES.required.password),
-      isLengthChecked(
-        VALIDATION_MESSAGES.minLength(newPasswordPolicy.minLength),
-        VALIDATION_MESSAGES.maxLength(newPasswordPolicy.maxLength),
-      ),
-      matchesPattern(
-        newPasswordPolicy.lowercase,
-        VALIDATION_MESSAGES.passwordComplexity.lowercase,
-      ),
-      matchesPattern(
-        newPasswordPolicy.uppercase,
-        VALIDATION_MESSAGES.passwordComplexity.uppercase,
-      ),
-      matchesPattern(
-        newPasswordPolicy.digit,
-        VALIDATION_MESSAGES.passwordComplexity.digit,
-      ),
-      matchesPattern(
-        newPasswordPolicy.special,
-        VALIDATION_MESSAGES.passwordComplexity.special,
-      ),
-      matchesPattern(
-        newPasswordPolicy.characters,
-        VALIDATION_MESSAGES.passwordCharacters,
-      ),
-    ],
-  },
-  email: {
-    name: "email",
-    type: "email",
-    label: AUTH_COPY.signUp.emailLabel,
-    placeholder: AUTH_COPY.signUp.emailPlaceholder,
-    validators: [
-      isRequired(VALIDATION_MESSAGES.required.email),
-      matchesPattern(emailRules.format, VALIDATION_MESSAGES.emailFormat),
-    ],
-  },
-  confirmPassword: {
-    name: "confirmPassword",
-    type: "password",
-    label: AUTH_COPY.signUp.confirmPasswordLabel,
-    placeholder: AUTH_COPY.signUp.confirmPasswordPlaceholder,
-    validators: [
-      isRequired(VALIDATION_MESSAGES.required.confirmPassword),
-      isMatch("password", VALIDATION_MESSAGES.match.password),
-    ],
-  },
-} satisfies Record<
-  keyof RegisterCredentials,
-  FormFieldConfig<RegisterCredentials>
->;
+  // ─── Register: full field rules + the New Password Policy ─────────────────────
+  // Deliberately not built from loginFields — that coupling is how the stale
+  // max(16) leaked into login. The backend re-validates independently.
+  const registerFields = {
+    username: {
+      name: "username",
+      type: "text",
+      label: copy.auth.signUp.usernameLabel,
+      placeholder: copy.auth.signUp.usernamePlaceholder,
+      validators: [
+        isRequired(copy.validation.required.username),
+        isLengthChecked(
+          copy.validation.minLength(usernameRules.minLength),
+          copy.validation.maxLength(usernameRules.maxLength),
+        ),
+        matchesPattern(usernameRules.charset, copy.validation.usernameCharset),
+      ],
+    },
+    password: {
+      name: "password",
+      type: "password",
+      label: copy.auth.signUp.passwordLabel,
+      placeholder: copy.auth.signUp.passwordPlaceholder,
+      validators: [
+        isRequired(copy.validation.required.password),
+        isLengthChecked(
+          copy.validation.minLength(newPasswordPolicy.minLength),
+          copy.validation.maxLength(newPasswordPolicy.maxLength),
+        ),
+        matchesPattern(
+          newPasswordPolicy.lowercase,
+          copy.validation.passwordComplexity.lowercase,
+        ),
+        matchesPattern(
+          newPasswordPolicy.uppercase,
+          copy.validation.passwordComplexity.uppercase,
+        ),
+        matchesPattern(
+          newPasswordPolicy.digit,
+          copy.validation.passwordComplexity.digit,
+        ),
+        matchesPattern(
+          newPasswordPolicy.special,
+          copy.validation.passwordComplexity.special,
+        ),
+        matchesPattern(
+          newPasswordPolicy.characters,
+          copy.validation.passwordCharacters,
+        ),
+      ],
+    },
+    email: {
+      name: "email",
+      type: "email",
+      label: copy.auth.signUp.emailLabel,
+      placeholder: copy.auth.signUp.emailPlaceholder,
+      validators: [
+        isRequired(copy.validation.required.email),
+        matchesPattern(emailRules.format, copy.validation.emailFormat),
+      ],
+    },
+    confirmPassword: {
+      name: "confirmPassword",
+      type: "password",
+      label: copy.auth.signUp.confirmPasswordLabel,
+      placeholder: copy.auth.signUp.confirmPasswordPlaceholder,
+      validators: [
+        isRequired(copy.validation.required.confirmPassword),
+        isMatch("password", copy.validation.match.password),
+      ],
+    },
+  } satisfies Record<
+    keyof RegisterCredentials,
+    FormFieldConfig<RegisterCredentials>
+  >;
 
-export const authFormSchemas = {
-  loginFields,
-  // Registration is account creation only (auth-first, ADR 0008) — no avatar.
-  registerFields: {
-    username: { ...registerFields.username, span: "full" },
-    email: { ...registerFields.email, span: "full" },
-    password: { ...registerFields.password, span: "full" },
-    confirmPassword: { ...registerFields.confirmPassword, span: "full" },
-  } satisfies Record<string, FormFieldConfig<RegisterCredentials>>,
+  return {
+    loginFields,
+    // Registration is account creation only (auth-first, ADR 0008) — no avatar.
+    registerFields: {
+      username: { ...registerFields.username, span: "full" },
+      email: { ...registerFields.email, span: "full" },
+      password: { ...registerFields.password, span: "full" },
+      confirmPassword: { ...registerFields.confirmPassword, span: "full" },
+    } satisfies Record<string, FormFieldConfig<RegisterCredentials>>,
+  };
 };

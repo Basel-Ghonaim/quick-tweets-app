@@ -1,8 +1,9 @@
 import { ToggleButton } from "@shared/design-system";
 import { useTheme } from "@shared/preferences";
-import { AUTH_COPY } from "@shared/copy";
+import { useCopy } from "@shared/copy";
 
 export const ThemeToggle = () => {
+  const copy = useCopy();
   const { theme, setTheme } = useTheme();
 
   return (
@@ -12,7 +13,7 @@ export const ThemeToggle = () => {
       pressed={theme === "dark"}
       onPressedChange={(pressed) => setTheme(pressed ? "dark" : "light")}
     >
-      {AUTH_COPY.brand.themeToggle}
+      {copy.auth.brand.themeToggle}
     </ToggleButton>
   );
 };

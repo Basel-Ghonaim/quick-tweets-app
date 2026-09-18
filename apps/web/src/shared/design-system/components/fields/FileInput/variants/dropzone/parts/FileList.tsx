@@ -4,12 +4,11 @@ import {
   FileTypeIcon,
 } from "../../../../../../icons";
 import { IconButton } from "../../../../../controls/IconButton";
-import { formatSize } from "../../../formatSize";
 import styles from "../../../FileInput.module.css";
 import type { DropzoneFileInputContent } from "../../../FileInput.types";
 
 interface FileListProps {
-  content: Pick<DropzoneFileInputContent, "remove" | "addMoreFiles" | "replaceFile">;
+  content: Pick<DropzoneFileInputContent, "remove" | "addMoreFiles" | "replaceFile" | "size">;
   files: File[];
   previews: string[];
   multiple: boolean;
@@ -53,7 +52,7 @@ export const FileList = ({
             <FileTypeIcon fileName={file.name} mimeType={file.type} size={18} />
           )}
           <span className={styles.fileListName}>{file.name}</span>
-          <span className={styles.fileListSize}>{formatSize(file.size)}</span>
+          <span className={styles.fileListSize}>{content.size(file.size)}</span>
           <IconButton
             size="small"
             className={styles.fileListRemoveBtn}
