@@ -4,6 +4,7 @@ import { useCopy } from "@shared/copy";
 import { AuthBackdrop } from "./parts/AuthBackdrop";
 import { BrandPanel } from "./parts/BrandPanel";
 import { AuthCard } from "./parts/AuthCard";
+import { LanguageToggle } from "./parts/LanguageToggle";
 import { ThemeToggle } from "./parts/ThemeToggle";
 import styles from "./AuthLayout.module.css";
 
@@ -25,7 +26,10 @@ export const AuthLayout = () => {
             <BrandMark size={40} />
           </span>
 
-          <ThemeToggle />
+          <div className={styles.controls}>
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
         </header>
 
         <main className={styles.stage}>

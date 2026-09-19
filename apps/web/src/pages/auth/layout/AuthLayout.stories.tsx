@@ -8,6 +8,7 @@ import { sessionReducer } from "@shared/session";
 import { AuthLayout } from "./AuthLayout";
 import { useRouteNavigate } from "@shared/routing";
 import { currentCopy } from "@shared/copy";
+import { formatsFor } from "@shared/localisation";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint the
    ground is judged against the browser's white. */
@@ -166,5 +167,18 @@ export const AHandleReadsLeftToRight: Story = {
         await expect(getComputedStyle(handle).unicodeBidi).toBe("isolate");
       }
     }
+  },
+};
+
+/** The shell offers the language the page is not in, named in its own words and marked as it. */
+export const TheLanguageControlOffersTheOtherLanguage: Story = {
+  decorators: [at("/auth/signin")],
+  play: async ({ canvasElement }) => {
+    const other = document.documentElement.lang === "ar" ? "en" : "ar";
+    const control = within(canvasElement).getByRole("button", {
+      name: formatsFor(other).languageName(other),
+    });
+
+    await expect(control).toHaveAttribute("lang", other);
   },
 };

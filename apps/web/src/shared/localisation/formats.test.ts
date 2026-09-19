@@ -37,6 +37,11 @@ describe("how a language writes numbers", () => {
     expect(formatsFor("ar").authored("photo.png")).toBe("\u2068photo.png\u2069");
   });
 
+  test("a language is named in its own words, whichever language asks", () => {
+    expect(formatsFor("en").languageName("ar")).toBe("العربية");
+    expect(formatsFor("ar").languageName("en")).toBe("English");
+  });
+
   test("a file size takes its unit at 1024, to one decimal, ungrouped", () => {
     const sizes = [0, 1023, 1024, 1536, 1048575, 1048576, 5 * 1048576, 1048576 * 1024];
 
