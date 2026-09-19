@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../../../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **how the authentication experience should look and behave** — its visual personality, hierarchy, layout, form and CTA structure, state patterns, and the constraints any design exploration must respect. It owns **applied design decisions and component mapping**; the product decisions it applies are the [brief](ux-brief.md)'s, and the observations it draws on are the [research](ux-research.md)'s.
 > **Scope:** The seven auth flows the brief ratifies. It contains **no screen designs** — it constrains an exploration rather than performing one.
-> **Version:** 1.9
-> **Last Updated:** 2026-09-07
+> **Version:** 1.10
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 **Derives from:** the [product and UX brief](ux-brief.md) (ratified decisions) and the [competitive UX research](ux-research.md) (observations and insights). It reopens neither.
@@ -334,6 +334,7 @@ Each was observed in a real product and is rejected for a stated reason:
 7. **Do not reopen `D1`–`D5`** or the three-phase journey.
 8. **No pixel values** except where the Design System already defines one.
 9. **§12's accessibility invariants are non-negotiable** — an exploration breaking one is wrong regardless of how it looks.
+10. **Both directions, always.** An exploration is reviewed in Arabic, right to left, as well as in English (§19).
 
 ---
 
@@ -344,6 +345,27 @@ Visual detail, deliberately unresolved — and **none of it requires a component
 - Exact copy for the neutral confirmation, the expired link-or-code dead end, and the optional-step labels — the *shape* is decided, the words are not.
 
 **Resolved and no longer open:** the stepper's visual form and where its optional label sits · the message region's proportions · registration's step count within Phase 1 · the column's measure and its vertical rhythm · the brand zone's ground and copy · card-versus-page-ground (bordered surface, no elevation, §7) · whether auth owns motion (it does not, §8) · how form-level messages and success work without `Alert` or `Toast` (§9) · **which components this design requires, and which stay closed by analysis** (§15) · how a missing icon is handled during exploration (placeholder, §15) · **whether auth has a brand surface, and of what kind** (`D8` — a continuous typographic brand ground, §3) · **registration's primary and secondary actions** (§5).
+
+## 19 · Right to left, and choosing a language
+
+**Auth reads in English, left to right, and in Arabic, right to left.** The direction follows the language and is never chosen on its own ([localisation](../../../frontend/localisation.md)).
+
+**Mirroring comes from how the layer is built, so no separate right-to-left design exists.**
+- The ground, the column and the card mirror because they are authored in logical properties.
+- An icon that points along the reading direction turns with it, and every other icon stays put ([component authoring](../../../frontend/design-system/components.md)).
+- An exploration that places anything by *left* or *right* has designed one direction only.
+
+**Arabic is set in its own face and leading.** The Design System resolves both ([Foundation](../../../frontend/design-system/foundation.md)), so an exploration never sets a face or a line-height for Arabic itself.
+
+**Identifiers stay left to right in both directions:** an address, a username, a code, a password, a handle. A reader's own words take the direction of what they wrote ([component authoring](../../../frontend/design-system/components.md)).
+
+### The language control
+
+- **Where it sits:** in the shell's header, beside the theme control, at the inline end. It stays there until a settings or navigation surface exists; that surface then owns it.
+- **What it says:** the language the page is *not* in, offered as [localisation](../../../frontend/localisation.md) says a language is offered.
+- **It is text, never a flag.** A flag names a country, not a language.
+
+**Arabic words are approved before they ship**, by the named approver ([localisation](../../../frontend/localisation.md)).
 
 ---
 
