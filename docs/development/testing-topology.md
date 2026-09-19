@@ -4,8 +4,8 @@
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)).
 > **Authority:** The authoritative source for **where a behavior is proven** — the lanes that exist, what each one owns, what each one is forbidden, and the rule that assigns a behavior to exactly one of them. It owns the **placement** of proof and never its **quality**, which is [Engineering Principles §8](engineering-principles.md)'s. The decision that gives it this ownership, and the reasoning behind it, are [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md)'s — cited here, never restated.
 > **Scope:** Every lane in this repository, both tiers, automated and manual. It does **not** own any lane's configuration, which is code; nor the [manual verification harness](verification/README.md)'s contents, which that directory owns; nor whether a particular Work Item has proved enough, which is its acceptance criteria's.
-> **Version:** 1.5
-> **Last Updated:** 2026-09-16
+> **Version:** 1.6
+> **Last Updated:** 2026-09-18
 > **Owner:** Basel Ghonaim
 
 ## Why placement has an owner
@@ -64,7 +64,9 @@ This is an obligation on the lane, never an exemption for a case. It decides not
 
 **Why this lane and not the cheaper one:** the component lane is forbidden the accessibility tree as computed, so a state rendered only there is rendered under no check at all. Three Work Items moved a case correctly and deleted a state's only accessibility proof, which is the failure this rule exists to prevent ([Finding 0031](../architecture/findings/0031-the-proofs-predate-the-topology-they-share.md)).
 
-**The check is a tripwire, not a proof.** Per-file **branch**-coverage floors over the screen files, measured on the browser project alone, fail when a branch stops being rendered. Coverage does not map to states — it counts closing tags, default parameters and callback bodies — so the floors are a ratchet whose numbers mean nothing on their own, and a green run says that nothing stopped rendering rather than that every state is covered. **What proves a state covered is the mutation: inject a violation inside its branch, run the lane, revert.** The floors ride the browser lane, so they are gated exactly as much as it is, which is not at all.
+**Every state is rendered in both reading directions.** The lane runs every story twice, left to right and right to left, each under the story's own accessibility mode; a violation that only one direction produces is reported only in that run, and fails it where the story enforces the check. The direction is stamped on the document, as the application stamps it, and a story that ends in another fails. That last check guards the lane rather than any outcome a reader meets, and where such a check belongs is [Finding 0032](../architecture/findings/0032-a-check-on-lane-infrastructure-has-no-lane.md)'s open question. The commitment to both directions is the [Arabic and RTL plan](../plans/arabic-rtl-support.md)'s D13.
+
+**The check is a tripwire, not a proof.** Per-file **branch**-coverage floors over the screen files, measured on the browser lane's left-to-right run alone, fail when a branch stops being rendered. Coverage does not map to states — it counts closing tags, default parameters and callback bodies — so the floors are a ratchet whose numbers mean nothing on their own, and a green run says that nothing stopped rendering rather than that every state is covered. **What proves a state covered is the mutation: inject a violation inside its branch, run the lane, revert.** The floors ride the browser lane, so they are gated exactly as much as it is, which is not at all.
 
 ## Which lanes exist
 

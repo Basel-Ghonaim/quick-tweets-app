@@ -26,3 +26,11 @@ Deciding where a check on a harness belongs is a change to a Contract, and the W
 ## Not decided here
 
 Whether the topology gains a row for a check on lane infrastructure, whether such a check is exempt from the assignment rule instead, and whether the component project's include glob should admit a non-rendering file without a `.tsx` extension. Each is the topology owner's, and none is this Finding's to take.
+
+## Addendum — 2026-09-18, the browser lane checks its own direction ([#765](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/765))
+
+**A second check of the same kind now exists, in the browser lane.** The lane renders every story twice, once in each reading direction, and each run's setup, through `apps/web/.storybook/readingDirection.ts`, fails a story that ends in a direction other than the one the run claims. Like the case above, it asserts no outcome a reader meets: it asserts that **this run is the run it says it is**, and the unit it speaks for is lane configuration.
+
+**It was added deliberately, not by elimination.** Without it, a run that stopped stamping its direction would pass as the other run and report nothing, so the right-to-left proof would erode with the lane still green. It follows `domValidity.ts`, which already asserts after every story in the same lane.
+
+**Nothing here decides the question above.** Where such a check belongs, and whether the topology names it, remain the topology owner's.

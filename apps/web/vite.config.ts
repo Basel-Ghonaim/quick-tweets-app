@@ -9,6 +9,30 @@ import { playwright } from '@vitest/browser-playwright';
 import { configDefaults } from 'vitest/config';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
+// Every story renders once per reading direction, from one definition so the runs cannot drift
+// apart; `test:storybook` measures coverage on the left-to-right run alone.
+const storybookProject = (name: string, direction: 'leftToRight' | 'rightToLeft') => ({
+  extends: true as const,
+  plugins: [
+  // The plugin will run tests for the stories defined in your Storybook config
+  // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
+  storybookTest({
+    configDir: path.join(dirname, '.storybook')
+  })],
+  test: {
+    name,
+    setupFiles: [`./.storybook/${direction}.ts`, './.storybook/domValidity.ts'],
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright({}),
+      instances: [{
+        browser: 'chromium' as const
+      }]
+    }
+  }
+});
+
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   plugins: [react({
@@ -69,26 +93,8 @@ export default defineConfig({
           setupFiles: ['./vitest.component.setup.ts'],
         },
       },
-      {
-      extends: true,
-      plugins: [
-      // The plugin will run tests for the stories defined in your Storybook config
-      // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-      storybookTest({
-        configDir: path.join(dirname, '.storybook')
-      })],
-      test: {
-        name: 'storybook',
-        setupFiles: ['./.storybook/domValidity.ts'],
-        browser: {
-          enabled: true,
-          headless: true,
-          provider: playwright({}),
-          instances: [{
-            browser: 'chromium'
-          }]
-        }
-      }
-    }]
+      storybookProject('storybook', 'leftToRight'),
+      storybookProject('storybook-rtl', 'rightToLeft'),
+    ]
   }
 });

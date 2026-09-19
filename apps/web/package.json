@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run --project unit",
     "test:component": "vitest run --project component",
-    "test:storybook": "vitest run --project storybook --coverage.enabled"
+    "test:storybook": "vitest run --project storybook --coverage.enabled && vitest run --project storybook-rtl"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
