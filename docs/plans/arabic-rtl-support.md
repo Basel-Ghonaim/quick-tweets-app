@@ -30,18 +30,15 @@ Approved. A decision changes only when implementation exposes a genuine technica
 | **D9** | Western digits and the Gregorian calendar, both pinned in `Intl` |
 | **D10** | ADR 0010's second-locale condition is met; script-ordered font stacks with a `:lang(ar)` override; Google Fonts delivery |
 | **O2** | The Arabic face is Noto Sans Arabic; Arabic line-heights are 1.6 for display and heading, 1.8 for label and body |
+| **O3** | The named native-Arabic approver is Basel Ghonaim |
+| **O4** | The language control sits in the auth shell's header, beside the theme control, until a settings or navigation surface exists |
 | **D11** | `dir="auto"` on user-authored text; identifiers isolated as LTR; script detection only where no element exists |
 | **D12** | Render containment now; server-side NFC and bidi-control refusal later (deferred) |
 | **D13** | The browser lane runs in both directions; coverage floors stay on the LTR run |
 | **D14** | A frontend localisation platform document, plus the Strategy §6 row, the map, an RTL section in the UX direction, glossary links |
 | **D15** | A named native-Arabic approver signs off Arabic content; English is the source |
 
-**Inputs still owed**, each gating one Work Item:
-
-| Input | Gates |
-|---|---|
-| O3 — the named Arabic-content approver | WI-6 |
-| O4 — where the language control sits, and its name | WI-6 |
+**No input is still owed.**
 
 ## 3. Scope
 
@@ -83,7 +80,7 @@ Approved. A decision changes only when implementation exposes a genuine technica
 | **WI-3** [#763](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/763) | The active language: preference, pre-paint `lang`/`dir`, content mechanism, formatting (D6–D9, O5) | Decision | WI-2 |
 | **WI-4** [#765](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/765) | RTL proof: the browser lane in both directions (D13) | Decision | WI-3 |
 | **WI-5** [#767](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/767) | Design System script and direction reactivity (D10, D11, D12 containment) | Decision | WI-4 · O2 |
-| **WI-6** | The Arabic catalogue and the language control (D15) | Decision | WI-5 · O3 · O4 |
+| **WI-6** [#771](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/771) | The Arabic catalogue and the language control (D15) | Decision | WI-5 · O3 · O4 |
 
 **WI-1.** Enforces the password allow-list in both tiers, aligns the client email rule with the server, and records the rules and the exception in the API contract. Done when both tiers accept and reject one shared fixture set identically, and login is unchanged.
 
