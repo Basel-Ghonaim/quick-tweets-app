@@ -20,6 +20,8 @@ interface Formats {
   identifier: (value: string) => string;
   /** Words a reader wrote, held as one unit in the direction of their own first letter. */
   authored: (value: string) => string;
+  /** A language's name in its own words, as a reader of it would look for it. */
+  languageName: (code: string) => string;
 }
 
 // Unicode's isolates (UAX #9): LRI and FSI each open one, and PDI closes it.
@@ -53,5 +55,7 @@ export const formatsFor = (language: string): Formats => {
     },
     identifier: (value) => `${LEFT_TO_RIGHT_ISOLATE}${value}${POP_DIRECTIONAL_ISOLATE}`,
     authored: (value) => `${FIRST_STRONG_ISOLATE}${value}${POP_DIRECTIONAL_ISOLATE}`,
+    languageName: (code) =>
+      new Intl.DisplayNames([localeOf(code)], { type: "language" }).of(code) ?? code,
   };
 };

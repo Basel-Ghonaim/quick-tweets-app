@@ -10,10 +10,12 @@ import { setupLocalisation } from "@shared/localisation";
 import { ThemeProvider, useDocumentLanguage } from "@shared/preferences";
 import { sessionActions, sessionReducer } from "@shared/session";
 import { server } from "@testing/server";
-import { recoveryPositionIs } from "@testing/handlers/recovery";
+import { journeyRefuses } from "@testing/handlers/journey";
+import { recoveryPositionIs, recoveryPositionRefuses } from "@testing/handlers/recovery";
 import { verificationIs } from "@testing/handlers/verification";
 import { JourneyLayout } from "./layout";
 import { authRoute } from "./routes/authRoutes";
+import { Onboarding } from "./screens/Onboarding";
 import { Profile } from "./screens/Profile";
 import { VerifyAsk, VerifyCode } from "./screens/Verify";
 import { stepStates } from "./services";
@@ -69,9 +71,9 @@ const DocumentLanguage = () => {
   return null;
 };
 
-const mount = (element: ReactElement, path = "/auth/onboarding") => {
+const mount = (element: ReactElement, path = "/auth/onboarding", signedIn = false) => {
   const store = configureStore({ reducer: { session: sessionReducer, authentication: authenticationReducer } });
-  store.dispatch(sessionActions.sessionEnded());
+  store.dispatch(signedIn ? sessionActions.sessionSettled() : sessionActions.sessionEnded());
 
   return render(
     <Provider store={store}>
@@ -104,7 +106,10 @@ afterEach(() => {
   setupLocalisation(CATALOGUES);
 });
 
-const SURFACES: [string, () => ReturnType<typeof render>, () => void][] = [
+// A state reached after a read settles is waited for, so the switch is proven on it and not on the wait.
+const failed = () => screen.findByRole("alert");
+
+const SURFACES: [string, () => ReturnType<typeof render>, () => void, (() => Promise<unknown>)?][] = [
   ["sign-in, inside the auth layout", atRoute("/auth/signin"), noop],
   ["registration, inside the journey's layout", atRoute("/auth/signup"), noop],
   ["recovery's request step", atRoute("/auth/recovery"), () => server.use(recoveryPositionIs({ step: "request" }))],
@@ -114,6 +119,8 @@ const SURFACES: [string, () => ReturnType<typeof render>, () => void][] = [
     () => server.use(recoveryPositionIs({ step: "code", maskedEndpoint: "h•••••@example.test", canResend: true })),
   ],
   ["recovery's password step", atRoute("/auth/recovery"), () => server.use(recoveryPositionIs({ step: "password" }))],
+  ["recovery's retry", atRoute("/auth/recovery"), () => server.use(recoveryPositionRefuses()), failed],
+  ["the journey's retry", () => mount(<Onboarding />, "/auth/onboarding", true), () => server.use(journeyRefuses()), failed],
   ["the profile step", () => mount(<Profile onSettled={noop} />), noop],
   ["verification's ask", () => mount(<VerifyAsk onSent={noop} onLater={noop} />), noop],
   ["verification's code", () => mount(<VerifyCode onVerified={noop} onLater={noop} />), () => server.use(verificationIs("pending", 30))],
@@ -121,9 +128,10 @@ const SURFACES: [string, () => ReturnType<typeof render>, () => void][] = [
 ];
 
 describe("a change of language", () => {
-  it.each(SURFACES)("re-renders %s in the new language, without a reload", async (_, show, answer) => {
+  it.each(SURFACES)("re-renders %s in the new language, without a reload", async (_, show, answer, ready) => {
     answer();
     const { container } = show();
+    await ready?.();
     await waitFor(() => expect(englishIn(container).length).toBeGreaterThan(0));
 
     await switchTo("xx");

@@ -4,6 +4,7 @@ import { CONTROL_COPY } from "./controls";
 import { ERROR_COPY } from "./errors";
 import { PLACEHOLDER_COPY } from "./placeholder";
 import { VALIDATION_MESSAGES } from "./validation";
+import { ARABIC } from "./arabic";
 
 const ENGLISH = {
   auth: AUTH_COPY,
@@ -42,7 +43,7 @@ type Refused<T> = {
 const registry = <T extends Record<string, Catalogue>>(catalogues: T & Refused<T>): T => catalogues;
 
 /** One catalogue per language a reader can be given, keyed by its code. */
-export const CATALOGUES = registry({ en: ENGLISH });
+export const CATALOGUES = registry({ en: ENGLISH, ar: ARABIC });
 
 /** The active language's words; the component renders again when the language changes. */
 export const useCopy = (): Catalogue => useCatalogue<Catalogue>();

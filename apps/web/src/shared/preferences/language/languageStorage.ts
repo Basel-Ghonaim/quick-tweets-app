@@ -10,3 +10,12 @@ export const readStoredLanguage = (): string | null => {
     return null;
   }
 };
+
+/** Keeps the reader's choice for later visits, where storage can. */
+export const writeStoredLanguage = (language: string): void => {
+  try {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  } catch {
+    /* The session still holds the choice; only a later visit loses it. */
+  }
+};

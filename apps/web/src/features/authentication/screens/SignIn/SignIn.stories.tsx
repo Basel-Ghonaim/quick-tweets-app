@@ -8,7 +8,7 @@ import { SignIn } from "./SignIn";
 import { AuthLayout } from "@pages/auth/layout";
 import { sessionReducer } from "@shared/session";
 import { authenticationReducer, authenticationActions } from "../../store";
-import { AUTH_COPY } from "@shared/copy";
+import { currentCopy } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -55,16 +55,16 @@ export const Idle: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByRole("heading", { name: AUTH_COPY.signIn.title })).toBeVisible();
-    await expect(canvas.getByLabelText(/username or email/i)).toBeVisible();
-    await expect(canvas.getByLabelText(/^password$/i)).toBeVisible();
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.signIn.submit })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: currentCopy().auth.signIn.title })).toBeVisible();
+    await expect(canvas.getByLabelText(currentCopy().auth.signIn.identifierLabel)).toBeVisible();
+    await expect(canvas.getByLabelText(currentCopy().auth.signIn.passwordLabel)).toBeVisible();
+    await expect(canvas.getByRole("button", { name: currentCopy().auth.signIn.submit })).toBeVisible();
 
     // The three ways on, all of them links because all three leave this screen.
     for (const name of [
-      AUTH_COPY.signIn.forgotPassword,
-      AUTH_COPY.signIn.createAccount,
-      AUTH_COPY.signIn.browseAsGuest,
+      currentCopy().auth.signIn.forgotPassword,
+      currentCopy().auth.signIn.createAccount,
+      currentCopy().auth.signIn.browseAsGuest,
     ]) {
       await expect(canvas.getByRole("link", { name })).toBeVisible();
     }
@@ -108,7 +108,7 @@ export const SubmittingIsReportedInPlace: Story = {
     const canvas = within(canvasElement);
 
     await expect(
-      canvas.getByRole("button", { name: AUTH_COPY.signIn.submitting }),
+      canvas.getByRole("button", { name: currentCopy().auth.signIn.submitting }),
     ).toBeVisible();
   },
 };
@@ -121,7 +121,7 @@ export const Compact: Story = {
     const canvas = within(canvasElement);
 
     await expect(window.innerWidth).toBeLessThan(576);
-    await expect(canvas.getByRole("heading", { name: AUTH_COPY.signIn.title })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: currentCopy().auth.signIn.title })).toBeVisible();
     await expect(canvas.getByTestId("brand-posts")).not.toBeVisible();
   },
 };

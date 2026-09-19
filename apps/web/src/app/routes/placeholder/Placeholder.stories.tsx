@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
+import { currentCopy } from "@shared/copy";
 import { Placeholder } from "./Placeholder";
 
 const meta = {
@@ -14,8 +15,9 @@ type Story = StoryObj<typeof meta>;
 export const NamedSurface: Story = {
   args: { surface: "feed" },
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.textContent).toContain("Feed is not built yet");
-    await expect(canvasElement.textContent).not.toContain("nothing at this address");
+    const { notBuiltTitle, unknownTitle } = currentCopy().placeholder;
+    await expect(canvasElement.textContent).toContain(notBuiltTitle.feed);
+    await expect(canvasElement.textContent).not.toContain(unknownTitle);
   },
 };
 
@@ -23,7 +25,9 @@ export const NamedSurface: Story = {
 export const UnknownPath: Story = {
   args: {},
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.textContent).toContain("nothing at this address");
-    await expect(canvasElement.textContent).not.toContain("not built yet");
+    const { notBuiltTitle, unknownTitle } = currentCopy().placeholder;
+    await expect(canvasElement.textContent).toContain(unknownTitle);
+    for (const title of Object.values(notBuiltTitle))
+      await expect(canvasElement.textContent).not.toContain(title);
   },
 };

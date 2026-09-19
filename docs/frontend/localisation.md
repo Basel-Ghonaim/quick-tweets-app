@@ -2,9 +2,9 @@
 
 > **Status:** Active.
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)) — the rules the interface's language follows, for whoever adds a language, a line or a consumer.
-> **Authority:** The authoritative source for the web interface's **language**: how a reader's language is resolved and stamped on the document, how the catalogues are served and read, how numbers and the values a line takes are written, and what a language's words need before they ship. It does **not** own the words themselves (the catalogues in `shared/copy`), how the Design System adapts to direction and script ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 6, the [Design System](design-system/README.md)), which languages the product is committed to (the [overview](../project/overview.md)), or the sequencing of the work that builds them ([Arabic and RTL support](../plans/arabic-rtl-support.md)).
+> **Authority:** The authoritative source for the web interface's **language**: how a reader's language is resolved, chosen and stamped on the document, how the catalogues are served and read, how numbers and the values a line takes are written, and what a language's words need before they ship. It does **not** own the words themselves (the catalogues in `shared/copy`), how the Design System adapts to direction and script ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 6, the [Design System](design-system/README.md)), which languages the product is committed to (the [overview](../project/overview.md)), or the sequencing of the work that builds them ([Arabic and RTL support](../plans/arabic-rtl-support.md)).
 > **Scope:** The web interface: the language preference in `apps/web/src/shared/preferences/language/`, the mechanism in `apps/web/src/shared/localisation/`, and the shape of the catalogues in `apps/web/src/shared/copy/`. Server-side language is outside it.
-> **Version:** 1.1
+> **Version:** 1.2
 > **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
@@ -27,6 +27,13 @@ A reader's language decides every word the interface says and the direction the 
 **Both are stamped before the first paint**, by an inline script in `index.html`, since no module runs early enough ([Finding 0018](../architecture/findings/0018-theme-is-applied-after-first-paint.md)). The script and the application share no code, so a check holds them together: the script declares exactly the registered languages and the same fallback, gives every language it names or can stamp the application's direction, and reaches the application's decision on every path, from the same storage key, and when storage cannot be read. That copy of the language set is [Finding 0019](../architecture/findings/0019-pre-paint-script-hardcodes-the-theme-set.md)'s duplication, made loud rather than silent.
 
 **While no choice is stored, the document follows the browser** when its languages change. A stored choice holds whatever the browser does.
+
+**A reader chooses a language by naming one a catalogue exists for, and no other.**
+- The choice outranks the browser from that moment, and it is stored so the next visit, and the script before its first paint, read it.
+- Where storage refuses, the choice still holds for the rest of the visit.
+- Nothing returns a reader to following the browser once they have chosen.
+
+**A language is offered in its own words:** its name as its own readers write it, marked as that language, so a reader who cannot read the page can still find one they can.
 
 ## The catalogues
 
@@ -62,8 +69,10 @@ This covers a value inside a line, where no element exists to carry a direction.
 
 ## Approving a language's words
 
-**English is the source language.** Arabic content is approved by a named native-Arabic approver before its catalogue is registered. A catalogue that compiles is complete in shape; only the approver says it is right.
+**English is the source language.** Arabic content is approved by a named native-Arabic approver before its catalogue ships. A catalogue that compiles is complete in shape; only the approver says it is right.
+
+**An approval names what it approved.** It is recorded on the Work Item that registers or changes the catalogue, naming the commit that holds the approved words, before that Work Item merges. Any later change to those words needs approval again.
 
 ---
 
-> This document owns the interface's language: its resolution, its catalogues' mechanism and shape, how numbers and values are written, and the approval rule. The words are the catalogues'; how the interface adapts to direction and script is the [Design System](design-system/README.md)'s; which languages the product is committed to is the [overview](../project/overview.md)'s — linked here, never duplicated.
+> This document owns the interface's language: its resolution and choice, its catalogues' mechanism and shape, how numbers and values are written, and the approval rule. The words are the catalogues'; how the interface adapts to direction and script is the [Design System](design-system/README.md)'s; which languages the product is committed to is the [overview](../project/overview.md)'s — linked here, never duplicated.
