@@ -51,6 +51,7 @@ export const VerifyCode = ({ onVerified, onLater }: VerifyCodeProps) => {
           onChange={(event) => setCode(event.target.value)}
           autoComplete="one-time-code"
           inputMode="text"
+          dir="ltr"
           autoCapitalize="characters"
           autoCorrect="off"
           spellCheck={false}

@@ -28,6 +28,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       disabled,
       id,
       onChange,
+      dir = "auto",
       ...props
     },
     ref,
@@ -92,6 +93,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             styles[`resize-${autoResize ? "none" : resize}`],
           )}
           disabled={disabled}
+          dir={dir}
           aria-invalid={isInvalid || undefined}
           aria-describedby={describedBy}
           onChange={handleChange}

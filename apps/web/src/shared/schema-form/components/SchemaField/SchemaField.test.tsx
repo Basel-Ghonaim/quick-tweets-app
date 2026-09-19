@@ -88,6 +88,13 @@ describe("SchemaField seam (#248, #249)", () => {
     },
   );
 
+  it("hands a text control the schema's direction, and leaves it to the control when there is none", () => {
+    for (const type of ["text", "email", "password", "textarea"] as const) {
+      expect(invoke({ ...base, type, dir: "ltr" }).child?.props.dir).toBe("ltr");
+      expect(invoke({ ...base, type }).child?.props.dir).toBeUndefined();
+    }
+  });
+
   it("maps checkbox to a Checkbox carrying the boolean value as checked", () => {
     const { child } = invoke({ ...base, type: "checkbox", value: true });
     expect(child?.type).toBe(Checkbox);

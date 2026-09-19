@@ -224,3 +224,51 @@ export const RevealSurvivesALoadCycle: Story = {
     await expect(after).toHaveAttribute("aria-pressed", "true");
   },
 };
+
+/** A name a reader might type in Arabic. */
+const ARABIC_NAME = "باسل";
+
+const directionOf = (canvasElement: HTMLElement, name: string) =>
+  getComputedStyle(canvasElement.querySelector(`[data-case="${name}"]`)!).direction;
+
+/** Words a reader types take their own direction, whichever way the page reads. */
+export const WordsTakeTheirOwnDirection: Story = {
+  args: { label: "Name" },
+  render: () => (
+    <div>
+      <Input label="Arabic name" defaultValue={ARABIC_NAME} data-case="arabic" />
+      <Input label="Latin name" defaultValue="Basel" data-case="latin" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(directionOf(canvasElement, "arabic")).toBe("rtl");
+    await expect(directionOf(canvasElement, "latin")).toBe("ltr");
+  },
+};
+
+/** An identifier reads left to right in any document, empty or not. */
+export const AnIdentifierReadsLeftToRight: Story = {
+  args: { label: "Email" },
+  render: () => (
+    <div>
+      <Input label="Empty email" type="email" placeholder="you@example.com" data-case="empty" />
+      <Input label="Email" type="email" defaultValue="you@example.com" data-case="filled" />
+      <Input label="Password" type="password" revealLabel="Show password" data-case="password" />
+      <Input label="Username" placeholder="username" dir="ltr" data-case="stated" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const name of ["empty", "filled", "password", "stated"])
+      await expect(directionOf(canvasElement, name)).toBe("ltr");
+  },
+};
+
+/** Before anything is typed, a field's placeholder reads as the page does. */
+export const AnEmptyFieldReadsAsThePageDoes: Story = {
+  args: { label: "Name" },
+  render: () => <Input label="Display name" placeholder="Name" data-case="empty" />,
+  play: async ({ canvasElement }) => {
+    const page = getComputedStyle(document.documentElement).direction;
+    await expect(directionOf(canvasElement, "empty")).toBe(page);
+  },
+};

@@ -18,6 +18,7 @@ export const SchemaField = ({
   onChange,
   span = "full",
   autoFocus,
+  dir,
   controls,
 }: SchemaFieldProps) => {
   const isInvalid = !!error;
@@ -49,6 +50,7 @@ export const SchemaField = ({
             isInvalid={isInvalid}
             errorMessage={error ?? undefined}
             autoFocus={autoFocus}
+            dir={dir}
             fullWidth
           />
         );
@@ -67,6 +69,7 @@ export const SchemaField = ({
             isInvalid={isInvalid}
             errorMessage={error ?? undefined}
             autoFocus={autoFocus}
+            dir={dir}
             fullWidth
           />
         );
@@ -111,6 +114,7 @@ export const SchemaField = ({
             isInvalid={isInvalid}
             errorMessage={error ?? undefined}
             autoFocus={autoFocus}
+            dir={dir}
             fullWidth
           />
         );

@@ -31,6 +31,12 @@
   color: var(--text-muted);
 }
 
+/* An empty `auto` field has no text to take a direction from, and the browser reads that as
+   left to right; until something is typed, its placeholder reads as the page does. */
+.textarea[dir="auto"]:placeholder-shown {
+  direction: inherit;
+}
+
 .size-small {
   padding: var(--control-padding-block-small) var(--control-padding-inline-small);
   font: var(--type-body-small);

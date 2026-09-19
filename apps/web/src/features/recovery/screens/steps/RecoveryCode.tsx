@@ -54,6 +54,7 @@ export const RecoveryCode = ({
         errorMessage={errors.code ?? undefined}
         autoComplete="one-time-code"
         inputMode="text"
+        dir="ltr"
         autoCapitalize="characters"
         autoCorrect="off"
         spellCheck={false}

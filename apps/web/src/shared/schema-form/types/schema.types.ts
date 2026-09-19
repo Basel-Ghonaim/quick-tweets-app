@@ -38,6 +38,8 @@ export interface FormFieldConfig<TPayload> {
   placeholder?: string;
   validators?: ValidatorFn[];
   span?: FieldSpan;
+  /** `ltr` for a field that holds an identifier; left out, the control decides from its type. */
+  dir?: "ltr" | "rtl" | "auto";
 }
 
 export type FormValue<T extends Record<string, FormFieldConfig<FormPayload>>> =
