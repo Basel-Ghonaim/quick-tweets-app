@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the system **topology** and the end-to-end **request lifecycle** across frontend, backend, and database. Per-subsystem mechanism detail and the wire contract are owned by their documents and linked here, never restated.
 > **Scope:** How the parts fit together and how a request flows through them. It does not specify endpoints (see the [API contract](../api/api-contract.md)) or per-subsystem internals (see the backend and frontend platform documents).
 > **Version:** 1.1
-> **Last Updated:** 2026-09-02
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 ## Topology
@@ -57,7 +57,7 @@ This document owns the topology and lifecycle only; each subsystem's internals a
 | Proof of control over a communication channel — the fact, its lifecycle, and its sweep | [`backend/channel-verification.md`](../backend/channel-verification.md) |
 | The outbound mail mechanism, its backends, abuse controls, and sweep | [`backend/mail.md`](../backend/mail.md) |
 | Axios clients & interceptors, RTK Query, error normalization | [`frontend/api-client.md`](../frontend/api-client.md) + [`frontend/error-handling.md`](../frontend/error-handling.md) + `frontend/state-and-data.md` *(deferred)* |
-| A known deviation from this intended architecture | [Finding 0001 — schema-form ↔ design-system cycle](findings/0001-schema-form-design-system-cycle.md) |
+| Known deviations from this intended architecture | the [findings register](findings/) |
 
 ---
 
