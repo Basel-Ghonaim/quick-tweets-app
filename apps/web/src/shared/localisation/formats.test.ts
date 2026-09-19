@@ -32,6 +32,11 @@ describe("how a language writes numbers", () => {
     expect(formatsFor("ar").plural(2, { other: "other" })).toBe("other");
   });
 
+  test("an identifier and a reader's words are each held apart from the line around them", () => {
+    expect(formatsFor("en").identifier("j***@example.com")).toBe("\u2066j***@example.com\u2069");
+    expect(formatsFor("ar").authored("photo.png")).toBe("\u2068photo.png\u2069");
+  });
+
   test("a file size takes its unit at 1024, to one decimal, ungrouped", () => {
     const sizes = [0, 1023, 1024, 1536, 1048575, 1048576, 5 * 1048576, 1048576 * 1024];
 

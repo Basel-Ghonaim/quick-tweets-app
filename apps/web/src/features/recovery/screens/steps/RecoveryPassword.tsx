@@ -32,6 +32,7 @@ export const RecoveryPassword = ({ onSubmit }: RecoveryPasswordProps) => {
           error={errors[field.key]}
           onChange={handleChange}
           span={field.span}
+          dir={field.dir}
           autoFocus={index === 0}
           controls={copy.controls}
         />

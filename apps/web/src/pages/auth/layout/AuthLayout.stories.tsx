@@ -149,3 +149,22 @@ export const TheTwoColumnsHoldAtLaptopWidth: Story = {
     await expect(canvas.getByTestId("feed-texture")).toBeVisible();
   },
 };
+
+/** A handle is an identifier: it reads left to right, held apart from the line it sits in. */
+export const AHandleReadsLeftToRight: Story = {
+  decorators: [at("/auth/signin")],
+  globals: { viewport: { value: "laptop" } },
+  play: async ({ canvasElement }) => {
+    for (const surface of ["brand-posts", "feed-texture"]) {
+      const handles = within(canvasElement)
+        .getByTestId(surface)
+        .querySelectorAll<HTMLElement>("bdi");
+
+      await expect(handles.length).toBeGreaterThan(0);
+      for (const handle of handles) {
+        await expect(getComputedStyle(handle).direction).toBe("ltr");
+        await expect(getComputedStyle(handle).unicodeBidi).toBe("isolate");
+      }
+    }
+  },
+};

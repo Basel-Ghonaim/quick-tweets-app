@@ -47,6 +47,18 @@ describe("the catalogues", () => {
     expect(whole).toBe(english);
   });
 
+  test("a line holds a value it did not write apart from itself", () => {
+    expect(english.auth.recovery.codeSubtitle("j***@example.com")).toContain(
+      "\u2066j***@example.com\u2069",
+    );
+    for (const refusal of [
+      english.controls.file.notAccepted("photo.png"),
+      english.controls.file.tooLarge("photo.png", "2 MB"),
+      english.controls.files.tooLarge("photo.png", "2 MB"),
+    ])
+      expect(refusal).toContain("\u2068photo.png\u2069");
+  });
+
   test("a catalogue that drifts from English's shape does not compile", () => {
     // The typecheck lane is the proof: each directive fails it unless its line errs. Each fixture is
     // used below, so an unused-variable error cannot stand in for the one it names.

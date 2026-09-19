@@ -81,6 +81,7 @@ export const Profile = ({ onSettled }: ProfileProps) => {
             error={errors[field.key]}
             onChange={handleChange}
             span={field.span}
+            dir={field.dir}
             controls={copy.controls}
           />
         ))}

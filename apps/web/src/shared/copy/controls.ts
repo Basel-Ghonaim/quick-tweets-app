@@ -18,8 +18,10 @@ export const CONTROL_COPY = {
     removeTitle: "Delete",
     replace: "Replace file",
     replaceTitle: "Replace",
-    notAccepted: (fileName: string) => `"${fileName}" is not an accepted file type`,
-    tooLarge: (fileName: string, limit: string) => `"${fileName}" exceeds the ${limit} limit`,
+    notAccepted: (fileName: string) =>
+      `"${ENGLISH_FORMATS.authored(fileName)}" is not an accepted file type`,
+    tooLarge: (fileName: string, limit: string) =>
+      `"${ENGLISH_FORMATS.authored(fileName)}" exceeds the ${limit} limit`,
     size,
   },
 
@@ -31,7 +33,8 @@ export const CONTROL_COPY = {
         one: `${ENGLISH_FORMATS.count(count)} file selected`,
         other: `${ENGLISH_FORMATS.count(count)} files selected`,
       }),
-    tooLarge: (fileName: string, limit: string) => `"${fileName}" exceeds the ${limit} limit`,
+    tooLarge: (fileName: string, limit: string) =>
+      `"${ENGLISH_FORMATS.authored(fileName)}" exceeds the ${limit} limit`,
     size,
   },
 } as const;

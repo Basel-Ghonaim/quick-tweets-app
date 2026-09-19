@@ -16,7 +16,16 @@ interface Formats {
   /** The form of a line its language's plural rules choose for `count`. */
   plural: (count: number, forms: PluralForms) => string;
   fileSize: (bytes: number, units: FileSizeUnits) => string;
+  /** An identifier, held left to right as one unit so no line around it can reorder it. */
+  identifier: (value: string) => string;
+  /** Words a reader wrote, held as one unit in the direction of their own first letter. */
+  authored: (value: string) => string;
 }
+
+// Unicode's isolates (UAX #9): LRI and FSI each open one, and PDI closes it.
+const LEFT_TO_RIGHT_ISOLATE = "\u2066";
+const FIRST_STRONG_ISOLATE = "\u2068";
+const POP_DIRECTIONAL_ISOLATE = "\u2069";
 
 const KILOBYTE = 1024;
 const MEGABYTE = KILOBYTE * 1024;
@@ -42,5 +51,7 @@ export const formatsFor = (language: string): Formats => {
       if (bytes < MEGABYTE) return units.kilobytes(tenths.format(bytes / KILOBYTE));
       return units.megabytes(tenths.format(bytes / MEGABYTE));
     },
+    identifier: (value) => `${LEFT_TO_RIGHT_ISOLATE}${value}${POP_DIRECTIONAL_ISOLATE}`,
+    authored: (value) => `${FIRST_STRONG_ISOLATE}${value}${POP_DIRECTIONAL_ISOLATE}`,
   };
 };

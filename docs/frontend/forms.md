@@ -4,8 +4,8 @@
 > **Authority:** The authoritative source for the frontend's **schema-driven form engine** (`apps/web/src/shared/schema-form`) — the architecture by which a single schema describes a form and the engine derives its state, validation, typing, and control binding. It owns the **engine**. It does **not** own the presentation controls the engine binds to (the [design system](design-system/README.md)), the mechanism by which a submission is *executed* or how its failures are *handled* — the engine delegates both, and normalization of those failures is owned by [error handling](error-handling.md) — the application layout (the [frontend architecture](architecture.md)), per-feature form usage (the feature documents), or the design principles it applies ([Engineering Principles](../development/engineering-principles.md)).
 > **Scope:** The shared engine in `apps/web/src/shared/schema-form/`. How a specific feature uses it lives in that feature's document; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Maturity:** This document describes the **currently implemented** engine. It will grow as the engine gains capabilities; anything not described here is not yet built, not architecturally rejected.
-> **Version:** 1.2
-> **Last Updated:** 2026-09-17
+> **Version:** 1.3
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 ## Why the engine exists
@@ -62,6 +62,8 @@ This is distinct from field **validation** errors, which the engine *does* own �
 The seam is where a schema field meets a rendered control: driven by the field's type, it selects the matching control and passes it the field's value, error, and change handler. Its architectural **purpose is isolation** — it is the single boundary that lets the engine deal only in *field types* and stay entirely ignorant of concrete UI components. The engine never imports or names a specific control; the seam translates type → control on its behalf. This mirrors the submission inversion: the engine is agnostic to *presentation* exactly as it is agnostic to *execution*. The engine owns the **seam** (the type→control mapping); the **controls** are the [design system](design-system/README.md)'s.
 
 The seam also carries the **words of the controls it composes itself** — a password field's reveal toggle, the file controls' prompts and refusals — which neither the engine nor the design system holds. They arrive as one required `controls` object from the screen that renders the field, so the engine stays as ignorant of content as it is of presentation.
+
+**A field that holds an identifier can say so.** Its declaration may carry a direction, and the seam hands it to the control. When the declaration leaves it out, the control decides from the field's type ([component authoring](design-system/components.md)): a text field takes the direction of what is typed, so a text field that holds an identifier declares `ltr`.
 
 The intended dependency is one-directional: the form engine *consumes* the design system's controls; the design system does not depend back on the engine. A recorded deviation from that intended seam ownership was captured in [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md) and has since been resolved; it is referenced here as the historical record of the problem, while this document describes the intended architecture and the code remains the source of truth for the current state.
 

@@ -6,6 +6,10 @@ import { classNames, customProperties, useFieldA11y } from "../../shared";
 import { FieldLabel, FieldMessages } from "../anatomy";
 import { Spinner } from "../../feedback/Spinner";
 
+// These hold identifiers, which read left to right in any document; anything else a reader
+// types takes the direction of what they type.
+const IDENTIFIER_TYPES = new Set(["email", "password", "tel", "url", "number"]);
+
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
@@ -26,6 +30,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       id,
       type,
       revealLabel,
+      dir,
       ...props
     },
     ref,
@@ -90,6 +95,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={controlId}
             type={isPassword && isPasswordVisible ? "text" : type}
+            dir={dir ?? (IDENTIFIER_TYPES.has(type ?? "text") ? "ltr" : "auto")}
             className={styles.input}
             disabled={disabled}
             aria-busy={isLoading || undefined}

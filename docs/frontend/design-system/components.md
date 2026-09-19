@@ -5,8 +5,8 @@
 > **Scope:** Components and shared parts under `components/`. The layer's peer subsystems sit outside it: the design language is [foundation.md](foundation.md)'s, and `icons/` has no authoring contract today — where an icon departs from a convention stated here, the reason is at the code.
 > **Stability:** Adding a component must require **no change here**. This document changes when the way we build components changes.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.4
-> **Last Updated:** 2026-09-17
+> **Version:** 1.5
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 ## What this document does not own
@@ -59,9 +59,16 @@ Every component follows the same shape, so a new one is predictable to build and
 
 **Words** — a component **holds no user-facing text of its own**, visible or announced. Every word it renders — a label, a prompt, an accessible name, a title, a message about a refused value — arrives from the caller, which draws it from the product's content ([ADR 0010](../../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 8, [ADR 0018](../../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 6). A word the component cannot render without is a **required prop**, never a default, because a default is a word in one language that no caller is made to replace; a word a caller may leave out is simply not rendered. A component with several words takes **one typed content object**, scoped to what that component or variant renders; a value that varies arrives as a function of named values, never as a fragment the component assembles into a sentence.
 
+**Direction of text** — a component **never decides the direction of words it did not write**:
+- **A reader's own words take the direction of their first letter.** A field's value and a file's name carry `dir="auto"`.
+- **An identifier reads left to right on any page.** An address, a password, a handle and a code carry `dir="ltr"`. A field decides from its type, and a caller states an identifier the type cannot show.
+- **The attribute also isolates what it holds**, so no reader's words can reorder the line around them. Where no element can carry it, as with a value inside a line, the language's formats isolate the value instead ([localisation](../localisation.md)).
+- **An empty field has no words to decide from**, so until something is typed its placeholder reads as the page does. A field with no placeholder reads left to right until something is typed.
+- **A component never turns an icon itself.** An icon declares whether it mirrors, and it turns with the page's direction on that declaration alone.
+
 **Focus** — a component **never declares an indicator of its own**; it composes the owned one. Because the element that receives focus is not always the element that should show it, the indicator provides attachment forms sharing a single definition — on the focused element, on a wrapper that owns the visible boundary, on a sibling when the control is visually replaced, and inset where a clipping ancestor would cut an outward ring.
 
-**The rule:** a new component adopts this layout, ref pattern, styling approach, prop vocabulary, words-as-props and accessibility baseline. Departures are deliberate exceptions, not new defaults.
+**The rule:** a new component adopts this layout, ref pattern, styling approach, prop vocabulary, words-as-props, direction of text and accessibility baseline. Departures are deliberate exceptions, not new defaults.
 
 ## The variant model
 

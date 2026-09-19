@@ -300,3 +300,28 @@ export const AutoResizeStopsAtMaxRows: Story = {
     await expect(getComputedStyle(control).resize).toBe("none");
   },
 };
+
+/** A line a reader might write in Arabic. */
+const ARABIC_BIO = "مرحبا بكم";
+
+const directionOf = (canvasElement: HTMLElement, name: string) =>
+  getComputedStyle(canvasElement.querySelector(`[data-case="${name}"]`)!).direction;
+
+/** Words a reader writes take their own direction; before any, the placeholder reads as the page does. */
+export const WordsTakeTheirOwnDirection: Story = {
+  args: { label: "Bio" },
+  render: () => (
+    <div>
+      <Textarea label="Arabic bio" defaultValue={ARABIC_BIO} data-case="arabic" />
+      <Textarea label="Latin bio" defaultValue={LOREM} data-case="latin" />
+      <Textarea label="Empty bio" placeholder="Tell us about yourself" data-case="empty" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(directionOf(canvasElement, "arabic")).toBe("rtl");
+    await expect(directionOf(canvasElement, "latin")).toBe("ltr");
+    await expect(directionOf(canvasElement, "empty")).toBe(
+      getComputedStyle(document.documentElement).direction,
+    );
+  },
+};

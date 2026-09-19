@@ -31,7 +31,7 @@ export const BrandPanel = () => {
               <span className={styles.postAvatar}>{initials(post.name)}</span>
               <span className={styles.postName}>{post.name}</span>
               <span className={styles.postMeta}>
-                {post.handle} · {post.age}
+                <bdi dir="ltr">{post.handle}</bdi> · {post.age}
               </span>
             </div>
             <p className={styles.postBody}>{post.body}</p>

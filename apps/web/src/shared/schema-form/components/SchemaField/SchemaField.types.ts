@@ -4,6 +4,8 @@ import type {
 } from "@shared/design-system";
 import type {
   FormChangeHandler,
+  FormFieldConfig,
+  FormPayload,
   FieldType,
   FieldSpan,
 } from "../../types/schema.types";
@@ -28,5 +30,6 @@ export interface SchemaFieldProps {
   onChange: FormChangeHandler;
   span?: FieldSpan;
   autoFocus?: boolean;
+  dir?: FormFieldConfig<FormPayload>["dir"];
   controls: SchemaFieldControls;
 }

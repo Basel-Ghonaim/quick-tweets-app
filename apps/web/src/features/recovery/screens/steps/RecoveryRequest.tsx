@@ -40,6 +40,7 @@ export const RecoveryRequest = ({
           error={errors[field.key]}
           onChange={handleChange}
           span={field.span}
+          dir={field.dir}
           autoFocus
           controls={copy.controls}
         />

@@ -18,6 +18,7 @@ export const authFormSchemas = (copy: Catalogue) => {
     identifier: {
       name: "identifier",
       type: "text",
+      dir: "ltr",
       label: copy.auth.signIn.identifierLabel,
       placeholder: copy.auth.signIn.identifierPlaceholder,
       validators: [isRequired(copy.validation.required.identifier)],
@@ -38,6 +39,7 @@ export const authFormSchemas = (copy: Catalogue) => {
     username: {
       name: "username",
       type: "text",
+      dir: "ltr",
       label: copy.auth.signUp.usernameLabel,
       placeholder: copy.auth.signUp.usernamePlaceholder,
       validators: [

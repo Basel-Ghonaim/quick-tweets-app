@@ -9,6 +9,13 @@ const authFormSchemas = schemasFor(CATALOGUES.en);
 const shownFor = (field: { validators?: ValidatorFn[] }, value: string) =>
   (field.validators ?? []).map((validate) => validate(value, {})).find(Boolean) ?? null;
 
+describe("an identifier's field reads left to right", () => {
+  it("declares it where the field's type does not already say so", () => {
+    expect(authFormSchemas.loginFields.identifier.dir).toBe("ltr");
+    expect(authFormSchemas.registerFields.username.dir).toBe("ltr");
+  });
+});
+
 describe("registration's fields compose the credential rules", () => {
   it("refuses a password outside printable ASCII with the catalogue's message", () => {
     expect(shownFor(authFormSchemas.registerFields.password, "Passw0rd!\u0643\u0644\u0645\u0629")).toBe(

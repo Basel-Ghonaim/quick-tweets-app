@@ -1,3 +1,3 @@
 import { everyStoryReads } from "./readingDirection";
 
-everyStoryReads("rtl");
+everyStoryReads("ar", "rtl");

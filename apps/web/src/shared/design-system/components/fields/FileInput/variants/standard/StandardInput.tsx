@@ -38,7 +38,8 @@ export const StandardInput = ({
     onValidationError,
   } = context;
 
-  const [displayName, setDisplayName] = useState("");
+  // A file's name is the reader's own words, and a count of files is the catalogue's.
+  const [chosen, setChosen] = useState<{ text: string; isName: boolean } | null>(null);
 
   const openPicker = () => {
     if (disabled) return;
@@ -62,8 +63,10 @@ export const StandardInput = ({
     }
 
     onValidationError("");
-    setDisplayName(
-      files.length === 1 ? files[0].name : content.chosenCount(files.length),
+    setChosen(
+      files.length === 1
+        ? { text: files[0].name, isName: true }
+        : { text: content.chosenCount(files.length), isName: false },
     );
 
     onChange?.(event);
@@ -102,7 +105,9 @@ export const StandardInput = ({
         )}
       </button>
 
-      <span className={styles.fileName}>{displayName || content.nothingChosen}</span>
+      <span className={styles.fileName} dir={chosen?.isName ? "auto" : undefined}>
+        {chosen?.text || content.nothingChosen}
+      </span>
     </div>
   );
 };

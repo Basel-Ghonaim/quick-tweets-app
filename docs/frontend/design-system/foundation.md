@@ -5,8 +5,8 @@
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.6
-> **Last Updated:** 2026-09-16
+> **Version:** 1.7
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 ## What the language is for
@@ -103,6 +103,12 @@ Typographic **sizes are typographic**, not a control's density. A component deci
 **Theme is a resolution axis, not a tier** — the first of possibly several, which is why it is structured as one axis among others rather than as the whole concept. Every theme resolves the same keys, so switching is setting one attribute and no component participates.
 
 A key whose value is identical across resolutions is still declared in each: uniform values are permitted, an axis-invariant shortcut is not.
+
+**Script is the second axis, and typography resolves along it** ([ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md) Decision 1(a); [ADR 0010](../../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 6). A script's resolution is selected by the language an element is in: the Latin one at the root, and another wherever the language is written in its script. Unlike a theme, which resolves once at the root, a script resolves wherever a language is declared, so a passage marked as Arabic inside an English page reads as Arabic. An English passage inside an Arabic page stays under the Arabic resolution, because the Latin one sits at the root; no surface marks one yet.
+
+**A text style is redeclared whole in every script's resolution.** A composite inherited from the root keeps the family and leading it resolved there, so a resolution that changed only the family underneath it would change nothing a consumer binds.
+
+**Every font-family token is a script-ordered stack, per role:** one script's face first, then the other script's. A glyph the leading face lacks is then drawn by the face made for it, in any document, while each role keeps its own Latin face. The vocabulary names the faces; loading them is the application's, and every host that renders the language must load the same ones.
 
 ## Disposition
 

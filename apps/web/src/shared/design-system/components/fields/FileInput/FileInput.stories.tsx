@@ -716,3 +716,38 @@ export const AddMoreRowComposesTheIndicator: DropzoneStory = {
     await expect(parseFloat(getComputedStyle(add).marginTop)).toBeGreaterThan(4);
   },
 };
+
+/** A file a reader named in Arabic. */
+const ARABIC_FILE_NAME = "تقرير.pdf";
+
+const choose = (canvasElement: HTMLElement, names: string[]) => {
+  const input = canvasElement.querySelector<HTMLInputElement>('input[type="file"]')!;
+  const transfer = new DataTransfer();
+  for (const name of names) transfer.items.add(new File(["x"], name, { type: "application/pdf" }));
+  input.files = transfer.files;
+  fireEvent.change(input);
+};
+
+/** A file's name is the reader's own words, so it reads in the direction of its first letter. */
+export const AListedFileNameTakesItsOwnDirection: DropzoneStory = {
+  args: { ...DropzoneFileList.args },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    choose(canvasElement, [ARABIC_FILE_NAME, "report.pdf"]);
+
+    const arabic = await canvas.findByText(ARABIC_FILE_NAME);
+    await expect(getComputedStyle(arabic).direction).toBe("rtl");
+    await expect(getComputedStyle(await canvas.findByText("report.pdf")).direction).toBe("ltr");
+  },
+};
+
+/** The same, where the standard control names the one file chosen. */
+export const AChosenFileNameTakesItsOwnDirection: Story = {
+  args: { ...Standard.args },
+  play: async ({ canvasElement }) => {
+    choose(canvasElement, [ARABIC_FILE_NAME]);
+
+    const name = await within(canvasElement).findByText(ARABIC_FILE_NAME);
+    await expect(getComputedStyle(name).direction).toBe("rtl");
+  },
+};
