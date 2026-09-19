@@ -80,9 +80,9 @@ export interface CreateChallengeInput {
 
 /**
  * Why a challenge was closed. A closed set, so a failed attempt cannot quietly
- * become a fourth reason: a wrong guess leaves the challenge open.
+ * become a third reason: a wrong guess leaves the challenge open.
  */
-export type ChallengeCloseReason = "verified" | "superseded" | "expired";
+export type ChallengeCloseReason = "verified" | "superseded";
 
 export interface CloseChallengesInput {
   verificationId: number;
