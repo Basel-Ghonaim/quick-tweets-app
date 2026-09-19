@@ -37,11 +37,13 @@ optional.
 
 ## Quick start
 
-1. **pgAdmin** running, connected to `quick_tweets`.
+1. **pgAdmin** running, connected to the database your tree's `DATABASE_URL`
+   names — a linked worktree has its own ([local setup](../setup.md#working-in-a-linked-worktree)).
 2. **Server** — `npm install` once at the repository root, then from `apps/api/`:
    `npx prisma generate; npx prisma migrate deploy; npm run dev`
 3. **Postman** — import the collection and `environment.local.json`; select the
-   **QuickTweets — Local** environment.
+   **QuickTweets — Local** environment. It assumes the backend on port `4000`;
+   for any other, see [Import into Postman](verification-runbook.md#import-into-postman).
 4. Follow [verification-runbook.md](verification-runbook.md) **phase by phase**,
    pausing at each DB checkpoint. Record outcomes in
    [verification-scenarios.md](verification-scenarios.md).
