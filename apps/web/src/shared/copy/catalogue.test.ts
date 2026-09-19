@@ -7,7 +7,7 @@ import { CATALOGUES, type Catalogue } from "./catalogue";
 const english = CATALOGUES.en;
 
 const MODULE = join(process.cwd(), "src/shared/copy/catalogue.ts");
-const REGISTERED = "export const CATALOGUES = registry({ en: ENGLISH });";
+const REGISTERED = "export const CATALOGUES = registry({ en: ENGLISH, ar: ARABIC });";
 
 // The module is typechecked with one more language registered, built as a translation will be: from
 // constants, where no excess-property check reaches. Returns what the compiler says about that copy.
@@ -24,7 +24,7 @@ const registering = (() => {
   let previous: ts.Program | undefined;
 
   return (declarations: string): string[] => {
-    const registered = `${declarations}\nexport const CATALOGUES = registry({ en: ENGLISH, xx: XX });`;
+    const registered = `${declarations}\nexport const CATALOGUES = registry({ en: ENGLISH, ar: ARABIC, xx: XX });`;
     const text = source.replace(REGISTERED, () => registered);
     const host = ts.createCompilerHost(options);
     const { fileExists, readFile } = host;
