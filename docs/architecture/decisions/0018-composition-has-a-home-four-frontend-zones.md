@@ -73,7 +73,6 @@ A story renders a thing in the composition a reader actually meets, and that com
 - **A page group is a routing and layout unit, never a domain claim.** One may hold routes with opposite access modes, so an access guard belongs visibly at each route and is never inherited from the group.
 - **The two rules a page must not break are mechanically checkable** — no transport import, no state ownership — and nothing enforces the zone direction today. An unenforced boundary is what produced this ADR's context.
 - **`shared/` becomes a judgement call where it was a bright line.** This cost is accepted and named: what it admits is enumerated in Decision 5 rather than left to be inferred, and the zone is expected to be revisited on its own terms.
-- **[#623](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/623) narrows rather than closes.** Its motivating case is composition and is answered here; the mechanism it proposes survives for the case composition cannot reach — most likely the current user's identity, which many features want and none owns.
 - **Nothing about the Users capability is decided.** Where profile behaviour finally lives is that capability's question, and any placement made before it exists is temporary by construction.
 - **No file moves and no behaviour changes** because of this ADR. Sequencing is an execution plan's, and the placements it implies are Work Items' — neither is recorded here.
 
