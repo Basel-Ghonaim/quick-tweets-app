@@ -37,11 +37,13 @@ optional.
 
 ## Quick start
 
-1. **pgAdmin** running, connected to `quick_tweets`.
-2. **Server** — from `D:\quick-tweets-app\server`:
-   `npm install; npx prisma generate; npx prisma migrate deploy; npm run dev`
+1. **pgAdmin** running, connected to the database your tree's `DATABASE_URL`
+   names — a linked worktree has its own ([local setup](../setup.md#working-in-a-linked-worktree)).
+2. **Server** — `npm install` once at the repository root, then from `apps/api/`:
+   `npx prisma generate; npx prisma migrate deploy; npm run dev`
 3. **Postman** — import the collection and `environment.local.json`; select the
-   **QuickTweets — Local** environment.
+   **QuickTweets — Local** environment. It assumes the backend on port `4000`;
+   for any other, see [Import into Postman](verification-runbook.md#import-into-postman).
 4. Follow [verification-runbook.md](verification-runbook.md) **phase by phase**,
    pausing at each DB checkpoint. Record outcomes in
    [verification-scenarios.md](verification-scenarios.md).
@@ -85,7 +87,7 @@ Full detail (with the FK-safe order and the note on orphaned bytes) is in the
 runbook's [Reset strategy](verification-runbook.md#reset-strategy). In short:
 
 - **Soft reset** — a `TRUNCATE` script that clears data and keeps the schema.
-- **Full reset** — `npx prisma migrate reset` for a pristine baseline.
+- **Full reset** — `npx prisma migrate reset`, from `apps/api/`, for a pristine baseline.
 - **Bytes on disk** under `apps/api/uploads/` are **not** cleared by SQL — Media
   owns physical deletion, and its reclamation runs report-only by default
   ([Media](../../backend/media.md)). Delete them by hand for a truly clean slate.

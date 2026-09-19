@@ -47,16 +47,21 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
 
 ## Prerequisites
 
-1. **pgAdmin running**, connected to the `quick_tweets` database.
-2. **Server running** (from `D:\quick-tweets-app\server`):
+1. **pgAdmin running**, connected to the database your tree's `DATABASE_URL`
+   names — a linked worktree has its own ([local setup](../setup.md#working-in-a-linked-worktree)).
+2. **Server running** — install once at the repository root, then run the rest
+   from `apps/api/`:
    ```
-   npm install
+   npm install                # at the repository root
+   cd apps/api
    npx prisma generate
    npx prisma migrate deploy
    npm run dev
    ```
 3. **Client running** (optional for this phase — the API is exercised directly):
-   `npm run dev` from the project root.
+   `npm run dev` from the repository root. In a linked worktree, run it with its
+   port pinned and `VITE_API_URL` set, as [local setup](../setup.md#working-in-a-linked-worktree)
+   says — otherwise it drives the other tree's backend.
 4. **Postman** with the collection and environment imported (see below).
 5. A **clean or known** database state (see [Reset strategy](#reset-strategy)).
 
@@ -65,7 +70,13 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
 1. Import `quick-tweets-verification.postman_collection.json`.
 2. Import `environment.local.json` and select **QuickTweets — Local** as the
    active environment.
-3. The image fixtures are under `fixtures/`. On the first file-upload request,
+3. The environment points `baseUrl` and `mediaOrigin` at port `4000`, the
+   backend's default. If yours runs on another `PORT` — a linked worktree's does
+   ([local setup](../setup.md#working-in-a-linked-worktree)) — change the port
+   in **both**, together: they are pinned separately, and folders 00 and 02 read
+   `mediaOrigin`. The Newman runs need only `baseUrl`
+   ([below](#running-folder-11-from-the-command-line-newman)).
+4. The image fixtures are under `fixtures/`. On the first file-upload request,
    Postman may ask you to re-select the file — point it at
    `fixtures/sample.png` (Postman stores file paths per machine).
 
@@ -644,7 +655,7 @@ DELETE FROM users WHERE email LIKE '%@verify.local';
 
 **2. Full DB reset (schema + data).**
 ```
-cd server
+cd apps/api
 npx prisma migrate reset       # drops, recreates, re-applies every migration
 ```
 > Re-runs the avatar backfill migration against an empty `users` table (a no-op),

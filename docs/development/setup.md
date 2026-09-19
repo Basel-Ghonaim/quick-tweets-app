@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for **running the project locally** — prerequisites, installation, environment, database, and the run/build scripts. It owns *how to run it*, not *how it works*: the architecture is the [system overview](../architecture/system-overview.md)'s and the frontend/backend documents', and the HTTP surface is the [API contract](../api/api-contract.md)'s.
 > **Scope:** Developer environment and scripts for both halves of the monorepo. It documents the current configuration; it does not restate mechanisms owned elsewhere.
 > **Version:** 1.3
-> **Last Updated:** 2026-09-16
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 ## The monorepo
@@ -183,10 +183,10 @@ git switch -c <type>/<short-kebab-description> origin/main
 
 ## Verify
 
-With the backend up, confirm it is healthy and can reach the database:
+With the backend up, confirm it is healthy and can reach the database — on the tree's own `PORT`, `4000` unless set (a linked tree's is in the [table above](#working-in-a-linked-worktree)):
 
 ```
-GET http://localhost:4000/health  →  { "status": "ok", "db": "connected", "timestamp": "…" }
+GET http://localhost:<PORT>/health  →  { "status": "ok", "db": "connected", "timestamp": "…" }
 ```
 
 A `503` with `"db": "disconnected"` means the server is running but `DATABASE_URL` does not reach a live PostgreSQL.
@@ -194,7 +194,7 @@ A `503` with `"db": "disconnected"` means the server is running but `DATABASE_UR
 ## Inspect
 
 - **The database** — pgAdmin, or `npm run db:studio` (Prisma Studio, above).
-- **The API** — the manual verification harness (a Postman collection driving `http://localhost:4000/api/v1`) lives under [`verification/`](verification/README.md).
+- **The API** — the manual verification harness (a Postman collection driving the backend's `/api/v1` — point its environment at the tree's own `PORT`) lives under [`verification/`](verification/README.md).
 
 ## Build
 
