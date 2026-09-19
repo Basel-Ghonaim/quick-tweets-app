@@ -17,7 +17,7 @@ import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { stepStates } from "../../services";
 import { sessionReducer } from "@shared/session";
-import { AUTH_COPY } from "@shared/copy";
+import { currentCopy } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -80,7 +80,7 @@ export const Compact: Story = {
     const canvas = within(canvasElement);
 
     await expect(window.innerWidth).toBeLessThan(576);
-    await expect(await canvas.findByRole("button", { name: AUTH_COPY.verify.send })).toBeVisible();
+    await expect(await canvas.findByRole("button", { name: currentCopy().auth.verify.send })).toBeVisible();
   },
 };
 
@@ -94,7 +94,7 @@ export const TheAskRefused: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
+    await userEvent.click(await canvas.findByRole("button", { name: currentCopy().auth.verify.send }));
     await canvas.findByRole("alert");
   },
 };
@@ -105,8 +105,8 @@ export const TheAskSending: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(await canvas.findByRole("button", { name: AUTH_COPY.verify.send }));
-    await canvas.findByRole("button", { name: AUTH_COPY.verify.sending });
+    await userEvent.click(await canvas.findByRole("button", { name: currentCopy().auth.verify.send }));
+    await canvas.findByRole("button", { name: currentCopy().auth.verify.sending });
   },
 };
 
@@ -116,8 +116,8 @@ export const TheCodeRefused: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.verify.codeLabel), "7QK3MNP2XVZB");
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.verify.submit }));
+    await userEvent.type(await canvas.findByLabelText(currentCopy().auth.verify.codeLabel), "7QK3MNP2XVZB");
+    await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.verify.submit }));
     await canvas.findByRole("alert");
   },
 };
@@ -128,7 +128,7 @@ export const TheResendHeld: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await canvas.findByRole("button", { name: AUTH_COPY.verify.resendIn(60) });
+    await canvas.findByRole("button", { name: currentCopy().auth.verify.resendIn(60) });
   },
 };
 
@@ -138,8 +138,8 @@ export const TheCodeSubmitting: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.verify.codeLabel), "7QK3MNP2XVZB");
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.verify.submit }));
-    await canvas.findByRole("button", { name: AUTH_COPY.verify.submitting });
+    await userEvent.type(await canvas.findByLabelText(currentCopy().auth.verify.codeLabel), "7QK3MNP2XVZB");
+    await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.verify.submit }));
+    await canvas.findByRole("button", { name: currentCopy().auth.verify.submitting });
   },
 };

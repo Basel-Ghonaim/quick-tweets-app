@@ -14,7 +14,7 @@ import { verificationIs } from "@testing/handlers/verification";
 import { Onboarding } from "./Onboarding";
 import { AuthLayout } from "../../layout";
 import { sessionActions, sessionReducer } from "@shared/session";
-import { AUTH_COPY } from "@shared/copy";
+import { currentCopy } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -64,7 +64,7 @@ export const TheReadFailed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await canvas.findByRole("button", { name: AUTH_COPY.onboarding.retry });
+    await canvas.findByRole("button", { name: currentCopy().auth.onboarding.retry });
   },
 };
 
@@ -87,7 +87,7 @@ export const TheCodeStep: Story = {
   // journey's answer alone does not put this state on screen.
   parameters: { msw: { handlers: [journeyIs("code"), verificationIs("pending", 60)] } },
   play: async ({ canvasElement }) => {
-    await within(canvasElement).findByRole("heading", { name: AUTH_COPY.verify.codeTitle });
+    await within(canvasElement).findByRole("heading", { name: currentCopy().auth.verify.codeTitle });
   },
 };
 
@@ -98,7 +98,7 @@ export const TheProfileStep: Story = {
   render: asTheRouteMountsIt(),
   parameters: { msw: { handlers: [journeyIs("profile")] } },
   play: async ({ canvasElement }) => {
-    await within(canvasElement).findByRole("heading", { name: AUTH_COPY.profile.title });
+    await within(canvasElement).findByRole("heading", { name: currentCopy().auth.profile.title });
   },
 };
 
@@ -108,6 +108,6 @@ export const TheVerifyStep: Story = {
   // state rendered is whatever that answers.
   parameters: { msw: { handlers: [journeyIs("verify"), journeyAdvancesTo("verify")] } },
   play: async ({ canvasElement }) => {
-    await within(canvasElement).findByRole("heading", { name: AUTH_COPY.verify.askTitle });
+    await within(canvasElement).findByRole("heading", { name: currentCopy().auth.verify.askTitle });
   },
 };

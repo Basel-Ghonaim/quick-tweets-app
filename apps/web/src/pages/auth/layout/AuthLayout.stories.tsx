@@ -7,7 +7,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { sessionReducer } from "@shared/session";
 import { AuthLayout } from "./AuthLayout";
 import { useRouteNavigate } from "@shared/routing";
-import { AUTH_COPY } from "@shared/copy";
+import { currentCopy } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint the
    ground is judged against the browser's white. */
@@ -66,9 +66,9 @@ export const TheShellHoldsStill: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByLabelText(AUTH_COPY.brand.markLabel)).toBeInTheDocument();
-    await expect(canvas.getByText(AUTH_COPY.brand.headlineLine2)).toBeInTheDocument();
-    await expect(canvas.getByText(AUTH_COPY.brand.tagline)).toBeInTheDocument();
+    await expect(canvas.getByLabelText(currentCopy().auth.brand.markLabel)).toBeInTheDocument();
+    await expect(canvas.getByText(currentCopy().auth.brand.headlineLine2)).toBeInTheDocument();
+    await expect(canvas.getByText(currentCopy().auth.brand.tagline)).toBeInTheDocument();
   },
 };
 
@@ -80,7 +80,7 @@ export const TheCardSignsItself: Story = {
     const card = canvasElement.querySelector("main > div:last-of-type");
 
     await expect(
-      within(card as HTMLElement).getByText(AUTH_COPY.brand.markLabel),
+      within(card as HTMLElement).getByText(currentCopy().auth.brand.markLabel),
     ).toBeVisible();
   },
 };
@@ -91,7 +91,7 @@ export const TheThemeIsSwitchableFromTheShell: Story = {
   decorators: [at("/auth/signin")],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const toggle = canvas.getByRole("button", { name: AUTH_COPY.brand.themeToggle });
+    const toggle = canvas.getByRole("button", { name: currentCopy().auth.brand.themeToggle });
 
     const before = document.documentElement.getAttribute("data-theme");
     await userEvent.click(toggle);
@@ -101,7 +101,7 @@ export const TheThemeIsSwitchableFromTheShell: Story = {
     );
 
     // The name did not move with the state.
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.brand.themeToggle })).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: currentCopy().auth.brand.themeToggle })).toBeInTheDocument();
 
     // The theme is on the document, so leaving it flipped would reach the next story.
     await userEvent.click(toggle);
@@ -125,13 +125,13 @@ export const TheCompactSetLeadsWithTheForm: Story = {
     await expect(window.innerWidth).toBeLessThan(576);
 
     // Present in the markup, absent from the page: what the compact set drops.
-    await expect(canvas.getByText(AUTH_COPY.brand.tagline)).toBeVisible();
+    await expect(canvas.getByText(currentCopy().auth.brand.tagline)).toBeVisible();
     await expect(canvas.getByTestId("brand-posts")).not.toBeVisible();
     await expect(canvas.getByTestId("feed-texture")).not.toBeVisible();
 
     // The form is above the pitch, not beside it.
     const card = canvas.getByTestId("where").closest("div");
-    const pitch = canvas.getByText(AUTH_COPY.brand.tagline);
+    const pitch = canvas.getByText(currentCopy().auth.brand.tagline);
     await expect(
       card!.getBoundingClientRect().top < pitch.getBoundingClientRect().top,
     ).toBe(true);

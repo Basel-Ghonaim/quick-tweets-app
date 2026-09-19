@@ -9,7 +9,7 @@ import { AuthLayout } from "@pages/auth/layout";
 import { JourneyLayout } from "@pages/auth/layout/JourneyLayout";
 import { sessionReducer } from "@shared/session";
 import { authenticationReducer, authenticationActions } from "../../store";
-import { AUTH_COPY } from "@shared/copy";
+import { currentCopy } from "@shared/copy";
 import { stepStates } from "@pages/auth/services";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
@@ -56,22 +56,25 @@ const withState = (seed?: (dispatch: ReturnType<typeof configureStore>["dispatch
   );
 };
 
-const FIELD_LABELS = [/^username$/i, /^email address$/i, /^password$/i, /^confirm password$/i];
+const fieldLabels = () => {
+  const { usernameLabel, emailLabel, passwordLabel, confirmPasswordLabel } = currentCopy().auth.signUp;
+  return [usernameLabel, emailLabel, passwordLabel, confirmPasswordLabel];
+};
 
 export const Idle: Story = {
   decorators: [withState()],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByRole("heading", { name: AUTH_COPY.signUp.title })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: currentCopy().auth.signUp.title })).toBeVisible();
 
-    for (const label of FIELD_LABELS) {
+    for (const label of fieldLabels()) {
       await expect(canvas.getByLabelText(label)).toBeVisible();
     }
 
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.signUp.submit })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: currentCopy().auth.signUp.submit })).toBeVisible();
 
-    for (const name of [AUTH_COPY.signUp.backToLogin, AUTH_COPY.signUp.browseAsGuest]) {
+    for (const name of [currentCopy().auth.signUp.backToLogin, currentCopy().auth.signUp.browseAsGuest]) {
       await expect(canvas.getByRole("link", { name })).toBeVisible();
     }
 
@@ -87,9 +90,9 @@ export const TheJourneyBeginsAtAccount: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const account = canvas.getByText(AUTH_COPY.journey.steps.account).closest("li");
+    const account = canvas.getByText(currentCopy().auth.journey.steps.account).closest("li");
     await expect(account).toHaveAttribute("aria-current", "step");
-    await expect(within(account as HTMLElement).getByText(AUTH_COPY.journey.states.current)).toBeVisible();
+    await expect(within(account as HTMLElement).getByText(currentCopy().auth.journey.states.current)).toBeVisible();
   },
 };
 
@@ -124,7 +127,7 @@ export const SubmittingIsReportedInPlace: Story = {
     const canvas = within(canvasElement);
 
     await expect(
-      canvas.getByRole("button", { name: AUTH_COPY.signUp.submitting }),
+      canvas.getByRole("button", { name: currentCopy().auth.signUp.submitting }),
     ).toBeVisible();
   },
 };
@@ -138,8 +141,8 @@ export const Compact: Story = {
 
     await expect(window.innerWidth).toBeLessThan(576);
 
-    const password = canvas.getByLabelText(/^password$/i);
-    const confirm = canvas.getByLabelText(/^confirm password$/i);
+    const password = canvas.getByLabelText(currentCopy().auth.signUp.passwordLabel);
+    const confirm = canvas.getByLabelText(currentCopy().auth.signUp.confirmPasswordLabel);
 
     /* Stacked, so the second field starts below the first rather than beside
        it — the pairing measured rather than asserted from the rule. */
@@ -156,8 +159,8 @@ export const ThePasswordFieldsShareARow: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const password = canvas.getByLabelText(/^password$/i);
-    const confirm = canvas.getByLabelText(/^confirm password$/i);
+    const password = canvas.getByLabelText(currentCopy().auth.signUp.passwordLabel);
+    const confirm = canvas.getByLabelText(currentCopy().auth.signUp.confirmPasswordLabel);
 
     await expect(password.getBoundingClientRect().top).toBeCloseTo(
       confirm.getBoundingClientRect().top,

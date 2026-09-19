@@ -19,7 +19,7 @@ import {
 import { Recovery } from "./Recovery";
 import { AuthLayout } from "@pages/auth/layout";
 import { sessionReducer } from "@shared/session";
-import { AUTH_COPY } from "@shared/copy";
+import { currentCopy } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -77,7 +77,7 @@ export const TheReadFailed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await canvas.findByRole("button", { name: AUTH_COPY.recovery.retry });
+    await canvas.findByRole("button", { name: currentCopy().auth.recovery.retry });
   },
 };
 
@@ -87,10 +87,10 @@ export const TheReadFailed: Story = {
 
 const askFor = async (canvas: ReturnType<typeof within>) => {
   await userEvent.type(
-    await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel),
+    await canvas.findByLabelText(currentCopy().auth.recovery.emailLabel),
     "holder@example.test",
   );
-  await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.send }));
+  await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.recovery.send }));
 };
 
 export const ThePositionIsBeingRead: Story = {
@@ -127,7 +127,7 @@ export const TheRequestLapsed: Story = {
     const canvas = within(canvasElement);
 
     await askFor(canvas);
-    await canvas.findByText(AUTH_COPY.recovery.lapsed);
+    await canvas.findByText(currentCopy().auth.recovery.lapsed);
   },
 };
 
@@ -140,7 +140,7 @@ export const TheRequestSending: Story = {
     const canvas = within(canvasElement);
 
     await askFor(canvas);
-    await canvas.findByRole("button", { name: AUTH_COPY.recovery.sending });
+    await canvas.findByRole("button", { name: currentCopy().auth.recovery.sending });
   },
 };
 
@@ -152,8 +152,8 @@ export const TheCodeRefused: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.recovery.codeLabel), "7QK3MNP2XVZB");
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.submitCode }));
+    await userEvent.type(await canvas.findByLabelText(currentCopy().auth.recovery.codeLabel), "7QK3MNP2XVZB");
+    await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.recovery.submitCode }));
     await canvas.findByRole("alert");
   },
 };
@@ -166,22 +166,22 @@ export const TheCodeSubmitting: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.type(await canvas.findByLabelText(AUTH_COPY.recovery.codeLabel), "7QK3MNP2XVZB");
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.submitCode }));
-    await canvas.findByRole("button", { name: AUTH_COPY.recovery.submittingCode });
+    await userEvent.type(await canvas.findByLabelText(currentCopy().auth.recovery.codeLabel), "7QK3MNP2XVZB");
+    await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.recovery.submitCode }));
+    await canvas.findByRole("button", { name: currentCopy().auth.recovery.submittingCode });
   },
 };
 
 const setPassword = async (canvas: ReturnType<typeof within>) => {
   await userEvent.type(
-    await canvas.findByLabelText(AUTH_COPY.recovery.newPasswordLabel),
+    await canvas.findByLabelText(currentCopy().auth.recovery.newPasswordLabel),
     "A-new-passw0rd!",
   );
   await userEvent.type(
-    canvas.getByLabelText(AUTH_COPY.recovery.confirmPasswordLabel),
+    canvas.getByLabelText(currentCopy().auth.recovery.confirmPasswordLabel),
     "A-new-passw0rd!",
   );
-  await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.submitPassword }));
+  await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.recovery.submitPassword }));
 };
 
 export const ThePasswordRefused: Story = {
@@ -206,7 +206,7 @@ export const ThePasswordSubmitting: Story = {
     const canvas = within(canvasElement);
 
     await setPassword(canvas);
-    await canvas.findByRole("button", { name: AUTH_COPY.recovery.submittingPassword });
+    await canvas.findByRole("button", { name: currentCopy().auth.recovery.submittingPassword });
   },
 };
 
@@ -220,7 +220,7 @@ export const TheResendWindowIsOpen: Story = {
   },
   play: async ({ canvasElement }) => {
     await within(canvasElement).findByRole("button", {
-      name: AUTH_COPY.recovery.resendIn(42),
+      name: currentCopy().auth.recovery.resendIn(42),
     });
   },
 };
@@ -231,7 +231,7 @@ export const TheResendIsSpent: Story = {
     msw: { handlers: [recoveryPositionIs({ ...AT_CODE, canResend: false })] },
   },
   play: async ({ canvasElement }) => {
-    await within(canvasElement).findByText(AUTH_COPY.recovery.resendSpent);
+    await within(canvasElement).findByText(currentCopy().auth.recovery.resendSpent);
   },
 };
 
@@ -244,11 +244,11 @@ export const TheCodeStepConfirms: Story = {
     const canvas = within(canvasElement);
 
     await userEvent.type(
-      await canvas.findByLabelText(AUTH_COPY.recovery.emailLabel),
+      await canvas.findByLabelText(currentCopy().auth.recovery.emailLabel),
       "holder@example.test",
     );
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.send }));
-    await canvas.findByText(AUTH_COPY.recovery.sent);
+    await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.recovery.send }));
+    await canvas.findByText(currentCopy().auth.recovery.sent);
   },
 };
 
@@ -258,8 +258,8 @@ export const TheAddressStepAfterRestart: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
-    await canvas.findByRole("heading", { name: AUTH_COPY.recovery.requestTitle });
+    await canvas.findByRole("heading", { name: currentCopy().auth.recovery.codeTitle });
+    await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.recovery.startOver }));
+    await canvas.findByRole("heading", { name: currentCopy().auth.recovery.requestTitle });
   },
 };

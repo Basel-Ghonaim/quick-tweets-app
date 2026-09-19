@@ -15,7 +15,7 @@ import { Profile } from "./Profile";
 import { AuthLayout } from "../../layout";
 import { JourneyLayout } from "../../layout/JourneyLayout";
 import { sessionReducer } from "@shared/session";
-import { AUTH_COPY } from "@shared/copy";
+import { currentCopy } from "@shared/copy";
 import { stepStates } from "../../services";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
@@ -71,8 +71,8 @@ export const Compact: Story = {
     const canvas = within(canvasElement);
 
     await expect(window.innerWidth).toBeLessThan(576);
-    await expect(canvas.getByRole("heading", { name: AUTH_COPY.profile.title })).toBeVisible();
-    await expect(canvas.getByRole("button", { name: AUTH_COPY.profile.submit })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: currentCopy().auth.profile.title })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: currentCopy().auth.profile.submit })).toBeVisible();
   },
 };
 
@@ -86,7 +86,7 @@ export const TheSaveRefused: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.profile.submit }));
+    await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.profile.submit }));
     await canvas.findByRole("alert");
   },
 };
@@ -97,8 +97,8 @@ export const TheSaveInFlight: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getByRole("button", { name: AUTH_COPY.profile.submit }));
-    await canvas.findByRole("button", { name: AUTH_COPY.profile.submitting });
+    await userEvent.click(canvas.getByRole("button", { name: currentCopy().auth.profile.submit }));
+    await canvas.findByRole("button", { name: currentCopy().auth.profile.submitting });
   },
 };
 
@@ -132,7 +132,7 @@ export const ThePictureUploaded: Story = {
   parameters: { msw: { handlers: [avatarUploads()] } },
   play: async ({ canvasElement }) => {
     choosePicture(canvasElement);
-    await within(canvasElement).findByText(AUTH_COPY.profile.uploaded);
+    await within(canvasElement).findByText(currentCopy().auth.profile.uploaded);
   },
 };
 
@@ -141,6 +141,6 @@ export const ThePictureRejected: Story = {
   parameters: { msw: { handlers: [avatarRefused()] } },
   play: async ({ canvasElement }) => {
     choosePicture(canvasElement);
-    await within(canvasElement).findByRole("button", { name: AUTH_COPY.profile.uploadRetry });
+    await within(canvasElement).findByRole("button", { name: currentCopy().auth.profile.uploadRetry });
   },
 };

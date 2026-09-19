@@ -7,7 +7,7 @@ import type { JourneyStepId, StepState } from "../../model";
 import { JourneyLayout } from "../JourneyLayout";
 import { stepStates } from "../../services";
 import type { StepPosition } from "../../model";
-import { AUTH_COPY } from "@shared/copy";
+import { currentCopy } from "@shared/copy";
 
 /* Storybook mounts no application stylesheet, so a story that does not paint
    the ground is judged against the browser's white. */
@@ -40,9 +40,9 @@ export const AtTheFirstStep: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByRole("list", { name: AUTH_COPY.journey.label })).toBeVisible();
-    await expect(canvas.getByText(AUTH_COPY.journey.states.current)).toBeVisible();
-    await expect(canvas.getAllByText(AUTH_COPY.journey.states.optional)).toHaveLength(2);
+    await expect(canvas.getByRole("list", { name: currentCopy().auth.journey.label })).toBeVisible();
+    await expect(canvas.getByText(currentCopy().auth.journey.states.current)).toBeVisible();
+    await expect(canvas.getAllByText(currentCopy().auth.journey.states.optional)).toHaveLength(2);
   },
 };
 
@@ -54,9 +54,9 @@ export const EveryStateSaysItself: Story = {
     const canvas = within(canvasElement);
 
     for (const word of [
-      AUTH_COPY.journey.states.done,
-      AUTH_COPY.journey.states.skipped,
-      AUTH_COPY.journey.states.current,
+      currentCopy().auth.journey.states.done,
+      currentCopy().auth.journey.states.skipped,
+      currentCopy().auth.journey.states.current,
     ]) {
       await expect(canvas.getByText(word)).toBeVisible();
     }
@@ -97,15 +97,15 @@ export const ItSurvivesAChangeOfStep: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const before = canvas.getByRole("list", { name: AUTH_COPY.journey.label });
-    await expect(within(before).getByText(AUTH_COPY.journey.states.current)).toBeVisible();
+    const before = canvas.getByRole("list", { name: currentCopy().auth.journey.label });
+    await expect(within(before).getByText(currentCopy().auth.journey.states.current)).toBeVisible();
 
     await userEvent.click(canvas.getByRole("button", { name: "onward" }));
 
     // The same element, not an equal one: a remount would replace the node.
     await waitFor(() =>
-      expect(within(before).getByText(AUTH_COPY.journey.states.skipped)).toBeVisible(),
+      expect(within(before).getByText(currentCopy().auth.journey.states.skipped)).toBeVisible(),
     );
-    await expect(canvas.getByRole("list", { name: AUTH_COPY.journey.label })).toBe(before);
+    await expect(canvas.getByRole("list", { name: currentCopy().auth.journey.label })).toBe(before);
   },
 };
