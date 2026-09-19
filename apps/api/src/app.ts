@@ -11,9 +11,6 @@
  * - helmet() sets all recommended HTTP security headers
  * - express.json({ limit }) prevents memory exhaustion DoS
  * - CORS origin is configurable via CORS_ORIGIN env var
- *
- * Future expansion:
- * - Add compression middleware for response compression
  */
 
 import express from "express";

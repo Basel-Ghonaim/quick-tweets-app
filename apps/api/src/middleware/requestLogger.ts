@@ -1,15 +1,9 @@
 /**
  * Request logger middleware.
  *
- * Current purpose:
+ * Purpose:
  * - Logs every incoming request: method, path, status code, and duration in ms
  * - Helps debug slow endpoints and track traffic patterns during development
- *
- * Future expansion:
- * - Add request ID (X-Request-ID header) for distributed tracing
- * - Log request body (sanitized — exclude passwords) in debug mode
- * - Write to a structured logging service (Winston, Pino) instead of console
- * - Add color coding by status code range (2xx green, 4xx yellow, 5xx red)
  */
 
 import type { Request, Response, NextFunction } from "express";

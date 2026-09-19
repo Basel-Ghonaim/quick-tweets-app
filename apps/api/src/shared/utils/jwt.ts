@@ -1,15 +1,10 @@
 /**
  * JWT utility — token generation and verification.
  *
- * Current purpose:
+ * Purpose:
  * - generateAccessToken(userId): creates a signed JWT with short expiry (15min)
  * - generateRefreshToken(): creates a crypto-random UUID for refresh tokens
  * - verifyAccessToken(token): verifies and decodes a JWT, throws AppError on failure
- *
- * Future expansion:
- * - Add token blacklisting check
- * - Add audience/issuer claims for multi-service environments
- * - Add key rotation support
  *
  * Principle: SRP — only handles token operations, no business logic.
  * Principle: DIP — auth service depends on these utilities, not on jsonwebtoken directly.

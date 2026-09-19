@@ -1,14 +1,10 @@
 /**
  * AppError — Typed error class for the backend.
  *
- * Current purpose:
+ * Purpose:
  * - Provides a consistent error shape across all layers (controller, service, middleware)
  * - Mirrors the frontend AppError contract so both sides speak the same error language
  * - Used by errorHandler middleware to format HTTP error responses
- *
- * Future expansion:
- * - Add error `code` field for machine-readable error codes (e.g., "AUTH_INVALID_CREDENTIALS")
- * - Add serialization method (.toJSON()) for consistent API responses
  */
 
 import type { ErrorType } from "./types.js";

@@ -1,14 +1,10 @@
 /**
  * Prisma Config — Database connection & CLI configuration for Prisma v7.
  *
- * Current purpose:
+ * Purpose:
  * - Provides the DATABASE_URL to Prisma CLI for migrations and introspection
  * - Points to the schema.prisma file location
  * - Defines migration output directory
- *
- * Future expansion:
- * - Add seed script configuration
- * - Add shadow database URL for migration testing
  */
 
 import "dotenv/config";

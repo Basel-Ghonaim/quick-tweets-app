@@ -10,11 +10,6 @@
  * Controllers access it directly: req.userId (no casting needed)
  *   - After authGuard: req.userId is guaranteed (number)
  *   - After optionalAuth: req.userId may be undefined (number | undefined)
- *
- * Future expansion:
- * - Add `sessionId` for refresh token tracking
- * - Add `role` for role-based access control (RBAC)
- * - Add `file` / `files` typing for Multer uploads
  */
 
 declare global {
