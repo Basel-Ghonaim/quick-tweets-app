@@ -15,7 +15,7 @@ export const FeedTexture = () => {
               <span className={styles.avatar} />
               <span className={styles.name}>{post.name}</span>
               <span className={styles.meta}>
-                {post.handle} · {post.age}
+                <bdi dir="ltr">{post.handle}</bdi> · {post.age}
               </span>
             </div>
             <p className={styles.body}>{post.body}</p>

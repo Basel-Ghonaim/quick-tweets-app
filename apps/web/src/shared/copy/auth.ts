@@ -173,7 +173,8 @@ export const AUTH_COPY = {
     codeTitle: "Enter your code",
     /* The address is the server's mask, never what the reader typed: echoing an
        unmasked identifier on a recovery screen is a documented incident. */
-    codeSubtitle: (masked: string) => `We sent a 12-character code to ${masked}.`,
+    codeSubtitle: (masked: string) =>
+      `We sent a 12-character code to ${ENGLISH_FORMATS.identifier(masked)}.`,
     passwordTitle: "Set a new password",
     passwordSubtitle: "Choose one you have not used on this account before.",
 

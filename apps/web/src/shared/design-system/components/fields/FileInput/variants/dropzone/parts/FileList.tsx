@@ -51,7 +51,7 @@ export const FileList = ({
           ) : (
             <FileTypeIcon fileName={file.name} mimeType={file.type} size={18} />
           )}
-          <span className={styles.fileListName}>{file.name}</span>
+          <span className={styles.fileListName} dir="auto">{file.name}</span>
           <span className={styles.fileListSize}>{content.size(file.size)}</span>
           <IconButton
             size="small"
