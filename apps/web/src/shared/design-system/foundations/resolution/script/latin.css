@@ -1,6 +1,8 @@
 /* Disposition: active */
 /* Composite text styles (ADR 0011 Decision 6): the `font` shorthand keeps size and
    weight inseparable at the call site. No tracking — no consumer sets one. */
+/* Script resolves them (ADR 0011 Decision 1(a)): this is the Latin resolution, at the root, and
+   `arabic.css` overrides it wherever the language is Arabic. */
 :root {
   /* Four typographic roles, not four namespaces. `label` names or identifies
      something — a button's caption, a field's label, an alert's title. `body` is

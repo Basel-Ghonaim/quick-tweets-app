@@ -1,0 +1,32 @@
+/* Disposition: active */
+/* The Arabic resolution, on the element that declares the language: its descendants inherit
+   it, and a style inherited from the root would keep the Latin family it resolved there. */
+[lang]:lang(ar) {
+  /* Arabic marks stack above and below the letter, inking about 1.5em, so no leading here
+     falls below it; text read as content gets the looser step. */
+  --type-label-small: 500 var(--font-size-xs) / var(--line-height-loose)
+    var(--font-family-base-arabic);
+  --type-label-medium: 500 var(--font-size-sm) / var(--line-height-loose)
+    var(--font-family-base-arabic);
+  --type-label-large: 500 var(--font-size-base) / var(--line-height-loose)
+    var(--font-family-base-arabic);
+
+  --type-body-small: 400 var(--font-size-xs) / var(--line-height-loose)
+    var(--font-family-base-arabic);
+  --type-body-medium: 400 var(--font-size-sm) / var(--line-height-loose)
+    var(--font-family-base-arabic);
+  --type-body-large: 400 var(--font-size-base) / var(--line-height-loose)
+    var(--font-family-base-arabic);
+
+  --type-heading-small: 600 var(--font-size-md) / var(--line-height-relaxed)
+    var(--font-family-heading-arabic);
+  --type-heading-medium: 600 var(--font-size-lg) / var(--line-height-relaxed)
+    var(--font-family-heading-arabic);
+  --type-heading-large: 600 var(--font-size-xl) / var(--line-height-relaxed)
+    var(--font-family-heading-arabic);
+
+  --type-display-medium: 700 var(--font-size-2xl) / var(--line-height-relaxed)
+    var(--font-family-heading-arabic);
+  --type-display-large: 700 var(--font-size-3xl) / var(--line-height-relaxed)
+    var(--font-family-heading-arabic);
+}

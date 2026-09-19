@@ -42,9 +42,9 @@ function declaredIn(dirs: string[], selectorTest: (selector: string) => boolean)
 }
 
 const axisInvariant = declaredIn(["tokens"], (s) => s === ":root");
-const axisResolved = declaredIn(["resolution"], (s) =>
-  s.startsWith("[data-theme"),
-);
+// Every block under `resolution/` is some axis's resolution — a theme's attribute, a script's
+// language, or the root a script resolves at — so every one is read.
+const axisResolved = declaredIn(["resolution"], () => true);
 
 describe("token residency", () => {
   test("no key is declared both axis-invariantly and under a resolution axis", () => {

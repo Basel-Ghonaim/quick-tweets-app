@@ -1,7 +1,11 @@
 /* Disposition: active */
 :root {
-  --font-family-base: "Montserrat", sans-serif;
-  --font-family-heading: "Inter", sans-serif;
+  /* Script-ordered: one script's face first, then the other's, so a glyph the first lacks
+     is drawn by the face made for it rather than by whatever the system holds. */
+  --font-family-base: "Montserrat", "Noto Sans Arabic", sans-serif;
+  --font-family-heading: "Inter", "Noto Sans Arabic", sans-serif;
+  --font-family-base-arabic: "Noto Sans Arabic", "Montserrat", sans-serif;
+  --font-family-heading-arabic: "Noto Sans Arabic", "Inter", sans-serif;
 
   --font-size-xs: 0.75rem; /* 12px */
   --font-size-sm: 0.875rem; /* 14px */
@@ -15,4 +19,6 @@
   --line-height-tight: 1.2;
   --line-height-snug: 1.3;
   --line-height-base: 1.5;
+  --line-height-relaxed: 1.6;
+  --line-height-loose: 1.8;
 }

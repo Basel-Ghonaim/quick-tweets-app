@@ -201,3 +201,90 @@ export const InheritsWithoutTone: Story = {
     await expect(getComputedStyle(pick("toned")).color).not.toBe(inherited);
   },
 };
+
+/** Arabic with marks stacked above and below its letters, which is what its leading is for. */
+const ARABIC_LINE = "\u0625\u0646\u064E\u0651 \u0627\u0644\u0643\u0650\u062A\u0627\u0628\u064E \u0645\u064F\u0641\u064A\u062F\u064C \u062C\u0650\u062F\u064B\u0651\u0627";
+
+const familiesOf = (element: HTMLElement) =>
+  getComputedStyle(element)
+    .fontFamily.split(",")
+    .map((family) => family.trim().replace(/^"|"$/g, ""));
+
+const leadingOf = (element: HTMLElement) => {
+  const { lineHeight, fontSize } = getComputedStyle(element);
+  return parseFloat(lineHeight) / parseFloat(fontSize);
+};
+
+/**
+ * Wherever the language is Arabic, every style leads with the Arabic face, keeps its role's
+ * Latin face behind it, and opens its leading so stacked marks stay inside the line.
+ */
+export const ArabicTakesItsOwnFaceAndLeading: Story = {
+  args: { children: "Arabic" },
+  render: () => (
+    <div lang="ar">
+      <Typography variant="display-large" as="p" data-case="display">
+        {ARABIC_LINE}
+      </Typography>
+      <Typography variant="heading-large" as="p" data-case="heading">
+        {ARABIC_LINE}
+      </Typography>
+      <Typography variant="body-medium" data-case="body">
+        {ARABIC_LINE}
+      </Typography>
+      <Typography variant="label-small" data-case="label">
+        {ARABIC_LINE}
+      </Typography>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const pick = (name: string) =>
+      canvasElement.querySelector<HTMLElement>(`[data-case="${name}"]`)!;
+
+    for (const title of ["display", "heading"]) {
+      await expect(familiesOf(pick(title))).toEqual(["Noto Sans Arabic", "Inter", "sans-serif"]);
+      await expect(leadingOf(pick(title))).toBeCloseTo(1.6, 2);
+    }
+    for (const text of ["body", "label"]) {
+      await expect(familiesOf(pick(text))).toEqual([
+        "Noto Sans Arabic",
+        "Montserrat",
+        "sans-serif",
+      ]);
+      await expect(leadingOf(pick(text))).toBeCloseTo(1.8, 2);
+    }
+  },
+};
+
+/** The document's language chooses the script's resolution; nothing else is asked. */
+export const TheDocumentLanguageChoosesTheScript: Story = {
+  args: { children: "Script" },
+  render: () => (
+    <div>
+      <Typography variant="heading-large" as="p" data-case="heading">
+        Heading
+      </Typography>
+      <Typography variant="body-medium" data-case="body">
+        Body
+      </Typography>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const pick = (name: string) =>
+      canvasElement.querySelector<HTMLElement>(`[data-case="${name}"]`)!;
+    const arabic = document.documentElement.lang === "ar";
+
+    await expect(familiesOf(pick("heading"))).toEqual(
+      arabic
+        ? ["Noto Sans Arabic", "Inter", "sans-serif"]
+        : ["Inter", "Noto Sans Arabic", "sans-serif"],
+    );
+    await expect(leadingOf(pick("heading"))).toBeCloseTo(arabic ? 1.6 : 1.3, 2);
+    await expect(familiesOf(pick("body"))).toEqual(
+      arabic
+        ? ["Noto Sans Arabic", "Montserrat", "sans-serif"]
+        : ["Montserrat", "Noto Sans Arabic", "sans-serif"],
+    );
+    await expect(leadingOf(pick("body"))).toBeCloseTo(arabic ? 1.8 : 1.5, 2);
+  },
+};
