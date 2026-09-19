@@ -48,9 +48,11 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
 ## Prerequisites
 
 1. **pgAdmin running**, connected to the `quick_tweets` database.
-2. **Server running** (from `D:\quick-tweets-app\server`):
+2. **Server running** — install once at the repository root, then run the rest
+   from `apps/api/`:
    ```
-   npm install
+   npm install                # at the repository root
+   cd apps/api
    npx prisma generate
    npx prisma migrate deploy
    npm run dev
@@ -644,7 +646,7 @@ DELETE FROM users WHERE email LIKE '%@verify.local';
 
 **2. Full DB reset (schema + data).**
 ```
-cd server
+cd apps/api
 npx prisma migrate reset       # drops, recreates, re-applies every migration
 ```
 > Re-runs the avatar backfill migration against an empty `users` table (a no-op),
