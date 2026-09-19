@@ -34,3 +34,9 @@ Whether the topology gains a row for a check on lane infrastructure, whether suc
 **It was added deliberately, not by elimination.** Without it, a run that stopped stamping its direction would pass as the other run and report nothing, so the right-to-left proof would erode with the lane still green. It follows `domValidity.ts`, which already asserts after every story in the same lane.
 
 **Nothing here decides the question above.** Where such a check belongs, and whether the topology names it, remain the topology owner's.
+
+## Addendum — 2026-09-19, the check holds the language too ([#767](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/767))
+
+**Each run now stamps a language as well as a direction, and the same check asserts both.** The right-to-left run is Arabic, because the application never reads right to left in English. Once the typography resolves by language, a run that lost its language stamp would render every story in the other script's typography and still report its direction correctly.
+
+**Nothing here decides the question above.** The check still cannot see a run whose setup file has been removed from its project, because nothing then runs that could fail.

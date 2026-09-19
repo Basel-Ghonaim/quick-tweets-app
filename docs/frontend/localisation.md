@@ -2,10 +2,10 @@
 
 > **Status:** Active.
 > **Class:** Contract ([Documentation Strategy §3](../architecture/documentation-strategy.md)) — the rules the interface's language follows, for whoever adds a language, a line or a consumer.
-> **Authority:** The authoritative source for the web interface's **language**: how a reader's language is resolved and stamped on the document, how the catalogues are served and read, how numbers are written, and what a language's words need before they ship. It does **not** own the words themselves (the catalogues in `shared/copy`), how the Design System adapts to direction and script ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 6, the [Design System](design-system/README.md)), which languages the product is committed to (the [overview](../project/overview.md)), or the sequencing of the work that builds them ([Arabic and RTL support](../plans/arabic-rtl-support.md)).
+> **Authority:** The authoritative source for the web interface's **language**: how a reader's language is resolved and stamped on the document, how the catalogues are served and read, how numbers and the values a line takes are written, and what a language's words need before they ship. It does **not** own the words themselves (the catalogues in `shared/copy`), how the Design System adapts to direction and script ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 6, the [Design System](design-system/README.md)), which languages the product is committed to (the [overview](../project/overview.md)), or the sequencing of the work that builds them ([Arabic and RTL support](../plans/arabic-rtl-support.md)).
 > **Scope:** The web interface: the language preference in `apps/web/src/shared/preferences/language/`, the mechanism in `apps/web/src/shared/localisation/`, and the shape of the catalogues in `apps/web/src/shared/copy/`. Server-side language is outside it.
-> **Version:** 1.0
-> **Last Updated:** 2026-09-17
+> **Version:** 1.1
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 ## Why the language has an owner
@@ -52,10 +52,18 @@ A reader's language decides every word the interface says and the direction the 
 - **A file size takes its unit at 1024 bytes, to one decimal.** The units' words are the catalogue's.
 - **A line that changes with a count chooses its form by its language's plural rules.** English uses one or other; Arabic has six forms.
 
+## Values a line did not write
+
+**A line holds apart any value it was handed that it did not write**, through its language's formats, so that the value and the line cannot reorder each other.
+- **An identifier** — a masked address, for example — is held left to right, since it reads that way on any page.
+- **Words a reader wrote**, such as a file's name, are held in the direction of their own first letter.
+
+This covers a value inside a line, where no element exists to carry a direction. Where an element does exist, the [Design System](design-system/components.md) sets the direction instead.
+
 ## Approving a language's words
 
 **English is the source language.** Arabic content is approved by a named native-Arabic approver before its catalogue is registered. A catalogue that compiles is complete in shape; only the approver says it is right.
 
 ---
 
-> This document owns the interface's language: its resolution, its catalogues' mechanism and shape, how numbers are written, and the approval rule. The words are the catalogues'; how the interface adapts to direction and script is the [Design System](design-system/README.md)'s; which languages the product is committed to is the [overview](../project/overview.md)'s — linked here, never duplicated.
+> This document owns the interface's language: its resolution, its catalogues' mechanism and shape, how numbers and values are written, and the approval rule. The words are the catalogues'; how the interface adapts to direction and script is the [Design System](design-system/README.md)'s; which languages the product is committed to is the [overview](../project/overview.md)'s — linked here, never duplicated.
