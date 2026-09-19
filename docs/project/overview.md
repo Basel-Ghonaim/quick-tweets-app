@@ -4,8 +4,8 @@
 > **Class:** **Description** for current implementation status; **Commitment** for committed product scope ([Documentation Strategy §3](../architecture/documentation-strategy.md)). Each section says which it is.
 > **Authority:** The authoritative source for the **product's scope** — both what exists today and what the product is committed to. It does not describe *how* the system is built (see the architecture and platform documents) or the API surface (see the [API contract](../api/api-contract.md)).
 > **Scope:** What quick-tweets is, which capabilities exist today, and which the product is committed to. Mechanisms, endpoints, and per-feature internals live in their owning documents and are linked, never restated.
-> **Version:** 1.8
-> **Last Updated:** 2026-09-07
+> **Version:** 1.9
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 ## What quick-tweets is
@@ -33,6 +33,8 @@ The **backend exposes the full product surface; the frontend currently implement
 | **Follows** — follow and unfollow, follower and following lists | Implemented | Not yet |
 
 The data model behind these capabilities — `User`, `RefreshToken`, `Tweet`, `Comment`, `Like`, `Follow` — is owned by the Prisma schema, [`apps/api/prisma/schema.prisma`](../../apps/api/prisma/schema.prisma).
+
+**The web interface reads in English and in Arabic,** right to left in Arabic. The language follows the reader's browser until they choose one, and how it is resolved and chosen is [localisation](../frontend/localisation.md)'s. Text the server writes, including its mail, is English.
 
 **Scope boundaries in the current version:** tweet images and file uploads are not implemented (the `image` field exists but is always `null`), and profiles are read-only (there is no profile-edit endpoint).
 

@@ -1,11 +1,12 @@
 # Arabic and RTL/LTR Support
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
 > **Last Updated:** 2026-09-19
 > **Parent Issue:** [#754](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/754)
 > **Supersedes:** —
+> **Archived (completed, 2026-09-19):** all six Work Items merged. The durable facts now live with their owners: [localisation](../frontend/localisation.md), the Design System's [foundation](../frontend/design-system/foundation.md) and [components](../frontend/design-system/components.md) contracts, the [testing topology](../development/testing-topology.md), the [API contract](../api/api-contract.md) and the [UX direction](../features/authentication/product/ux-direction.md). Every deferral has an Issue (§12).
 
 ## 1. Purpose
 
@@ -48,13 +49,13 @@ Approved. A decision changes only when implementation exposes a genuine technica
 
 **Deferred**, each with its trigger:
 
-| Item | Trigger |
-|---|---|
-| Server-side language and localised mail | The next effort, after WI-6 |
-| Server-side NFC and bidi-control refusal | Before the first surface renders other users' text |
-| Arabic-Indic digits in the one-time code | Human ruling |
-| A translation library or vendor | A third language, a vendor, or catalogue size |
-| Self-hosted fonts | Decided for every face together, outside this effort |
+| Item | Trigger | Tracked in |
+|---|---|---|
+| Server-side language and localised mail | The next effort, after WI-6 | [#774](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/774) |
+| Server-side NFC and bidi-control refusal | Before the first surface renders other users' text | [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775) |
+| Arabic-Indic digits in the one-time code | Human ruling | [#776](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/776) |
+| A translation library or vendor | A third language, a vendor, or catalogue size | [#777](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/777) |
+| Self-hosted fonts | Decided for every face together, outside this effort | [#778](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/778) |
 
 ## 4. Strategy
 
@@ -150,3 +151,38 @@ No ADR is created or edited.
 ## 11. Updating this plan
 
 It changes in the branch where the need was found, never in a branch of its own. When an implementation detail moves, the Work Item's Issue is updated; when strategy, sequencing, scope or a decision moves, this plan is. Nothing stale is left in either.
+
+## 12. Reconciliation — where the durable knowledge landed
+
+*Written at archival. Every settled decision now lives with an owner that outlives this plan, which is what lets the plan be archived rather than kept alive as the only place a fact is written down.*
+
+**Decisions, and where each landed:**
+
+- **D1–D4 (the credential rules).** The [API contract](../api/api-contract.md) holds the password and email rules, login's presence-only statement and the Pre-release Contract Exception; the [forms](../frontend/forms.md) document holds the client's email rule. Both tiers state the rules, which is [Finding 0026](../architecture/findings/0026-no-tier-owns-the-credential-rules.md)'s open question and not this plan's.
+- **D5.** It was deferred, and the deferral is tracked in [#774](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/774).
+- **D6–D9, O1, O5 and D15.** They are the [localisation](../frontend/localisation.md) contract's: resolution, the pre-paint stamp, the catalogues and how they are read, writing numbers and values, choosing a language, and approval. The [frontend architecture](../frontend/architecture.md) places the mechanism in its platform index and composition root.
+- **D10 and O2.** The [Foundation](../frontend/design-system/foundation.md) owns script as the second resolution axis and the script-ordered stacks. O2's face and line-heights are values, and they live in the token layer, where values belong. [#778](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/778) tracks D10's Google Fonts delivery against self-hosting.
+- **D11 and D12's containment.** The [component contract](../frontend/design-system/components.md) owns the direction of text; [localisation](../frontend/localisation.md) owns how a line holds a value it did not write. D12's server half is [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775).
+- **D13.** The [testing topology](../development/testing-topology.md) owns it: every state is rendered in both directions, each run in its own language.
+- **D14.** It is met: the [localisation](../frontend/localisation.md) document, its [Documentation Strategy](../architecture/documentation-strategy.md) §6 row, the [map](../README.md), the [glossary](../project/glossary.md) entry and the [UX direction](../features/authentication/product/ux-direction.md)'s §19.
+- **O3 and O4.** They were inputs rather than rules. O3 named who approves; the approval rule is localisation's, and the approval itself is recorded on [#771](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/771). O4's placement is the UX direction's §19.
+- **D7's revisit trigger** is tracked in [#777](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/777), and the one-time code's digits in [#776](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/776).
+- **No ADR was created or edited**, as §9 required.
+
+**Findings.**
+- [Finding 0028](../architecture/findings/0028-authentication-form-labels-live-outside-the-catalogue.md) was resolved, in WI-2.
+- [Finding 0019](../architecture/findings/0019-pre-paint-script-hardcodes-the-theme-set.md) gained the language set's addendum, in WI-3.
+- [Finding 0032](../architecture/findings/0032-a-check-on-lane-infrastructure-has-no-lane.md) gained three addenda, for the direction and language checks the lane runs on itself.
+- No finding was opened, and none of these is this plan's to close.
+
+**Residues, named rather than absorbed.** Each was recorded by the PR that met it, and none is a deferral of this plan:
+- the theme's pre-paint check lacks the storage-key and storage-guard coverage the language's has, and the language-switch proof's surface list is recorded (#764);
+- `createUnknownError` shows a raw message (#760);
+- `FileTypeIcon`'s label column is never rendered (#764);
+- a stale comment in `Mirroring.stories.tsx`, `FileInput`'s one-edged badge story, and a lane check that cannot see a removed setup file (#766);
+- the application's body font binds a primitive, and `FileInput`'s add-more control sets a raw `10px` (#769);
+- the component lane behaves differently on local Node 26 and CI's Node 22, and `arabic.test.ts` carries a tautological assertion inside the approved tree (#773).
+
+**Deliberately not part of this closing.** The approver's comments on structure, file partitioning and organisation were deferred, by instruction, to an independent refactor round after this effort, and none of them is reconciled here.
+
+**How this plan was closed.** It was archived in a branch of its own ([#779](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/779)), by the human's instruction and ruling W6-R9. That is the one departure from §11 and from the plans index's rule that a plan is never updated in a branch of its own.

@@ -55,7 +55,7 @@ A new plan is drafted outside the tracked tree — under `.project/`, or whereve
 
 | Plan | Type | Status | Parent Issue |
 |---|---|---|---|
-| [arabic-rtl-support.md](arabic-rtl-support.md) | Execution | Active | [#754](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/754) |
+| [arabic-rtl-support.md](arabic-rtl-support.md) | Execution | Historical | [#754](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/754) |
 | [channel-verification.md](channel-verification.md) | Execution | Active | [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403) |
 | [component-architecture-unification.md](component-architecture-unification.md) | Execution | Historical | [#465](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/465) |
 | [design-system-components.md](design-system-components.md) | Execution | Historical | [#522](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/522) |
