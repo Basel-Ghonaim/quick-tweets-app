@@ -1,15 +1,10 @@
 /**
  * Prisma Client singleton — shared database connection for the entire backend.
  *
- * Current purpose:
+ * Purpose:
  * - Creates a single PrismaClient instance with the PrismaPg adapter
  * - Provides type-safe access to all database models (User, RefreshToken)
  * - Ensures one connection pool is reused across all modules
- *
- * Future expansion:
- * - Add logging middleware for query debugging
- * - Add graceful disconnect on SIGTERM
- * - Add connection health check utility
  *
  * Principle: SRP — this file only manages the database connection.
  * Principle: DIP — modules import this singleton, not Prisma directly.

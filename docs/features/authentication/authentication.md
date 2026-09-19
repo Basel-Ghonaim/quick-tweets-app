@@ -5,7 +5,7 @@
 > **Scope:** The authentication capability (`apps/web/src/features/authentication/`) and its behavior. The wire contract is the [API contract](../../api/api-contract.md)'s; the server-side security mechanisms are [Backend Security](../../backend/security.md)'s; the transport and the client half of the token model are the [frontend API client](../../frontend/api-client.md)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organisation is the [capability structure](../../frontend/architecture.md#the-capability-structure), which every capability shares and which that document owns. Anything not described here is not yet built, not architecturally rejected.
 > **Version:** 2.0
-> **Last Updated:** 2026-09-15
+> **Last Updated:** 2026-09-19
 > **Owner:** Basel Ghonaim
 
 ## What the feature does
@@ -20,7 +20,7 @@ Signing **out** and silent **restore** are not this feature's: both are the sess
 **The rest of what a reader meets under `/auth` is not this feature either.** The URL space and the layout are the auth **page group**'s, and each of the following is a capability of its own that the group composes. They are described here because no document yet owns them:
 
 - **The post-registration journey** — profile completion and email verification, presented as one surface whose step is named by the server. The account is complete before any of it and nothing an account may do depends on it ([ADR 0008](../../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) Decision 2, as revised); the journey's own state and transitions are the [API contract](../../api/api-contract.md)'s.
-- **Profile completion** — name, bio and avatar, saved or skipped, with the avatar uploaded when it is chosen rather than at submit. It lives here temporarily: its destination is a User feature that does not exist, and the mechanism that will carry it there is proposed in [#623](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/623).
+- **Profile completion** — name, bio and avatar, saved or skipped, with the avatar uploaded when it is chosen rather than at submit. It is the `profile` feature (`apps/web/src/features/profile/`); where it lives once a Users capability exists is still undecided ([Finding 0030](../../architecture/findings/0030-the-capabilities-predate-the-structure-they-share.md)).
 - **Email verification** — requesting a code and confirming it, composing the [Channel Verification](../../backend/channel-verification.md) capability. Whether an address is proven is that capability's fact, never this feature's.
 - **Account recovery** — asking for a code, confirming it, and setting a new password, composing the [Password Reset](../../backend/password-reset.md) capability. Where the reader stands is that capability's fact and never this feature's; the flow ends at sign-in rather than in a session ([ADR 0016](../../architecture/decisions/0016-password-reset-credential-change-authority.md) Decision 8).
 

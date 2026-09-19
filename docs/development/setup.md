@@ -97,7 +97,7 @@ cp apps/api/.env.example apps/api/.env
 | `RESET_CODE_LENGTH` | no | `12` | Reset-code length |
 | `RESET_CHALLENGE_SWEEP_INTERVAL_MS` | no | `21600000` | Cleanup cadence (6h) |
 | `RESET_CHALLENGE_RETENTION_MS` | no | `604800000` | Spent or expired challenge retention (7d); cannot be shorter than the resend cooldown |
-| `RESET_MAX_RESENDS` | no | `3` | Maximum resends for one active password-reset challenge |
+| `RESET_MAX_RESENDS` | no | `3` | Maximum resends for one recovery position |
 
 `apps/api/.env` is gitignored — never commit it.
 

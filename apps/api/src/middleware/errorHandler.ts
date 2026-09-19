@@ -9,12 +9,6 @@
  *
  * Response format:
  *   { success: false, error: { type: "validation", message: "..." } }
- *
- * Future expansion:
- * - Log errors to an external service (Sentry, LogRocket)
- * - Add request ID to error responses for traceability
- * - Handle Prisma-specific errors (P2002 unique constraint, etc.)
- * - Handle Zod validation errors with field-level detail
  */
 
 import type { Request, Response, NextFunction } from "express";

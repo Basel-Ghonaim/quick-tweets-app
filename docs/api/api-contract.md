@@ -77,6 +77,8 @@ PATCH  /api/v1/comments/:id
 DELETE /api/v1/comments/:id
 
 GET    /api/v1/users/:username
+GET    /api/v1/users/me
+PATCH  /api/v1/users/me
 
 POST   /api/v1/follows/:username
 DELETE /api/v1/follows/:username
@@ -731,7 +733,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
   "data": {
     "id": 1,
     "body": "Updated comment!",
-    "media": null,                // the comment's single media file, or null
+    "media": { "token": "<token>" },  // the comment's single media file, or null
     "author": { "id": 2, "username": "ahmed", "name": "Ahmed", "avatar": null },
     "tweetId": 5,
     "createdAt": "2026-05-10T12:05:00.000Z"

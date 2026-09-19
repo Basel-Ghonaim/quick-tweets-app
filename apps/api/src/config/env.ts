@@ -1,7 +1,7 @@
 /**
  * Environment configuration — type-safe via Zod.
  *
- * Current purpose:
+ * Purpose:
  * - Parses and validates all required environment variables at startup
  * - Fails fast with a clear error if any variable is missing or invalid
  * - Exports a typed `env` object used across the entire backend
@@ -10,10 +10,6 @@
  * - JWT_EXPIRES_IN defaults to "15m" (not "7d") — short-lived access tokens
  * - NODE_ENV controls cookie secure flag and other production behaviors
  * - CORS_ORIGIN controls allowed frontend origin (no hardcoding)
- *
- * Future expansion:
- * - Add REFRESH_TOKEN_SECRET for refresh token rotation
- * - Add rate limiting config (RATE_LIMIT_WINDOW, RATE_LIMIT_MAX)
  */
 
 import "dotenv/config";

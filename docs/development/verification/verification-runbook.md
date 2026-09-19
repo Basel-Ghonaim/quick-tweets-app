@@ -92,6 +92,9 @@ manual code paste — the code is knowable to nobody by design, so no runner can
 cross it. The second is a restart, because the limiter counter is in memory.
 The subfolders are named for those breaks.
 
+Run all three from the repository root: the scripts live in its `package.json`
+and resolve the collection and `.newman/` from there.
+
 ```bash
 # Leg 1 — everything up to the point the code is needed.
 # Exports the environment and the cookie jar that leg 2 depends on.
