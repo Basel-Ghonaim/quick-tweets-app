@@ -1,5 +1,5 @@
 /** What a failure says when the screen that met it has nothing more specific to say. */
-export const ERROR_COPY = {
+export const ERRORS = {
   bad_request: "Bad request. Please check your input.",
   unauthorized: "Unauthorized. Please log in to continue.",
   forbidden: "Forbidden. You do not have permission to perform this action.",

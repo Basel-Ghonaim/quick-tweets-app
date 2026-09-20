@@ -1,9 +1,9 @@
-import { AUTH_COPY } from "./auth";
-import { CONTROL_COPY } from "./controls";
-import { ERROR_COPY } from "./errors";
-import { PLACEHOLDER_COPY } from "./placeholder";
-import { RECOVERY_COPY } from "./recovery";
-import { VALIDATION_MESSAGES } from "./validation";
+import { AUTH } from "./auth";
+import { CONTROLS } from "./controls";
+import { ERRORS } from "./errors";
+import { PLACEHOLDER } from "./placeholder";
+import { RECOVERY } from "./recovery";
+import { VALIDATION } from "./validation";
 
 /**
  * English, the source language: every other catalogue is written in the shape of this one.
@@ -14,10 +14,10 @@ import { VALIDATION_MESSAGES } from "./validation";
  * so it can be reflowed.
  */
 export const ENGLISH = {
-  auth: AUTH_COPY,
-  controls: CONTROL_COPY,
-  errors: ERROR_COPY,
-  placeholder: PLACEHOLDER_COPY,
-  recovery: RECOVERY_COPY,
-  validation: VALIDATION_MESSAGES,
+  auth: AUTH,
+  controls: CONTROLS,
+  errors: ERRORS,
+  placeholder: PLACEHOLDER,
+  recovery: RECOVERY,
+  validation: VALIDATION,
 } as const;

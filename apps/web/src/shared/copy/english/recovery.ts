@@ -1,6 +1,6 @@
 import { ENGLISH_FORMATS } from "./formats";
 
-export const RECOVERY_COPY = {
+export const RECOVERY = {
   /* Three steps under one title each, since the card's header is the only
      title on the screen and is rewritten as the server moves the reader. */
   requestTitle: "Reset your password",

@@ -389,12 +389,12 @@ describe("user-facing content", () => {
     const f = "features/x/y.tsx";
     const found = (source: string) => catalogueReadsIn(f, source);
 
-    expect(found(`import { AUTH_COPY } from "@shared/copy";`)).toEqual([`${f} — AUTH_COPY`]);
+    expect(found(`import { AUTH } from "@shared/copy";`)).toEqual([`${f} — AUTH`]);
     expect(found(`import { CATALOGUES } from "@shared/copy";`)).toEqual([`${f} — CATALOGUES`]);
-    expect(found(`import { CONTROL_COPY } from "../../shared/copy/controls";`)).toHaveLength(1);
+    expect(found(`import { CONTROLS } from "../../shared/copy/english/controls";`)).toHaveLength(1);
     expect(found(`import * as copy from "@shared/copy";`)).toHaveLength(1);
     expect(found(`import copy from "@shared/copy";`)).toHaveLength(1);
-    expect(found(`export { ERROR_COPY } from "@shared/copy";`)).toHaveLength(1);
+    expect(found(`export { ERRORS } from "@shared/copy";`)).toHaveLength(1);
     expect(found(`const load = () => import("@shared/copy");`)).toHaveLength(1);
     expect(found(`import { currentCopy } from "@shared/copy";\nconst words = currentCopy().auth;`)).toHaveLength(1);
     expect(found(`import { useCopy as copyOf } from "@shared/copy";\nconst words = copyOf();`)).toHaveLength(1);
@@ -402,7 +402,7 @@ describe("user-facing content", () => {
     expect(found(`import { useCopy, type Catalogue } from "@shared/copy";\nexport const A = () => useCopy().auth;`)).toHaveLength(0);
     const root = `import { CATALOGUES, currentCopy } from "@shared/copy";\nexport function b() { return [CATALOGUES, currentCopy()]; }`;
     expect(catalogueReadsIn("app/bootstrap.ts", root)).toHaveLength(0);
-    expect(catalogueReadsIn("shared/copy/catalogue.ts", `import { AUTH_COPY } from "./auth";`)).toHaveLength(0);
+    expect(catalogueReadsIn("shared/copy/english/index.ts", `import { AUTH } from "./auth";`)).toHaveLength(0);
   });
 
   test("the mechanism's generic readers are reported outside the catalogue, and its other exports are not", () => {
@@ -419,7 +419,7 @@ describe("user-facing content", () => {
     const root = `import { setupLocalisation } from "@shared/localisation";`;
     expect(catalogueReadsIn("app/bootstrap.ts", root)).toHaveLength(0);
     const typed = `import { currentCatalogue, useCatalogue } from "@shared/localisation";`;
-    expect(catalogueReadsIn("shared/copy/catalogue.ts", typed)).toHaveLength(0);
+    expect(catalogueReadsIn("shared/copy/catalogues.ts", typed)).toHaveLength(0);
     const own = `export { currentCatalogue, setupLocalisation, useCatalogue } from "./catalogues";`;
     expect(catalogueReadsIn("shared/localisation/index.ts", own)).toHaveLength(0);
   });
@@ -466,15 +466,15 @@ describe("user-facing content", () => {
   test("a mechanism reaching the catalogue is reported by alias or by path, and a consumer is not", () => {
     const found = catalogueImportsIn;
 
-    expect(found("shared/errors/x.ts", `import { ERROR_COPY } from "@shared/copy";`)).toHaveLength(1);
-    expect(found("shared/errors/parsers/x.ts", `import type { C } from "../../copy/errors";`)).toHaveLength(1);
-    expect(found("shared/errors/x.ts", `export { ERROR_COPY } from "@shared/copy/errors";`)).toHaveLength(1);
+    expect(found("shared/errors/x.ts", `import { ERRORS } from "@shared/copy";`)).toHaveLength(1);
+    expect(found("shared/errors/parsers/x.ts", `import type { C } from "../../copy/english/errors";`)).toHaveLength(1);
+    expect(found("shared/errors/x.ts", `export { ERRORS } from "@shared/copy/english/errors";`)).toHaveLength(1);
     expect(found("shared/errors/x.ts", `const load = () => import("../copy");`)).toHaveLength(1);
     expect(found("shared/errors/x.ts", `type Copy = typeof import("@shared/copy");`)).toHaveLength(1);
 
-    expect(found("features/authentication/x.ts", `import { AUTH_COPY } from "@shared/copy";`)).toHaveLength(0);
-    expect(found("app/bootstrap.ts", `import { ERROR_COPY } from "@shared/copy";`)).toHaveLength(0);
-    expect(found("shared/copy/index.ts", `export { AUTH_COPY } from "./auth";`)).toHaveLength(0);
+    expect(found("features/authentication/x.ts", `import { AUTH } from "@shared/copy";`)).toHaveLength(0);
+    expect(found("app/bootstrap.ts", `import { ERRORS } from "@shared/copy";`)).toHaveLength(0);
+    expect(found("shared/copy/index.ts", `export { CATALOGUES } from "./catalogues";`)).toHaveLength(0);
     expect(found("shared/errors/x.ts", `import { copyText } from "@shared/copying";`)).toHaveLength(0);
   });
 });

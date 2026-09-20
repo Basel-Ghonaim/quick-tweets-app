@@ -4,7 +4,7 @@ import { ONBOARDING } from "./onboarding";
 import { PROFILE } from "./profile";
 import { VERIFY } from "./verify";
 
-export const AUTH_COPY = {
+export const AUTH = {
   brand: BRAND,
   journey: JOURNEY,
   signIn: SIGN_IN,
