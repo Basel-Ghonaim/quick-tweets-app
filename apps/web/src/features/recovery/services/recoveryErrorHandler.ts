@@ -2,7 +2,7 @@ import { AppError, createAppError } from "@shared/errors";
 import type { Catalogue } from "@shared/copy";
 
 /** The words recovery refuses in, handed in from the active catalogue. */
-export type RecoveryWords = Catalogue["auth"]["recovery"];
+export type RecoveryWords = Catalogue["recovery"];
 
 /**
  * Every refusal the capability makes is one opaque `400` — never issued,

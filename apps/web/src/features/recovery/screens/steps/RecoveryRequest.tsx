@@ -22,8 +22,8 @@ export const RecoveryRequest = ({
 
   return (
     <StepLayout
-      title={copy.auth.recovery.requestTitle}
-      subtitle={copy.auth.recovery.requestSubtitle}
+      title={copy.recovery.requestTitle}
+      subtitle={copy.recovery.requestSubtitle}
       onSubmit={handleSubmit}
     >
       {serverError && <MessageRegion tone="error">{serverError.message}</MessageRegion>}
@@ -50,9 +50,9 @@ export const RecoveryRequest = ({
         type="submit"
         fullWidth
         isLoading={isSubmitting}
-        loadingText={copy.auth.recovery.sending}
+        loadingText={copy.recovery.sending}
       >
-        {copy.auth.recovery.send}
+        {copy.recovery.send}
       </Button>
     </StepLayout>
   );

@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
-import { AUTH_COPY } from "@shared/copy";
+import { CATALOGUES } from "@shared/copy";
 import { sessionReducer } from "@shared/session";
 import { server } from "@testing/server";
 import {
@@ -12,6 +12,8 @@ import {
   recoveryRequests,
 } from "@testing/handlers/recovery";
 import { Recovery } from "./Recovery";
+
+const RECOVERY = CATALOGUES.en.recovery;
 
 /** The steps a reader can stand on, as the server reports them. */
 const AT_REQUEST = { step: "request" as const };
@@ -39,7 +41,7 @@ describe("the step chooses the screen", () => {
     mount();
 
     expect(
-      await screen.findByRole("heading", { name: AUTH_COPY.recovery.requestTitle }),
+      await screen.findByRole("heading", { name: RECOVERY.requestTitle }),
     ).toBeTruthy();
   });
 });
@@ -49,10 +51,10 @@ describe("a failed read offers a retry", () => {
     server.use(recoveryPositionRefuses());
     mount();
 
-    expect(await screen.findByText(AUTH_COPY.recovery.unavailable)).toBeTruthy();
-    expect(screen.getByRole("button", { name: AUTH_COPY.recovery.retry })).toBeTruthy();
+    expect(await screen.findByText(RECOVERY.unavailable)).toBeTruthy();
+    expect(screen.getByRole("button", { name: RECOVERY.retry })).toBeTruthy();
     expect(
-      screen.queryByRole("heading", { name: AUTH_COPY.recovery.requestTitle }),
+      screen.queryByRole("heading", { name: RECOVERY.requestTitle }),
     ).toBeNull();
   });
 });
@@ -60,10 +62,10 @@ describe("a failed read offers a retry", () => {
 /* The address form is the way in for the cases that correct one, so its two
    steps are given a name rather than repeated. */
 const typeAddress = async (scope: ReturnType<typeof within>, typed: string) => {
-  fireEvent.change(await scope.findByLabelText(AUTH_COPY.recovery.emailLabel), {
+  fireEvent.change(await scope.findByLabelText(RECOVERY.emailLabel), {
     target: { value: typed },
   });
-  fireEvent.click(scope.getByRole("button", { name: AUTH_COPY.recovery.send }));
+  fireEvent.click(scope.getByRole("button", { name: RECOVERY.send }));
 };
 
 /** The address step, where asking moves the reader on to the code. */
@@ -76,7 +78,7 @@ describe("a reload keeps the place", () => {
     server.use(recoveryPositionIs(AT_CODE));
     mount();
 
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+    await screen.findByRole("heading", { name: RECOVERY.codeTitle });
     // The address the reader sees is the server's mask, never what they typed.
     expect(screen.getByText(/h•••••@example\.test/)).not.toBeNull();
   });
@@ -87,8 +89,8 @@ describe("a reload at the password step can still finish", () => {
     server.use(recoveryPositionIs(AT_PASSWORD));
     mount();
 
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle });
-    const submit = screen.getByRole("button", { name: AUTH_COPY.recovery.submitPassword });
+    await screen.findByRole("heading", { name: RECOVERY.passwordTitle });
+    const submit = screen.getByRole("button", { name: RECOVERY.submitPassword });
     expect((submit as HTMLButtonElement).disabled).toBe(false);
   });
 });
@@ -101,7 +103,7 @@ describe("neither address is echoed back", () => {
       const scope = within(container);
 
       await typeAddress(scope, typed);
-      await scope.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+      await scope.findByRole("heading", { name: RECOVERY.codeTitle });
 
       const text = container.textContent;
       unmount();
@@ -119,7 +121,7 @@ describe("the confirmation says nothing about the account", () => {
 
     await typeAddress(within(container), "someone@example.test");
 
-    const confirmation = await screen.findByText(AUTH_COPY.recovery.sent);
+    const confirmation = await screen.findByText(RECOVERY.sent);
     // Announced rather than merely drawn, and politely: it is not a failure.
     expect(confirmation.closest("[role='status']")).not.toBeNull();
   });
@@ -131,7 +133,7 @@ describe("the resend window is the server's own", () => {
     mount();
 
     const resend = await screen.findByRole("button", {
-      name: AUTH_COPY.recovery.resendIn(42),
+      name: RECOVERY.resendIn(42),
     });
     expect((resend as HTMLButtonElement).disabled).toBe(true);
   });
@@ -142,11 +144,11 @@ describe("a spent bound still has a way out", () => {
     server.use(recoveryPositionIs({ ...AT_CODE, canResend: false }));
     mount();
 
-    expect(await screen.findByText(AUTH_COPY.recovery.resendSpent)).not.toBeNull();
-    const out = screen.getByRole("button", { name: AUTH_COPY.recovery.startOver });
+    expect(await screen.findByText(RECOVERY.resendSpent)).not.toBeNull();
+    const out = screen.getByRole("button", { name: RECOVERY.startOver });
     expect((out as HTMLButtonElement).disabled).toBe(false);
     // No resend control at all, rather than one that cannot be used.
-    expect(screen.queryByRole("button", { name: AUTH_COPY.recovery.resend })).toBeNull();
+    expect(screen.queryByRole("button", { name: RECOVERY.resend })).toBeNull();
   });
 });
 
@@ -155,11 +157,11 @@ describe("a mistyped address can be corrected", () => {
     server.use(recoveryPositionIs(AT_CODE));
     mount();
 
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
-    fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
+    await screen.findByRole("heading", { name: RECOVERY.codeTitle });
+    fireEvent.click(screen.getByRole("button", { name: RECOVERY.startOver }));
 
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.requestTitle });
-    expect(screen.getByLabelText(AUTH_COPY.recovery.emailLabel)).not.toBeNull();
+    await screen.findByRole("heading", { name: RECOVERY.requestTitle });
+    expect(screen.getByLabelText(RECOVERY.emailLabel)).not.toBeNull();
   });
 });
 
@@ -170,11 +172,11 @@ describe("the address comes back when correcting", () => {
     const typed = "holder@example.test";
 
     await typeAddress(within(container), typed);
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+    await screen.findByRole("heading", { name: RECOVERY.codeTitle });
 
-    fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
+    fireEvent.click(screen.getByRole("button", { name: RECOVERY.startOver }));
 
-    const field = await screen.findByLabelText(AUTH_COPY.recovery.emailLabel);
+    const field = await screen.findByLabelText(RECOVERY.emailLabel);
     expect((field as HTMLInputElement).value).toBe(typed);
   });
 });
@@ -185,14 +187,14 @@ describe("a corrected address returns to the code", () => {
     const { container } = mount();
 
     await typeAddress(within(container), "holder@example.test");
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+    await screen.findByRole("heading", { name: RECOVERY.codeTitle });
 
-    fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.recovery.startOver }));
-    await screen.findByLabelText(AUTH_COPY.recovery.emailLabel);
-    fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.recovery.send }));
+    fireEvent.click(screen.getByRole("button", { name: RECOVERY.startOver }));
+    await screen.findByLabelText(RECOVERY.emailLabel);
+    fireEvent.click(screen.getByRole("button", { name: RECOVERY.send }));
 
     expect(
-      await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle }),
+      await screen.findByRole("heading", { name: RECOVERY.codeTitle }),
     ).not.toBeNull();
   });
 });
@@ -202,9 +204,9 @@ describe("every step can be left", () => {
     server.use(recoveryPositionIs(AT_CODE));
     mount();
 
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.codeTitle });
+    await screen.findByRole("heading", { name: RECOVERY.codeTitle });
     expect(
-      screen.getByRole("link", { name: AUTH_COPY.recovery.backToLogin }).getAttribute("href"),
+      screen.getByRole("link", { name: RECOVERY.backToLogin }).getAttribute("href"),
     ).toBe("/auth/signin");
   });
 });
@@ -214,9 +216,9 @@ describe("the password step can be left but not restarted", () => {
     server.use(recoveryPositionIs(AT_PASSWORD));
     mount();
 
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle });
-    expect(screen.getByRole("link", { name: AUTH_COPY.recovery.backToLogin })).not.toBeNull();
-    expect(screen.queryByRole("button", { name: AUTH_COPY.recovery.startOver })).toBeNull();
+    await screen.findByRole("heading", { name: RECOVERY.passwordTitle });
+    expect(screen.getByRole("link", { name: RECOVERY.backToLogin })).not.toBeNull();
+    expect(screen.queryByRole("button", { name: RECOVERY.startOver })).toBeNull();
   });
 });
 
@@ -225,7 +227,7 @@ describe("the password step shows no address", () => {
     server.use(recoveryPositionIs(AT_PASSWORD));
     mount();
 
-    await screen.findByRole("heading", { name: AUTH_COPY.recovery.passwordTitle });
+    await screen.findByRole("heading", { name: RECOVERY.passwordTitle });
     expect(screen.queryByText(/•/)).toBeNull();
   });
 });

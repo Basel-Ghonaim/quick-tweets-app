@@ -26,7 +26,7 @@ export const Recovery = () => {
     apply,
     retry,
   } = useRecoveryFlow(() =>
-    navigate("/auth/signin", { state: { notice: copy.auth.recovery.done } }),
+    navigate("/auth/signin", { state: { notice: copy.recovery.done } }),
   );
 
   if (screen === "pending") {
@@ -40,9 +40,9 @@ export const Recovery = () => {
   if (screen === "retry") {
     return (
       <div className={styles.waiting}>
-        <MessageRegion tone="error">{copy.auth.recovery.unavailable}</MessageRegion>
+        <MessageRegion tone="error">{copy.recovery.unavailable}</MessageRegion>
         <Button type="button" onClick={retry}>
-          {copy.auth.recovery.retry}
+          {copy.recovery.retry}
         </Button>
       </div>
     );

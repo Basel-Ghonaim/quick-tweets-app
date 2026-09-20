@@ -49,7 +49,7 @@ describe("the catalogues", () => {
   });
 
   test("a line holds a value it did not write apart from itself", () => {
-    expect(english.auth.recovery.codeSubtitle("j***@example.com")).toContain(
+    expect(english.recovery.codeSubtitle("j***@example.com")).toContain(
       "\u2066j***@example.com\u2069",
     );
     for (const refusal of [

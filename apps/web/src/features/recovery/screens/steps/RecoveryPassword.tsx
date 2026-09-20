@@ -15,8 +15,8 @@ export const RecoveryPassword = ({ onSubmit }: RecoveryPasswordProps) => {
 
   return (
     <StepLayout
-      title={copy.auth.recovery.passwordTitle}
-      subtitle={copy.auth.recovery.passwordSubtitle}
+      title={copy.recovery.passwordTitle}
+      subtitle={copy.recovery.passwordSubtitle}
       onSubmit={handleSubmit}
     >
       {serverError && <MessageRegion tone="error">{serverError.message}</MessageRegion>}
@@ -42,9 +42,9 @@ export const RecoveryPassword = ({ onSubmit }: RecoveryPasswordProps) => {
         type="submit"
         fullWidth
         isLoading={isSubmitting}
-        loadingText={copy.auth.recovery.submittingPassword}
+        loadingText={copy.recovery.submittingPassword}
       >
-        {copy.auth.recovery.submitPassword}
+        {copy.recovery.submitPassword}
       </Button>
     </StepLayout>
   );

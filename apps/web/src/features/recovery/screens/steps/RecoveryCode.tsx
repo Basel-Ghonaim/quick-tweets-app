@@ -31,8 +31,8 @@ export const RecoveryCode = ({
 
   return (
     <StepLayout
-      title={copy.auth.recovery.codeTitle}
-      subtitle={copy.auth.recovery.codeSubtitle(position.maskedAddress ?? "")}
+      title={copy.recovery.codeTitle}
+      subtitle={copy.recovery.codeSubtitle(position.maskedAddress ?? "")}
       onSubmit={handleSubmit}
     >
       {serverError && <MessageRegion tone="error">{serverError.message}</MessageRegion>}
@@ -45,9 +45,9 @@ export const RecoveryCode = ({
           alphabet has letters so the keyboard must not be numeric. */}
       <Input
         name="code"
-        label={copy.auth.recovery.codeLabel}
-        placeholder={copy.auth.recovery.codePlaceholder}
-        helperText={copy.auth.recovery.codeHint}
+        label={copy.recovery.codeLabel}
+        placeholder={copy.recovery.codePlaceholder}
+        helperText={copy.recovery.codeHint}
         value={values.code}
         onChange={handleChange}
         isInvalid={!!errors.code}
@@ -65,7 +65,7 @@ export const RecoveryCode = ({
 
       <div className={styles.secondaries}>
         <Button type="button" variant="ghost" size="small" onClick={onRestart}>
-          {copy.auth.recovery.startOver}
+          {copy.recovery.startOver}
         </Button>
 
         {position.canResend && (
@@ -76,14 +76,14 @@ export const RecoveryCode = ({
             disabled={!isOpen}
             onClick={() => void onResend()}
           >
-            {isOpen ? copy.auth.recovery.resend : copy.auth.recovery.resendIn(secondsLeft)}
+            {isOpen ? copy.recovery.resend : copy.recovery.resendIn(secondsLeft)}
           </Button>
         )}
       </div>
 
       {!position.canResend && (
         <Typography variant="body-small" tone="muted">
-          {copy.auth.recovery.resendSpent}
+          {copy.recovery.resendSpent}
         </Typography>
       )}
 
@@ -97,9 +97,9 @@ export const RecoveryCode = ({
         type="submit"
         fullWidth
         isLoading={isSubmitting}
-        loadingText={copy.auth.recovery.submittingCode}
+        loadingText={copy.recovery.submittingCode}
       >
-        {copy.auth.recovery.submitCode}
+        {copy.recovery.submitCode}
       </Button>
     </StepLayout>
   );
