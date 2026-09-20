@@ -1,4 +1,4 @@
-import type { Catalogue } from "../catalogue";
+import type { Catalogue } from "../shape";
 import { ARABIC_FORMATS, characters, seconds } from "./formats";
 
 export const AUTH = {

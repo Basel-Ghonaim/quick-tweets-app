@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { CATALOGUES, type Catalogue } from "../catalogue";
-import { ARABIC } from "./index";
+import { CATALOGUES } from "./catalogues";
+import type { Catalogue } from "./shape";
+import { ARABIC } from "./arabic";
 
 const arabic = CATALOGUES.ar;
 const COUNTS = [0, 1, 2, 3, 11, 100];

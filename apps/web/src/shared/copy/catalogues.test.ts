@@ -2,11 +2,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
 import { describe, expect, test } from "vitest";
-import { CATALOGUES, type Catalogue } from "./catalogue";
+import { CATALOGUES } from "./catalogues";
+import type { Catalogue } from "./shape";
 
 const english = CATALOGUES.en;
 
-const MODULE = join(process.cwd(), "src/shared/copy/catalogue.ts");
+const MODULE = join(process.cwd(), "src/shared/copy/catalogues.ts");
 const REGISTERED = "export const CATALOGUES = registry({ en: ENGLISH, ar: ARABIC });";
 
 // The module is typechecked with one more language registered, built as a translation will be: from
@@ -18,7 +19,7 @@ const registering = (() => {
       throw new Error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
     },
   })!;
-  const copy = MODULE.replace("catalogue.ts", "catalogue.registering.ts").split("\\").join("/");
+  const copy = MODULE.replace("catalogues.ts", "catalogues.registering.ts").split("\\").join("/");
   const source = readFileSync(MODULE, "utf8");
   if (source.split(REGISTERED).length !== 2) throw new Error("the registry is not declared as expected");
   let previous: ts.Program | undefined;

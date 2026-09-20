@@ -1,4 +1,4 @@
-import type { Catalogue } from "../catalogue";
+import type { Catalogue } from "../shape";
 import { ARABIC_FORMATS, files } from "./formats";
 
 // Unit symbols stay Latin, as Arabic interfaces commonly write them.

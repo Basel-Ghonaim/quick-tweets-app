@@ -1,4 +1,4 @@
-import type { Catalogue } from "../catalogue";
+import type { Catalogue } from "../shape";
 
 export const ERRORS = {
   bad_request: "طلب غير صالح. يُرجى التحقق من المدخلات.",
