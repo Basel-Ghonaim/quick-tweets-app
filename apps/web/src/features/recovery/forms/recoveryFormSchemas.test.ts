@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CATALOGUES, VALIDATION_MESSAGES } from "@shared/copy";
+import { CATALOGUES } from "@shared/copy";
 import type { ValidatorFn } from "@shared/schema-form";
 import { recoveryFormSchemas as schemasFor } from "./recoveryFormSchemas";
+
+const VALIDATION = CATALOGUES.en.validation;
 
 const recoveryFormSchemas = schemasFor(CATALOGUES.en);
 
@@ -12,13 +14,13 @@ const shownFor = (field: { validators?: ValidatorFn[] }, value: string) =>
 describe("recovery's fields compose the credential rules", () => {
   it("refuses a new password outside printable ASCII with the catalogue's message", () => {
     expect(shownFor(recoveryFormSchemas.passwordFields.newPassword, "Passw0rd!\u0643\u0644\u0645\u0629")).toBe(
-      VALIDATION_MESSAGES.passwordCharacters,
+      VALIDATION.passwordCharacters,
     );
   });
 
   it("refuses an address the server would refuse with the catalogue's message", () => {
     expect(shownFor(recoveryFormSchemas.requestFields.email, "\u0628\u0627\u0633\u0644@example.com")).toBe(
-      VALIDATION_MESSAGES.emailFormat,
+      VALIDATION.emailFormat,
     );
   });
 });

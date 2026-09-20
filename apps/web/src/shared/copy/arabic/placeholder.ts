@@ -1,4 +1,4 @@
-import type { Catalogue } from "../catalogue";
+import type { Catalogue } from "../shape";
 
 export const PLACEHOLDER = {
   notBuiltTitle: {

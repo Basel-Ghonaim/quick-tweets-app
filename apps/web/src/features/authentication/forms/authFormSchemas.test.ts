@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CATALOGUES, VALIDATION_MESSAGES } from "@shared/copy";
+import { CATALOGUES } from "@shared/copy";
 import type { ValidatorFn } from "@shared/schema-form";
 import { authFormSchemas as schemasFor } from "./authFormSchemas";
+
+const VALIDATION = CATALOGUES.en.validation;
 
 const authFormSchemas = schemasFor(CATALOGUES.en);
 
@@ -19,13 +21,13 @@ describe("an identifier's field reads left to right", () => {
 describe("registration's fields compose the credential rules", () => {
   it("refuses a password outside printable ASCII with the catalogue's message", () => {
     expect(shownFor(authFormSchemas.registerFields.password, "Passw0rd!\u0643\u0644\u0645\u0629")).toBe(
-      VALIDATION_MESSAGES.passwordCharacters,
+      VALIDATION.passwordCharacters,
     );
   });
 
   it("refuses an address the server would refuse with the catalogue's message", () => {
     expect(shownFor(authFormSchemas.registerFields.email, "\u0628\u0627\u0633\u0644@example.com")).toBe(
-      VALIDATION_MESSAGES.emailFormat,
+      VALIDATION.emailFormat,
     );
   });
 });

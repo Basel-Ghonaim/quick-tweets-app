@@ -29,7 +29,7 @@ export const StepLayout = ({ title, subtitle, onSubmit, children }: StepLayoutPr
 
       <p className={styles.aside}>
         <RouteLink href="/auth/signin" tone="muted">
-          {copy.auth.recovery.backToLogin}
+          {copy.recovery.backToLogin}
         </RouteLink>
       </p>
     </div>

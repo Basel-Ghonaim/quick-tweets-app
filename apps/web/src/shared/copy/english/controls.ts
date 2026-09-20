@@ -1,4 +1,4 @@
-import { ENGLISH_FORMATS } from "./englishFormats";
+import { ENGLISH_FORMATS } from "./formats";
 
 const size = (bytes: number) =>
   ENGLISH_FORMATS.fileSize(bytes, {
@@ -8,7 +8,7 @@ const size = (bytes: number) =>
   });
 
 /** The words of the controls a screen renders: a password reveal and the two file controls. */
-export const CONTROL_COPY = {
+export const CONTROLS = {
   revealPassword: "Show password",
 
   file: {

@@ -32,6 +32,6 @@ export const useResendWindow = (position: RecoveryPosition) => {
   return {
     secondsLeft: state.secondsLeft,
     isOpen: windowIsOpen(state),
-    announcement: state.justEnded ? copy.auth.recovery.resendReady : "",
+    announcement: state.justEnded ? copy.recovery.resendReady : "",
   };
 };

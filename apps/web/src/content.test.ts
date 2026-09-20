@@ -288,6 +288,79 @@ const catalogueReadsIn = (l: string, text: string): string[] => {
   return found;
 };
 
+// The shape is English's own, so the source language may not import it and the shape may reach
+// nothing else: a language folder reaching further is the cycle those two modules exist to prevent.
+// The folders are read from the catalogue rather than listed, so the next language is reached too.
+const SOURCE_LANGUAGE = "shared/copy/english";
+const SHAPE = "shared/copy/shape";
+const LANGUAGE_FOLDERS = readdirSync(join(SRC, CATALOGUE), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => `${CATALOGUE}/${entry.name}`);
+
+const reachableFrom = (l: string): ((target: string) => boolean) | null => {
+  if (l === `${SHAPE}.ts`) return (target) => target === SOURCE_LANGUAGE;
+
+  const folder = LANGUAGE_FOLDERS.find((candidate) => l.startsWith(`${candidate}/`));
+  if (!folder) return null;
+
+  // Its own folder's barrel is what assembles it, so reaching that is the same cycle one level down.
+  return (target) =>
+    (target.startsWith(`${folder}/`) && target !== `${folder}/index`) ||
+    target === LOCALISATION ||
+    (target === SHAPE && folder !== SOURCE_LANGUAGE);
+};
+
+// A language's constants are one language's words. Offering one through the barrel is how a consumer
+// comes to hold them for the life of the page, which is what the accessors exist to prevent.
+const BARREL = "shared/copy/index.ts";
+const OFFERED = ["CATALOGUES", "Catalogue", "currentCopy", "useCopy"];
+const OFFERED_FROM = ["./catalogues", "./shape"];
+
+// What the barrel offers, and everything about it that is not offering those four: a name it does not
+// name, a module it does not come from — an alias hides that — and anything it declares itself.
+const barrelSurfaceIn = (text: string): { offers: string[]; extras: string[] } => {
+  const offers: string[] = [];
+  const extras: string[] = [];
+
+  for (const statement of parse(BARREL, text).statements) {
+    if (!ts.isExportDeclaration(statement)) {
+      const modifiers = ts.canHaveModifiers(statement) ? (ts.getModifiers(statement) ?? []) : [];
+      if (modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword))
+        extras.push("a declaration of its own");
+      continue;
+    }
+
+    const from =
+      statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier)
+        ? statement.moduleSpecifier.text
+        : null;
+    if (!statement.exportClause || !ts.isNamedExports(statement.exportClause)) {
+      extras.push("everything a module holds");
+      continue;
+    }
+    if (from === null || !OFFERED_FROM.includes(from)) extras.push(`from ${from ?? "itself"}`);
+
+    for (const element of statement.exportClause.elements) {
+      offers.push(element.name.text);
+      if (!OFFERED.includes(element.name.text)) extras.push(element.name.text);
+    }
+  }
+
+  return { offers: offers.sort(), extras: extras.sort() };
+};
+
+const catalogueCyclesIn = (l: string, text: string): string[] => {
+  const reachable = reachableFrom(l);
+  if (!reachable) return [];
+
+  return specifiersIn(parse(l, text))
+    .filter((spec) => {
+      const target = targetOf(spec, l);
+      return target !== null && !reachable(target);
+    })
+    .map((spec) => `${l} — ${spec}`);
+};
+
 describe("user-facing content", () => {
   test("no production file outside the catalogue holds a user-facing word", () => {
     // A clean result is only trustworthy if the scan saw the source.
@@ -316,12 +389,12 @@ describe("user-facing content", () => {
     const f = "features/x/y.tsx";
     const found = (source: string) => catalogueReadsIn(f, source);
 
-    expect(found(`import { AUTH_COPY } from "@shared/copy";`)).toEqual([`${f} — AUTH_COPY`]);
+    expect(found(`import { AUTH } from "@shared/copy";`)).toEqual([`${f} — AUTH`]);
     expect(found(`import { CATALOGUES } from "@shared/copy";`)).toEqual([`${f} — CATALOGUES`]);
-    expect(found(`import { CONTROL_COPY } from "../../shared/copy/controls";`)).toHaveLength(1);
+    expect(found(`import { CONTROLS } from "../../shared/copy/english/controls";`)).toHaveLength(1);
     expect(found(`import * as copy from "@shared/copy";`)).toHaveLength(1);
     expect(found(`import copy from "@shared/copy";`)).toHaveLength(1);
-    expect(found(`export { ERROR_COPY } from "@shared/copy";`)).toHaveLength(1);
+    expect(found(`export { ERRORS } from "@shared/copy";`)).toHaveLength(1);
     expect(found(`const load = () => import("@shared/copy");`)).toHaveLength(1);
     expect(found(`import { currentCopy } from "@shared/copy";\nconst words = currentCopy().auth;`)).toHaveLength(1);
     expect(found(`import { useCopy as copyOf } from "@shared/copy";\nconst words = copyOf();`)).toHaveLength(1);
@@ -329,7 +402,7 @@ describe("user-facing content", () => {
     expect(found(`import { useCopy, type Catalogue } from "@shared/copy";\nexport const A = () => useCopy().auth;`)).toHaveLength(0);
     const root = `import { CATALOGUES, currentCopy } from "@shared/copy";\nexport function b() { return [CATALOGUES, currentCopy()]; }`;
     expect(catalogueReadsIn("app/bootstrap.ts", root)).toHaveLength(0);
-    expect(catalogueReadsIn("shared/copy/catalogue.ts", `import { AUTH_COPY } from "./auth";`)).toHaveLength(0);
+    expect(catalogueReadsIn("shared/copy/english/index.ts", `import { AUTH } from "./auth";`)).toHaveLength(0);
   });
 
   test("the mechanism's generic readers are reported outside the catalogue, and its other exports are not", () => {
@@ -346,7 +419,7 @@ describe("user-facing content", () => {
     const root = `import { setupLocalisation } from "@shared/localisation";`;
     expect(catalogueReadsIn("app/bootstrap.ts", root)).toHaveLength(0);
     const typed = `import { currentCatalogue, useCatalogue } from "@shared/localisation";`;
-    expect(catalogueReadsIn("shared/copy/catalogue.ts", typed)).toHaveLength(0);
+    expect(catalogueReadsIn("shared/copy/catalogues.ts", typed)).toHaveLength(0);
     const own = `export { currentCatalogue, setupLocalisation, useCatalogue } from "./catalogues";`;
     expect(catalogueReadsIn("shared/localisation/index.ts", own)).toHaveLength(0);
   });
@@ -393,15 +466,74 @@ describe("user-facing content", () => {
   test("a mechanism reaching the catalogue is reported by alias or by path, and a consumer is not", () => {
     const found = catalogueImportsIn;
 
-    expect(found("shared/errors/x.ts", `import { ERROR_COPY } from "@shared/copy";`)).toHaveLength(1);
-    expect(found("shared/errors/parsers/x.ts", `import type { C } from "../../copy/errors";`)).toHaveLength(1);
-    expect(found("shared/errors/x.ts", `export { ERROR_COPY } from "@shared/copy/errors";`)).toHaveLength(1);
+    expect(found("shared/errors/x.ts", `import { ERRORS } from "@shared/copy";`)).toHaveLength(1);
+    expect(found("shared/errors/parsers/x.ts", `import type { C } from "../../copy/english/errors";`)).toHaveLength(1);
+    expect(found("shared/errors/x.ts", `export { ERRORS } from "@shared/copy/english/errors";`)).toHaveLength(1);
     expect(found("shared/errors/x.ts", `const load = () => import("../copy");`)).toHaveLength(1);
     expect(found("shared/errors/x.ts", `type Copy = typeof import("@shared/copy");`)).toHaveLength(1);
 
-    expect(found("features/authentication/x.ts", `import { AUTH_COPY } from "@shared/copy";`)).toHaveLength(0);
-    expect(found("app/bootstrap.ts", `import { ERROR_COPY } from "@shared/copy";`)).toHaveLength(0);
-    expect(found("shared/copy/index.ts", `export { AUTH_COPY } from "./auth";`)).toHaveLength(0);
+    expect(found("features/authentication/x.ts", `import { AUTH } from "@shared/copy";`)).toHaveLength(0);
+    expect(found("app/bootstrap.ts", `import { ERRORS } from "@shared/copy";`)).toHaveLength(0);
+    expect(found("shared/copy/index.ts", `export { CATALOGUES } from "./catalogues";`)).toHaveLength(0);
     expect(found("shared/errors/x.ts", `import { copyText } from "@shared/copying";`)).toHaveLength(0);
+  });
+});
+
+describe("the catalogue's own imports", () => {
+  test("a language folder reaches its own words, the shape and the mechanism, and nothing else", () => {
+    const words = production.filter((l) => reachableFrom(l) !== null);
+    // A language the scan did not see is a language the rule did not reach, and the shape is
+    // recognised by its name, so a rename would take its half of the rule with it.
+    expect(LANGUAGE_FOLDERS.length).toBeGreaterThan(1);
+    for (const folder of LANGUAGE_FOLDERS)
+      expect(words.filter((l) => l.startsWith(`${folder}/`)).length).toBeGreaterThan(5);
+    expect(words).toContain(`${SHAPE}.ts`);
+
+    expect(words.flatMap((l) => catalogueCyclesIn(l, read(l))).sort()).toEqual([]);
+  });
+
+  test("the barrel offers the catalogue, and no language's constants", () => {
+    const surface = barrelSurfaceIn(read(BARREL));
+
+    expect(surface.extras).toEqual([]);
+    expect(surface.offers).toEqual([...OFFERED].sort());
+  });
+
+  test("a name, a module or a declaration the barrel may not offer is reported", () => {
+    const extras = (source: string) => barrelSurfaceIn(source).extras;
+
+    expect(extras(`export { AUTH } from "./english/auth";`)).toEqual(["AUTH", "from ./english/auth"]);
+    // An alias passes any check that reads names alone, so where it comes from is read as well.
+    expect(extras(`export { AUTH as useCopy } from "./english/auth";`)).toEqual(["from ./english/auth"]);
+    expect(extras(`export * from "./english";`)).toEqual(["everything a module holds"]);
+    expect(extras(`export const CATALOGUES = {};`)).toEqual(["a declaration of its own"]);
+
+    expect(extras(`export { CATALOGUES } from "./catalogues";`)).toEqual([]);
+    expect(barrelSurfaceIn(`export { CATALOGUES, useCopy } from "./catalogues";`).offers).toEqual([
+      "CATALOGUES",
+      "useCopy",
+    ]);
+  });
+
+  test("a reach past a language folder is reported, and the shape's one import is not", () => {
+    const arabic = "shared/copy/arabic/auth/verify.ts";
+    const english = "shared/copy/english/controls.ts";
+
+    expect(catalogueCyclesIn(arabic, `import type { C } from "../../catalogues";`)).toHaveLength(1);
+    expect(catalogueCyclesIn(arabic, `import { E } from "../../english";`)).toHaveLength(1);
+    expect(catalogueCyclesIn(arabic, `import { C } from "@shared/copy";`)).toHaveLength(1);
+    expect(catalogueCyclesIn(arabic, `type C = typeof import("../../index");`)).toHaveLength(1);
+    // Its own folder's barrel assembles it, so reaching that is the same cycle one level down.
+    expect(catalogueCyclesIn(arabic, `import { ARABIC } from "../index";`)).toHaveLength(1);
+    // English is where the shape comes from, so importing it is the cycle in the other direction.
+    expect(catalogueCyclesIn(english, `import type { C } from "../shape";`)).toHaveLength(1);
+
+    expect(catalogueCyclesIn(arabic, `import type { C } from "../../shape";`)).toHaveLength(0);
+    expect(catalogueCyclesIn(arabic, `import { ARABIC_FORMATS } from "../formats";`)).toHaveLength(0);
+    expect(catalogueCyclesIn(arabic, `import { formatsFor } from "@shared/localisation";`)).toHaveLength(0);
+    expect(catalogueCyclesIn(english, `import { ENGLISH_FORMATS } from "./formats";`)).toHaveLength(0);
+    expect(catalogueCyclesIn("shared/copy/shape.ts", `import type { ENGLISH } from "./english";`)).toHaveLength(0);
+    expect(catalogueCyclesIn("shared/copy/shape.ts", `import { ARABIC } from "./arabic";`)).toHaveLength(1);
+    expect(catalogueCyclesIn("shared/copy/catalogues.ts", `import { ARABIC } from "./arabic";`)).toHaveLength(0);
   });
 });

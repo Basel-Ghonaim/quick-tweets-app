@@ -1,5 +1,5 @@
 /** Where a route points while the surface it names is not built. */
-export const PLACEHOLDER_COPY = {
+export const PLACEHOLDER = {
   /* A whole title per surface: a name slotted into a sentence cannot keep its agreement. */
   notBuiltTitle: {
     feed: "Feed is not built yet",

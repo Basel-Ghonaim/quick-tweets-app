@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { CATALOGUES, type Catalogue } from "../catalogue";
-import { ARABIC } from "./index";
+import { CATALOGUES } from "./catalogues";
+import type { Catalogue } from "./shape";
+import { ARABIC } from "./arabic";
 
 const arabic = CATALOGUES.ar;
 const COUNTS = [0, 1, 2, 3, 11, 100];
@@ -19,7 +20,7 @@ const COUNTED: [string, (n: number) => string, keyof typeof FORMS][] = [
   ["the shortest a field may be", (n) => arabic.validation.minLength(n).message, "characters"],
   ["the longest a field may be", (n) => arabic.validation.maxLength(n).message, "characters"],
   ["verification's resend wait", arabic.auth.verify.resendIn, "seconds"],
-  ["recovery's resend wait", arabic.auth.recovery.resendIn, "seconds"],
+  ["recovery's resend wait", arabic.recovery.resendIn, "seconds"],
   ["the files chosen", arabic.controls.files.chosenCount, "files"],
 ];
 
@@ -42,7 +43,7 @@ describe("the Arabic catalogue", () => {
     const lines = [
       arabic.auth.verify.resendIn(1234),
       arabic.auth.profile.bioCount(12, 160),
-      arabic.auth.recovery.codeSubtitle("j***@example.com"),
+      arabic.recovery.codeSubtitle("j***@example.com"),
       arabic.controls.file.size(1536),
       arabic.controls.files.chosenCount(25),
     ];
@@ -53,7 +54,7 @@ describe("the Arabic catalogue", () => {
   });
 
   test("holds apart a value it did not write, and symbols a right-to-left line would reverse", () => {
-    expect(arabic.auth.recovery.codeSubtitle("j***@example.com")).toContain(
+    expect(arabic.recovery.codeSubtitle("j***@example.com")).toContain(
       "\u2066j***@example.com\u2069",
     );
     expect(arabic.controls.file.notAccepted("photo.png")).toContain("\u2068photo.png\u2069");

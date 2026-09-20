@@ -1,4 +1,4 @@
-import type { Catalogue } from "../catalogue";
+import type { Catalogue } from "../shape";
 import { ARABIC_FORMATS, characters } from "./formats";
 
 export const VALIDATION = {

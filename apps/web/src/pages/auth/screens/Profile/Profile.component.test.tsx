@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
-import { AUTH_COPY } from "@shared/copy";
+import { CATALOGUES } from "@shared/copy";
 import { sessionReducer } from "@shared/session";
 import { server } from "@testing/server";
 import {
@@ -14,6 +14,8 @@ import {
 import { JourneyLayout } from "../../layout";
 import { stepStates } from "../../services";
 import { Profile } from "./Profile";
+
+const ENGLISH = CATALOGUES.en;
 
 const noop = () => {};
 
@@ -42,7 +44,7 @@ describe("a server error is announced", () => {
     server.use(profileRefuses());
     mount();
 
-    fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.profile.submit }));
+    fireEvent.click(screen.getByRole("button", { name: ENGLISH.auth.profile.submit }));
 
     // Which words a refusal is given is `profileErrorHandler.test.ts`'s, which
     // asserts the catalogue entry directly. The handler is not published, and
@@ -60,10 +62,10 @@ describe("saving is reported in place", () => {
     server.use(profileNeverSaves());
     mount();
 
-    fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.profile.submit }));
+    fireEvent.click(screen.getByRole("button", { name: ENGLISH.auth.profile.submit }));
 
     expect(
-      await screen.findByRole("button", { name: AUTH_COPY.profile.submitting }),
+      await screen.findByRole("button", { name: ENGLISH.auth.profile.submitting }),
     ).toBeTruthy();
   });
 });
@@ -72,10 +74,10 @@ describe("skipping issues no request", () => {
   it("leaves the form at rest, with nothing announced", async () => {
     mount();
 
-    fireEvent.click(screen.getByRole("button", { name: AUTH_COPY.profile.skip }));
+    fireEvent.click(screen.getByRole("button", { name: ENGLISH.auth.profile.skip }));
 
     expect(screen.queryByRole("alert")).toBeNull();
-    const submit = screen.getByRole("button", { name: AUTH_COPY.profile.submit });
+    const submit = screen.getByRole("button", { name: ENGLISH.auth.profile.submit });
     expect((submit as HTMLButtonElement).disabled).toBe(false);
   });
 });
@@ -112,12 +114,12 @@ describe("the form is at rest", () => {
   it("offers every field and both actions, with one submit among them", () => {
     const { container } = mount();
 
-    expect(screen.getByRole("heading", { name: AUTH_COPY.profile.title })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: ENGLISH.auth.profile.title })).not.toBeNull();
     expect(screen.getByLabelText(/display name/i)).not.toBeNull();
     expect(screen.getByLabelText(/^bio$/i)).not.toBeNull();
-    expect(screen.getByLabelText(AUTH_COPY.profile.avatarLabel)).not.toBeNull();
-    expect(screen.getByRole("button", { name: AUTH_COPY.profile.submit })).not.toBeNull();
-    expect(screen.getByRole("button", { name: AUTH_COPY.profile.skip })).not.toBeNull();
+    expect(screen.getByLabelText(ENGLISH.auth.profile.avatarLabel)).not.toBeNull();
+    expect(screen.getByRole("button", { name: ENGLISH.auth.profile.submit })).not.toBeNull();
+    expect(screen.getByRole("button", { name: ENGLISH.auth.profile.skip })).not.toBeNull();
 
     /* Everything that is not the primary action carries no fill. */
     expect(container.querySelectorAll("button[type='submit']")).toHaveLength(1);
@@ -128,11 +130,11 @@ describe("the journey is at profile", () => {
   it("marks profile current and the step before it done", () => {
     mountInJourney();
 
-    const profile = screen.getByText(AUTH_COPY.journey.steps.profile).closest("li");
+    const profile = screen.getByText(ENGLISH.auth.journey.steps.profile).closest("li");
     expect(profile?.getAttribute("aria-current")).toBe("step");
 
-    const account = screen.getByText(AUTH_COPY.journey.steps.account).closest("li");
-    expect(account?.textContent).toContain(AUTH_COPY.journey.states.done);
+    const account = screen.getByText(ENGLISH.auth.journey.steps.account).closest("li");
+    expect(account?.textContent).toContain(ENGLISH.auth.journey.states.done);
   });
 });
 
@@ -140,12 +142,12 @@ describe("the bio count tracks what is typed", () => {
   it("moves with the field rather than waiting for a submit", async () => {
     mount();
 
-    expect(screen.getByText(AUTH_COPY.profile.bioCount(0, 160))).not.toBeNull();
+    expect(screen.getByText(ENGLISH.auth.profile.bioCount(0, 160))).not.toBeNull();
 
     fireEvent.change(screen.getByLabelText(/^bio$/i), { target: { value: "hello" } });
 
     await waitFor(() =>
-      expect(screen.getByText(AUTH_COPY.profile.bioCount(5, 160))).not.toBeNull(),
+      expect(screen.getByText(ENGLISH.auth.profile.bioCount(5, 160))).not.toBeNull(),
     );
   });
 });

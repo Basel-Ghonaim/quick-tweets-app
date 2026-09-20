@@ -27,8 +27,8 @@ export const recoveryFormSchemas = (copy: Catalogue) => {
     email: {
       name: "email",
       type: "email",
-      label: copy.auth.recovery.emailLabel,
-      placeholder: copy.auth.recovery.emailPlaceholder,
+      label: copy.recovery.emailLabel,
+      placeholder: copy.recovery.emailPlaceholder,
       span: "full",
       validators: [
         isRequired(copy.validation.required.email),
@@ -45,8 +45,8 @@ export const recoveryFormSchemas = (copy: Catalogue) => {
     code: {
       name: "code",
       type: "text",
-      label: copy.auth.recovery.codeLabel,
-      placeholder: copy.auth.recovery.codePlaceholder,
+      label: copy.recovery.codeLabel,
+      placeholder: copy.recovery.codePlaceholder,
       span: "full",
       validators: [isRequired(copy.validation.required.resetCode)],
     },
@@ -58,8 +58,8 @@ export const recoveryFormSchemas = (copy: Catalogue) => {
     newPassword: {
       name: "newPassword",
       type: "password",
-      label: copy.auth.recovery.newPasswordLabel,
-      placeholder: copy.auth.recovery.newPasswordPlaceholder,
+      label: copy.recovery.newPasswordLabel,
+      placeholder: copy.recovery.newPasswordPlaceholder,
       span: "full",
       validators: [
         isRequired(copy.validation.required.password),
@@ -77,8 +77,8 @@ export const recoveryFormSchemas = (copy: Catalogue) => {
     confirmPassword: {
       name: "confirmPassword",
       type: "password",
-      label: copy.auth.recovery.confirmPasswordLabel,
-      placeholder: copy.auth.recovery.confirmPasswordPlaceholder,
+      label: copy.recovery.confirmPasswordLabel,
+      placeholder: copy.recovery.confirmPasswordPlaceholder,
       span: "full",
       validators: [
         isRequired(copy.validation.required.confirmPassword),

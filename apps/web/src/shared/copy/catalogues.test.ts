@@ -2,11 +2,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
 import { describe, expect, test } from "vitest";
-import { CATALOGUES, type Catalogue } from "./catalogue";
+import { CATALOGUES } from "./catalogues";
+import type { Catalogue } from "./shape";
 
 const english = CATALOGUES.en;
 
-const MODULE = join(process.cwd(), "src/shared/copy/catalogue.ts");
+const MODULE = join(process.cwd(), "src/shared/copy/catalogues.ts");
 const REGISTERED = "export const CATALOGUES = registry({ en: ENGLISH, ar: ARABIC });";
 
 // The module is typechecked with one more language registered, built as a translation will be: from
@@ -18,7 +19,7 @@ const registering = (() => {
       throw new Error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
     },
   })!;
-  const copy = MODULE.replace("catalogue.ts", "catalogue.registering.ts").split("\\").join("/");
+  const copy = MODULE.replace("catalogues.ts", "catalogues.registering.ts").split("\\").join("/");
   const source = readFileSync(MODULE, "utf8");
   if (source.split(REGISTERED).length !== 2) throw new Error("the registry is not declared as expected");
   let previous: ts.Program | undefined;
@@ -48,7 +49,7 @@ describe("the catalogues", () => {
   });
 
   test("a line holds a value it did not write apart from itself", () => {
-    expect(english.auth.recovery.codeSubtitle("j***@example.com")).toContain(
+    expect(english.recovery.codeSubtitle("j***@example.com")).toContain(
       "\u2066j***@example.com\u2069",
     );
     for (const refusal of [
@@ -73,13 +74,13 @@ describe("the catalogues", () => {
   });
 
   test("a catalogue assembled from constants is registered only without lines English lacks", () => {
-    expect(registering("const AUTH = { ...AUTH_COPY };\nconst XX = { ...ENGLISH, auth: AUTH };")).toEqual([]);
+    expect(registering("const AUTH = { ...ENGLISH.auth };\nconst XX = { ...ENGLISH, auth: AUTH };")).toEqual([]);
 
     const atTheTop = registering(`const XX = { ...ENGLISH, footer: "Made with care" };`);
     const deepDown = registering(
       [
-        `const VERIFY = { ...AUTH_COPY.verify, footer: "Made with care" };`,
-        "const XX = { ...ENGLISH, auth: { ...AUTH_COPY, verify: VERIFY } };",
+        `const VERIFY = { ...ENGLISH.auth.verify, footer: "Made with care" };`,
+        "const XX = { ...ENGLISH, auth: { ...ENGLISH.auth, verify: VERIFY } };",
       ].join("\n"),
     );
 

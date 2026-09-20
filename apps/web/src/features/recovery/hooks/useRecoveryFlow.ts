@@ -54,8 +54,8 @@ export const useRecoveryFlow = (
   return {
     screen: screenFor(read, restarting),
     position,
-    notice: asked && !restarting ? copy.auth.recovery.lapsed : undefined,
-    confirmation: asked ? copy.auth.recovery.sent : undefined,
+    notice: asked && !restarting ? copy.recovery.lapsed : undefined,
+    confirmation: asked ? copy.recovery.sent : undefined,
     initialEmail: asked,
     ask,
     restart,

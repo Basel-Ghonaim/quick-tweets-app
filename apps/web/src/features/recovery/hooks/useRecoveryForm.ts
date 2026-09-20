@@ -31,7 +31,7 @@ export const useRecoveryForm = <TSchema extends Record<string, FormFieldConfig<F
 
   const onError = useCallback(
     (error: unknown) => {
-      setServerError(recoveryErrorHandler(errorNormalizer(error), copy.auth.recovery).toSerialized());
+      setServerError(recoveryErrorHandler(errorNormalizer(error), copy.recovery).toSerialized());
     },
     [copy],
   );

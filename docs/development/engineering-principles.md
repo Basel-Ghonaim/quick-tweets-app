@@ -102,7 +102,7 @@ Principle only — component-level details are owned by the [component-authoring
 | CSS modules | `ComponentName.module.css` | `FileInput.module.css` |
 | Interfaces | PascalCase (`I`-prefix for backend repositories) | `AuthRepository`, `IUserRepository` |
 | Types | PascalCase | `LoginCredentials` |
-| Constants | UPPER_SNAKE_CASE | `VALIDATION_MESSAGES` |
+| Constants | UPPER_SNAKE_CASE | `DEFAULT_THEME` |
 | Backend routes | kebab-case | `/auth/login` |
 | DB tables / columns | snake_case (mapped by the ORM) | `users`, `profile_image` |
 

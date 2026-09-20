@@ -4,7 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
-import { AUTH_COPY } from "@shared/copy";
+import { CATALOGUES } from "@shared/copy";
 import { normaliseCode } from "@shared/one-time-code";
 import { sessionReducer } from "@shared/session";
 import { server } from "@testing/server";
@@ -18,6 +18,8 @@ import { JourneyLayout } from "../../layout";
 import { stepStates } from "../../services";
 import { VerifyAsk } from "./VerifyAsk";
 import { VerifyCode } from "./VerifyCode";
+
+const ENGLISH = CATALOGUES.en;
 
 const noop = () => {};
 
@@ -42,9 +44,9 @@ describe("sending is reported in place", () => {
     server.use(verificationNeverIssues());
     mount(ASK);
 
-    fireEvent.click(await screen.findByRole("button", { name: AUTH_COPY.verify.send }));
+    fireEvent.click(await screen.findByRole("button", { name: ENGLISH.auth.verify.send }));
 
-    expect(await screen.findByRole("button", { name: AUTH_COPY.verify.sending })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: ENGLISH.auth.verify.sending })).toBeTruthy();
   });
 });
 
@@ -53,10 +55,10 @@ describe("the cooldown refusal says what it is", () => {
     server.use(verificationRefusesIssue("too_many_requests"));
     mount(ASK);
 
-    fireEvent.click(await screen.findByRole("button", { name: AUTH_COPY.verify.send }));
+    fireEvent.click(await screen.findByRole("button", { name: ENGLISH.auth.verify.send }));
 
     expect((await screen.findByRole("alert")).textContent).toContain(
-      AUTH_COPY.verify.cooldownRefused,
+      ENGLISH.auth.verify.cooldownRefused,
     );
   });
 });
@@ -66,11 +68,11 @@ describe("the client limiter says something else", () => {
     server.use(verificationRefusesIssue("rate_limit"));
     mount(ASK);
 
-    fireEvent.click(await screen.findByRole("button", { name: AUTH_COPY.verify.send }));
+    fireEvent.click(await screen.findByRole("button", { name: ENGLISH.auth.verify.send }));
 
     const alert = await screen.findByRole("alert");
-    expect(alert.textContent).toContain(AUTH_COPY.verify.rateLimited);
-    expect(alert.textContent).not.toContain(AUTH_COPY.verify.cooldownRefused);
+    expect(alert.textContent).toContain(ENGLISH.auth.verify.rateLimited);
+    expect(alert.textContent).not.toContain(ENGLISH.auth.verify.cooldownRefused);
   });
 });
 
@@ -80,7 +82,7 @@ describe("the code field forgives what is typed", () => {
     mount(CODE);
 
     const typed = "7qk3-mnp2 xvzo";
-    const field = await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
+    const field = await screen.findByLabelText(ENGLISH.auth.verify.codeLabel);
     fireEvent.change(field, { target: { value: typed } });
 
     // What the normaliser turns a code into is `normaliseCode.test.ts`'s; this
@@ -99,7 +101,7 @@ describe("the wait comes from the server", () => {
     // How long the window lasts is the cooldown reducer's; this asserts only
     // that an open one reaches the control as a refusal to act.
     const resend = await screen.findByRole("button", {
-      name: AUTH_COPY.verify.resendIn(seconds),
+      name: ENGLISH.auth.verify.resendIn(seconds),
     });
 
     expect((resend as HTMLButtonElement).disabled).toBe(true);
@@ -111,7 +113,7 @@ describe("arriving with no window offers resend at once", () => {
     server.use(standing(0));
     mount(CODE);
 
-    const resend = await screen.findByRole("button", { name: AUTH_COPY.verify.resend });
+    const resend = await screen.findByRole("button", { name: ENGLISH.auth.verify.resend });
 
     expect((resend as HTMLButtonElement).disabled).toBe(false);
   });
@@ -123,11 +125,11 @@ describe("a failed read still lets the code be typed", () => {
     mount(CODE);
 
     const typed = "7qk3";
-    const field = await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
+    const field = await screen.findByLabelText(ENGLISH.auth.verify.codeLabel);
     fireEvent.change(field, { target: { value: typed } });
 
     await waitFor(() => expect((field as HTMLInputElement).value).toBe(normaliseCode(typed)));
-    const resend = screen.getByRole("button", { name: AUTH_COPY.verify.resend });
+    const resend = screen.getByRole("button", { name: ENGLISH.auth.verify.resend });
     expect((resend as HTMLButtonElement).disabled).toBe(false);
   });
 });
@@ -136,9 +138,9 @@ describe("the ask comes first", () => {
   it("offers the send, and no field for a code nothing has sent", async () => {
     mount(ASK);
 
-    await screen.findByRole("heading", { name: AUTH_COPY.verify.askTitle });
-    expect(screen.getByRole("button", { name: AUTH_COPY.verify.send })).not.toBeNull();
-    expect(screen.queryByLabelText(AUTH_COPY.verify.codeLabel)).toBeNull();
+    await screen.findByRole("heading", { name: ENGLISH.auth.verify.askTitle });
+    expect(screen.getByRole("button", { name: ENGLISH.auth.verify.send })).not.toBeNull();
+    expect(screen.queryByLabelText(ENGLISH.auth.verify.codeLabel)).toBeNull();
   });
 });
 
@@ -147,8 +149,8 @@ describe("the code screen is what the phase chooses", () => {
     server.use(standing(0));
     mount(CODE);
 
-    await screen.findByRole("heading", { name: AUTH_COPY.verify.codeTitle });
-    expect(screen.getByLabelText(AUTH_COPY.verify.codeLabel)).not.toBeNull();
+    await screen.findByRole("heading", { name: ENGLISH.auth.verify.codeTitle });
+    expect(screen.getByLabelText(ENGLISH.auth.verify.codeLabel)).not.toBeNull();
   });
 });
 
@@ -157,8 +159,8 @@ describe("the code screen offers no way back", () => {
     server.use(standing(0));
     mount(CODE);
 
-    await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
-    expect(screen.queryByRole("link", { name: AUTH_COPY.verify.backToProfile })).toBeNull();
+    await screen.findByLabelText(ENGLISH.auth.verify.codeLabel);
+    expect(screen.queryByRole("link", { name: ENGLISH.auth.verify.backToProfile })).toBeNull();
   });
 });
 
@@ -167,8 +169,8 @@ describe("both screens are the same step", () => {
     server.use(standing(0));
     mount(<JourneyLayout states={stepStates("verify", null)}>{CODE}</JourneyLayout>);
 
-    await screen.findByLabelText(AUTH_COPY.verify.codeLabel);
-    const verify = screen.getByText(AUTH_COPY.journey.steps.verify).closest("li");
+    await screen.findByLabelText(ENGLISH.auth.verify.codeLabel);
+    const verify = screen.getByText(ENGLISH.auth.journey.steps.verify).closest("li");
     expect(verify?.getAttribute("aria-current")).toBe("step");
   });
 });
