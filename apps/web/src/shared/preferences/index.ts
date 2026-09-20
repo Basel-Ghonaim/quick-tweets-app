@@ -7,7 +7,6 @@ export {
   setLanguage,
   setupLanguages,
   subscribeToLanguage,
-  useDocumentLanguage,
   useLanguage,
 } from "./language";
 export type { LanguagePreference } from "./language";

@@ -1,6 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test } from "vitest";
-import { useDocumentLanguage } from "@shared/preferences";
+import { LanguageProvider } from "@shared/preferences";
 import { currentCatalogue, setupLocalisation, useCatalogue } from "./catalogues";
 
 interface Words {
@@ -12,10 +12,15 @@ const CATALOGUES: Record<string, Words> = {
   xx: { greeting: "Stand-in greeting" },
 };
 
-const Greeting = () => {
-  useDocumentLanguage();
-  return <p>{useCatalogue<Words>().greeting}</p>;
-};
+const Greeting = () => <p>{useCatalogue<Words>().greeting}</p>;
+
+// The provider is what hears the browser change its languages, as the application mounts it.
+const showGreeting = () =>
+  render(
+    <LanguageProvider>
+      <Greeting />
+    </LanguageProvider>,
+  );
 
 const browserPrefers = (...languages: string[]) =>
   Object.defineProperty(window.navigator, "languages", { value: languages, configurable: true });
@@ -29,7 +34,7 @@ describe("the active catalogue", () => {
     browserPrefers("xx");
     setupLocalisation(CATALOGUES);
 
-    render(<Greeting />);
+    showGreeting();
 
     expect(screen.getByText("Stand-in greeting")).toBeTruthy();
     expect(currentCatalogue<Words>().greeting).toBe("Stand-in greeting");
@@ -38,7 +43,7 @@ describe("the active catalogue", () => {
   test("is read again, and rendered again, when the language changes", () => {
     browserPrefers("en");
     setupLocalisation(CATALOGUES);
-    render(<Greeting />);
+    showGreeting();
     expect(screen.getByText("Hello")).toBeTruthy();
 
     act(() => {
