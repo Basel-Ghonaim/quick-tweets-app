@@ -3,11 +3,13 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { describe, expect, it } from "vitest";
-import { AUTH_COPY } from "@shared/copy";
+import { CATALOGUES } from "@shared/copy";
 import { sessionActions, sessionReducer } from "@shared/session";
 import { server } from "@testing/server";
 import { journeyAdvancesTo, journeyIs, journeyRefuses } from "@testing/handlers/journey";
 import { Onboarding } from "./Onboarding";
+
+const ENGLISH = CATALOGUES.en;
 
 /* The feed route exists so an ejection would be visible: asserting that the
    reader stayed means nothing if there is nowhere for them to have gone. */
@@ -33,9 +35,9 @@ describe("a failed read offers a retry", () => {
     mount();
 
     expect((await screen.findByRole("alert")).textContent).toContain(
-      AUTH_COPY.onboarding.unavailable,
+      ENGLISH.auth.onboarding.unavailable,
     );
-    expect(screen.getByRole("button", { name: AUTH_COPY.onboarding.retry })).toBeTruthy();
+    expect(screen.getByRole("button", { name: ENGLISH.auth.onboarding.retry })).toBeTruthy();
     expect(screen.queryByText("the feed")).toBeNull();
   });
 });
@@ -45,7 +47,7 @@ describe("the phase chooses the screen", () => {
     server.use(journeyIs("profile"));
     mount();
 
-    expect(await screen.findByRole("heading", { name: AUTH_COPY.profile.title })).not.toBeNull();
+    expect(await screen.findByRole("heading", { name: ENGLISH.auth.profile.title })).not.toBeNull();
   });
 });
 
@@ -58,9 +60,9 @@ describe("a skipped profile reads as skipped", () => {
 
     // The verify screen arriving is what says the read resolved; reading the
     // stepper before it would read the position the journey starts from.
-    await screen.findByRole("heading", { name: AUTH_COPY.verify.askTitle });
+    await screen.findByRole("heading", { name: ENGLISH.auth.verify.askTitle });
 
-    const profile = screen.getByText(AUTH_COPY.journey.steps.profile).closest("li");
-    expect(profile?.textContent).toContain(AUTH_COPY.journey.states.skipped);
+    const profile = screen.getByText(ENGLISH.auth.journey.steps.profile).closest("li");
+    expect(profile?.textContent).toContain(ENGLISH.auth.journey.states.skipped);
   });
 });

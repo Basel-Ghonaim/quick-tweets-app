@@ -1,9 +1,11 @@
 import { AxiosError } from "axios";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CATALOGUES, currentCopy, ERROR_COPY } from "@shared/copy";
+import { CATALOGUES, currentCopy } from "@shared/copy";
 import { errorNormalizer } from "@shared/errors";
 import { setupLocalisation } from "@shared/localisation";
 import { bootstrap } from "./bootstrap";
+
+const ENGLISH = CATALOGUES.en;
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -19,7 +21,7 @@ describe("the composition root", () => {
   it("hands the error pipeline the catalogue's words, so an unmapped failure reads in them", () => {
     bootstrap();
 
-    expect(errorNormalizer(new AxiosError("offline", "ERR_NETWORK")).message).toBe(ERROR_COPY.network);
+    expect(errorNormalizer(new AxiosError("offline", "ERR_NETWORK")).message).toBe(ENGLISH.errors.network);
   });
 
   it("hands them over to be read per failure, so a failure reads in the language active when it happens", () => {

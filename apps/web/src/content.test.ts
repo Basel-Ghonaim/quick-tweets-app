@@ -310,6 +310,45 @@ const reachableFrom = (l: string): ((target: string) => boolean) | null => {
     (target === SHAPE && folder !== SOURCE_LANGUAGE);
 };
 
+// A language's constants are one language's words. Offering one through the barrel is how a consumer
+// comes to hold them for the life of the page, which is what the accessors exist to prevent.
+const BARREL = "shared/copy/index.ts";
+const OFFERED = ["CATALOGUES", "Catalogue", "currentCopy", "useCopy"];
+const OFFERED_FROM = ["./catalogues", "./shape"];
+
+// What the barrel offers, and everything about it that is not offering those four: a name it does not
+// name, a module it does not come from — an alias hides that — and anything it declares itself.
+const barrelSurfaceIn = (text: string): { offers: string[]; extras: string[] } => {
+  const offers: string[] = [];
+  const extras: string[] = [];
+
+  for (const statement of parse(BARREL, text).statements) {
+    if (!ts.isExportDeclaration(statement)) {
+      const modifiers = ts.canHaveModifiers(statement) ? (ts.getModifiers(statement) ?? []) : [];
+      if (modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword))
+        extras.push("a declaration of its own");
+      continue;
+    }
+
+    const from =
+      statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier)
+        ? statement.moduleSpecifier.text
+        : null;
+    if (!statement.exportClause || !ts.isNamedExports(statement.exportClause)) {
+      extras.push("everything a module holds");
+      continue;
+    }
+    if (from === null || !OFFERED_FROM.includes(from)) extras.push(`from ${from ?? "itself"}`);
+
+    for (const element of statement.exportClause.elements) {
+      offers.push(element.name.text);
+      if (!OFFERED.includes(element.name.text)) extras.push(element.name.text);
+    }
+  }
+
+  return { offers: offers.sort(), extras: extras.sort() };
+};
+
 const catalogueCyclesIn = (l: string, text: string): string[] => {
   const reachable = reachableFrom(l);
   if (!reachable) return [];
@@ -451,6 +490,29 @@ describe("the catalogue's own imports", () => {
     expect(words).toContain(`${SHAPE}.ts`);
 
     expect(words.flatMap((l) => catalogueCyclesIn(l, read(l))).sort()).toEqual([]);
+  });
+
+  test("the barrel offers the catalogue, and no language's constants", () => {
+    const surface = barrelSurfaceIn(read(BARREL));
+
+    expect(surface.extras).toEqual([]);
+    expect(surface.offers).toEqual([...OFFERED].sort());
+  });
+
+  test("a name, a module or a declaration the barrel may not offer is reported", () => {
+    const extras = (source: string) => barrelSurfaceIn(source).extras;
+
+    expect(extras(`export { AUTH } from "./english/auth";`)).toEqual(["AUTH", "from ./english/auth"]);
+    // An alias passes any check that reads names alone, so where it comes from is read as well.
+    expect(extras(`export { AUTH as useCopy } from "./english/auth";`)).toEqual(["from ./english/auth"]);
+    expect(extras(`export * from "./english";`)).toEqual(["everything a module holds"]);
+    expect(extras(`export const CATALOGUES = {};`)).toEqual(["a declaration of its own"]);
+
+    expect(extras(`export { CATALOGUES } from "./catalogues";`)).toEqual([]);
+    expect(barrelSurfaceIn(`export { CATALOGUES, useCopy } from "./catalogues";`).offers).toEqual([
+      "CATALOGUES",
+      "useCopy",
+    ]);
   });
 
   test("a reach past a language folder is reported, and the shape's one import is not", () => {

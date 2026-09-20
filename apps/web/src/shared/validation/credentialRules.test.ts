@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { matchesPattern } from "@shared/schema-form";
 import { emailRules, newPasswordPolicy, usernameRules } from "./credentialRules";
-import { VALIDATION_MESSAGES } from "@shared/copy";
+import { CATALOGUES } from "@shared/copy";
+
+const ENGLISH = CATALOGUES.en;
 
 // The API's auth.validator.test.ts carries these same tables, and its outcomes
 // are the ones both tiers answer to: the server decides, this tier mirrors it.
@@ -49,18 +51,18 @@ const titled = (cases: ReadonlyArray<readonly [string, string, boolean]>) =>
   cases.map(([label, value, accepted]) => [`${label} is ${accepted ? "accepted" : "refused"}`, value, accepted] as const);
 
 describe("new password character rule — printable ASCII only", () => {
-  const validate = matchesPattern(newPasswordPolicy.characters, VALIDATION_MESSAGES.passwordCharacters);
+  const validate = matchesPattern(newPasswordPolicy.characters, ENGLISH.validation.passwordCharacters);
 
   it.each(titled(PASSWORD_CASES))("%s", (_title, password, accepted) => {
-    expect(validate(password, {})).toBe(accepted ? null : VALIDATION_MESSAGES.passwordCharacters);
+    expect(validate(password, {})).toBe(accepted ? null : ENGLISH.validation.passwordCharacters);
   });
 });
 
 describe("email rule — the address the server accepts", () => {
-  const validate = matchesPattern(emailRules.format, VALIDATION_MESSAGES.emailFormat);
+  const validate = matchesPattern(emailRules.format, ENGLISH.validation.emailFormat);
 
   it.each(titled(EMAIL_CASES))("%s", (_title, email, accepted) => {
-    expect(validate(email, {})).toBe(accepted ? null : VALIDATION_MESSAGES.emailFormat);
+    expect(validate(email, {})).toBe(accepted ? null : ENGLISH.validation.emailFormat);
   });
 });
 
@@ -68,7 +70,7 @@ describe("email rule — the address the server accepts", () => {
 // matchesPattern(usernameRules.charset, message) — so this proves the field's
 // behaviour rather than a bare regex constant.
 describe("username charset rule — lowercase-only", () => {
-  const validate = matchesPattern(usernameRules.charset, VALIDATION_MESSAGES.usernameCharset);
+  const validate = matchesPattern(usernameRules.charset, ENGLISH.validation.usernameCharset);
 
   it("accepts lowercase letters, digits, and underscores", () => {
     for (const u of ["basel_a", "user_123", "abcd", "a_b_c_9"]) {
@@ -78,11 +80,11 @@ describe("username charset rule — lowercase-only", () => {
 
   it("rejects any uppercase letter (no silent normalization)", () => {
     for (const u of ["Basel_A", "USER", "aBc1", "basel_A"]) {
-      expect(validate(u, {})).toBe(VALIDATION_MESSAGES.usernameCharset);
+      expect(validate(u, {})).toBe(ENGLISH.validation.usernameCharset);
     }
   });
 
   it("the charset message names the lowercase constraint", () => {
-    expect(VALIDATION_MESSAGES.usernameCharset.toLowerCase()).toContain("lowercase");
+    expect(ENGLISH.validation.usernameCharset.toLowerCase()).toContain("lowercase");
   });
 });
