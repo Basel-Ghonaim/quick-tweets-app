@@ -1,4 +1,4 @@
-import { ENGLISH_FORMATS } from "./englishFormats";
+import { ENGLISH_FORMATS } from "./formats";
 
 export const VALIDATION_MESSAGES = {
   /* One whole line per field rather than a name slotted into a sentence: word

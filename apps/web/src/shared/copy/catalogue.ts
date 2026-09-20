@@ -1,18 +1,6 @@
 import { currentCatalogue, useCatalogue } from "@shared/localisation";
-import { AUTH_COPY } from "./auth";
-import { CONTROL_COPY } from "./controls";
-import { ERROR_COPY } from "./errors";
-import { PLACEHOLDER_COPY } from "./placeholder";
-import { VALIDATION_MESSAGES } from "./validation";
+import { ENGLISH } from "./english";
 import { ARABIC } from "./arabic";
-
-const ENGLISH = {
-  auth: AUTH_COPY,
-  controls: CONTROL_COPY,
-  errors: ERROR_COPY,
-  placeholder: PLACEHOLDER_COPY,
-  validation: VALIDATION_MESSAGES,
-} as const;
 
 // English's shape with its words widened: every language fills the same keys, and a line that takes
 // values is handed the same ones. A translation may leave one unused; it cannot ask for another.

@@ -1,4 +1,4 @@
-import { ENGLISH_FORMATS } from "./englishFormats";
+import { ENGLISH_FORMATS } from "./formats";
 
 /**
  * Four rules keep these translatable, and none of them is visible from a value:

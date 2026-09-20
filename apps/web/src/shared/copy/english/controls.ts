@@ -1,4 +1,4 @@
-import { ENGLISH_FORMATS } from "./englishFormats";
+import { ENGLISH_FORMATS } from "./formats";
 
 const size = (bytes: number) =>
   ENGLISH_FORMATS.fileSize(bytes, {

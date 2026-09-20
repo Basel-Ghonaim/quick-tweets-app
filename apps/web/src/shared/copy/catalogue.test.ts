@@ -73,13 +73,13 @@ describe("the catalogues", () => {
   });
 
   test("a catalogue assembled from constants is registered only without lines English lacks", () => {
-    expect(registering("const AUTH = { ...AUTH_COPY };\nconst XX = { ...ENGLISH, auth: AUTH };")).toEqual([]);
+    expect(registering("const AUTH = { ...ENGLISH.auth };\nconst XX = { ...ENGLISH, auth: AUTH };")).toEqual([]);
 
     const atTheTop = registering(`const XX = { ...ENGLISH, footer: "Made with care" };`);
     const deepDown = registering(
       [
-        `const VERIFY = { ...AUTH_COPY.verify, footer: "Made with care" };`,
-        "const XX = { ...ENGLISH, auth: { ...AUTH_COPY, verify: VERIFY } };",
+        `const VERIFY = { ...ENGLISH.auth.verify, footer: "Made with care" };`,
+        "const XX = { ...ENGLISH, auth: { ...ENGLISH.auth, verify: VERIFY } };",
       ].join("\n"),
     );
 

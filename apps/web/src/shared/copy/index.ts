@@ -1,7 +1,7 @@
-export { AUTH_COPY } from "./auth";
 export { CATALOGUES, currentCopy, useCopy } from "./catalogue";
 export type { Catalogue } from "./catalogue";
-export { CONTROL_COPY } from "./controls";
-export { ERROR_COPY } from "./errors";
-export { PLACEHOLDER_COPY } from "./placeholder";
-export { VALIDATION_MESSAGES } from "./validation";
+export { AUTH_COPY } from "./english/auth";
+export { CONTROL_COPY } from "./english/controls";
+export { ERROR_COPY } from "./english/errors";
+export { PLACEHOLDER_COPY } from "./english/placeholder";
+export { VALIDATION_MESSAGES } from "./english/validation";
