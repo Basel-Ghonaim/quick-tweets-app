@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { authenticationReducer } from "@features/authentication";
 import { CATALOGUES, type Catalogue } from "@shared/copy";
 import { setupLocalisation } from "@shared/localisation";
-import { ThemeProvider, useDocumentLanguage } from "@shared/preferences";
+import { LanguageProvider, ThemeProvider } from "@shared/preferences";
 import { sessionActions, sessionReducer } from "@shared/session";
 import { server } from "@testing/server";
 import { journeyRefuses } from "@testing/handlers/journey";
@@ -66,23 +66,17 @@ const englishIn = (root: HTMLElement) => ENGLISH.filter((line) => renderedWords(
 const browserPrefers = (...languages: string[]) =>
   Object.defineProperty(window.navigator, "languages", { value: languages, configurable: true });
 
-const DocumentLanguage = () => {
-  useDocumentLanguage();
-  return null;
-};
-
 const mount = (element: ReactElement, path = "/auth/onboarding", signedIn = false) => {
   const store = configureStore({ reducer: { session: sessionReducer, authentication: authenticationReducer } });
   store.dispatch(signedIn ? sessionActions.sessionSettled() : sessionActions.sessionEnded());
 
   return render(
     <Provider store={store}>
-      <ThemeProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <DocumentLanguage />
-          {element}
-        </MemoryRouter>
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={[path]}>{element}</MemoryRouter>
+        </ThemeProvider>
+      </LanguageProvider>
     </Provider>,
   );
 };

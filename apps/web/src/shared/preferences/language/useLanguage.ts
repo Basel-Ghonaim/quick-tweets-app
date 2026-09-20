@@ -1,8 +1,9 @@
-import { useSyncExternalStore } from "react";
-import { currentLanguage, registeredLanguages, subscribeToLanguage } from "./languageStore";
+import { useContext } from "react";
+import { LanguageContext, type LanguagePreference } from "./languageContext";
 
-/** The active language and the ones a reader can choose; renders again when the language changes. */
-export const useLanguage = (): { language: string; languages: readonly string[] } => ({
-  language: useSyncExternalStore(subscribeToLanguage, currentLanguage),
-  languages: registeredLanguages(),
-});
+export const useLanguage = (): LanguagePreference => {
+  const preference = useContext(LanguageContext);
+  if (!preference)
+    throw new Error("useLanguage must be used within a LanguageProvider.");
+  return preference;
+};

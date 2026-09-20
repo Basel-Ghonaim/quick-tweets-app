@@ -1,33 +1,15 @@
 import { THEMES, type ThemeName } from "@shared/design-system";
+import { storedChoice } from "../storage";
 
-/**
- * A bare string, not a serialised value: the reader that matters most cannot
- * import this module, because applying the theme before the first paint means
- * running before the bundle exists (Finding 0018). It has to understand the
- * stored value in one line, and a format the two read differently is the flash
- * returning by another route.
- *
- * Access is guarded because storage throws outright in some privacy modes.
- */
-export const THEME_STORAGE_KEY = "quick-tweets:theme";
+const stored = storedChoice("theme");
 
 const isThemeName = (value: unknown): value is ThemeName =>
   typeof value === "string" && THEMES.includes(value as ThemeName);
 
-/** The stored choice, or `null` when none was made or storage is unreadable. */
+/** The stored choice, or `null` when none was made, it cannot be read, or nothing resolves it. */
 export const readStoredTheme = (): ThemeName | null => {
-  try {
-    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return isThemeName(stored) ? stored : null;
-  } catch {
-    return null;
-  }
+  const value = stored.read();
+  return isThemeName(value) ? value : null;
 };
 
-export const storeTheme = (theme: ThemeName): void => {
-  try {
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {
-    // A choice that cannot be remembered still holds for this visit.
-  }
-};
+export const storeTheme = (theme: ThemeName): void => stored.write(theme);

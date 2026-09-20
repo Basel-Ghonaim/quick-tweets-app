@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Provider } from "react-redux";
-import { ThemeProvider } from "@shared/preferences";
+import { LanguageProvider, ThemeProvider } from "@shared/preferences";
 import { configureStore } from "@reduxjs/toolkit";
 import { sessionReducer } from "@shared/session";
 import { AuthLayout } from "./AuthLayout";
@@ -49,17 +49,19 @@ const store = configureStore({ reducer: { session: sessionReducer } });
 
 const at = (entry: string) => (Story: () => React.ReactElement) => (
   <Provider store={store}>
-    <ThemeProvider>
-      <MemoryRouter initialEntries={[entry]}>
-        <Routes>
-          <Route path="/auth" element={<AuthLayout />}>
-            <Route path="signin" element={<Body />} />
-            <Route path="signup" element={<Body />} />
-          </Route>
-          <Route path="*" element={<Story />} />
-        </Routes>
-      </MemoryRouter>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <MemoryRouter initialEntries={[entry]}>
+          <Routes>
+            <Route path="/auth" element={<AuthLayout />}>
+              <Route path="signin" element={<Body />} />
+              <Route path="signup" element={<Body />} />
+            </Route>
+            <Route path="*" element={<Story />} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
+    </LanguageProvider>
   </Provider>
 );
 export const TheShellHoldsStill: Story = {

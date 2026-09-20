@@ -1,12 +1,9 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { currentLanguage, setupLanguages } from "./languageStore";
-import { useDocumentLanguage } from "./useDocumentLanguage";
+import { LanguageProvider } from "./LanguageProvider";
 
-const DocumentLanguage = () => {
-  useDocumentLanguage();
-  return null;
-};
+const inAProvider = () => render(<LanguageProvider>{null}</LanguageProvider>);
 
 const browserPrefers = (...languages: string[]) =>
   Object.defineProperty(window.navigator, "languages", { value: languages, configurable: true });
@@ -33,7 +30,7 @@ describe("the document's language", () => {
     browserPrefers("ar-EG", "en");
     setupLanguages(["en", "ar"]);
 
-    render(<DocumentLanguage />);
+    inAProvider();
 
     expect(documentReads()).toEqual({ lang: "ar", dir: "rtl" });
   });
@@ -41,7 +38,7 @@ describe("the document's language", () => {
   test("follows the browser while the reader has chosen nothing", () => {
     browserPrefers("en-US");
     setupLanguages(["en", "ar"]);
-    render(<DocumentLanguage />);
+    inAProvider();
     expect(documentReads()).toEqual({ lang: "en", dir: "ltr" });
 
     browserChanges("ar");
@@ -53,7 +50,7 @@ describe("the document's language", () => {
     vi.stubGlobal("localStorage", { getItem: (key: string) => (key === "quick-tweets:language" ? "en" : null) });
     browserPrefers("en");
     setupLanguages(["en", "ar"]);
-    render(<DocumentLanguage />);
+    inAProvider();
 
     browserChanges("ar");
 
@@ -63,7 +60,7 @@ describe("the document's language", () => {
   test("stops listening to the browser once it is gone", () => {
     browserPrefers("en");
     setupLanguages(["en", "ar"]);
-    const { unmount } = render(<DocumentLanguage />);
+    const { unmount } = inAProvider();
     unmount();
 
     browserChanges("ar");

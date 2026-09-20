@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CATALOGUES, useCopy } from "@shared/copy";
 import { formatsFor, setupLocalisation } from "@shared/localisation";
+import { LanguageProvider } from "@shared/preferences";
 import { LanguageToggle } from "./LanguageToggle";
 
 const Tagline = () => <p>{useCopy().auth.brand.tagline}</p>;
@@ -25,10 +26,10 @@ afterEach(() => {
 describe("the language control", () => {
   it("switches to the language it names, keeps the choice, and offers the other back", () => {
     render(
-      <>
+      <LanguageProvider>
         <LanguageToggle />
         <Tagline />
-      </>,
+      </LanguageProvider>,
     );
     expect(screen.getByText(CATALOGUES.en.auth.brand.tagline)).toBeTruthy();
 

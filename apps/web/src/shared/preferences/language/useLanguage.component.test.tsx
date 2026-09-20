@@ -1,5 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { LanguageProvider } from "./LanguageProvider";
 import { setLanguage, setupLanguages } from "./languageStore";
 import { useLanguage } from "./useLanguage";
 
@@ -25,7 +26,11 @@ afterEach(() => {
 describe("the active language, as a component reads it", () => {
   test("names the choices, and renders again when the reader chooses another", () => {
     setupLanguages(["en", "ar"]);
-    render(<Reader />);
+    render(
+      <LanguageProvider>
+        <Reader />
+      </LanguageProvider>,
+    );
     expect(screen.getByText("en of en,ar")).toBeTruthy();
 
     act(() => setLanguage("ar"));
