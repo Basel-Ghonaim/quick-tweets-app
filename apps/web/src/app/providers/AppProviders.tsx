@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Provider as ReduxProvider } from "react-redux";
-import { ThemeProvider, useDocumentLanguage } from "@shared/preferences";
+import { LanguageProvider, ThemeProvider, useDocumentLanguage } from "@shared/preferences";
 import { reduxStore } from "../store";
 
 /**
@@ -14,8 +14,10 @@ export const AppProviders = ({ children }: { children: ReactNode }) => {
   useDocumentLanguage();
 
   return (
-    <ReduxProvider store={reduxStore}>
-      <ThemeProvider>{children}</ThemeProvider>
-    </ReduxProvider>
+    <LanguageProvider>
+      <ReduxProvider store={reduxStore}>
+        <ThemeProvider>{children}</ThemeProvider>
+      </ReduxProvider>
+    </LanguageProvider>
   );
 };

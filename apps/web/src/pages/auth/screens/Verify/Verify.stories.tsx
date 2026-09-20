@@ -3,7 +3,7 @@ import { expect, userEvent, within } from "storybook/test";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import { ThemeProvider } from "@shared/preferences";
+import { LanguageProvider, ThemeProvider } from "@shared/preferences";
 import {
   verificationIs,
   verificationNeverConfirms,
@@ -46,22 +46,24 @@ const showing = (screen: React.ReactElement) => {
 
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>
-      <ThemeProvider>
-        <MemoryRouter initialEntries={["/auth/onboarding"]}>
-          <Routes>
-            <Route path="/auth" element={<AuthLayout />}>
-              <Route
-                path="onboarding"
-                element={
-                  <JourneyLayout states={stepStates("verify", "saved")}>{screen}</JourneyLayout>
-                }
-              />
-            </Route>
-            <Route path="/feed" element={<p>the feed</p>} />
-            <Route path="*" element={<Story />} />
-          </Routes>
-        </MemoryRouter>
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={["/auth/onboarding"]}>
+            <Routes>
+              <Route path="/auth" element={<AuthLayout />}>
+                <Route
+                  path="onboarding"
+                  element={
+                    <JourneyLayout states={stepStates("verify", "saved")}>{screen}</JourneyLayout>
+                  }
+                />
+              </Route>
+              <Route path="/feed" element={<p>the feed</p>} />
+              <Route path="*" element={<Story />} />
+            </Routes>
+          </MemoryRouter>
+        </ThemeProvider>
+      </LanguageProvider>
     </Provider>
   );
 };

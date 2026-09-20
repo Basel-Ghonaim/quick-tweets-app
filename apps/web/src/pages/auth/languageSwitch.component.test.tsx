@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { authenticationReducer } from "@features/authentication";
 import { CATALOGUES, type Catalogue } from "@shared/copy";
 import { setupLocalisation } from "@shared/localisation";
-import { ThemeProvider, useDocumentLanguage } from "@shared/preferences";
+import { LanguageProvider, ThemeProvider, useDocumentLanguage } from "@shared/preferences";
 import { sessionActions, sessionReducer } from "@shared/session";
 import { server } from "@testing/server";
 import { journeyRefuses } from "@testing/handlers/journey";
@@ -77,12 +77,14 @@ const mount = (element: ReactElement, path = "/auth/onboarding", signedIn = fals
 
   return render(
     <Provider store={store}>
-      <ThemeProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <DocumentLanguage />
-          {element}
-        </MemoryRouter>
-      </ThemeProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <DocumentLanguage />
+            {element}
+          </MemoryRouter>
+        </ThemeProvider>
+      </LanguageProvider>
     </Provider>,
   );
 };

@@ -3,7 +3,7 @@ import { expect, within } from "storybook/test";
 import { MemoryRouter, Outlet, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
-import { ThemeProvider } from "@shared/preferences";
+import { LanguageProvider, ThemeProvider } from "@shared/preferences";
 import { SignUp } from "./SignUp";
 import { AuthLayout } from "@pages/auth/layout";
 import { JourneyLayout } from "@pages/auth/layout/JourneyLayout";
@@ -38,20 +38,22 @@ const withState = (seed?: (dispatch: ReturnType<typeof configureStore>["dispatch
 
   return (Story: () => React.ReactElement) => (
     <Provider store={store}>
-      <ThemeProvider>
-        <MemoryRouter initialEntries={["/auth/signup"]}>
-          <Routes>
-            <Route path="/auth" element={<AuthLayout />}>
-              <Route
-                element={<JourneyLayout states={stepStates("account", null)}><Outlet /></JourneyLayout>}
-              >
-                <Route path="signup" element={<SignUp />} />
+      <LanguageProvider>
+        <ThemeProvider>
+          <MemoryRouter initialEntries={["/auth/signup"]}>
+            <Routes>
+              <Route path="/auth" element={<AuthLayout />}>
+                <Route
+                  element={<JourneyLayout states={stepStates("account", null)}><Outlet /></JourneyLayout>}
+                >
+                  <Route path="signup" element={<SignUp />} />
+                </Route>
               </Route>
-            </Route>
-            <Route path="*" element={<Story />} />
-          </Routes>
-        </MemoryRouter>
-      </ThemeProvider>
+              <Route path="*" element={<Story />} />
+            </Routes>
+          </MemoryRouter>
+        </ThemeProvider>
+      </LanguageProvider>
     </Provider>
   );
 };
