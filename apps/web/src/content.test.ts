@@ -288,6 +288,40 @@ const catalogueReadsIn = (l: string, text: string): string[] => {
   return found;
 };
 
+// The shape is English's own, so the source language may not import it and the shape may reach
+// nothing else: a language folder reaching further is the cycle those two modules exist to prevent.
+// The folders are read from the catalogue rather than listed, so the next language is reached too.
+const SOURCE_LANGUAGE = "shared/copy/english";
+const SHAPE = "shared/copy/shape";
+const LANGUAGE_FOLDERS = readdirSync(join(SRC, CATALOGUE), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => `${CATALOGUE}/${entry.name}`);
+
+const reachableFrom = (l: string): ((target: string) => boolean) | null => {
+  if (l === `${SHAPE}.ts`) return (target) => target === SOURCE_LANGUAGE;
+
+  const folder = LANGUAGE_FOLDERS.find((candidate) => l.startsWith(`${candidate}/`));
+  if (!folder) return null;
+
+  // Its own folder's barrel is what assembles it, so reaching that is the same cycle one level down.
+  return (target) =>
+    (target.startsWith(`${folder}/`) && target !== `${folder}/index`) ||
+    target === LOCALISATION ||
+    (target === SHAPE && folder !== SOURCE_LANGUAGE);
+};
+
+const catalogueCyclesIn = (l: string, text: string): string[] => {
+  const reachable = reachableFrom(l);
+  if (!reachable) return [];
+
+  return specifiersIn(parse(l, text))
+    .filter((spec) => {
+      const target = targetOf(spec, l);
+      return target !== null && !reachable(target);
+    })
+    .map((spec) => `${l} — ${spec}`);
+};
+
 describe("user-facing content", () => {
   test("no production file outside the catalogue holds a user-facing word", () => {
     // A clean result is only trustworthy if the scan saw the source.
@@ -403,5 +437,41 @@ describe("user-facing content", () => {
     expect(found("app/bootstrap.ts", `import { ERROR_COPY } from "@shared/copy";`)).toHaveLength(0);
     expect(found("shared/copy/index.ts", `export { AUTH_COPY } from "./auth";`)).toHaveLength(0);
     expect(found("shared/errors/x.ts", `import { copyText } from "@shared/copying";`)).toHaveLength(0);
+  });
+});
+
+describe("the catalogue's own imports", () => {
+  test("a language folder reaches its own words, the shape and the mechanism, and nothing else", () => {
+    const words = production.filter((l) => reachableFrom(l) !== null);
+    // A language the scan did not see is a language the rule did not reach, and the shape is
+    // recognised by its name, so a rename would take its half of the rule with it.
+    expect(LANGUAGE_FOLDERS.length).toBeGreaterThan(1);
+    for (const folder of LANGUAGE_FOLDERS)
+      expect(words.filter((l) => l.startsWith(`${folder}/`)).length).toBeGreaterThan(5);
+    expect(words).toContain(`${SHAPE}.ts`);
+
+    expect(words.flatMap((l) => catalogueCyclesIn(l, read(l))).sort()).toEqual([]);
+  });
+
+  test("a reach past a language folder is reported, and the shape's one import is not", () => {
+    const arabic = "shared/copy/arabic/auth/verify.ts";
+    const english = "shared/copy/english/controls.ts";
+
+    expect(catalogueCyclesIn(arabic, `import type { C } from "../../catalogues";`)).toHaveLength(1);
+    expect(catalogueCyclesIn(arabic, `import { E } from "../../english";`)).toHaveLength(1);
+    expect(catalogueCyclesIn(arabic, `import { C } from "@shared/copy";`)).toHaveLength(1);
+    expect(catalogueCyclesIn(arabic, `type C = typeof import("../../index");`)).toHaveLength(1);
+    // Its own folder's barrel assembles it, so reaching that is the same cycle one level down.
+    expect(catalogueCyclesIn(arabic, `import { ARABIC } from "../index";`)).toHaveLength(1);
+    // English is where the shape comes from, so importing it is the cycle in the other direction.
+    expect(catalogueCyclesIn(english, `import type { C } from "../shape";`)).toHaveLength(1);
+
+    expect(catalogueCyclesIn(arabic, `import type { C } from "../../shape";`)).toHaveLength(0);
+    expect(catalogueCyclesIn(arabic, `import { ARABIC_FORMATS } from "../formats";`)).toHaveLength(0);
+    expect(catalogueCyclesIn(arabic, `import { formatsFor } from "@shared/localisation";`)).toHaveLength(0);
+    expect(catalogueCyclesIn(english, `import { ENGLISH_FORMATS } from "./formats";`)).toHaveLength(0);
+    expect(catalogueCyclesIn("shared/copy/shape.ts", `import type { ENGLISH } from "./english";`)).toHaveLength(0);
+    expect(catalogueCyclesIn("shared/copy/shape.ts", `import { ARABIC } from "./arabic";`)).toHaveLength(1);
+    expect(catalogueCyclesIn("shared/copy/catalogues.ts", `import { ARABIC } from "./arabic";`)).toHaveLength(0);
   });
 });
