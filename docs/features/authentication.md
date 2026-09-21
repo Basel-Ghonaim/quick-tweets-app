@@ -17,7 +17,7 @@ Authentication is **signing in and registering**:
 
 Either one **commits a session**. Signing **out** and silent **restore** are not this feature's: both are the session's lifecycle, and the session is platform ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 3).
 
-**The rest of what a reader meets under `/auth` is not this feature's.** The URL space and the layout belong to the auth **page group**, which composes this feature with the [recovery](recovery.md), [profile](profile.md) and [journey](journey.md) features and with the platform's [Channel Verification](../backend/channel-verification.md), each described by its own owner.
+**The rest of what a reader meets under `/auth` is not this feature's.** The URL space and the layout belong to the auth **page group**, which composes this feature with the [recovery](recovery.md), [profile](profile.md) and [journey](journey.md) features and with the platform's [Channel Verification](../backend/channel-verification.md). The three features are described by documents of their own. The page group and Channel Verification's client half have none yet ([Finding 0036](../architecture/findings/0036-documentation-the-feature-split-found-missing.md)).
 
 ## Responsibility boundary
 
