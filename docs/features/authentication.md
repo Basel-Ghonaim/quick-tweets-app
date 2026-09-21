@@ -22,7 +22,8 @@ Signing **out** and silent **restore** are not this feature's: both are the sess
 - **The post-registration journey** — profile completion and email verification, presented as one surface whose step is named by the server. The account is complete before any of it and nothing an account may do depends on it ([ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) Decision 2, as revised); the journey's own state and transitions are the [API contract](../api/api-contract.md)'s.
 - **Profile completion** — name, bio and avatar, saved or skipped, with the avatar uploaded when it is chosen rather than at submit. It is the `profile` feature (`apps/web/src/features/profile/`); where it lives once a Users capability exists is still undecided ([Finding 0030](../architecture/findings/0030-the-capabilities-predate-the-structure-they-share.md)).
 - **Email verification** — requesting a code and confirming it, composing the [Channel Verification](../backend/channel-verification.md) capability. Whether an address is proven is that capability's fact, never this feature's.
-- **Account recovery** — asking for a code, confirming it, and setting a new password, composing the [Password Reset](../backend/password-reset.md) capability. Where the reader stands is that capability's fact and never this feature's; the flow ends at sign-in rather than in a session ([ADR 0016](../architecture/decisions/0016-password-reset-credential-change-authority.md) Decision 8).
+
+Account recovery is a capability of its own too, and it has [its own document](recovery.md).
 
 ## Responsibility boundary
 
@@ -58,20 +59,6 @@ The feature's contribution is the **act**, not the fact that results. A reader s
 2. **Everything after that is the session's.** Silent restore on startup, keeping the token current, and ending a session — as a command the reader gives or as a reaction to an ending the server has already made — belong to `shared/session` and are not described here. What the transport does while a session is alive is the [API client](../frontend/api-client.md)'s.
 
 The dependency runs one way: **authentication commits a session and may react to its ending; the session knows nothing of authentication** ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 5).
-
-## Recovery — one route, and the server names the step
-
-Account recovery is three steps on **one** route. Which of them renders is read from the server, never tracked by the client: a step's URL would be a second, reader-editable copy of a position the capability owns, and that shape was built once for the onboarding journey and rejected. The same conclusion is reached here for a stronger reason — the position *is* a credential, so the client cannot hold it at all ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)).
-
-Three consequences follow, and they are the feature's own:
-
-- **A reload lands on the step the reader reached, able to finish it.** Nothing is remembered on the client for that to work; the answer is asked for again.
-- **A read that failed is not an answer.** It renders a retry rather than the first screen, because sending a reader back to the beginning would discard a recovery the server still holds.
-- **No number on these screens is the client's.** The resend window and whether one may still be asked for are read from the position, so a countdown never reports something no server said.
-
-Two things the reader can do are actions rather than claims about the step, and the distinction is what keeps the server authoritative. **Leaving** is always available and always safe, since the position outlives the visit. **Starting over** is confined to the code step: it abandons the attempt, and what actually moves the server is the request the address form then makes — which supersedes the position outright. At the password step it is deliberately absent, because a new request would discard control the reader has already proved.
-
-Unlike the journey's read, this one waits for nothing. These endpoints are anonymous, so there is no session whose absence could be mistaken for an answer.
 
 ## Inside the capability
 

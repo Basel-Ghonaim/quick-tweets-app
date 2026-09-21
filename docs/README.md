@@ -42,6 +42,7 @@ This is the **map** of the project's documentation — every document, what it o
 Each capability's document sits directly under `features/`. **These documents are interim:** their flat placement and their shape hold until feature documentation is restructured.
 
 - [authentication.md](features/authentication.md) — the authentication capability **as currently implemented**: its flows and how it composes the platform.
+- [recovery.md](features/recovery.md) — the recovery capability **as currently implemented**: the client half of account recovery, its three steps on one screen, and how it composes the platform.
 
 ### `development/` — how to run the project and how the team works
 - [agent-onboarding.md](development/agent-onboarding.md) — the on-ramp for an agent or contributor joining the project: reading order, decision authority in practice, the mistakes newcomers make, and the self-review bar. Points at the rules; never restates them.
