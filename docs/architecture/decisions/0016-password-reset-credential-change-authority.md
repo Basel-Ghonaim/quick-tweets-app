@@ -42,7 +42,7 @@ Auth is also where the operation lands: the password hash, its comparison, and t
 
 **5. Delivery is composed and never owned** — the direction ADR 0009 Decision 7 fixed, unchanged here. Recovery composes the same mechanism, and its message content is its own.
 
-**6. The answer to a reset request is neutral, and neutrality is a property of the contract rather than of the interface.** The status, the body and the shape are identical whether or not an account exists, and **existence is never revealed by advancing to a further step** — a second screen that appears only for real accounts is the same disclosure with more clicks. This continues the posture [Backend Security](../../backend/security.md) already holds for login and registration, and it is ratified product direction ([UX brief](../../features/authentication/product/ux-brief.md) §4).
+**6. The answer to a reset request is neutral, and neutrality is a property of the contract rather than of the interface.** The status, the body and the shape are identical whether or not an account exists, and **existence is never revealed by advancing to a further step** — a second screen that appears only for real accounts is the same disclosure with more clicks. This continues the posture [Backend Security](../../backend/security.md) already holds for login and registration, and it is ratified product direction ([UX brief](https://github.com/Basel-Ghonaim/quick-tweets-app/blob/093796829cfbd8628e8654bab5a2be144346a7ea/docs/features/authentication/product/ux-brief.md) §4).
 
 **The residual is stated rather than discovered:** a request for a real address does work a request for an unknown one does not, so *timing* remains an imperfect oracle even when the response is byte-identical. Closing that is an implementation obligation, not a boundary question, and it is named in what this ADR does not decide.
 
@@ -56,7 +56,7 @@ The **approved initial values** are a **10-minute credential lifetime**, a **60-
 
 - The lifetime is **shorter than verification's** because Decision 1's credential changes a password, and authority to change a credential should be spendable for less time than a status report.
 - The excluded letters matter more to the actor Decision 1 names — someone locked out, retyping from a phone — than to a holder already signed in.
-- The length is what makes the single paste-friendly field the right control rather than a segmented one, a decision the [design direction](../../features/authentication/product/ux-direction.md) already took and which shortening the code would reopen.
+- The length is what makes the single paste-friendly field the right control rather than a segmented one, a decision the [design direction](https://github.com/Basel-Ghonaim/quick-tweets-app/blob/093796829cfbd8628e8654bab5a2be144346a7ea/docs/features/authentication/product/ux-direction.md) already took and which shortening the code would reopen.
 
 **What this decision owns is the separation and the reason for it.** The three values above are **approved defaults, settled and recorded** — not provisional, and not left to whoever implements first. What they are *not* is architectural constants: retuning one is an operational judgement that moves no boundary, made where configuration lives and reviewed as configuration.
 

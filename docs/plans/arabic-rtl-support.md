@@ -6,7 +6,7 @@
 > **Last Updated:** 2026-09-19
 > **Parent Issue:** [#754](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/754)
 > **Supersedes:** —
-> **Archived (completed, 2026-09-19):** all six Work Items merged. The durable facts now live with their owners: [localisation](../frontend/localisation.md), the Design System's [foundation](../frontend/design-system/foundation.md) and [components](../frontend/design-system/components.md) contracts, the [testing topology](../development/testing-topology.md), the [API contract](../api/api-contract.md) and the [UX direction](../features/authentication/product/ux-direction.md). Every deferral has an Issue (§12).
+> **Archived (completed, 2026-09-19):** all six Work Items merged. The durable facts now live with their owners: [localisation](../frontend/localisation.md), the Design System's [foundation](../frontend/design-system/foundation.md) and [components](../frontend/design-system/components.md) contracts, the [testing topology](../development/testing-topology.md), the [API contract](../api/api-contract.md) and the [UX direction](https://github.com/Basel-Ghonaim/quick-tweets-app/blob/093796829cfbd8628e8654bab5a2be144346a7ea/docs/features/authentication/product/ux-direction.md). Every deferral has an Issue (§12).
 
 ## 1. Purpose
 
@@ -164,7 +164,7 @@ It changes in the branch where the need was found, never in a branch of its own.
 - **D10 and O2.** The [Foundation](../frontend/design-system/foundation.md) owns script as the second resolution axis and the script-ordered stacks. O2's face and line-heights are values, and they live in the token layer, where values belong. [#778](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/778) tracks D10's Google Fonts delivery against self-hosting.
 - **D11 and D12's containment.** The [component contract](../frontend/design-system/components.md) owns the direction of text; [localisation](../frontend/localisation.md) owns how a line holds a value it did not write. D12's server half is [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775).
 - **D13.** The [testing topology](../development/testing-topology.md) owns it: every state is rendered in both directions, each run in its own language.
-- **D14.** It is met: the [localisation](../frontend/localisation.md) document, its [Documentation Strategy](../architecture/documentation-strategy.md) §6 row, the [map](../README.md), the [glossary](../project/glossary.md) entry and the [UX direction](../features/authentication/product/ux-direction.md)'s §19.
+- **D14.** It is met: the [localisation](../frontend/localisation.md) document, its [Documentation Strategy](../architecture/documentation-strategy.md) §6 row, the [map](../README.md), the [glossary](../project/glossary.md) entry and the [UX direction](https://github.com/Basel-Ghonaim/quick-tweets-app/blob/093796829cfbd8628e8654bab5a2be144346a7ea/docs/features/authentication/product/ux-direction.md)'s §19.
 - **O3 and O4.** They were inputs rather than rules. O3 named who approves; the approval rule is localisation's, and the approval itself is recorded on [#771](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/771). O4's placement is the UX direction's §19.
 - **D7's revisit trigger** is tracked in [#777](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/777), and the one-time code's digits in [#776](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/776).
 - **No ADR was created or edited**, as §9 required.

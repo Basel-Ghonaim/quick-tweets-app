@@ -41,7 +41,6 @@ This is the **map** of the project's documentation — every document, what it o
 ### `features/` — one directory per capability
 - [authentication/](features/authentication/) — the authentication capability.
   - [authentication.md](features/authentication/authentication.md) — the feature **as currently implemented**: its flows and how it composes the platform.
-  - `product/` — the capability's product and UX documentation: the [UX brief](features/authentication/product/ux-brief.md) (**Contract** — the ratified product and UX decisions), the [competitive UX research](features/authentication/product/ux-research.md) (**Record** — what research observed, and the insights drawn from it), and the [UX design direction](features/authentication/product/ux-direction.md) (**Contract** — how the experience should look and behave).
 
 ### `development/` — how to run the project and how the team works
 - [agent-onboarding.md](development/agent-onboarding.md) — the on-ramp for an agent or contributor joining the project: reading order, decision authority in practice, the mistakes newcomers make, and the self-review bar. Points at the rules; never restates them.
