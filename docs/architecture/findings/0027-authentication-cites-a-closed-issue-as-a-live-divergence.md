@@ -1,7 +1,8 @@
 # Finding 0027: The authentication document cites a closed issue as a live divergence
 
-> **Status:** Open
+> **Status:** Resolved
 > **Date:** 2026-09-09
+> **Resolved:** [#786](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/786) — the sentence is gone, and the forms entry points at Finding 0026 instead.
 > **Affected areas:** [`docs/features/authentication/authentication.md`](../../features/authentication.md) — the *Configuration, not code, for forms* entry
 > **Reported by:** Basel Ghonaim (surfaced while comparing the rules against the contract, [#683](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/683))
 
@@ -24,3 +25,7 @@ The Work Item that surfaced it moves files between zones. Correcting a feature d
 ## Not decided here
 
 What the sentence becomes — whether it simply drops, or is replaced by a pointer to [Finding 0026](0026-no-tier-owns-the-credential-rules.md). A finding records the deviation; it never schedules the fix.
+
+## Addendum — 2026-09-21, resolved ([#786](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/786))
+
+**The sentence is gone, and what replaced it points at the real problem.** The authentication document no longer reports a drift in the credential rules. Its forms entry now says that the rules are read from the cross-tier definitions and that which tier owns them is open, and it links [Finding 0026](0026-no-tier-owns-the-credential-rules.md), which is what this Finding said the sentence was hiding. The document moved in the same change, to `docs/features/authentication.md`.

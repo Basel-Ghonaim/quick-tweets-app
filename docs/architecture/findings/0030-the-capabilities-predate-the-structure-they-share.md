@@ -122,3 +122,9 @@ The Finding stays `Open`: the route literals and Media's upload are unchanged, a
 **What still has no answer**, and is not this Finding's to invent: where Media's upload belongs, now that profile reaches it through its own gateway; and where profile itself lives once a Users capability exists, which remains a directory move by construction. A fifth thing joins them — the four capabilities this effort created still share one document, which is [Finding 0034](0034-four-capabilities-are-described-by-a-document-that-does-not-own-them.md).
 
 The Finding stays `Open` for those.
+
+## Addendum — 2026-09-21, the shared document is resolved ([#786](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/786))
+
+**[Finding 0034](0034-four-capabilities-are-described-by-a-document-that-does-not-own-them.md) is resolved.** Recovery, profile and the journey have documents of their own, so the fifth item the 2026-09-15 addendum added to this Finding's open list no longer stands. Profile's document states that the capability is temporary until a Users capability exists, which puts this Finding's open question where readers of the capability will meet it.
+
+The Finding stays `Open`: where Media's upload belongs, and where profile lives once a Users capability exists, are unchanged. The frontend's reach to Media also has no description, which [Finding 0036](0036-documentation-the-feature-split-found-missing.md) records beside the other gaps.
