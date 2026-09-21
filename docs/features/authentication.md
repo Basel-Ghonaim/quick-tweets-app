@@ -17,12 +17,7 @@ Authentication is **signing in and registering**. It provides:
 
 Signing **out** and silent **restore** are not this feature's: both are the session's lifecycle, and the session is platform ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 3).
 
-**The rest of what a reader meets under `/auth` is not this feature either.** The URL space and the layout are the auth **page group**'s, and each of the following is a capability of its own that the group composes. They are described here because no document yet owns them:
-
-- **The post-registration journey** — profile completion and email verification, presented as one surface whose step is named by the server. The account is complete before any of it and nothing an account may do depends on it ([ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) Decision 2, as revised); the journey's own state and transitions are the [API contract](../api/api-contract.md)'s.
-- **Email verification** — requesting a code and confirming it, composing the [Channel Verification](../backend/channel-verification.md) capability. Whether an address is proven is that capability's fact, never this feature's.
-
-Account recovery and profile editing are capabilities of their own too, and each has its own document: [recovery](recovery.md) and [profile](profile.md).
+**The rest of what a reader meets under `/auth` is not this feature's.** The URL space and the layout belong to the auth **page group**, which composes this feature with the [recovery](recovery.md), [profile](profile.md) and [journey](journey.md) features and with the platform's [Channel Verification](../backend/channel-verification.md), each described by its own owner.
 
 ## Responsibility boundary
 

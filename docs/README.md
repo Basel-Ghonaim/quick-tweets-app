@@ -44,6 +44,7 @@ Each capability's document sits directly under `features/`. **These documents ar
 - [authentication.md](features/authentication.md) — the authentication capability **as currently implemented**: its flows and how it composes the platform.
 - [recovery.md](features/recovery.md) — the recovery capability **as currently implemented**: the client half of account recovery, its three steps on one screen, and how it composes the platform.
 - [profile.md](features/profile.md) — the profile capability **as currently implemented**: a signed-in reader editing their own name, bio and picture. The capability itself is temporary until a Users capability exists.
+- [journey.md](features/journey.md) — the journey capability **as currently implemented**: the client's hold on where a newly registered reader stands in the post-registration journey, whose phases the server names.
 
 ### `development/` — how to run the project and how the team works
 - [agent-onboarding.md](development/agent-onboarding.md) — the on-ramp for an agent or contributor joining the project: reading order, decision authority in practice, the mistakes newcomers make, and the self-review bar. Points at the rules; never restates them.
