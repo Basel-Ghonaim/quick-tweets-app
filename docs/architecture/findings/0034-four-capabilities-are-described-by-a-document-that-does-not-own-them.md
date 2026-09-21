@@ -2,7 +2,7 @@
 
 > **Status:** Open
 > **Date:** 2026-09-15
-> **Affected areas:** [`docs/features/authentication/authentication.md`](../../features/authentication/authentication.md); `apps/web/src/features/journey/`; `apps/web/src/features/profile/`; `apps/web/src/features/recovery/`; `apps/web/src/shared/channel-verification/`
+> **Affected areas:** [`docs/features/authentication/authentication.md`](../../features/authentication.md); `apps/web/src/features/journey/`; `apps/web/src/features/profile/`; `apps/web/src/features/recovery/`; `apps/web/src/shared/channel-verification/`
 > **Reported by:** Basel Ghonaim (surfaced while the documents were restated to four zones, [#740](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/740))
 
 ## Observation

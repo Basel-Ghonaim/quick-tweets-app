@@ -6,7 +6,7 @@
 > **Last Updated:** 2026-08-31
 > **Parent Issue:** [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384)
 > **Supersedes:** —
-> **Archived (completed, 2026-08-31):** all six Work Items merged. The durable facts now live with their owners — endpoints and error shapes in the [API contract](../api/api-contract.md), the alias and uniqueness model in the [data model](../architecture/data-model.md) and `schema.prisma`, and the session and identity rules in [Authentication](../features/authentication/authentication.md). §8 below records where each fact landed and what proves each completion criterion.
+> **Archived (completed, 2026-08-31):** all six Work Items merged. The durable facts now live with their owners — endpoints and error shapes in the [API contract](../api/api-contract.md), the alias and uniqueness model in the [data model](../architecture/data-model.md) and `schema.prisma`, and the session and identity rules in [Authentication](../features/authentication.md). §8 below records where each fact landed and what proves each completion criterion.
 
 This plan sequences the settled **Login & Registration refinements** into six independently reviewable Work Items. The product and architecture decisions behind them are **closed** (recorded through prior analysis passes); this plan owns their **execution order, boundaries, and invariants**, and never reopens them.
 
@@ -174,7 +174,7 @@ Little moved at this transition, and that is the point of pinned constraint 2. C
 |---|---|
 | Endpoint shapes, request and response bodies, error codes, and the retirement of `GET /auth/me` | [API contract](../api/api-contract.md) |
 | The alias and reservation model, username uniqueness across two tables, the deletion footprint | [Data model](../architecture/data-model.md), and `schema.prisma` for field-level truth |
-| The session's minimal identity, id-based restore, and `name` as a read-side fallback | [Authentication](../features/authentication/authentication.md) |
+| The session's minimal identity, id-based restore, and `name` as a read-side fallback | [Authentication](../features/authentication.md) |
 | Why authenticated-only media replaced the pre-auth register-with-avatar path | [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) |
 
 ### The completion criteria, each with what proves it

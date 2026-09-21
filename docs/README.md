@@ -38,9 +38,10 @@ This is the **map** of the project's documentation — every document, what it o
 - [design-system/](frontend/design-system/README.md) — the Design System: its boundary and ownership model, the [Foundation contract](frontend/design-system/foundation.md), and the [component-authoring contract](frontend/design-system/components.md). Its code-adjacent map at `apps/web/src/shared/design-system/README.md` is the designated index for documentation living beside the layer's code (Strategy §11.6).
 - `state-and-data.md` — the RTK Query cache/data layer. **Deferred** until that layer is realized in code (its interim source is `apps/web/src/docs/rtk-query-strategy.md`).
 
-### `features/` — one directory per capability
-- [authentication/](features/authentication/) — the authentication capability.
-  - [authentication.md](features/authentication/authentication.md) — the feature **as currently implemented**: its flows and how it composes the platform.
+### `features/` — one document per capability
+Each capability's document sits directly under `features/`. **These documents are interim:** their flat placement and their shape hold until feature documentation is restructured.
+
+- [authentication.md](features/authentication.md) — the authentication capability **as currently implemented**: its flows and how it composes the platform.
 
 ### `development/` — how to run the project and how the team works
 - [agent-onboarding.md](development/agent-onboarding.md) — the on-ramp for an agent or contributor joining the project: reading order, decision authority in practice, the mistakes newcomers make, and the self-review bar. Points at the rules; never restates them.

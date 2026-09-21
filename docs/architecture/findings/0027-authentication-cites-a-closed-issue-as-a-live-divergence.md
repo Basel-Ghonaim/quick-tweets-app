@@ -2,7 +2,7 @@
 
 > **Status:** Open
 > **Date:** 2026-09-09
-> **Affected areas:** [`docs/features/authentication/authentication.md`](../../features/authentication/authentication.md) — the *Configuration, not code, for forms* entry
+> **Affected areas:** [`docs/features/authentication/authentication.md`](../../features/authentication.md) — the *Configuration, not code, for forms* entry
 > **Reported by:** Basel Ghonaim (surfaced while comparing the rules against the contract, [#683](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/683))
 
 ## Observation
