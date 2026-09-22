@@ -4,8 +4,8 @@
 > **Class:** **Description** for current implementation status; **Commitment** for committed product scope ([Documentation Strategy §3](../architecture/documentation-strategy.md)). Each section says which it is.
 > **Authority:** The authoritative source for the **product's scope** — both what exists today and what the product is committed to. It does not describe *how* the system is built (see the architecture and platform documents) or the API surface (see the [API contract](../api/api-contract.md)).
 > **Scope:** What quick-tweets is, which capabilities exist today, and which the product is committed to. Mechanisms, endpoints, and per-feature internals live in their owning documents and are linked, never restated.
-> **Version:** 1.9
-> **Last Updated:** 2026-09-19
+> **Version:** 1.10
+> **Last Updated:** 2026-09-21
 > **Owner:** Basel Ghonaim
 
 ## What quick-tweets is
@@ -21,22 +21,22 @@ The product centres on short posts — "tweets" of at most 280 characters — an
 
 > **Class: Description.** Everything in this section exists in the code today. What the product is committed to — built or not — is the separate section below.
 
-The **backend exposes the full product surface; the frontend currently implements authentication only.** The complete request/response contract is owned by the [API contract](../api/api-contract.md); this table states *what exists today*, not how it behaves.
+The **backend exposes the full product surface; the frontend currently implements only the authentication area**: signing in and registering, account recovery, and the post-registration journey, whose profile step edits the reader's own profile. The complete request/response contract is owned by the [API contract](../api/api-contract.md); this table states *what exists today*, not how it behaves.
 
 | Capability | Backend | Frontend |
 |---|---|---|
-| [**Authentication**](../features/authentication/authentication.md) — register, login, logout, logout-all, token refresh, current user (JWT access token + HttpOnly refresh cookie; auth rate limiting) | Implemented | Implemented (sign-in · sign-up · the post-registration journey: profile completion and email verification · account recovery) |
+| [**Authentication**](../features/authentication.md) — register, login, logout, logout-all, token refresh (JWT access token + HttpOnly refresh cookie; auth rate limiting) | Implemented | Implemented (sign-in · sign-up · the post-registration [journey](../features/journey.md): [profile](../features/profile.md) completion and email verification · account [recovery](../features/recovery.md)) |
 | **Tweets** — global feed and author timelines (cursor-paginated), single tweet, create, edit own, delete own | Implemented | Not yet |
 | **Likes** — toggle a like on a tweet | Implemented | Not yet |
 | **Comments** — list per tweet (offset-paginated), create, edit own, delete own | Implemented | Not yet |
-| **User profiles** — public profile with tweet / like / follower / following counts | Implemented (read-only) | Not yet |
+| **User profiles** — public profile with tweet / like / follower / following counts, and reading and editing one's own | Implemented | Editing one's own name, bio and picture, inside the post-registration journey ([profile](../features/profile.md)); the public profile not yet |
 | **Follows** — follow and unfollow, follower and following lists | Implemented | Not yet |
 
 The data model behind these capabilities — `User`, `RefreshToken`, `Tweet`, `Comment`, `Like`, `Follow` — is owned by the Prisma schema, [`apps/api/prisma/schema.prisma`](../../apps/api/prisma/schema.prisma).
 
 **The web interface reads in English and in Arabic,** right to left in Arabic. The language follows the reader's browser until they choose one, and how it is resolved and chosen is [localisation](../frontend/localisation.md)'s. Text the server writes, including its mail, is English.
 
-**Scope boundaries in the current version:** tweet images and file uploads are not implemented (the `image` field exists but is always `null`), and profiles are read-only (there is no profile-edit endpoint).
+**Media in the current version:** the backend accepts uploads and attaches them to tweets, to comments and to a profile's picture. The frontend's only use of them is the picture chosen in the post-registration journey.
 
 ## Committed product scope
 
@@ -88,7 +88,7 @@ Direct messaging, notifications, search, bookmarks, lists, and any form of moder
 
 - **The HTTP surface** — endpoints, payloads, errors, pagination: the [API contract](../api/api-contract.md).
 - **How work is executed**, and how documentation is governed: the [Engineering Execution Standard](../development/engineering-execution-standard.md) and the [Documentation Strategy](../architecture/documentation-strategy.md).
-- **Per-capability behaviour** lives in feature documents under `docs/features/` — currently [authentication](../features/authentication/authentication.md); the remaining capabilities gain theirs as each is authored.
+- **Per-capability behaviour** lives in feature documents under `docs/features/` — currently [authentication](../features/authentication.md), [recovery](../features/recovery.md), [profile](../features/profile.md) and the [journey](../features/journey.md); the remaining capabilities gain theirs as each is authored.
 
 ---
 

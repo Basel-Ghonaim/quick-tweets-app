@@ -3,7 +3,7 @@
 > **Status:** Active.
 > **Authority:** The entry point for the Design System's documentation — its boundary, its ownership and stability model, its public surface, and where each kind of information lives. **It states no design rules of its own**; it names the document that owns each one.
 > **Version:** 1.1
-> **Last Updated:** 2026-08-17
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 ## What the Design System is
@@ -65,6 +65,6 @@ One fact has one canonical owner. Every other document links to it and none rede
 
 ## Related boundaries
 
-Schema-driven **form binding** is owned by the [frontend forms](../forms.md) document; this layer owns only the controls that seam consumes. A circular dependency between the two was recorded in [Finding 0001](../../architecture/findings/0001-schema-form-design-system-cycle.md) and has since been resolved one-directionally.
+Schema-driven **form binding** is owned by the [frontend forms](../forms.md) document; this layer owns only the controls that seam consumes. A circular dependency between the two was recorded in [Finding 0001](../../architecture/findings/resolved/0001-schema-form-design-system-cycle.md) and has since been resolved one-directionally.
 
 The **application layout** is owned by [frontend architecture](../architecture.md), and the **design principles** these conventions apply by [Engineering Principles](../../development/engineering-principles.md).

@@ -4,8 +4,8 @@
 > **Class:** Contract (§3).
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.11
-> **Last Updated:** 2026-09-17
+> **Version:** 1.12
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 
@@ -152,7 +152,7 @@ For every recurring class of fact, there is exactly one owner. All other documen
 | Relationship, cascade, and indexing rationale | `architecture/data-model.md` | feature documents |
 | Why an architectural decision was made | the decision's **natural-owner document**; `architecture/decisions/` (ADRs) only when no document owns it (§8) | architecture, backend, frontend, feature documents |
 | Known architectural deviations / technical debt | `architecture/findings/` | the affected platform/feature documents (which link to the finding) |
-| Authentication mechanisms (JWT, hashing, cookies, rate limiting) | `backend/security.md` | `features/authentication/authentication.md` |
+| Authentication mechanisms (JWT, hashing, cookies, rate limiting) | `backend/security.md` | `features/authentication.md`, `features/recovery.md` |
 | Redux / RTK Query mechanics | `frontend/state-and-data.md` | feature documents |
 | Error normalization pipeline | `frontend/error-handling.md` | feature documents, `frontend/api-client.md` |
 | Axios API client (clients, interceptors, retry, 401-refresh) | `frontend/api-client.md` | feature documents |
@@ -234,11 +234,12 @@ Create a finding when a review surfaces an architectural problem that deserves d
 - A finding **never schedules work** and **never edits the intended-architecture documents**; instead, the affected document **links** to the finding so readers see the known deviation.
 
 ### Finding rules
-- **Location:** `architecture/findings/`, a sibling of `architecture/decisions/`.
+- **Location:** `architecture/findings/`, a sibling of `architecture/decisions/`, filed by status. **`open/`** holds every finding that is still open, whether `Open` or `Acknowledged`. **`resolved/`** holds every closed one, whether `Resolved` or `Accepted`. The open findings can then be read on their own, and `resolved/` keeps the closed ones on record.
+- **A finding moves when it closes.** The change that sets a finding's status to `Resolved` or `Accepted` also moves it from `open/` to `resolved/`. The move is recorded as a rename, so the finding's history follows it. Every link to the finding is repointed in the same change, and its entry in the [map](../README.md) moves from the open list to the closed one. Links from outside the repository cannot be repointed, and they break ([Finding 0037](findings/open/0037-moving-a-finding-breaks-links-from-outside-the-repository.md)). A finding keeps its number, and numbering runs across both folders.
 - **One finding per file.** Each records a single architectural concern.
 - **Content:** the observation, concrete evidence (code references), the principle or boundary it violates, the affected areas, a status, and links to any motivating discussion and to the resolving ADR / issue / PR.
 - **Status:** one of `Open`, `Acknowledged`, `Resolved`, or `Accepted` (consciously tolerated, with rationale).
-- **Append-only.** A resolved finding is marked `Resolved` with a link to the ADR, PR, or commit that fixed it — it is not deleted. The register is the project's durable memory of architectural debt.
+- **Append-only.** A resolved finding is marked `Resolved` with a link to the ADR, PR, or commit that fixed it, and filed under `resolved/` — it is not deleted. The register is the project's durable memory of architectural debt.
 
 ### Relationship to ADRs and issues
 A finding is the *problem observed*; an ADR is the *decision made*; an issue is the *task to do it*. One finding may motivate an ADR and spawn one or more issues, and it links to both. This keeps intended-architecture documents clean: they describe the target design and point to findings for any current divergence.

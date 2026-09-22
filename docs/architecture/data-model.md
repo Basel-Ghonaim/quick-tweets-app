@@ -4,7 +4,7 @@
 > **Authority:** The authoritative source for the data model's **relationship, cascade, and indexing rationale** — the *why* behind the schema. The field-level truth (types, defaults, column maps) is owned by [`schema.prisma`](../../apps/api/prisma/schema.prisma) and referenced here, never restated.
 > **Scope:** Why the entities relate as they do, how deletes propagate, and which indexes exist and what they serve. It is not a field listing.
 > **Version:** 1.4
-> **Last Updated:** 2026-09-05
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 ## Overview
@@ -46,7 +46,7 @@ The rationale: the model has no meaningful orphan — a comment without its twee
 
 Indexes exist to serve the product's hot read paths; each maps to a query the application actually runs:
 
-- **Tweets** carry an **author** index (serving **author timelines**). Both the global feed and author timelines order and cursor on the primary key **`id`**: an `autoincrement()` `id` is monotonic with insertion, so `id DESC` is already reverse-chronological *and* a unique, stable cursor (no `createdAt` ties to break). No creation-time index is needed — the former `createdAt` index had no reader and was removed ([Finding 0003](findings/0003-feed-index-vs-id-ordering.md)).
+- **Tweets** carry an **author** index (serving **author timelines**). Both the global feed and author timelines order and cursor on the primary key **`id`**: an `autoincrement()` `id` is monotonic with insertion, so `id DESC` is already reverse-chronological *and* a unique, stable cursor (no `createdAt` ties to break). No creation-time index is needed — the former `createdAt` index had no reader and was removed ([Finding 0003](findings/resolved/0003-feed-index-vs-id-ordering.md)).
 - **Comments** are indexed by tweet (the "comments on this tweet" query) and by author.
 - **Likes** are indexed by tweet (per-tweet like counts) and carry a **unique (user, tweet)** constraint — a user can like a tweet at most once, which makes liking idempotent.
 - **Follows** carry a **unique (follower, followed)** constraint — you cannot follow someone twice — and are indexed in **both directions**: by follower ("who do I follow", which drives the feed) and by followed ("who follows me", which drives follower counts).

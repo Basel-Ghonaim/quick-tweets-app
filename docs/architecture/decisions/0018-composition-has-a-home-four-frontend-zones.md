@@ -56,7 +56,7 @@ No need has been demonstrated: server state is held by the cache, and shared wir
 
 ### 9. Story files may compose across zones
 
-A story renders a thing in the composition a reader actually meets, and that composition is a page. Story files are therefore exempt from the zone direction; **production code is not.** The exemption is bounded to rendering and evidence, and buys the rendered-accessibility proof the layer depends on ([Finding 0022](../findings/0022-subtle-fills-are-composites-no-token-check-measures.md)).
+A story renders a thing in the composition a reader actually meets, and that composition is a page. Story files are therefore exempt from the zone direction; **production code is not.** The exemption is bounded to rendering and evidence, and buys the rendered-accessibility proof the layer depends on ([Finding 0022](../findings/open/0022-subtle-fills-are-composites-no-token-check-measures.md)).
 
 ## Alternatives considered
 
