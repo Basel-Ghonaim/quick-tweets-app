@@ -25,7 +25,7 @@ Each plan opens with a status block:
 > **Supersedes:** <prior plan, or —>
 ```
 
-A `Historical` plan adds a one-line archival note (completed / superseded, plus a forward link to the documents that now own its durable facts).
+A `Historical` plan adds a one-line archival note (completed / superseded, plus a forward link to the documents that now own its durable facts), and moves to `historical/` (see *Naming*).
 
 ## Layout
 
@@ -39,7 +39,9 @@ A plan is organized around its *strategy and structure*, not a task list. The us
 
 ## Naming
 
-`docs/plans/<short-kebab-name>.md` — named for the plan's subject, not its lifecycle state (state lives in the header).
+`docs/plans/<short-kebab-name>.md` — named for the plan's subject, not its lifecycle state. State lives in the header; the one place it also shows is the folder of a `Historical` plan, below.
+
+**A `Historical` plan lives in `docs/plans/historical/`**, under the same name. It moves there in the change that archives it, and every link to it is repointed in that change. A `Draft` never enters the directory; an `Active` plan stays at the top level.
 
 ## Updating a Plan
 
