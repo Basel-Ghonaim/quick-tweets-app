@@ -15,7 +15,7 @@ The split applies Single Responsibility at the document level: code-design princ
 
 Three consequences were deferred — intentionally — until the Engineering Execution Standard merged, and are reconciled here:
 
-1. **The governing documents still describe the pre-split world.** The [Documentation Strategy](../documentation-strategy.md)'s directory structure (§4) and the [Migration Plan](../../plans/documentation-migration-plan.md) still name a single `workflow.md`; [CLAUDE.md](../../../CLAUDE.md)'s Authoritative Documents still point to the legacy `src/docs/Principles/*` files.
+1. **The governing documents still describe the pre-split world.** The [Documentation Strategy](../documentation-strategy.md)'s directory structure (§4) and the [Migration Plan](../../plans/historical/documentation-migration-plan.md) still name a single `workflow.md`; [CLAUDE.md](../../../CLAUDE.md)'s Authoritative Documents still point to the legacy `src/docs/Principles/*` files.
 2. **"Constitutional document" has no defining owner.** The Engineering Execution Standard uses the term (§9) as a heightened-review trigger, but no document defines which documents constitute the constitution.
 3. **CLAUDE.md's decision-authority summary is stale.** Its non-negotiable "editing authoritative documents are human-only" predates and contradicts the Standard's refined model (§10), under which the AI may *draft* changes to authoritative documents (propose → approve) while only a human authorizes the *merge* that makes them canonical.
 
@@ -31,7 +31,7 @@ Finalize and reconcile the constitutional architecture:
    - [`engineering-principles.md`](../../development/engineering-principles.md) — code-design principles;
    - [`engineering-execution-standard.md`](../../development/engineering-execution-standard.md) — execution process.
 
-   The [Migration Plan](../../plans/documentation-migration-plan.md) is a binding *execution plan*, not a governing constitution, and is excluded.
+   The [Migration Plan](../../plans/historical/documentation-migration-plan.md) is a binding *execution plan*, not a governing constitution, and is excluded.
 
 3. **Decision authority follows the Engineering Execution Standard's §10.** Editing an authoritative or constitutional document is an AI-draftable, propose → approve action; only the merge that makes a change canonical is human-authorized. CLAUDE.md's summary is reconciled to this model.
 

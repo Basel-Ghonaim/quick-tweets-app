@@ -9,7 +9,7 @@
 
 This plan unifies the architecture of the Design System's components into **four independently reviewable Work Items**, then hands back to the [Design System Re-establishment plan](design-system-reestablishment.md) at its next component migration.
 
-It is a **strategy document**: it owns the effort's execution order, boundaries, invariants, and the rationale for that order. Each Work Item's scope detail, acceptance criteria and status belong to its Issue — authored at Execution Preparation, when the most is known — per [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
+It is a **strategy document**: it owns the effort's execution order, boundaries, invariants, and the rationale for that order. Each Work Item's scope detail, acceptance criteria and status belong to its Issue — authored at Execution Preparation, when the most is known — per [ADR 0006](../../architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
 
 ## 1. Purpose
 
@@ -35,7 +35,7 @@ Continuing the token migration onto that base would bind a stable presentation l
 
 ### 3.2 Settled decisions
 
-- **E1 — The platform is the reference, not an existing consumer.** Existing consumers are evidence that capabilities are needed; they do not define them. A contract is designed from what the wrapped element *is* ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2 — grounded, not merely consumed).
+- **E1 — The platform is the reference, not an existing consumer.** Existing consumers are evidence that capabilities are needed; they do not define them. A contract is designed from what the wrapped element *is* ([ADR 0010](../../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2 — grounded, not merely consumed).
 - **E2 — `Field` is a hook, not a component.** The duplication that hurts is id derivation and aria wiring — three components, three conventions, one omitting an error association entirely. The markup is small and each component's stylesheet owns its layout, so a shared `<Field>` component would force one stylesheet across three different layouts: real duplication traded for worse coupling.
 - **E3 — Structure follows responsibility, in both directions.** *Creating:* a folder exists when it has content — §3.3 states where a responsibility *goes*, and imposing the full layout on the smallest component is the reserved-vocabulary mistake in another form. *Growing:* a file that takes on a second responsibility is split before it takes a third, and a flat folder earns subdirectories when it holds more than one kind of thing. **Growth is the trigger, never a schedule, and the trigger is a number: a responsibility earns its own directory at its *second* member.** A threshold rather than a judgement, because a directory never becomes a catch-all by decision — it becomes one because each addition looked defensible on its own, and a number removes the per-addition judgement that allows that. This binds the shared surfaces specifically: the foundations vocabulary and the shared component artifacts both start flat, and they evolve into `contracts/`, `hooks/`, `helpers/` when they are actually holding those separately — not as a pre-emptive skeleton, and not by accumulating everything behind one import because it currently works.
 - **E4 — Grouping follows the anatomy, not a product taxonomy.** `fields/`, `controls/`, `display/` derive from the Field/Control distinction. `feedback/`, `navigation/`, `overlay/` are product categories that get argued about; they are created when something populates them.
@@ -63,7 +63,7 @@ Named `parts/` rather than `components/`, because "components inside a component
 
 ### 3.4 The anatomy
 
-**Owned by [the Design System documentation](../frontend/design-system/README.md)** — Control, Field, Adorned Control, Adorned Field, and the inline-axis boundary. This plan applies the vocabulary and never redefines it; a plan ends `Historical`, so a concept living only here would lose its owner when the effort closes.
+**Owned by [the Design System documentation](../../frontend/design-system/README.md)** — Control, Field, Adorned Control, Adorned Field, and the inline-axis boundary. This plan applies the vocabulary and never redefines it; a plan ends `Historical`, so a concept living only here would lose its owner when the effort closes.
 
 ### 3.5 Component roles
 
@@ -125,7 +125,7 @@ CA-4 (public surface + taxonomy)
 
 ## 8. Reconciliation
 
-The effort is complete; the conventions it settled are owned by [the Design System documentation](../frontend/design-system/README.md) and this plan is read-only.
+The effort is complete; the conventions it settled are owned by [the Design System documentation](../../frontend/design-system/README.md) and this plan is read-only.
 
 **Where the durable facts landed.** The component-authoring convention, the anatomy, the grouping, and the public-surface rule are all in the platform document. The language's enumerated scales live in the foundations; the prop contract and the shared helpers live beside the components that use them.
 

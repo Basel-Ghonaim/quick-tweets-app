@@ -6,9 +6,9 @@
 > **Last Updated:** 2026-09-11
 > **Parent Issue:** [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678)
 > **Supersedes:** —
-> **Archived:** 2026-09-11 — superseded by [Frontend Capability Structure](frontend-capability-structure.md) during Phase 1. Its durable facts now live in [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md), [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md), the [frontend architecture](../frontend/architecture.md) and Findings 0023–0029; this plan is retained as provenance.
+> **Archived:** 2026-09-11 — superseded by [Frontend Capability Structure](frontend-capability-structure.md) during Phase 1. Its durable facts now live in [ADR 0018](../../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md), [ADR 0019](../../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md), the [frontend architecture](../../frontend/architecture.md) and Findings 0023–0029; this plan is retained as provenance.
 
-**Historical — superseded.** Drafted outside the tracked tree and adopted in the first branch of its first Work Item, per [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 2. It governed the effort's strategy and sequencing until the plan that superseded it took over; §10 records what it delivered and what it handed on.
+**Historical — superseded.** Drafted outside the tracked tree and adopted in the first branch of its first Work Item, per [ADR 0006](../../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 2. It governed the effort's strategy and sequencing until the plan that superseded it took over; §10 records what it delivered and what it handed on.
 
 **Preliminary by intention.** This plan is deliberately coarse. A structural migration discovers things — a dependency nobody predicted, a placement the decisions do not cover, a proof that turns out to be missing — and a plan that specified every Work Item in advance would be wrong by the second phase and followed anyway. What is fixed here is the **objective, the phase order, and the dependencies between phases**. What is not fixed is the content of any Work Item.
 
@@ -16,7 +16,7 @@
 
 ## 1 · Purpose & goals
 
-Adopt the four zones [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) decides — `app → pages → features → shared` — in the web application, and leave the rules that hold them mechanically enforced.
+Adopt the four zones [ADR 0018](../../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) decides — `app → pages → features → shared` — in the web application, and leave the rules that hold them mechanically enforced.
 
 **Delivers:** the zones exist and hold what the ADR says each holds; capabilities are separated from composition; the zone direction and the two rules a page must not break are checkable rather than reviewed.
 
@@ -42,7 +42,7 @@ This section is the plan's most important one, and it binds harder than any phas
 
 ## 3 · The rules that govern every Work Item
 
-- **A move is a move.** History survives the migration: nothing is deleted and re-added. This carries [ADR 0013](../architecture/decisions/0013-applications-and-cross-tier-packages.md)'s migration invariant forward to a second restructure.
+- **A move is a move.** History survives the migration: nothing is deleted and re-added. This carries [ADR 0013](../../architecture/decisions/0013-applications-and-cross-tier-packages.md)'s migration invariant forward to a second restructure.
 - **No commit both moves a thing and changes it.** Where something must change to be placed correctly, that is a separate commit or a separate Work Item.
 - **Every Work Item is either a *move* or a *decision*, and the class sets its evidence.** A **move** changes nothing observable, so its proof is that the existing evidence is **unchanged** — a shifted count means something was not a move. A **decision** adds exactly the evidence it requires and names it. Adding a test is never scope creep when the test proves a boundary, a behaviour, or the safety of the migration; withholding one to keep a Work Item tidy is (Definition of Done, EES §9).
 - **Every Work Item leaves `main` green, and states what it did not run.** Silence never implies a pass.
@@ -76,7 +76,7 @@ Four ordering invariants. These are the part of the plan that is genuinely fixed
 
 ### Phase 1 — Capabilities
 
-**Intent:** each capability inside the current auth module becomes a feature in its own right — account recovery, the onboarding journey, and profile (the last temporary, pending the Users decision). The session is not among them: [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) made it platform and authentication a feature, and a Work Item outside this plan placed both at `shared/session` and `features/authentication` before this phase's extractions. Recovery's dependency on the session is therefore a legal import, not an edge this phase must resolve.
+**Intent:** each capability inside the current auth module becomes a feature in its own right — account recovery, the onboarding journey, and profile (the last temporary, pending the Users decision). The session is not among them: [ADR 0019](../../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) made it platform and authentication a feature, and a Work Item outside this plan placed both at `shared/session` and `features/authentication` before this phase's extractions. Recovery's dependency on the session is therefore a legal import, not an edge this phase must resolve.
 
 Expected: roughly one Work Item per capability. Largest phase, and the most mechanical.
 
@@ -185,10 +185,10 @@ Phase 0 is complete. Phase 1 delivered recovery, and the session outside it; jou
 
 | Fact | Now owned by |
 |---|---|
-| The four zones, what each owns, and the one-way rule between them | [ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) |
-| Authentication is a feature, the session is platform, and when a capability is platform | [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) |
-| The platform index, including the session | the [frontend architecture](../frontend/architecture.md) |
-| The deviations the work surfaced | [Findings 0023–0029](../architecture/findings/) |
+| The four zones, what each owns, and the one-way rule between them | [ADR 0018](../../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) |
+| Authentication is a feature, the session is platform, and when a capability is platform | [ADR 0019](../../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) |
+| The platform index, including the session | the [frontend architecture](../../frontend/architecture.md) |
+| The deviations the work surfaced | [Findings 0023–0029](../../architecture/findings/) |
 
 ### Handed on, not done
 

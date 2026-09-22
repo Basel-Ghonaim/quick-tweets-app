@@ -7,11 +7,11 @@
 > **Parent Issue:** [#215](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/215)
 > **Supersedes:** —
 >
-> **Archival note — complete.** The migration is executed and verified — the final audit (Work Item G3) is merged, and every fact now has a single owner under `docs/`; the durable knowledge now lives in the permanent documentation set mapped by [`docs/README.md`](../README.md). This plan is retained as a historical reference. The **single deliberate deferral** is the frontend `state-and-data.md` document (**E2**, deferred by the Stable-Core rule); its continuity — reason, re-evaluation trigger (a **code-state condition**: the emergence of a real RTK Query Stable Core in the data layer), and interim source `src/docs/rtk-query-strategy.md` — is preserved in [#272](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/272).
+> **Archival note — complete.** The migration is executed and verified — the final audit (Work Item G3) is merged, and every fact now has a single owner under `docs/`; the durable knowledge now lives in the permanent documentation set mapped by [`docs/README.md`](../../README.md). This plan is retained as a historical reference. The **single deliberate deferral** is the frontend `state-and-data.md` document (**E2**, deferred by the Stable-Core rule); its continuity — reason, re-evaluation trigger (a **code-state condition**: the emergence of a real RTK Query Stable Core in the data layer), and interim source `src/docs/rtk-query-strategy.md` — is preserved in [#272](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/272).
 >
-> **Authority:** This document is the official, binding plan for consolidating all existing documentation into the single root defined by [`documentation-strategy.md`](../architecture/documentation-strategy.md). Every migration phase must follow the inventory, decisions, ownership assignments, order, and risk controls recorded here.
+> **Authority:** This document is the official, binding plan for consolidating all existing documentation into the single root defined by [`documentation-strategy.md`](../../architecture/documentation-strategy.md). Every migration phase must follow the inventory, decisions, ownership assignments, order, and risk controls recorded here.
 > **Scope:** Analysis and planning only. This document moves, merges, or deletes nothing. It records *what* will happen, *where* each fact will live, and *in what order* — so that execution phases are mechanical and reversible.
-> **Governing standard:** [`documentation-strategy.md`](../architecture/documentation-strategy.md). This plan is synchronized with the finalized strategy, including the dedicated owners `frontend/forms.md` and `frontend/api-client.md`, the narrowed `frontend/design-system/`, and the `architecture/findings/` register.
+> **Governing standard:** [`documentation-strategy.md`](../../architecture/documentation-strategy.md). This plan is synchronized with the finalized strategy, including the dedicated owners `frontend/forms.md` and `frontend/api-client.md`, the narrowed `frontend/design-system/`, and the `architecture/findings/` register.
 
 ---
 
@@ -158,7 +158,7 @@ The order is lowest-risk first, and **create-before-delete**: a source is remove
 | **Delete** | 7 | `setup-log.md`, `issues.md`, `Gaps-and-shortcomings-map.md`, `RightPanel/changelog.md`, `FileInputIssues.md`, `IconLibraryIssues.md`, `Suggestions.md` |
 | **Total reviewed** | **19** | every Markdown file in the repository |
 
-Every existing documentation file has exactly one assigned fate. No file is left undecided. The plan is consistent with [`documentation-strategy.md`](../architecture/documentation-strategy.md): a single documentation root, one owner per fact, dedicated owners for the form engine (`frontend/forms.md`) and the API client (`frontend/api-client.md`), a presentation-only design system, no speculative documentation, decisions captured by their owning document (an ADR only when owner-less, Strategy §8), deviations captured as findings, and durable content preserved before any deletion.
+Every existing documentation file has exactly one assigned fate. No file is left undecided. The plan is consistent with [`documentation-strategy.md`](../../architecture/documentation-strategy.md): a single documentation root, one owner per fact, dedicated owners for the form engine (`frontend/forms.md`) and the API client (`frontend/api-client.md`), a presentation-only design system, no speculative documentation, decisions captured by their owning document (an ADR only when owner-less, Strategy §8), deviations captured as findings, and durable content preserved before any deletion.
 
 ---
 

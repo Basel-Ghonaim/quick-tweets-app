@@ -57,16 +57,16 @@ A new plan is drafted outside the tracked tree — under `.project/`, or whereve
 
 | Plan | Type | Status | Parent Issue |
 |---|---|---|---|
-| [arabic-rtl-support.md](arabic-rtl-support.md) | Execution | Historical | [#754](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/754) |
+| [arabic-rtl-support.md](historical/arabic-rtl-support.md) | Execution | Historical | [#754](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/754) |
 | [channel-verification.md](channel-verification.md) | Execution | Active | [#403](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/403) |
-| [component-architecture-unification.md](component-architecture-unification.md) | Execution | Historical | [#465](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/465) |
-| [design-system-components.md](design-system-components.md) | Execution | Historical | [#522](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/522) |
-| [design-system-reestablishment.md](design-system-reestablishment.md) | Execution | Historical | [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414) |
-| [login-registration-refinements.md](login-registration-refinements.md) | Execution | Historical | [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384) |
-| [mail-delivery.md](mail-delivery.md) | Execution | Historical | [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598) |
-| [password-reset.md](password-reset.md) | Execution | Historical | [#632](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/632) |
+| [component-architecture-unification.md](historical/component-architecture-unification.md) | Execution | Historical | [#465](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/465) |
+| [design-system-components.md](historical/design-system-components.md) | Execution | Historical | [#522](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/522) |
+| [design-system-reestablishment.md](historical/design-system-reestablishment.md) | Execution | Historical | [#414](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/414) |
+| [login-registration-refinements.md](historical/login-registration-refinements.md) | Execution | Historical | [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384) |
+| [mail-delivery.md](historical/mail-delivery.md) | Execution | Historical | [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598) |
+| [password-reset.md](historical/password-reset.md) | Execution | Historical | [#632](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/632) |
 | [media-implementation.md](media-implementation.md) | Execution | Active | [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305) |
-| [auth-first-grant-retirement.md](auth-first-grant-retirement.md) | Migration | Historical | [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357) |
-| [documentation-migration-plan.md](documentation-migration-plan.md) | Migration | Historical | [#215](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/215) |
-| [frontend-zone-migration.md](frontend-zone-migration.md) | Migration | Historical | [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) |
-| [frontend-capability-structure.md](frontend-capability-structure.md) | Refactoring | Historical | [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) |
+| [auth-first-grant-retirement.md](historical/auth-first-grant-retirement.md) | Migration | Historical | [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357) |
+| [documentation-migration-plan.md](historical/documentation-migration-plan.md) | Migration | Historical | [#215](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/215) |
+| [frontend-zone-migration.md](historical/frontend-zone-migration.md) | Migration | Historical | [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) |
+| [frontend-capability-structure.md](historical/frontend-capability-structure.md) | Refactoring | Historical | [#678](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/678) |

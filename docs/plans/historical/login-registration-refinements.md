@@ -6,11 +6,11 @@
 > **Last Updated:** 2026-08-31
 > **Parent Issue:** [#384](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/384)
 > **Supersedes:** —
-> **Archived (completed, 2026-08-31):** all six Work Items merged. The durable facts now live with their owners — endpoints and error shapes in the [API contract](../api/api-contract.md), the alias and uniqueness model in the [data model](../architecture/data-model.md) and `schema.prisma`, and the session and identity rules in [Authentication](../features/authentication.md). §8 below records where each fact landed and what proves each completion criterion.
+> **Archived (completed, 2026-08-31):** all six Work Items merged. The durable facts now live with their owners — endpoints and error shapes in the [API contract](../../api/api-contract.md), the alias and uniqueness model in the [data model](../../architecture/data-model.md) and `schema.prisma`, and the session and identity rules in [Authentication](../../features/authentication.md). §8 below records where each fact landed and what proves each completion criterion.
 
 This plan sequences the settled **Login & Registration refinements** into six independently reviewable Work Items. The product and architecture decisions behind them are **closed** (recorded through prior analysis passes); this plan owns their **execution order, boundaries, and invariants**, and never reopens them.
 
-It is a **strategy document**: it owns each Work Item's strategic definition (goal, scope, non-goals, dependencies, invariants, verification strategy, Definition-of-Done summary, and stop-risks). Each Work Item's **granular acceptance criteria, live status, and progress belong to its Issue** (created when that Work Item begins), which this plan links and never mirrors — per [Documentation Strategy §5](../architecture/documentation-strategy.md) and [ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
+It is a **strategy document**: it owns each Work Item's strategic definition (goal, scope, non-goals, dependencies, invariants, verification strategy, Definition-of-Done summary, and stop-risks). Each Work Item's **granular acceptance criteria, live status, and progress belong to its Issue** (created when that Work Item begins), which this plan links and never mirrors — per [Documentation Strategy §5](../../architecture/documentation-strategy.md) and [ADR 0006](../../architecture/decisions/0006-execution-plans-home-and-lifecycle.md).
 
 ## 1. Purpose & goals
 
@@ -172,10 +172,10 @@ Little moved at this transition, and that is the point of pinned constraint 2. C
 
 | What | Now owned by |
 |---|---|
-| Endpoint shapes, request and response bodies, error codes, and the retirement of `GET /auth/me` | [API contract](../api/api-contract.md) |
-| The alias and reservation model, username uniqueness across two tables, the deletion footprint | [Data model](../architecture/data-model.md), and `schema.prisma` for field-level truth |
-| The session's minimal identity, id-based restore, and `name` as a read-side fallback | [Authentication](../features/authentication.md) |
-| Why authenticated-only media replaced the pre-auth register-with-avatar path | [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) |
+| Endpoint shapes, request and response bodies, error codes, and the retirement of `GET /auth/me` | [API contract](../../api/api-contract.md) |
+| The alias and reservation model, username uniqueness across two tables, the deletion footprint | [Data model](../../architecture/data-model.md), and `schema.prisma` for field-level truth |
+| The session's minimal identity, id-based restore, and `name` as a read-side fallback | [Authentication](../../features/authentication.md) |
+| Why authenticated-only media replaced the pre-auth register-with-avatar path | [ADR 0008](../../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md) |
 
 ### The completion criteria, each with what proves it
 
@@ -198,7 +198,7 @@ Little moved at this transition, and that is the point of pinned constraint 2. C
 
 **Expired with it** — constraints 1, 2 and 5 were sequencing and scope discipline: one Work Item at a time, co-version inside the Work Item, keep C and A apart. They governed how this effort ran and bind nothing after it.
 
-**Held, with a limit worth stating** — constraint 6's third guarantee asked that the username rule and the handle resolver each be defined once. Both hold **within** a tier: the backend field is composed by registration and by the rename, and the resolver exists once. Across tiers the rule is stated twice, in `shared/validation/username.ts` and `modules/auth/config/authValidationRules.ts`, because there is nowhere yet to put a single definition — [ADR 0013](../architecture/decisions/0013-applications-and-cross-tier-packages.md)'s `packages/` layer is decided but unbuilt. Both ends say so at the code; neither pretends otherwise.
+**Held, with a limit worth stating** — constraint 6's third guarantee asked that the username rule and the handle resolver each be defined once. Both hold **within** a tier: the backend field is composed by registration and by the rename, and the resolver exists once. Across tiers the rule is stated twice, in `shared/validation/username.ts` and `modules/auth/config/authValidationRules.ts`, because there is nowhere yet to put a single definition — [ADR 0013](../../architecture/decisions/0013-applications-and-cross-tier-packages.md)'s `packages/` layer is decided but unbuilt. Both ends say so at the code; neither pretends otherwise.
 
 ### What this effort deliberately left
 

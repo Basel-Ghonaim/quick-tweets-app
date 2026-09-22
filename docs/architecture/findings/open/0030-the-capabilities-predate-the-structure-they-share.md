@@ -29,7 +29,7 @@ The structure exists so that a reader knows where a kind of thing lives without 
 
 ## Why it is recorded rather than resolved
 
-Bringing each capability to the structure is the work the [Frontend Capability Structure plan](../../../plans/frontend-capability-structure.md) sequences, one capability per Work Item. The structure was recorded first precisely so that no one of those Work Items decides it for the rest.
+Bringing each capability to the structure is the work the [Frontend Capability Structure plan](../../../plans/historical/frontend-capability-structure.md) sequences, one capability per Work Item. The structure was recorded first precisely so that no one of those Work Items decides it for the rest.
 
 ## Not decided here
 
