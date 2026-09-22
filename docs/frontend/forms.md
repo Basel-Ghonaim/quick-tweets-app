@@ -5,7 +5,7 @@
 > **Scope:** The shared engine in `apps/web/src/shared/schema-form/`. How a specific feature uses it lives in that feature's document; the end-to-end request lifecycle in the [system overview](../architecture/system-overview.md).
 > **Maturity:** This document describes the **currently implemented** engine. It will grow as the engine gains capabilities; anything not described here is not yet built, not architecturally rejected.
 > **Version:** 1.3
-> **Last Updated:** 2026-09-19
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 ## Why the engine exists
@@ -65,7 +65,7 @@ The seam also carries the **words of the controls it composes itself** — a pas
 
 **A field that holds an identifier can say so.** Its declaration may carry a direction, and the seam hands it to the control. When the declaration leaves it out, the control decides from the field's type ([component authoring](design-system/components.md)): a text field takes the direction of what is typed, so a text field that holds an identifier declares `ltr`.
 
-The intended dependency is one-directional: the form engine *consumes* the design system's controls; the design system does not depend back on the engine. A recorded deviation from that intended seam ownership was captured in [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md) and has since been resolved; it is referenced here as the historical record of the problem, while this document describes the intended architecture and the code remains the source of truth for the current state.
+The intended dependency is one-directional: the form engine *consumes* the design system's controls; the design system does not depend back on the engine. A recorded deviation from that intended seam ownership was captured in [Finding 0001](../architecture/findings/resolved/0001-schema-form-design-system-cycle.md) and has since been resolved; it is referenced here as the historical record of the problem, while this document describes the intended architecture and the code remains the source of truth for the current state.
 
 ## Public API
 
@@ -85,4 +85,4 @@ The engine's structure *is* the project's principles at work ([Engineering Princ
 
 ---
 
-> This document owns the frontend schema-driven form engine. The presentation controls are owned by the [design system](design-system/README.md), submission-error normalization by [error handling](error-handling.md), the application layout by the [frontend architecture](architecture.md) document, per-feature usage by the feature documents, and the underlying principles by [Engineering Principles](../development/engineering-principles.md) — linked here, never duplicated. The recorded schema-form ↔ design-system deviation lives in [Finding 0001](../architecture/findings/0001-schema-form-design-system-cycle.md).
+> This document owns the frontend schema-driven form engine. The presentation controls are owned by the [design system](design-system/README.md), submission-error normalization by [error handling](error-handling.md), the application layout by the [frontend architecture](architecture.md) document, per-feature usage by the feature documents, and the underlying principles by [Engineering Principles](../development/engineering-principles.md) — linked here, never duplicated. The recorded schema-form ↔ design-system deviation lives in [Finding 0001](../architecture/findings/resolved/0001-schema-form-design-system-cycle.md).

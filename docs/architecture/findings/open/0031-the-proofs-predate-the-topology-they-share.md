@@ -7,7 +7,7 @@
 
 ## Observation
 
-The [testing topology](../../development/testing-topology.md) was recorded after the proof it governs had been written, and some of that proof is not in the lane that owns it. Four story files are affected; the other twenty-one construct no double and are correct as they stand.
+The [testing topology](../../../development/testing-topology.md) was recorded after the proof it governs had been written, and some of that proof is not in the lane that owns it. Four story files are affected; the other twenty-one construct no double and are correct as they stand.
 
 Every case below is **component-lane behavior held in the browser lane**, and every one waits on the component lane the topology adopts but does not yet build. They divide by what they assert, not by whether they can be removed.
 
@@ -40,7 +40,7 @@ Every case below is **component-lane behavior held in the browser lane**, and ev
 | `Profile` · *skipping issues no request* | a spy — that no request was made |
 | `Onboarding` · *leaving never waits on the close* | that navigation does not await a promise |
 
-**The interaction class is wider than the twelve named above.** Typing, clicking, disabled state and the values that follow need a renderer but not a browser, so they belong to the component lane under [ADR 0020](../decisions/0020-proof-has-a-home-testing-topology.md) Decision 5. The twelve are named because each also restates a service outcome; the rest are spread across the same four files, and listing them case by case would be an inventory that the first move invalidates.
+**The interaction class is wider than the twelve named above.** Typing, clicking, disabled state and the values that follow need a renderer but not a browser, so they belong to the component lane under [ADR 0020](../../decisions/0020-proof-has-a-home-testing-topology.md) Decision 5. The twelve are named because each also restates a service outcome; the rest are spread across the same four files, and listing them case by case would be an inventory that the first move invalidates.
 
 ## Why it matters
 
@@ -52,9 +52,9 @@ The lifecycle cases are the sharpest symptom. Two of them assert through elapsed
 
 ## Why it is recorded rather than resolved
 
-**Nothing here can be resolved before the component lane exists**, including the restated halves: narrowing a case to the component's half leaves that half still in the browser lane, so the narrowing is work the move does rather than work that precedes it. [ADR 0020](../decisions/0020-proof-has-a-home-testing-topology.md) is deliberately a decision and not a migration, and the lane is its own Work Item with its own evidence.
+**Nothing here can be resolved before the component lane exists**, including the restated halves: narrowing a case to the component's half leaves that half still in the browser lane, so the narrowing is work the move does rather than work that precedes it. [ADR 0020](../../decisions/0020-proof-has-a-home-testing-topology.md) is deliberately a decision and not a migration, and the lane is its own Work Item with its own evidence.
 
-Recording the inventory here rather than in the [topology](../../development/testing-topology.md) keeps that document a Contract: it states the rule, and this register states which proof does not yet meet it — the same division [Finding 0030](0030-the-capabilities-predate-the-structure-they-share.md) holds against the capability structure.
+Recording the inventory here rather than in the [topology](../../../development/testing-topology.md) keeps that document a Contract: it states the rule, and this register states which proof does not yet meet it — the same division [Finding 0030](0030-the-capabilities-predate-the-structure-they-share.md) holds against the capability structure.
 
 ## Not decided here
 
@@ -64,7 +64,7 @@ What the component lane is built on. Whether a restated half is dropped as the c
 
 **The twelve cases in the first table were recorded as *duplicated*, and verification before any deletion proved they are not.** They were to be deleted in the Work Item that followed this Finding. Applying the topology's own test — *if this lane's case were deleted, would the behavior still be proven?* — to each of them in turn answered **no** every time, so none of them could be deleted, and the Work Item's scope was empty.
 
-**What the check found.** Each case asserts **more than one behavior**, and [ADR 0020](../decisions/0020-proof-has-a-home-testing-topology.md) Decision 3 attributes each to the unit that decides it. `Verify` · *the cooldown refusal says what it is* asserts three: that clicking *send* issues the request, that `too_many_requests` maps to the cooldown wording, and that the mapped message reaches a `role="alert"` region. Only the middle one is a service's, and only it is proven elsewhere. Delete the case and two behaviors stop being proven.
+**What the check found.** Each case asserts **more than one behavior**, and [ADR 0020](../../decisions/0020-proof-has-a-home-testing-topology.md) Decision 3 attributes each to the unit that decides it. `Verify` · *the cooldown refusal says what it is* asserts three: that clicking *send* issues the request, that `too_many_requests` maps to the cooldown wording, and that the mapped message reaches a `role="alert"` region. Only the middle one is a service's, and only it is proven elsewhere. Delete the case and two behaviors stop being proven.
 
 The same shape held for all twelve. The original table collapsed two behaviors into one by reading *the message a reader sees* as the service's outcome, when the service decides the wording and the component decides that it is rendered at all.
 
@@ -80,7 +80,7 @@ The Finding stays `Open`: every case above waits on the component lane.
 
 **One case in that table was never lifecycle.** `Profile` · *skipping issues no request* uses no gateway double, does not spy, and asserts that no alert appears and submit stays enabled after a click. `skip` is `useCallback(() => onSettled?.("skipped"))` and reaches no gateway, so there was nothing to spy on. It is **interaction**, and moves to that class — which now holds thirteen named cases, not twelve.
 
-**A gap the move exposed, and which this Finding now records.** Three of the four mutations run against the new tests failed exactly one test each. The fourth did not: removing the `useMemo` that holds `useJourney`'s gateway across renders **breaks nothing**, because every test supplies a stable gateway through the hook's optional parameter, and the memo only matters on the path where none is supplied. **The seam added for testing is what prevents the behavior it protects from being proven.** No test was added to close this — a test that reached for the memo would assert an implementation rather than an outcome ([Engineering Principles §8](../../development/engineering-principles.md)) — and it is evidence for the Work Item that removes the seam rather than for this one.
+**A gap the move exposed, and which this Finding now records.** Three of the four mutations run against the new tests failed exactly one test each. The fourth did not: removing the `useMemo` that holds `useJourney`'s gateway across renders **breaks nothing**, because every test supplies a stable gateway through the hook's optional parameter, and the memo only matters on the path where none is supplied. **The seam added for testing is what prevents the behavior it protects from being proven.** No test was added to close this — a test that reached for the memo would assert an implementation rather than an outcome ([Engineering Principles §8](../../../development/engineering-principles.md)) — and it is evidence for the Work Item that removes the seam rather than for this one.
 
 **Nothing in production changed.** The six tests inject through the existing optional gateway, which stays marked for removal; no prop, parameter or barrel was touched.
 
@@ -120,7 +120,7 @@ The Finding stays `Open`.
 
 > A case **restates** when its assertion **names** another lane's output. It **traverses** when it merely **depends** on one to reach its own subject.
 
-Profile's error case named `AUTH_COPY.profile.invalid`, which `profileErrorHandler.test.ts` asserts — a restatement, and narrowed. These three name a heading, a control and a wording that **no other lane asserts**; the mapping they depend on sits upstream of the assertion rather than inside it. Traversal is what the [topology](../../development/testing-topology.md) already permits: *another lane may traverse a behavior incidentally; it may not take it as its subject.*
+Profile's error case named `AUTH_COPY.profile.invalid`, which `profileErrorHandler.test.ts` asserts — a restatement, and narrowed. These three name a heading, a control and a wording that **no other lane asserts**; the mapping they depend on sits upstream of the assertion rather than inside it. Traversal is what the [topology](../../../development/testing-topology.md) already permits: *another lane may traverse a behavior incidentally; it may not take it as its subject.*
 
 **Two mutations per case established that, rather than reading.** Breaking a mapping — `screenFor({failed})` to `request`, `destinationFor({failed})` to `feed` — failed **both** lanes, which is what proves the unit lane owns it and these cases only pass through. Breaking a rendering — the retry control's name, in each screen — failed **only** the component lane, which is what proves each case has a subject of its own. Had a mapping mutation failed only the component lane, the verdict would have been wrong and the case would have narrowed.
 
@@ -136,7 +136,7 @@ The Finding stays `Open` for that evaluation.
 
 **The evaluation found the opposite of what the remaining cases' placement assumed.** Twenty-one of the twenty-three unnamed cases assert structure, text, DOM attributes or typing — things a renderer establishes. Only two need a browser for their **assertions**: the two `Compact` cases, which read the viewport.
 
-**But every story in those four files carries `a11y: { test: "error" }`**, which `preview.ts` documents as failing CI on violations, and which was proven to bite: an unlabelled input on `VerifyAsk` failed **three** browser tests and **zero** component tests, though the component lane renders that screen three times. **Each story is therefore also an accessibility assertion on a real rendering, and the component lane has no equivalent.** That is browser-only under this repository's own [topology](../../development/testing-topology.md), and it is why the remaining twenty-one are not moved: each would trade a cheap assertion for the loss of an axe run.
+**But every story in those four files carries `a11y: { test: "error" }`**, which `preview.ts` documents as failing CI on violations, and which was proven to bite: an unlabelled input on `VerifyAsk` failed **three** browser tests and **zero** component tests, though the component lane renders that screen three times. **Each story is therefore also an accessibility assertion on a real rendering, and the component lane has no equivalent.** That is browser-only under this repository's own [topology](../../../development/testing-topology.md), and it is why the remaining twenty-one are not moved: each would trade a cheap assertion for the loss of an axe run.
 
 **Nine states had already lost theirs, and nothing said so.** Each was rendered only by a case that #722, #724 or #726 moved. Five were proven by injecting a violation inside the state's branch and finding the browser lane still green; four were established by reading which stories remain:
 
@@ -204,8 +204,8 @@ What fell is **branches the departing cases traversed on their way somewhere els
 
 **This is the coarseness recorded against the check when it was built, seen from the other side.** #729 recorded that a branch another story crosses incidentally survives a withdrawal; this records that a branch only a departing case crossed falls without any state going with it. Neither is a defect in the rule — both are the distance between a branch and a state, and both are why **the mutation is the proof and the floor is only a tripwire**.
 
-Adding cases to lift the number back would have been tests written for a metric, which is the inversion [ADR 0020](../decisions/0020-proof-has-a-home-testing-topology.md) exists to prevent. The floor was lowered on a human ruling rather than by the branch that wanted it lowered, because a check that lowers its own bar is worth nothing.
+Adding cases to lift the number back would have been tests written for a metric, which is the inversion [ADR 0020](../../decisions/0020-proof-has-a-home-testing-topology.md) exists to prevent. The floor was lowered on a human ruling rather than by the branch that wanted it lowered, because a check that lowers its own bar is worth nothing.
 
-**The interaction class is empty, and the transition row is closed.** The [topology](../../development/testing-topology.md) records it.
+**The interaction class is empty, and the transition row is closed.** The [topology](../../../development/testing-topology.md) records it.
 
 The Finding stays `Open`: the seam named in *Why it matters* — the `repo?` prop on five screens, the optional gateway on every hook, and the three published ports — is untouched, and every lane in this repository still reaches those screens through it.

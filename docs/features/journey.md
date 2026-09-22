@@ -5,7 +5,7 @@
 > **Scope:** The journey capability (`apps/web/src/features/journey/`) and its behaviour. The journey's phases, its transitions and what each refuses are the [API contract](../api/api-contract.md#onboarding-journey)'s; the steps are the [profile](profile.md) feature's and [Channel Verification](../backend/channel-verification.md)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organisation is the [capability structure](../frontend/architecture.md#the-capability-structure), which every capability shares and which that document owns. Anything not described here is not yet built, not architecturally rejected. **This document is interim:** its flat placement under `docs/features/` and its shape hold until feature documentation is restructured.
 > **Version:** 1.0
-> **Last Updated:** 2026-09-21
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 ## What the feature does
@@ -19,7 +19,7 @@ This feature is **the client's hold on where the reader stands in that journey**
 - **Closes** it when the reader leaves.
 - **Retries** a read that failed.
 
-It has no interface of its own. The screens, the progress display and which move each screen makes belong to the auth page group, which composes this feature with the steps. That group has no document of its own yet ([Finding 0036](../architecture/findings/0036-documentation-the-feature-split-found-missing.md)).
+It has no interface of its own. The screens, the progress display and which move each screen makes belong to the auth page group, which composes this feature with the steps. That group has no document of its own yet ([Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)).
 
 ## Responsibility boundary
 
@@ -36,7 +36,7 @@ In one line: the feature asks the server where the reader belongs and tells it w
 | The feature needs | It composes | Owned by |
 |---|---|---|
 | Its endpoints and payloads | `GET /onboarding/journey` and `POST /onboarding/journey/advance` | [API contract](../api/api-contract.md#onboarding-journey) |
-| The server half: deriving the phase, storing how the profile step was left, consulting Channel Verification | the journey module under `apps/api/src/modules/auth/` | the [API contract](../api/api-contract.md#onboarding-journey) states its behaviour and the [data model](../architecture/data-model.md) how its phase is derived; no backend document owns the module yet ([Finding 0036](../architecture/findings/0036-documentation-the-feature-split-found-missing.md)) |
+| The server half: deriving the phase, storing how the profile step was left, consulting Channel Verification | the journey module under `apps/api/src/modules/auth/` | the [API contract](../api/api-contract.md#onboarding-journey) states its behaviour and the [data model](../architecture/data-model.md) how its phase is derived; no backend document owns the module yet ([Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)) |
 | Requests as the signed-in reader | the authenticated Axios client | [Frontend API Client](../frontend/api-client.md#three-clients) |
 | Whether the session has settled | the session's settled flag (`shared/session`) | [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md); its lifecycle awaits a document of its own ([platform index](../frontend/architecture.md#the-platform-index)) |
 | Telling an unauthenticated failure from any other | normalized `AppError` | [Frontend Error Handling](../frontend/error-handling.md) |

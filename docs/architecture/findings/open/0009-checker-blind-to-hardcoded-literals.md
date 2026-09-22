@@ -7,9 +7,9 @@
 
 ## Observation
 
-The checker ([ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 3's mechanical net, D12/D13) resolves `var(--…)` references and fails on any that name a Design Token yet resolve to no definition. That is one half of the binding rule **I1**. The other half — *never a hardcoded value* — it cannot see: a literal is not a reference, so `opacity: 0.6`, `transition: … 0.2s`, `color: #ffffff` or `padding: 8px` in a component pass the checker untouched. The net proves that the references which *are* present resolve; it says nothing about the values that were written instead of a reference.
+The checker ([ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 3's mechanical net, D12/D13) resolves `var(--…)` references and fails on any that name a Design Token yet resolve to no definition. That is one half of the binding rule **I1**. The other half — *never a hardcoded value* — it cannot see: a literal is not a reference, so `opacity: 0.6`, `transition: … 0.2s`, `color: #ffffff` or `padding: 8px` in a component pass the checker untouched. The net proves that the references which *are* present resolve; it says nothing about the values that were written instead of a reference.
 
-[ADR 0011](../decisions/0011-intent-layer-earned-not-assumed.md) already records that the checker cannot tell a scale position from an intent, so the *tier* half of I1 is review-enforced. This finding records the adjacent, older gap: the *literal-prohibition* half is review-enforced too, and always has been. Both halves of I1 rest on human review; only reference-resolution is mechanical.
+[ADR 0011](../../decisions/0011-intent-layer-earned-not-assumed.md) already records that the checker cannot tell a scale position from an intent, so the *tier* half of I1 is review-enforced. This finding records the adjacent, older gap: the *literal-prohibition* half is review-enforced too, and always has been. Both halves of I1 rest on human review; only reference-resolution is mechanical.
 
 ## Evidence
 

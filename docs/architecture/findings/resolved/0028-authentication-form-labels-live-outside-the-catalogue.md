@@ -14,7 +14,7 @@ So one screen draws its words from two sources: the catalogue for everything aro
 
 ## Why it matters
 
-[ADR 0018](../decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 6 makes user-facing text content addressed by key, so that adopting a translation layer replaces the catalogue without reshaping any consumer. Text that is not in the catalogue is not replaced by that step; it is found afterwards, one string at a time, by whoever notices a form still in English.
+[ADR 0018](../../decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 6 makes user-facing text content addressed by key, so that adopting a translation layer replaces the catalogue without reshaping any consumer. Text that is not in the catalogue is not replaced by that step; it is found afterwards, one string at a time, by whoever notices a form still in English.
 
 The copy Work Item (#685) moved the catalogue whole and could not have caught this — the labels were never in it.
 

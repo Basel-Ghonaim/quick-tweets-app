@@ -5,7 +5,7 @@
 > **Scope:** The profile capability (`apps/web/src/features/profile/`) and its behaviour. The wire contract is the API contract's: the [update](../api/api-contract.md#patch-usersme--update-own-profile), with the avatar policy the server enforces, and the [upload](../api/api-contract.md#post-media--upload-a-media-object-multipart). What happens to an uploaded picture on the server is [Media](../backend/media.md)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organisation is the [capability structure](../frontend/architecture.md#the-capability-structure), which every capability shares and which that document owns. Anything not described here is not yet built, not architecturally rejected. **This document is interim:** its flat placement under `docs/features/` and its shape hold until feature documentation is restructured. **The capability is temporary as well**, until a Users capability exists. Where it then lives is that capability's to decide ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md), Consequences), and it is kept self-contained so that the move is a directory move.
 > **Version:** 1.0
-> **Last Updated:** 2026-09-21
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 ## What the feature does
@@ -18,7 +18,7 @@ Profile is **a signed-in reader editing their own name, bio and picture**. Its o
 
 ## Responsibility boundary
 
-Profile **owns** the edit: its form and the validation it composes, the state of its one request and of the picture's upload, how each field is cleared on the wire, and the wording of its refusals. It publishes a hook and **no interface**. The screen that renders the form belongs to the auth page group, which composes this feature and has no document of its own yet ([Finding 0036](../architecture/findings/0036-documentation-the-feature-split-found-missing.md)).
+Profile **owns** the edit: its form and the validation it composes, the state of its one request and of the picture's upload, how each field is cleared on the wire, and the wording of its refusals. It publishes a hook and **no interface**. The screen that renders the form belongs to the auth page group, which composes this feature and has no document of its own yet ([Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)).
 
 It does **not** own the User domain. The update answers with more than profile reads, and the self profile, the handle and what a reader's name falls back to are that domain's; profile keeps none of them. It **commits no identity**: an update changes neither the session nor its token. It does not own **the journey**. It reports how the step ended in a type of its own, and the page passes that report on as the journey's outcome. The two types are declared separately, so the pass-through holds only while their values agree. It does not own the picture once uploaded, because storing, validating and reclaiming it are Media's.
 
@@ -32,7 +32,7 @@ In one line: the feature decides what a reader may change and how each change tr
 |---|---|---|
 | Its endpoints and payloads | `PATCH /users/me` and `POST /media` | [API contract](../api/api-contract.md#patch-usersme--update-own-profile) · [the upload](../api/api-contract.md#post-media--upload-a-media-object-multipart) |
 | Requests as the signed-in reader | the authenticated Axios client | [Frontend API Client](../frontend/api-client.md#three-clients) |
-| Sending the picture | the transport's upload call, `uploadMedia` | no owner on this tier yet: where Media's upload belongs is open in [Finding 0030](../architecture/findings/0030-the-capabilities-predate-the-structure-they-share.md) |
+| Sending the picture | the transport's upload call, `uploadMedia` | no owner on this tier yet: where Media's upload belongs is open in [Finding 0030](../architecture/findings/open/0030-the-capabilities-predate-the-structure-they-share.md) |
 | What becomes of an uploaded picture | storage, content validation, attachment and reclamation | [Media](../backend/media.md) |
 | Its form | a schema config driving the form engine | [Frontend Forms](../frontend/forms.md) |
 | One typed error shape | normalized `AppError` | [Frontend Error Handling](../frontend/error-handling.md) |
@@ -50,7 +50,7 @@ In one line: the feature decides what a reader may change and how each change tr
 It is organised as the [capability structure](../frontend/architecture.md#the-capability-structure) says, in the layers that structure names. What follows is what each layer holds here, not a rule; the rule is that document's.
 
 - **`model/`**: the edits, the part of the update's answer profile reads, how the step ended, the upload's four states, and the picture rules the server enforces. Those rules are mirrored here so that the screen offers nothing the server would refuse.
-- **`gateway/`**: the capability's own port, for updating and for uploading, with one REST implementation over the authenticated client. Uploading delegates to the transport's upload call and answers only the reference, which is all profile keeps of a picture. The wire shape and the mapper live here too. **The two text fields clear in opposite ways**: a name clears with `null` and a bio with an empty string, and the server rejects each field's other form, so the mapper translates an empty field per field rather than passing it through. The contract does not state either clearing form yet ([Finding 0036](../architecture/findings/0036-documentation-the-feature-split-found-missing.md)).
+- **`gateway/`**: the capability's own port, for updating and for uploading, with one REST implementation over the authenticated client. Uploading delegates to the transport's upload call and answers only the reference, which is all profile keeps of a picture. The wire shape and the mapper live here too. **The two text fields clear in opposite ways**: a name clears with `null` and a bio with an empty string, and the server rejects each field's other form, so the mapper translates an empty field per field rather than passing it through. The contract does not state either clearing form yet ([Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)).
 - **`services/`**: the upload's reducer, composing the edits from the form and the upload, running the update against the request state, and wording a refusal.
 - **`forms/`**: the form definition, which holds two optional fields and their length checks. The picture is not in it: its value is a reference an upload produced, not something typed in.
 - **`hooks/`**: the flow hook composes the form, the request and the upload behind one submit. It hands the screen its fields, the limits it displays, and the upload's controls, so the screen names no schema of its own. A second hook runs the upload when a picture is chosen.

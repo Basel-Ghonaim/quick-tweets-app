@@ -4,8 +4,8 @@
 > **Class:** Contract (§3).
 > **Authority:** This document is the constitutional reference for all documentation work in this project. Every documentation file, contribution, and review — by humans or AI assistants — must comply with it. Where any other documentation practice conflicts with this document, this document prevails.
 > **Scope:** Governs *what* documentation exists, *where* it lives, *who owns each fact*, and *when* it must change. It does not document the product itself.
-> **Version:** 1.11
-> **Last Updated:** 2026-09-21
+> **Version:** 1.12
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 
@@ -234,11 +234,12 @@ Create a finding when a review surfaces an architectural problem that deserves d
 - A finding **never schedules work** and **never edits the intended-architecture documents**; instead, the affected document **links** to the finding so readers see the known deviation.
 
 ### Finding rules
-- **Location:** `architecture/findings/`, a sibling of `architecture/decisions/`.
+- **Location:** `architecture/findings/`, a sibling of `architecture/decisions/`, filed by status. **`open/`** holds every finding that is still open, whether `Open` or `Acknowledged`. **`resolved/`** holds every closed one, whether `Resolved` or `Accepted`. The open findings can then be read on their own, and `resolved/` keeps the closed ones on record.
+- **A finding moves when it closes.** The change that sets a finding's status to `Resolved` or `Accepted` also moves it from `open/` to `resolved/`. The move is recorded as a rename, so the finding's history follows it. Every link to the finding is repointed in the same change, and its entry in the [map](../README.md) moves from the open list to the closed one. A finding keeps its number, and numbering runs across both folders.
 - **One finding per file.** Each records a single architectural concern.
 - **Content:** the observation, concrete evidence (code references), the principle or boundary it violates, the affected areas, a status, and links to any motivating discussion and to the resolving ADR / issue / PR.
 - **Status:** one of `Open`, `Acknowledged`, `Resolved`, or `Accepted` (consciously tolerated, with rationale).
-- **Append-only.** A resolved finding is marked `Resolved` with a link to the ADR, PR, or commit that fixed it — it is not deleted. The register is the project's durable memory of architectural debt.
+- **Append-only.** A resolved finding is marked `Resolved` with a link to the ADR, PR, or commit that fixed it, and filed under `resolved/` — it is not deleted. The register is the project's durable memory of architectural debt.
 
 ### Relationship to ADRs and issues
 A finding is the *problem observed*; an ADR is the *decision made*; an issue is the *task to do it*. One finding may motivate an ADR and spawn one or more issues, and it links to both. This keeps intended-architecture documents clean: they describe the target design and point to findings for any current divergence.

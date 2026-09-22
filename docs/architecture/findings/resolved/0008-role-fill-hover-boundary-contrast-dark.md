@@ -8,7 +8,7 @@
 
 ## Observation
 
-The fill family carries a resting value and a hover value per role (`--role-fill-<role>` and `--role-fill-<role>-hover`). A filled control's own background **is** its boundary against the surface behind it, so both values are subject to the 3:1 non-text contrast requirement (WCAG 1.4.11), which [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 5 places under the system's ownership.
+The fill family carries a resting value and a hover value per role (`--role-fill-<role>` and `--role-fill-<role>-hover`). A filled control's own background **is** its boundary against the surface behind it, so both values are subject to the 3:1 non-text contrast requirement (WCAG 1.4.11), which [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 5 places under the system's ownership.
 
 The hover value is one step darker than the resting value in both themes. On a light page that raises boundary contrast; on a dark page it lowers it. **In the dark theme every role's hover value falls below 3:1 against `--surface-page`**, while every resting value clears it.
 

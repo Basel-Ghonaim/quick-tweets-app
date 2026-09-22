@@ -46,7 +46,7 @@ Recorded here rather than as a separate finding: it is the same cluster, the sam
 
 ## The two invariants this crosses
 
-**A component never declares an indicator of its own; it composes the owned one** ([components.md](../../frontend/design-system/components.md)). Five of these declare none at all, so keyboard focus falls back to the user agent's default outline — which is not the owned indicator, is not guaranteed against the surfaces these sit on, and is exactly the per-component focus drift [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 5 exists to end. `avatarOverlayBtn` is the sharpest case: it sits over an arbitrary photograph, where a UA default has no contrast guarantee at all.
+**A component never declares an indicator of its own; it composes the owned one** ([components.md](../../../frontend/design-system/components.md)). Five of these declare none at all, so keyboard focus falls back to the user agent's default outline — which is not the owned indicator, is not guaranteed against the surfaces these sit on, and is exactly the per-component focus drift [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 5 exists to end. `avatarOverlayBtn` is the sharpest case: it sits over an arbitrary photograph, where a UA default has no contrast guarantee at all.
 
 **`--control-target-min` is a platform basis, not a design choice** — 24 px, WCAG 2.5.8, declared theme-invariant because no resolution axis changes a finger. `thumbnailRemoveBtn` at 20 px and `fileListRemoveBtn` at roughly 22 px are below it, and neither binds the token.
 

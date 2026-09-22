@@ -34,12 +34,12 @@ Implementing `radio`/`select`/`textarea` is **not** a mechanical addition; it re
 
 1. **The `SchemaField` seam design** for option-based and multiline controls — how the type→control mapping extends without eroding the seam's isolation role.
 2. **The `options` contract** — how option lists are declared on `FormFieldConfig`, typed, and inferred into the payload type (a public-API extension to the schema).
-3. **The responsibility boundary** between `schema-form` (the seam) and the `design-system` (the concrete `RadioGroup` / `Select` / `Textarea` controls), consistent with the one-directional relationship established in [Finding 0001](0001-schema-form-design-system-cycle.md).
+3. **The responsibility boundary** between `schema-form` (the seam) and the `design-system` (the concrete `RadioGroup` / `Select` / `Textarea` controls), consistent with the one-directional relationship established in [Finding 0001](../resolved/0001-schema-form-design-system-cycle.md).
 
 ## Principle / boundary
 
 - **Don't invent the future / one owner** — the field types remain in the public API (an implementation gap), while the *controls* remain the design system's responsibility; neither is designed speculatively here.
-- **Seam isolation** — the engine deals only in field types; the `SchemaField` seam owns the type→control mapping (see [`forms.md`](../../frontend/forms.md)). Extending it for option/multiline controls must preserve that boundary.
+- **Seam isolation** — the engine deals only in field types; the `SchemaField` seam owns the type→control mapping (see [`forms.md`](../../../frontend/forms.md)). Extending it for option/multiline controls must preserve that boundary.
 
 ## Resolution direction (not scheduled)
 
@@ -48,4 +48,4 @@ A future architectural review — followed by a dedicated Feature Work Item — 
 ## Links
 
 - Correctness / public-API facets delivered in [Issue #249](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/249).
-- Seam ownership and the intended one-directional `schema-form → design-system` relationship: [`frontend/forms.md`](../../frontend/forms.md), [`frontend/design-system/`](../../frontend/design-system/README.md), and [Finding 0001](0001-schema-form-design-system-cycle.md).
+- Seam ownership and the intended one-directional `schema-form → design-system` relationship: [`frontend/forms.md`](../../../frontend/forms.md), [`frontend/design-system/`](../../../frontend/design-system/README.md), and [Finding 0001](../resolved/0001-schema-form-design-system-cycle.md).

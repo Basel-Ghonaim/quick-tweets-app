@@ -27,13 +27,13 @@ This one used to hold in light as well. [#580](https://github.com/Basel-Ghonaim/
 
 `tokenContrast` measures every one of these tokens against surfaces, and each passes on its own. Contrast is the wrong instrument for this: it asks whether a colour is legible, never whether two colours that mean different things look different. So if one of a converged pair moved, the check would stay green and the only witness would be someone noticing by eye.
 
-The cost is not a rendering fault today — both pairs render legibly. It is that the vocabulary makes a promise the values do not keep, and [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 2 admits a token because it **names a shared design concept**. A name whose concept has no distinct value is a token that has stopped earning its admission.
+The cost is not a rendering fault today — both pairs render legibly. It is that the vocabulary makes a promise the values do not keep, and [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 2 admits a token because it **names a shared design concept**. A name whose concept has no distinct value is a token that has stopped earning its admission.
 
 ## Why it is not resolved here
 
 Both are design decisions rather than defects, and neither belongs to the Work Item that found them.
 
-- **`tertiary` / `muted`** resolves one of three ways: give them distinct values, retire one and migrate its callers, or record that they are deliberately equal today and expected to diverge. Only a design settles which — the same rule [foundation.md](../../frontend/design-system/foundation.md) applies to granularity.
+- **`tertiary` / `muted`** resolves one of three ways: give them distinct values, retire one and migrate its callers, or record that they are deliberately equal today and expected to diverge. Only a design settles which — the same rule [foundation.md](../../../frontend/design-system/foundation.md) applies to granularity.
 - **The dark convergence** may be correct. Two interactive affordances sharing one accent is a defensible language decision; what is not defensible is arriving at it by accident and keeping it by inattention.
 
-A check is conceivable — a pairwise minimum separation between tokens that are supposed to differ — but no such rule has ever been stated, and [foundation.md](../../frontend/design-system/foundation.md) reserves a check for a rule whose failure has been observed. The failure here is a naming claim, not a rendering one, and the rule would have to be written before it could be enforced.
+A check is conceivable — a pairwise minimum separation between tokens that are supposed to differ — but no such rule has ever been stated, and [foundation.md](../../../frontend/design-system/foundation.md) reserves a check for a rule whose failure has been observed. The failure here is a naming claim, not a rendering one, and the rule would have to be written before it could be enforced.

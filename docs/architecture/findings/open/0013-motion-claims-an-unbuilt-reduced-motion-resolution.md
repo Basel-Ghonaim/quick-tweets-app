@@ -22,9 +22,9 @@ The same file's header states that reduced motion is *"the earning axis"* for th
 
 Two rules meet here and neither is served by patching the comment quietly.
 
-**The claim is false in the direction the project cares about most.** A comment that describes a resolution is read as a description of the system; the code is authoritative for what the system does ([CLAUDE.md](../../../CLAUDE.md)), and this comment contradicts it. An agent reasoning about reduced motion from the token layer would conclude the axis is handled.
+**The claim is false in the direction the project cares about most.** A comment that describes a resolution is read as a description of the system; the code is authoritative for what the system does ([CLAUDE.md](../../../../CLAUDE.md)), and this comment contradicts it. An agent reasoning about reduced motion from the token layer would conclude the axis is handled.
 
-**The mechanism is deliberately deferred, not merely missing.** [ADR 0011](../decisions/0011-intent-layer-earned-not-assumed.md) leaves *where a reduced-motion resolution lives* undecided, and explicitly declines to extend [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 5's enumerated guarantees to motion. Deleting the clause or building the resolution are both decisions about that deferral, and neither belongs in a component Work Item.
+**The mechanism is deliberately deferred, not merely missing.** [ADR 0011](../../decisions/0011-intent-layer-earned-not-assumed.md) leaves *where a reduced-motion resolution lives* undecided, and explicitly declines to extend [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 5's enumerated guarantees to motion. Deleting the clause or building the resolution are both decisions about that deferral, and neither belongs in a component Work Item.
 
 ## What sharpened it
 

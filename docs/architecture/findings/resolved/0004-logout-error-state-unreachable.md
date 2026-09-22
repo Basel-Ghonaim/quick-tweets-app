@@ -36,7 +36,7 @@ The swallow-error / always-`fulfilled` behaviour the observation recorded is gon
 
 The reachability of `authRequestRejected → status: "error"` is locked by the auth store-access characterization test — `src/modules/auth/store/authStoreContract.test.ts` ("records the error and marks error on rejected").
 
-**No ADR:** #294 changed a flow's behaviour within the existing auth Model/Service/Component pattern — not architecture, layer boundaries, or dependency direction — so the [ADR 0002](../decisions/0002-refined-adr-threshold.md) threshold is not met, consistent with how Findings 0001/0002/0003 were resolved.
+**No ADR:** #294 changed a flow's behaviour within the existing auth Model/Service/Component pattern — not architecture, layer boundaries, or dependency direction — so the [ADR 0002](../../decisions/0002-refined-adr-threshold.md) threshold is not met, consistent with how Findings 0001/0002/0003 were resolved.
 
 ## Links
 

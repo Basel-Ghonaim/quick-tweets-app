@@ -3,13 +3,13 @@
 > **Status:** Open
 > **Date:** 2026-09-09
 > **Affected areas:** `apps/web/src/modules/auth/screens/Verify/` — `VerifyAsk.tsx`, `VerifyCode.tsx`, `messages.ts`
-> **Reported by:** Basel Ghonaim (surfaced during the architectural reassessment behind [ADR 0018](../decisions/0018-composition-has-a-home-four-frontend-zones.md), [#679](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/679))
+> **Reported by:** Basel Ghonaim (surfaced during the architectural reassessment behind [ADR 0018](../../decisions/0018-composition-has-a-home-four-frontend-zones.md), [#679](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/679))
 
 ## Observation
 
 The two verification screens perform the interaction of a **platform capability**: `shared/channel-verification/` owns whether an endpoint is proven, and these screens ask for a code and confirm one. What they are is one capability's interaction; where they sit is the composition that happens to use them.
 
-Under [ADR 0018](../decisions/0018-composition-has-a-home-four-frontend-zones.md) that is an uncomfortable fit rather than a violation. A feature may own the UI that *is* its interaction (Decision 3), and a page composes capabilities and owns no fact (Decision 4) — but the capability here lives in `shared/`, which holds no product UI, so neither rule places these screens cleanly. They go with the onboarding composition because that is the only surface that renders them today.
+Under [ADR 0018](../../decisions/0018-composition-has-a-home-four-frontend-zones.md) that is an uncomfortable fit rather than a violation. A feature may own the UI that *is* its interaction (Decision 3), and a page composes capabilities and owns no fact (Decision 4) — but the capability here lives in `shared/`, which holds no product UI, so neither rule places these screens cleanly. They go with the onboarding composition because that is the only surface that renders them today.
 
 ## Why this is recorded rather than resolved
 
@@ -29,7 +29,7 @@ Whether the verification UI becomes a feature of its own, whether it moves to si
 
 ## Addendum — 2026-09-14, the screens have a home ([#733](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/733))
 
-**Question A is answered: the verification screens live in the auth page group**, at `apps/web/src/pages/auth/screens/Verify/`. They are the interaction of a platform capability that publishes no product interface ([ADR 0019](../decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6), and a page is the zone that composes what no capability owns ([ADR 0018](../decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 4).
+**Question A is answered: the verification screens live in the auth page group**, at `apps/web/src/pages/auth/screens/Verify/`. They are the interaction of a platform capability that publishes no product interface ([ADR 0019](../../decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6), and a page is the zone that composes what no capability owns ([ADR 0018](../../decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 4).
 
 **What this Finding recorded is unchanged, and is now recorded against a real zone rather than a legacy one.** The placement is still the composition's rather than the capability's, and the cost this Finding named still stands: Settings is the surface most likely to render these screens next, and a page may not import another page. **That remains the trigger to revisit**, and it has not fired.
 

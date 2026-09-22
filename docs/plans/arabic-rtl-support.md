@@ -158,7 +158,7 @@ It changes in the branch where the need was found, never in a branch of its own.
 
 **Decisions, and where each landed:**
 
-- **D1–D4 (the credential rules).** The [API contract](../api/api-contract.md) holds the password and email rules, login's presence-only statement and the Pre-release Contract Exception; the [forms](../frontend/forms.md) document holds the client's email rule. Both tiers state the rules, which is [Finding 0026](../architecture/findings/0026-no-tier-owns-the-credential-rules.md)'s open question and not this plan's.
+- **D1–D4 (the credential rules).** The [API contract](../api/api-contract.md) holds the password and email rules, login's presence-only statement and the Pre-release Contract Exception; the [forms](../frontend/forms.md) document holds the client's email rule. Both tiers state the rules, which is [Finding 0026](../architecture/findings/open/0026-no-tier-owns-the-credential-rules.md)'s open question and not this plan's.
 - **D5.** It was deferred, and the deferral is tracked in [#774](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/774).
 - **D6–D9, O1, O5 and D15.** They are the [localisation](../frontend/localisation.md) contract's: resolution, the pre-paint stamp, the catalogues and how they are read, writing numbers and values, choosing a language, and approval. The [frontend architecture](../frontend/architecture.md) places the mechanism in its platform index and composition root.
 - **D10 and O2.** The [Foundation](../frontend/design-system/foundation.md) owns script as the second resolution axis and the script-ordered stacks. O2's face and line-heights are values, and they live in the token layer, where values belong. [#778](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/778) tracks D10's Google Fonts delivery against self-hosting.
@@ -170,9 +170,9 @@ It changes in the branch where the need was found, never in a branch of its own.
 - **No ADR was created or edited**, as §9 required.
 
 **Findings.**
-- [Finding 0028](../architecture/findings/0028-authentication-form-labels-live-outside-the-catalogue.md) was resolved, in WI-2.
-- [Finding 0019](../architecture/findings/0019-pre-paint-script-hardcodes-the-theme-set.md) gained the language set's addendum, in WI-3.
-- [Finding 0032](../architecture/findings/0032-a-check-on-lane-infrastructure-has-no-lane.md) gained three addenda, for the direction and language checks the lane runs on itself.
+- [Finding 0028](../architecture/findings/resolved/0028-authentication-form-labels-live-outside-the-catalogue.md) was resolved, in WI-2.
+- [Finding 0019](../architecture/findings/open/0019-pre-paint-script-hardcodes-the-theme-set.md) gained the language set's addendum, in WI-3.
+- [Finding 0032](../architecture/findings/open/0032-a-check-on-lane-infrastructure-has-no-lane.md) gained three addenda, for the direction and language checks the lane runs on itself.
 - No finding was opened, and none of these is this plan's to close.
 
 **Residues, named rather than absorbed.** Each was recorded by the PR that met it, and none is a deferral of this plan:

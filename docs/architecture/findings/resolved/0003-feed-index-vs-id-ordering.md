@@ -8,7 +8,7 @@
 
 ## Observation
 
-The data model documents the global feed as being served by a **creation-time index**, but the feed query actually orders and cursors on the primary key `id`. The `createdAt`-descending index the document credits is not the index the feed rides — and no observed query reads it. This is a divergence between the documented rationale and the code, which is the source of truth ([CLAUDE.md](../../../CLAUDE.md) — "Code is the source of truth").
+The data model documents the global feed as being served by a **creation-time index**, but the feed query actually orders and cursors on the primary key `id`. The `createdAt`-descending index the document credits is not the index the feed rides — and no observed query reads it. This is a divergence between the documented rationale and the code, which is the source of truth ([CLAUDE.md](../../../../CLAUDE.md) — "Code is the source of truth").
 
 Three facts are individually true but do not line up:
 
@@ -42,8 +42,8 @@ The wire contract agrees with the code: `docs/api/api-contract.md` — the feed 
 
 ## Principle / boundary violated
 
-- **Code is the source of truth** ([CLAUDE.md](../../../CLAUDE.md)): when documentation and code disagree, the code wins; the divergence must be reconciled by an approved decision. A finding records the problem — it does not decide it.
-- **Each index maps to a real query** (the [data model](../data-model.md)'s own stated indexing rule): the documented feed↔`createdAt` mapping does not hold, and the `createdAt` index has no observed reader.
+- **Code is the source of truth** ([CLAUDE.md](../../../../CLAUDE.md)): when documentation and code disagree, the code wins; the divergence must be reconciled by an approved decision. A finding records the problem — it does not decide it.
+- **Each index maps to a real query** (the [data model](../../data-model.md)'s own stated indexing rule): the documented feed↔`createdAt` mapping does not hold, and the `createdAt` index has no observed reader.
 
 ## Resolution direction (not scheduled here)
 
@@ -66,11 +66,11 @@ Ordering the global feed (and author timelines) by the primary key **`id`** is a
 
 The feed query is **unchanged** (Option 2 — reorder onto `createdAt` — was rejected: it adds composite-cursor complexity for a capability nothing needs). The `Tweet.createdAt` **column** is retained; only the dead index is removed.
 
-**No ADR:** this reconciles code, docs, and schema without changing architecture, patterns, layer boundaries, or dependency direction — the [ADR 0002](../decisions/0002-refined-adr-threshold.md) threshold is not met — consistent with how Findings 0001/0002 were resolved.
+**No ADR:** this reconciles code, docs, and schema without changing architecture, patterns, layer boundaries, or dependency direction — the [ADR 0002](../../decisions/0002-refined-adr-threshold.md) threshold is not met — consistent with how Findings 0001/0002 were resolved.
 
 **Caveat:** `id`-ordering assumes monotonic autoincrement; if tweets were ever bulk-imported with back-dated `createdAt` (out of `id` order), the feed would not reflect `createdAt` order. No such requirement today; revisit (Option 2) if back-dating becomes real.
 
 ## Links
 
-- Surfaced during the G3 final migration audit ([Migration Plan §7](../../plans/documentation-migration-plan.md), Work Item #271).
+- Surfaced during the G3 final migration audit ([Migration Plan §7](../../../plans/documentation-migration-plan.md), Work Item #271).
 - `docs/architecture/data-model.md` (Indexing) records the current state and links back to this finding.

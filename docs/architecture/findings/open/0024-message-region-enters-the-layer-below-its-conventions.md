@@ -7,7 +7,7 @@
 
 ## Observation
 
-`MessageRegion` is admitted to the layer as an **interim standing in for `Alert`**, which the product has committed to and which does not exist. The admission is deliberate; what follows is what came with it. Measured against `Spinner`, its sibling in the same category, it departs from the [authoring contract](../../frontend/design-system/components.md) in four ways.
+`MessageRegion` is admitted to the layer as an **interim standing in for `Alert`**, which the product has committed to and which does not exist. The admission is deliberate; what follows is what came with it. Measured against `Spinner`, its sibling in the same category, it departs from the [authoring contract](../../../frontend/design-system/components.md) in four ways.
 
 **Prop vocabulary.** It declares its own `MessageTone` union and takes `children`, rather than extending the native element and importing from the shared contract. `Spinner` is `NativeProps<"span"> & Pick<ControlProps, "color">`; this component shares none of that surface, so a consumer cannot pass an id, a class, or any native attribute through it.
 
@@ -21,7 +21,7 @@
 
 The Work Item that admits the component was scoped to the admission and its evidence. Bringing it up to the conventions changes its public shape — a props interface a consumer sees, a forwarded ref, a different class composition — and that is authoring work on a component whose eventual form is `Alert`'s, not a correction to a move.
 
-The class-reference gap is the one item here that is not about this component at all. It is a limitation of the check, of the same family as [Finding 0009](0009-checker-blind-to-hardcoded-literals.md) and [Finding 0021](0021-token-reference-check-sees-one-interpolation-name.md) — an owned rule the mechanism cannot fully see. Whether the check learns to read a dynamic index, or components are required not to use one, is a decision about the check rather than about its first subject.
+The class-reference gap is the one item here that is not about this component at all. It is a limitation of the check, of the same family as [Finding 0009](0009-checker-blind-to-hardcoded-literals.md) and [Finding 0021](../resolved/0021-token-reference-check-sees-one-interpolation-name.md) — an owned rule the mechanism cannot fully see. Whether the check learns to read a dynamic index, or components are required not to use one, is a decision about the check rather than about its first subject.
 
 ## Affected
 

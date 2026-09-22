@@ -34,9 +34,9 @@ The two are not a re-export of one another; they are independent, behaviourally 
 
 ## Principle / boundary violated
 
-- **Acyclic dependencies** ([Engineering Principles §3](../../development/engineering-principles.md)): dependencies must point one way and never form a cycle; two units importing each other means a responsibility is misplaced.
+- **Acyclic dependencies** ([Engineering Principles §3](../../../development/engineering-principles.md)): dependencies must point one way and never form a cycle; two units importing each other means a responsibility is misplaced.
 - **Platform vs. feature / layering** (same §3): the consumer (form engine) may depend on the platform (design system); the platform must not depend back on the consumer.
-- **Single Responsibility / one owner** ([Engineering Principles §2](../../development/engineering-principles.md)): two diverging `SchemaField` implementations duplicate one concept — the seam should have a single owner.
+- **Single Responsibility / one owner** ([Engineering Principles §2](../../../development/engineering-principles.md)): two diverging `SchemaField` implementations duplicate one concept — the seam should have a single owner.
 
 ## Resolution direction (not scheduled here)
 
@@ -50,5 +50,5 @@ The single canonical `SchemaField` — the live, richer implementation — was r
 
 ## Links
 
-- Surfaced during documentation-migration planning: [Migration Plan §7](../../plans/documentation-migration-plan.md).
+- Surfaced during documentation-migration planning: [Migration Plan §7](../../../plans/documentation-migration-plan.md).
 - The intended one-directional relationship will be described by `frontend/forms.md` and `frontend/design-system/` when they are authored (Phase E), each linking back to this finding.

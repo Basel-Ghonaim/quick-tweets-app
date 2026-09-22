@@ -30,8 +30,8 @@ So `modules → app` **and** `app → modules` — a two-way dependency between 
 
 ## Principle / boundary violated
 
-- **Acyclic dependencies** ([Engineering Principles §3](../../development/engineering-principles.md)): dependencies point one way and never form a cycle; two units importing each other means a responsibility is misplaced.
-- **Layered zones, dependencies inward** (same §3, and the [frontend architecture](../../frontend/architecture.md)'s dependency rule): a feature depends on the platform; nothing below the composition root depends on the composition root.
+- **Acyclic dependencies** ([Engineering Principles §3](../../../development/engineering-principles.md)): dependencies point one way and never form a cycle; two units importing each other means a responsibility is misplaced.
+- **Layered zones, dependencies inward** (same §3, and the [frontend architecture](../../../frontend/architecture.md)'s dependency rule): a feature depends on the platform; nothing below the composition root depends on the composition root.
 
 The misplaced responsibility is the **typed store hooks**: they are consumed by features but live in the zone that composes features.
 
@@ -47,5 +47,5 @@ The misplaced responsibility — the typed store hooks — was relocated **below
 
 ## Links
 
-- Surfaced during Work Item E6 — the frontend architecture document ([`frontend/architecture.md`](../../frontend/architecture.md)) states the intended rule and links back to this finding.
+- Surfaced during Work Item E6 — the frontend architecture document ([`frontend/architecture.md`](../../../frontend/architecture.md)) states the intended rule and links back to this finding.
 - Remedy tracked in [Issue #253](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/253). Related boundary *hygiene* (aliases, missing barrel) is deliberately **not** part of this finding — tracked as cleanup in Issue #254.

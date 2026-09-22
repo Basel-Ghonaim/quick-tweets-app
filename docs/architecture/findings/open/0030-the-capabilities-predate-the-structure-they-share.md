@@ -7,7 +7,7 @@
 
 ## Observation
 
-The [capability structure](../../frontend/architecture.md#the-capability-structure) was recorded after the six capabilities it governs had been built, and **none of them is organised as it says**. They took three shapes: by role, by concern, and flat.
+The [capability structure](../../../frontend/architecture.md#the-capability-structure) was recorded after the six capabilities it governs had been built, and **none of them is organised as it says**. They took three shapes: by role, by concern, and flat.
 
 | Capability | How it departs |
 |---|---|
@@ -29,7 +29,7 @@ The structure exists so that a reader knows where a kind of thing lives without 
 
 ## Why it is recorded rather than resolved
 
-Bringing each capability to the structure is the work the [Frontend Capability Structure plan](../../plans/frontend-capability-structure.md) sequences, one capability per Work Item. The structure was recorded first precisely so that no one of those Work Items decides it for the rest.
+Bringing each capability to the structure is the work the [Frontend Capability Structure plan](../../../plans/frontend-capability-structure.md) sequences, one capability per Work Item. The structure was recorded first precisely so that no one of those Work Items decides it for the rest.
 
 ## Not decided here
 
@@ -73,7 +73,7 @@ The Finding stays `Open`: authentication, channel verification and profile remai
 
 ## Addendum — 2026-09-12, authentication ([#707](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/707))
 
-**Authentication is organised as the structure says.** Its credentials are the model, its wire shapes and mapper sit inside the gateway beside the port and the adapter, its form definitions have a layer, its screens have the barrel they lacked, every barrel names what it offers, and its boundary test holds five rules. Its port is `AuthGateway`, and the dead wire shape [Finding 0029](0029-a-refresh-response-shape-nothing-reads.md) recorded is gone. Its row above is resolved.
+**Authentication is organised as the structure says.** Its credentials are the model, its wire shapes and mapper sit inside the gateway beside the port and the adapter, its form definitions have a layer, its screens have the barrel they lacked, every barrel names what it offers, and its boundary test holds five rules. Its port is `AuthGateway`, and the dead wire shape [Finding 0029](../resolved/0029-a-refresh-response-shape-nothing-reads.md) recorded is gone. Its row above is resolved.
 
 **Two of the six screens that reached past their hooks no longer do.** The flow hooks already closed over their schema, so they now hand the fields to their screens; `Profile.tsx` is the last one left, and it takes the same shape when profile is brought to the structure. The count in the row above therefore reads one.
 
@@ -101,7 +101,7 @@ The Finding stays `Open` for what remains across capabilities: the nine route li
 
 ## Addendum — 2026-09-14, the zone this Finding was written in no longer exists ([#733](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/733))
 
-**The auth page group exists and `modules/` is deleted**, with the `@modules` alias that reached it. Every path this Finding cites under `apps/web/src/modules/auth/` is mapped in [historical paths](../historical-paths.md); nothing above is edited, because each citation records where evidence stood when it was gathered.
+**The auth page group exists and `modules/` is deleted**, with the `@modules` alias that reached it. Every path this Finding cites under `apps/web/src/modules/auth/` is mapped in [historical paths](../../historical-paths.md); nothing above is edited, because each citation records where evidence stood when it was gathered.
 
 **What the page group took**, and why each piece is the composition's rather than a capability's: the two layouts and their parts, because a page group holds the layout; the progress display, which is question E; the verification screens, which is question A; the profile form, because profile publishes a hook and no interface; the route table and the access guard, because a page group publishes a route subtree and a guard belongs visibly at each route. Its boundary is held by five checks, each proven by an isolated mutation.
 
@@ -119,12 +119,12 @@ The Finding stays `Open`: the route literals and Media's upload are unchanged, a
 
 **The nine route literals have a home for the question, not an answer.** They stand exactly where this Finding recorded them, and the question of how a screen learns a destination it does not own is now [#739](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/739) — open, with no approach adopted or ruled out. It gates nothing: Phase 4 closed with the literals left, and Phase 5's enforcement landed without depending on it.
 
-**What still has no answer**, and is not this Finding's to invent: where Media's upload belongs, now that profile reaches it through its own gateway; and where profile itself lives once a Users capability exists, which remains a directory move by construction. A fifth thing joins them — the four capabilities this effort created still share one document, which is [Finding 0034](0034-four-capabilities-are-described-by-a-document-that-does-not-own-them.md).
+**What still has no answer**, and is not this Finding's to invent: where Media's upload belongs, now that profile reaches it through its own gateway; and where profile itself lives once a Users capability exists, which remains a directory move by construction. A fifth thing joins them — the four capabilities this effort created still share one document, which is [Finding 0034](../resolved/0034-four-capabilities-are-described-by-a-document-that-does-not-own-them.md).
 
 The Finding stays `Open` for those.
 
 ## Addendum — 2026-09-21, the shared document is resolved ([#786](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/786))
 
-**[Finding 0034](0034-four-capabilities-are-described-by-a-document-that-does-not-own-them.md) is resolved.** Recovery, profile and the journey have documents of their own, so the fifth item the 2026-09-15 addendum added to this Finding's open list no longer stands. Profile's document states that the capability is temporary until a Users capability exists, which puts this Finding's open question where readers of the capability will meet it.
+**[Finding 0034](../resolved/0034-four-capabilities-are-described-by-a-document-that-does-not-own-them.md) is resolved.** Recovery, profile and the journey have documents of their own, so the fifth item the 2026-09-15 addendum added to this Finding's open list no longer stands. Profile's document states that the capability is temporary until a Users capability exists, which puts this Finding's open question where readers of the capability will meet it.
 
 The Finding stays `Open`: where Media's upload belongs, and where profile lives once a Users capability exists, are unchanged. The frontend's reach to Media also has no description, which [Finding 0036](0036-documentation-the-feature-split-found-missing.md) records beside the other gaps.

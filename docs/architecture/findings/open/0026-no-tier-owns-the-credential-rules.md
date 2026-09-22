@@ -19,7 +19,7 @@ Three claims, three answers, and the values agree by attention rather than by co
 
 ## Why this is a finding rather than a fix
 
-**The home already exists as a decision and not yet as a directory.** [ADR 0013](../decisions/0013-applications-and-cross-tier-packages.md) records exactly this shape as the motivation for the cross-tier package layer — *"certain deterministic facts are defined on both tiers and reconciled by hand, which drifts"* — and its rules bind what such a package may hold: one ownership category, no runtime dependency, and a fact whose owner is already documented.
+**The home already exists as a decision and not yet as a directory.** [ADR 0013](../../decisions/0013-applications-and-cross-tier-packages.md) records exactly this shape as the motivation for the cross-tier package layer — *"certain deterministic facts are defined on both tiers and reconciled by hand, which drifts"* — and its rules bind what such a package may hold: one ownership category, no runtime dependency, and a fact whose owner is already documented.
 
 Creating `packages/` is an effort of its own. It is not something a Work Item that moves a file between zones may take on, and the frontend zone migration's plan puts it out of scope explicitly.
 

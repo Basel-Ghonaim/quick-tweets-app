@@ -31,7 +31,7 @@ WI-6 is a migration: it binds values to the vocabulary and does not change them.
 - bind `--text-secondary` and keep the opacity — a different colour;
 - keep both and accept the ratio — a decision to ship a known AA failure.
 
-Choosing among those under migration momentum is what the effort's stop rule exists to prevent, and it is the same call [CA-1](../../plans/component-architecture-unification.md) made when the Pilot Field's gate failed on a legacy colour.
+Choosing among those under migration momentum is what the effort's stop rule exists to prevent, and it is the same call [CA-1](../../../plans/component-architecture-unification.md) made when the Pilot Field's gate failed on a legacy colour.
 
 **Consequence:** tracked as [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477), which owns the decision. The decision taken there is that a demotion is carried by the colour and never by compositing an opacity over a token, because the composite leaves the contrast guarantee.
 
@@ -40,4 +40,4 @@ Choosing among those under migration momentum is what the effort's stop rule exi
 ## Related
 
 - [Finding 0008](0008-role-fill-hover-boundary-contrast-dark.md) — the other contrast defect the token-pair check cannot observe.
-- [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 5 places contrast under the Design System's ownership.
+- [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 5 places contrast under the Design System's ownership.

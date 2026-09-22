@@ -323,8 +323,8 @@ Each Work Item is a separate, atomic unit with its own Issue and PR, and each le
 - **Premise correction (2026-08-10).** The Work Item was written as though an unconsumed family were an unfinished one. **It is not** — consumer count is evidence, never a gate ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 2), and a family may be intentional curated vocabulary with nobody using it yet. Each family is decided on its own architectural grounds, and **Auth is evidence for none of them**.
   - **`shadow.css` stays active.** Elevation is among the token types Decision 3 names this architecture as governing, which grounds the family independently of any consumer. Values stay provisional (**D9**), and **no semantic tier is earned** — recorded at the family.
   - **`transitions.css` moves to `legacy/`** on **D23**'s condition: superseded by `--motion-*`, whose replacement exists and is proven. Not on its consumer count.
-  - **`breakpoints.css` is removed** because its **current mechanism cannot be consumed in a media query** — a custom property is illegal in a `@media` condition — *and* no responsive design owns it. Breakpoint values are perfectly consumable through a valid mechanism (build-time custom media, or application-level constants read via `matchMedia`); [Finding 0011](../architecture/findings/0011-breakpoint-tokens-unconsumable-mechanism.md) records when to reconsider.
-  - **`z-index.css` is removed** because **no shared stacking concept exists**: every real `z-index` orders a component's own children inside its own context, and an order is meaningful only as a complete sequence, which Decision 2's granularity limit reserves for a design ([Finding 0012](../architecture/findings/0012-no-shared-stacking-concept.md)).
+  - **`breakpoints.css` is removed** because its **current mechanism cannot be consumed in a media query** — a custom property is illegal in a `@media` condition — *and* no responsive design owns it. Breakpoint values are perfectly consumable through a valid mechanism (build-time custom media, or application-level constants read via `matchMedia`); [Finding 0011](../architecture/findings/open/0011-breakpoint-tokens-unconsumable-mechanism.md) records when to reconsider.
+  - **`z-index.css` is removed** because **no shared stacking concept exists**: every real `z-index` orders a component's own children inside its own context, and an order is meaningful only as a complete sequence, which Decision 2's granularity limit reserves for a design ([Finding 0012](../architecture/findings/open/0012-no-shared-stacking-concept.md)).
 - **Dependencies:** **WI-4B** (hard — for the tier model and the layout a conformed family is placed into); **WI-8** (sequencing only).
 - **Boundary validated:** **the criterion at its edge** — that **D20**'s test still yields a defensible answer for a family with *no* consumer to evidence it, or that it honestly cannot and says so.
 - **Invariants protected:** **I1**, **I4**, **I8**.
@@ -415,10 +415,10 @@ Nine criteria, each with what proves it rather than an assertion that it holds.
 
 | Finding | Owner |
 |---|---|
-| [0008](../architecture/findings/0008-role-fill-hover-boundary-contrast-dark.md) — hover fill below 3:1 in dark | open; the check asserts resting values only |
-| [0010](../architecture/findings/0010-avatar-placeholder-text-contrast.md) — placeholder text at 2.59:1 | [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477), which also owns promoting the last accessibility gate |
-| [0011](../architecture/findings/0011-breakpoint-tokens-unconsumable-mechanism.md) — breakpoints unusable in a media query | open; revisit when a real responsive design arrives with a valid mechanism |
-| [0012](../architecture/findings/0012-no-shared-stacking-concept.md) — no shared stacking concept | open; the first two floating components that overlap will settle the order |
+| [0008](../architecture/findings/resolved/0008-role-fill-hover-boundary-contrast-dark.md) — hover fill below 3:1 in dark | open; the check asserts resting values only |
+| [0010](../architecture/findings/resolved/0010-avatar-placeholder-text-contrast.md) — placeholder text at 2.59:1 | [#477](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/477), which also owns promoting the last accessibility gate |
+| [0011](../architecture/findings/open/0011-breakpoint-tokens-unconsumable-mechanism.md) — breakpoints unusable in a media query | open; revisit when a real responsive design arrives with a valid mechanism |
+| [0012](../architecture/findings/open/0012-no-shared-stacking-concept.md) — no shared stacking concept | open; the first two floating components that overlap will settle the order |
 
 ### Where the effort departed from this plan
 

@@ -22,7 +22,7 @@ The values were therefore unreachable by the only consumers that would want them
 Removal is not because nothing consumed it — **an unconsumed family is not an unfinished family**, and consumer count is evidence rather than a gate. Two things together decided it:
 
 1. **The mechanism was invalid**, so the family could not have been adopted even by a consumer that wanted it.
-2. **There is no responsive design to own it.** Elevation is named among the token types [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 3 governs; breakpoints are not, and responsive work is a standing non-goal across the effort. The three values in the tree belong to prototype markup, which is not design authority.
+2. **There is no responsive design to own it.** Elevation is named among the token types [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 3 governs; breakpoints are not, and responsive work is a standing non-goal across the effort. The three values in the tree belong to prototype markup, which is not design authority.
 
 Choosing a mechanism *and* a scale with neither a design nor a consumer would have been authoring vocabulary from nothing.
 
@@ -38,5 +38,5 @@ Choosing a mechanism *and* a scale with neither a design nor a consumer would ha
 
 ## Related
 
-- [ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 2 — consumer count is evidence, never a gate; what is admitted is a shared concept.
+- [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 2 — consumer count is evidence, never a gate; what is admitted is a shared concept.
 - [Finding 0012](0012-no-shared-stacking-concept.md) — the other family WI-9 removed, on different grounds.

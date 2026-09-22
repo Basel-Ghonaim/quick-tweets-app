@@ -123,7 +123,7 @@ The boundaries are settled by ADR 0008; these are contained Work-Item choices, e
 
 ## 7. Reconciliation targets
 
-*Where the effort's durable knowledge landed. Verified on `main` at archival: `MediaObject.uploaderId` is `NOT NULL` and carries no grant columns; `MEDIA_GRANT_SECRET` is absent from the env schema and `.env.example`; the API contract exposes no grant endpoint or evidence header and does expose `PATCH`/`GET /users/me`; and `ReclaimReason` is the single `"unreferenced"` class. One finding was recorded and is [Resolved](../architecture/findings/0007-grant-access-token-shared-secret.md).*
+*Where the effort's durable knowledge landed. Verified on `main` at archival: `MediaObject.uploaderId` is `NOT NULL` and carries no grant columns; `MEDIA_GRANT_SECRET` is absent from the env schema and `.env.example`; the API contract exposes no grant endpoint or evidence header and does expose `PATCH`/`GET /users/me`; and `ReclaimReason` is the single `"unreferenced"` class. One finding was recorded and is [Resolved](../architecture/findings/resolved/0007-grant-access-token-shared-secret.md).*
 
 - **`server/prisma/schema.prisma`** — `uploaderId NOT NULL`; `grantId`/`grantExpiresAt`/grant uniqueness removed.
 - **`docs/api/api-contract.md`** — remove `POST /media/grants` + grant evidence; `POST /media` auth-required; register loses `avatar`; add `PATCH`/`GET /users/me`; profile responses resolve the avatar.

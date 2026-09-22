@@ -5,7 +5,7 @@
 > **Authority:** The authoritative source for the web interface's **language**: how a reader's language is resolved, chosen and stamped on the document, how the catalogues are served and read, how numbers and the values a line takes are written, and what a language's words need before they ship. It does **not** own the words themselves (the catalogues in `shared/copy`), how the Design System adapts to direction and script ([ADR 0010](../architecture/decisions/0010-design-system-platform-reestablishment.md) Decision 6, the [Design System](design-system/README.md)), which languages the product is committed to (the [overview](../project/overview.md)), or the sequencing of the work that builds them ([Arabic and RTL support](../plans/arabic-rtl-support.md)).
 > **Scope:** The web interface: the language preference in `apps/web/src/shared/preferences/language/`, the mechanism in `apps/web/src/shared/localisation/`, and the shape of the catalogues in `apps/web/src/shared/copy/`. Server-side language is outside it.
 > **Version:** 1.2
-> **Last Updated:** 2026-09-19
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 ## Why the language has an owner
@@ -24,7 +24,7 @@ A reader's language decides every word the interface says and the direction the 
 
 **The direction follows the language and is never chosen.** The document carries the language in `lang` and its direction in `dir`. A language written right to left is declared as one ahead of its catalogue, because the direction is stamped before the first word is read.
 
-**Both are stamped before the first paint**, by an inline script in `index.html`, since no module runs early enough ([Finding 0018](../architecture/findings/0018-theme-is-applied-after-first-paint.md)). The script and the application share no code, so a check holds them together: the script declares exactly the registered languages and the same fallback, gives every language it names or can stamp the application's direction, and reaches the application's decision on every path, from the same storage key, and when storage cannot be read. That copy of the language set is [Finding 0019](../architecture/findings/0019-pre-paint-script-hardcodes-the-theme-set.md)'s duplication, made loud rather than silent.
+**Both are stamped before the first paint**, by an inline script in `index.html`, since no module runs early enough ([Finding 0018](../architecture/findings/resolved/0018-theme-is-applied-after-first-paint.md)). The script and the application share no code, so a check holds them together: the script declares exactly the registered languages and the same fallback, gives every language it names or can stamp the application's direction, and reaches the application's decision on every path, from the same storage key, and when storage cannot be read. That copy of the language set is [Finding 0019](../architecture/findings/open/0019-pre-paint-script-hardcodes-the-theme-set.md)'s duplication, made loud rather than silent.
 
 **While no choice is stored, the document follows the browser** when its languages change. A stored choice holds whatever the browser does.
 

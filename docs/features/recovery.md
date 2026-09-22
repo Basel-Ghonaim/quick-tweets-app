@@ -5,7 +5,7 @@
 > **Scope:** The recovery capability (`apps/web/src/features/recovery/`) and its behaviour. The wire contract is the [API contract](../api/api-contract.md#password-reset)'s; the reset cookie's place in the HTTP surface is [Backend Security](../backend/security.md#the-reset-session-cookie)'s; the client its requests travel on is the [frontend API client](../frontend/api-client.md#three-clients)'s.
 > **Maturity:** This document describes the feature **as currently implemented** and grows with it. Its internal organisation is the [capability structure](../frontend/architecture.md#the-capability-structure), which every capability shares and which that document owns. Anything not described here is not yet built, not architecturally rejected. **This document is interim:** its flat placement under `docs/features/` and its shape hold until feature documentation is restructured.
 > **Version:** 1.0
-> **Last Updated:** 2026-09-21
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 ## What the feature does
@@ -20,7 +20,7 @@ Recovery is **setting a new password for an account whose holder cannot sign in*
 
 Recovery **owns** the recovery screen and its three steps, their forms and the validation they compose, the client's read of where the reader stands, and the wording of its refusals. It also owns the only two things a client may add to the server's answer: the address it has just submitted, and whether the reader is starting over.
 
-It does **not** own where the reader stands, the code, or whether a code is usable. Those are held on the server ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)), and the client asks rather than decides. It does not own **the session**: a completed reset has already revoked every session on the server, and recovery clears whatever this tab still holds through the platform's session ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) rather than holding any of its own. It owns no route either: the auth page group mounts the screen and decides who may reach it, and that group has no document of its own yet ([Finding 0036](../architecture/findings/0036-documentation-the-feature-split-found-missing.md)).
+It does **not** own where the reader stands, the code, or whether a code is usable. Those are held on the server ([ADR 0017](../architecture/decisions/0017-recovery-session-and-the-proof-a-reset-produces.md)), and the client asks rather than decides. It does not own **the session**: a completed reset has already revoked every session on the server, and recovery clears whatever this tab still holds through the platform's session ([ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md)) rather than holding any of its own. It owns no route either: the auth page group mounts the screen and decides who may reach it, and that group has no document of its own yet ([Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)).
 
 Transport, the cookie, form execution, control rendering, error normalisation, how a typed code is normalised and the password policy's rules belong to their platform owners and are **composed** here.
 
@@ -37,8 +37,8 @@ In one line: the feature decides what a reader sees and may do at each step; the
 | Its controls | `SchemaField`-bound inputs, the code input, buttons, the message region | [Frontend Design System](../frontend/design-system/README.md) |
 | One typed error shape | normalized `AppError` | [Frontend Error Handling](../frontend/error-handling.md) |
 | Its words | the recovery catalogue, in the active language | [Frontend Localisation](../frontend/localisation.md) |
-| The address rule and the new-password policy | rules the server also states (`shared/validation`) | [Frontend Architecture — platform index](../frontend/architecture.md#the-platform-index); which tier owns them is open ([Finding 0026](../architecture/findings/0026-no-tier-owns-the-credential-rules.md)) |
-| A typed code's normalisation, and the resend countdown | the one-time-code mechanism (`shared/one-time-code`) | [Frontend Architecture — platform index](../frontend/architecture.md#the-platform-index), which describes the normalisation; nothing describes the countdown yet ([Finding 0036](../architecture/findings/0036-documentation-the-feature-split-found-missing.md)) |
+| The address rule and the new-password policy | rules the server also states (`shared/validation`) | [Frontend Architecture — platform index](../frontend/architecture.md#the-platform-index); which tier owns them is open ([Finding 0026](../architecture/findings/open/0026-no-tier-owns-the-credential-rules.md)) |
+| A typed code's normalisation, and the resend countdown | the one-time-code mechanism (`shared/one-time-code`) | [Frontend Architecture — platform index](../frontend/architecture.md#the-platform-index), which describes the normalisation; nothing describes the countdown yet ([Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)) |
 | Clearing any session this tab still holds | the session's ending (`shared/session`) | [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md); its lifecycle awaits a document of its own ([platform index](../frontend/architecture.md#the-platform-index)) |
 
 ## One route, and the server names the step
@@ -71,7 +71,7 @@ It is organised as the [capability structure](../frontend/architecture.md#the-ca
 - **No `store/`.** Nothing recovery holds outlives the screen that reads it.
 - **The root barrel is the only way in**, and it offers the recovery screen and nothing else. That surface, and the rule that no screen reaches the forms or the services, are asserted by the capability's own `boundary.test.ts`.
 
-**A known deviation stands:** the steps name the sign-in route directly, which a capability does not own. It is recorded in [Finding 0030](../architecture/findings/0030-the-capabilities-predate-the-structure-they-share.md), together with the question of how a screen learns a destination it does not own.
+**A known deviation stands:** the steps name the sign-in route directly, which a capability does not own. It is recorded in [Finding 0030](../architecture/findings/open/0030-the-capabilities-predate-the-structure-they-share.md), together with the question of how a screen learns a destination it does not own.
 
 ## Feature policies
 

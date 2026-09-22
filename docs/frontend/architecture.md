@@ -6,7 +6,7 @@
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, where features meet the platform, and how each capability inside them is organised.
 > **Maturity:** This document describes the **intended and settled** architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The capability structure was written once authentication, recovery, the session and channel verification had been built in two different shapes, and reconciles them ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
 > **Version:** 3.1
-> **Last Updated:** 2026-09-17
+> **Last Updated:** 2026-09-22
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -117,7 +117,7 @@ It does not govern the platform's **mechanisms** — the design system, the form
 - **A capability's boundary is held by its own test.** `boundary.test.ts` checks at least that the capability is reached only through its barrel, that it imports nothing its zone forbids, and — where it has no `screens/` — that it holds no component, stylesheet or story. Whatever the decision that governs the capability adds, it checks too.
 - **A platform capability has no `screens/` while [ADR 0019](../architecture/decisions/0019-authentication-is-a-feature-and-the-session-is-platform.md) Decision 6 holds**, because under it the platform publishes no product interface. The rule follows that decision and changes with it; where a platform capability's interface lives when a product surface needs one is not settled here.
 
-The rules above state the target. Which capabilities do not yet meet them is the findings register's to say, not this section's; [Finding 0030](../architecture/findings/0030-the-capabilities-predate-the-structure-they-share.md) records where each stood when this section was written.
+The rules above state the target. Which capabilities do not yet meet them is the findings register's to say, not this section's; [Finding 0030](../architecture/findings/open/0030-the-capabilities-predate-the-structure-they-share.md) records where each stood when this section was written.
 
 ## The platform index
 

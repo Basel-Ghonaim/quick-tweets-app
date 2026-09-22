@@ -13,7 +13,7 @@ A theme has to be applied before the first paint, which means before any module 
 var THEMES = { light: "#fafafe", dark: "#171424" };
 ```
 
-[ADR 0010](../decisions/0010-design-system-platform-reestablishment.md) Decision 4 makes the mechanism **theme-count agnostic** — *"a theme is one of an open, named set of resolutions, not a light/dark boolean — additional themes … slot into the same mechanism with no architectural change"* — and its Alternatives section rejects the opposite by name: *"hardcoding two themes forecloses high-contrast / brand / seasonal for no benefit."*
+[ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 4 makes the mechanism **theme-count agnostic** — *"a theme is one of an open, named set of resolutions, not a light/dark boolean — additional themes … slot into the same mechanism with no architectural change"* — and its Alternatives section rejects the opposite by name: *"hardcoding two themes forecloses high-contrast / brand / seasonal for no benefit."*
 
 The declared set lives in `theme.ts`. The script's copy of it is the only one nothing checks.
 
