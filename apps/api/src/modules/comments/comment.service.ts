@@ -118,6 +118,7 @@ const toCommentResponse = (
     // An absent `likes` means the query was made for a guest, which reads the
     // same as unliked and is the answer a guest is owed either way.
     isLiked: (comment.likes?.length ?? 0) > 0,
+    editedAt: comment.editedAt,
     createdAt: comment.createdAt,
   };
 };
@@ -202,6 +203,19 @@ const resolveParent = async (
     });
   }
 };
+
+/**
+ * Whether a submitted body is an edit of the stored one, as the fields a Prisma
+ * update takes: `{ editedAt: <now> }` when the text changed, and `{}` when it did
+ * not, so the column is left exactly as it was.
+ *
+ * The same rule tweets carry, stated the same way. An absent body is not an edit,
+ * and neither is an identical one — the plan asks for a marker shown *"when it
+ * was"* edited, and nothing a reader sees has changed in either case. Attaching,
+ * replacing or removing the image is not an edit either.
+ */
+const textChanged = (submitted: string | undefined, stored: string): { editedAt?: Date } =>
+  submitted !== undefined && submitted !== stored ? { editedAt: new Date() } : {};
 
 /**
  * Liking something that is not there is a `404`, exactly as reading it is. The
@@ -354,13 +368,20 @@ export const createCommentService = (
       throw AppError.forbidden("You can only edit your own comments");
     }
 
-    // 3a. Body-only edit (media omitted) — media untouched, no transaction. The
+    // 3. Did the *text* change? Decided once, before the branch below, so a
+    //    combined text-and-image edit cannot lose its marker to the media path.
+    const edited = textChanged(data.body, owner.body);
+
+    // 4a. Body-only edit (media omitted) — media untouched, no transaction. The
     //     existing reference is resolved for the response.
     if (data.media === undefined) {
-      return toResponse(media, await repo.update(commentId, { body: data.body }, undefined, userId));
+      return toResponse(
+        media,
+        await repo.update(commentId, { body: data.body, ...edited }, undefined, userId),
+      );
     }
 
-    // 3b. Media edit (set / replace / remove) — coordinate in one transaction.
+    // 4b. Media edit (set / replace / remove) — coordinate in one transaction.
     //     Captured in a const so its narrowed type survives inside the closure.
     const mediaEdit = data.media;
     const oldMediaId = owner.mediaId;
@@ -391,7 +412,7 @@ export const createCommentService = (
 
         const updated = await repo.update(
           commentId,
-          { body: data.body, mediaId: newMediaId },
+          { body: data.body, mediaId: newMediaId, ...edited },
           tx,
           userId,
         );

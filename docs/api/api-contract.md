@@ -177,6 +177,27 @@ your own row, which the client recognises by comparing ids with
 `GET /users/me`. A relation computed on the server would put a presentation
 choice in the payload.
 
+### "Edited" — `editedAt`
+
+Posts and comments carry `editedAt: string | null` — **when the text was last
+changed**, or `null` if it never was. The client shows its marker when the field
+is not null; nothing displays the time itself today, but a time is carried so
+that "edited 2h ago" needs no second migration.
+
+**An edit is a change to the text, and only to the text.** An image added,
+replaced, removed or reordered is **not** an edit, and neither is re-submitting
+the same words — in both cases nothing a reader sees has changed. Once set, it is
+never cleared.
+
+**It is not `updatedAt`, and could not be.** Prisma maintains `updatedAt`
+whenever an update carries a field, so re-saving identical text moves it; a
+marker derived from it would announce an edit that never happened. `updatedAt`
+stays exactly as it was and keeps its own meaning — *this row was written*.
+
+**Comments carry `editedAt` and no `updatedAt`.** They never had one, and this
+did not add one: the only question a reader's interface asks is whether the text
+was edited.
+
 ### TweetMediaEmbed
 
 Embedded in tweet responses as an **ordered** array — the array order *is* the display order.
@@ -455,7 +476,8 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
       "commentsCount": 2,
       "isLiked": true,
       "createdAt": "2026-05-10T12:00:00.000Z",
-      "updatedAt": "2026-05-10T12:00:00.000Z"
+      "updatedAt": "2026-05-10T12:00:00.000Z",
+      "editedAt": null            // see "Edited" above — null until the text changes
     }
   ],
   "meta": {
@@ -469,6 +491,9 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 **Notes:**
 - Ordered by `id DESC` (newest first)
 - `isLiked` is `false` for unauthenticated users
+- `editedAt` is `null` until the **text** changes; see ["Edited"](#edited--editedat).
+  Nothing here is breaking — it is an added optional field, and `updatedAt` keeps
+  its meaning and its place
 - **The author carries [FollowState](#followstate)**, so the row's ⋯ menu can draw
   Follow, Following or Follow back without a second request. It is resolved once
   for the whole page, never once per post, and a guest costs no lookup at all.
@@ -605,7 +630,8 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "commentsCount": 2,
     "isLiked": true,
     "createdAt": "2026-05-10T12:00:00.000Z",
-    "updatedAt": "2026-05-10T15:00:00.000Z"
+    "updatedAt": "2026-05-10T15:00:00.000Z",
+    "editedAt": "2026-05-10T15:00:00.000Z"   // the text changed in this edit
   }
 }
 
@@ -718,6 +744,7 @@ reached through its parent, below.
       "repliesCount": 3,          // top-level comments only; see the note below
       "likesCount": 12,
       "isLiked": false,           // this reader's own state; always false for a guest
+      "editedAt": null,           // see "Edited" — the text, and only the text
       "createdAt": "2026-05-10T12:05:00.000Z"
     }
   ],
@@ -771,6 +798,7 @@ so the interface can keep it collapsed until a reader asks for it.
       "parentId": 1,
       "likesCount": 2,
       "isLiked": true,
+      "editedAt": null,
       "createdAt": "2026-05-10T12:09:00.000Z"
     }
   ],
@@ -815,6 +843,7 @@ so the interface can keep it collapsed until a reader asks for it.
     "repliesCount": 0,                 // present only when parentId is null
     "likesCount": 0,
     "isLiked": false,
+    "editedAt": null,            // a comment is never born edited
     "createdAt": "2026-05-10T14:35:00.000Z"
   }
 }
@@ -877,6 +906,7 @@ so the interface can keep it collapsed until a reader asks for it.
     "repliesCount": 2,
     "likesCount": 7,
     "isLiked": true,                   // the editor's own state, not a flat false
+    "editedAt": "2026-05-10T12:40:00.000Z",  // this edit changed the text
     "createdAt": "2026-05-10T12:05:00.000Z"
   }
 }
@@ -895,7 +925,10 @@ so the interface can keep it collapsed until a reader asks for it.
 ```
 
 **Notes:**
-- Comment edits do not track timestamps (`updatedAt`) in this version.
+- `editedAt` is set **only** when this edit changed the **text**. Attaching,
+  replacing or removing the image does not set it, and neither does submitting
+  the same words; once set it is never cleared. See ["Edited"](#edited--editedat).
+- Comments carry no `updatedAt`, by design — see the same section.
 
 ---
 

@@ -113,6 +113,19 @@ the graph it asserts against is deliberately **asymmetric** — B follows A and 
 does not follow back — so the two directions can be told apart. A mutual pair
 would pass whichever way the fields were wired.
 
+### Folder 14 — the edited marker
+
+Self-isolated, and needs no pgAdmin: the marker is a field in a body.
+
+```bash
+npm run verify:edited -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+**One of its scenarios lives elsewhere.** `EDT-05` — that a media-only edit
+neither sets nor refreshes the marker — is asserted in **folder 04**, where a
+media-only PATCH already exists after a text edit, so the before/after is real
+rather than staged. Folder 04 uploads fixtures, so it needs `--working-dir`.
+
 ### Folder 13 — comment likes
 
 Self-isolated: its own account with a per-run handle, its own post and comments.

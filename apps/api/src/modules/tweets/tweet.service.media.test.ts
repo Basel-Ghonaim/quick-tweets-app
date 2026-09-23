@@ -47,7 +47,7 @@ const makeWorld = () => {
     },
     update: async () => rawTweet(1, stored.get(1) ?? []) as never,
     delete: async () => {},
-    findOwner: async () => ({ authorId: AUTHOR }),
+    findOwner: async () => ({ authorId: AUTHOR, body: "stored" }),
     findMediaRefs: async (tweetId) => stored.get(tweetId) ?? [],
     replaceMediaRefs: async (tweetId, refs, client) => {
       calls.replace.push({ tweetId, refs, client });

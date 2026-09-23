@@ -66,6 +66,12 @@ export interface TweetResponse {
   isLiked: boolean;
   createdAt: Date;
   updatedAt: Date;
+  /**
+   * When the *text* was last changed, or `null` if it never was. Distinct from
+   * `updatedAt`, which moves on any write to the row — including an edit that
+   * only changed the images.
+   */
+  editedAt: Date | null;
 }
 
 
@@ -78,6 +84,7 @@ export interface TweetWithRelations {
   authorId: number;
   createdAt: Date;
   updatedAt: Date;
+  editedAt: Date | null;
   author: AuthorRow;
   _count: {
     likes: number;
@@ -115,7 +122,7 @@ export interface ITweetRepository {
 
   update(
     id: number,
-    data: { body?: string },
+    data: { body?: string; editedAt?: Date },
     userId?: number,
     client?: DbClient,
   ): Promise<TweetWithRelations>;
@@ -139,7 +146,10 @@ export interface ITweetRepository {
   ): Promise<void>;
 
   /** Lightweight query — only fetches authorId for ownership checks. */
-  findOwner(id: number, client?: DbClient): Promise<{ authorId: number } | null>;
+  findOwner(
+    id: number,
+    client?: DbClient,
+  ): Promise<{ authorId: number; body: string } | null>;
 
   // ── Like Operations ──
   createLike(userId: number, tweetId: number): Promise<void>;

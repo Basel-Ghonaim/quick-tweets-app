@@ -47,4 +47,5 @@ export const toTweetResponse = (
   isLiked: (tweet.likes?.length ?? 0) > 0,
   createdAt: tweet.createdAt,
   updatedAt: tweet.updatedAt,
+  editedAt: tweet.editedAt,
 });

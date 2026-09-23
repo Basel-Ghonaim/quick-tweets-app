@@ -156,7 +156,9 @@ export const createCommentRepository = (
   findOwner: (id, client: DbClient = db) =>
     client.comment.findUnique({
       where: { id },
-      select: { authorId: true, mediaId: true, parentId: true },
+      // The body rides this check rather than costing a query of its own:
+      // deciding whether the text changed needs the stored text.
+      select: { authorId: true, mediaId: true, parentId: true, body: true },
     }),
 
   // ── Reply-deletion helpers (used when a top-level comment goes) ──

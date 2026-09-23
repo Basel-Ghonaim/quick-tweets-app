@@ -151,7 +151,9 @@ export const createTweetRepository = (
   // ── Ownership Check (lightweight) ──
 
   findOwner: (id, client: DbClient = db) =>
-    client.tweet.findUnique({ where: { id }, select: { authorId: true } }),
+    // The body rides the ownership check rather than costing a query of its own:
+    // deciding whether the text changed needs the stored text.
+    client.tweet.findUnique({ where: { id }, select: { authorId: true, body: true } }),
 
   // ── Like Operations ──
 
