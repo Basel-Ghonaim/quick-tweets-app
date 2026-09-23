@@ -1,0 +1,58 @@
+.root {
+  /* Placed by measurement, in the top layer, so the page's own flow says nothing
+     about where it belongs. */
+  position: fixed;
+  inset-block-start: var(--menu-block-start);
+  inset-inline-start: var(--menu-inline-start);
+  margin: 0;
+  min-inline-size: 240px;
+  max-inline-size: min(320px, 100vw - 16px);
+  padding: var(--space-1);
+  background: var(--surface-default);
+  border: var(--border-width-thin) solid var(--border-default);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--elevation-menu);
+  /* The surface itself takes the tab stop; its items are reached by key. */
+  overflow-y: auto;
+  max-block-size: calc(100vh - 32px);
+}
+
+.root:not(:popover-open) {
+  display: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  inline-size: 100%;
+  /* Above the floor by its own geometry: a menu is pointed at, not aimed at. */
+  min-block-size: 44px;
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--border-radius-md);
+  background: none;
+  font: var(--type-label-medium);
+  color: var(--menu-item-color, var(--text-primary));
+  text-align: start;
+  cursor: pointer;
+}
+
+.item:hover {
+  background: var(--surface-hover);
+}
+
+.item:disabled {
+  /* Untargetable, so no cursor of its own can reach a pointer. */
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.label {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.check {
+  flex-shrink: 0;
+}

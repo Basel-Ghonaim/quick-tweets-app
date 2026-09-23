@@ -5,7 +5,7 @@
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.8
+> **Version:** 1.9
 > **Last Updated:** 2026-09-23
 > **Owner:** Basel Ghonaim
 
@@ -83,6 +83,8 @@ A value stays with its owner until a shared design concept is actually establish
 **Promotion is by concept, not by repetition.** When two owners need the same *concept*, neither depends on the other: the concept moves to the layer that can own it and both become consumers. When two owners merely happen to use the same *value*, nothing moves.
 
 **Stacking divides on the same line, and the division is easy to miss because both sides spell it `z-index`.** What sits *above the page* — a sticky header, a menu, a dialog, a toast — competes with every other such thing for the front, and which of them wins is a single order nobody can hold a private opinion about. A component ordering its own children **inside its own positioned context** competes with nothing, so it is component-local and binds none of that order. The shared vocabulary is meaningful only as a **complete relative sequence**, which is why it names layers this system does not itself build.
+
+**The order governs what does not use the browser's top layer.** A modal dialog and a popover are raised by the platform into a layer that sits above the page whatever any `z-index` says, and they stack among themselves in the order they opened. Nothing about that is this vocabulary's to decide, and a layer bound to such a surface would be a value with no effect — which is worse than no value, because it reads as a decision. The order therefore governs the surfaces the page positions itself, and the layers naming platform-raised surfaces stand as the **complete sequence's** remaining members rather than as bindings anything reaches for.
 
 **A treatment only one anatomy can carry is not a disagreement.** A disabled *field* keeps its surface reachable and shows `not-allowed` across it; a disabled *control* makes itself untargetable, so no cursor of its own can reach a pointer and it shows the ordinary one. That is one decision meeting two anatomies, not two answers to one question — but it is invisible in the code unless it is said, and a declaration on an element nothing can reach reads as agreement where there is none.
 
