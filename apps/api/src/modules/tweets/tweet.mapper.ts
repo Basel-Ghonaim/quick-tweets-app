@@ -9,12 +9,14 @@
  *   _count.likes    → likesCount
  *   _count.comments → commentsCount
  *   likes[]         → isLiked (true if array has items)
+ *   follow state    → author.isFollowing / author.followsYou (supplied, per page)
  *
  * Principle: DRY — single source of truth for tweet DTO transformation.
  * Principle: SRP — only transforms data, no business logic.
  */
 
 import { toAuthorEmbed } from "../../shared/utils/index.js";
+import { NO_FOLLOW_STATE, type FollowState } from "../../shared/social/index.js";
 import type { TweetWithRelations, TweetResponse } from "./tweet.types.js";
 
 /**
@@ -31,6 +33,7 @@ export type ResolvedMediaTokens = ReadonlyMap<number, string>;
 export const toTweetResponse = (
   tweet: TweetWithRelations,
   tokens: ResolvedMediaTokens = new Map(),
+  follow: FollowState = NO_FOLLOW_STATE,
 ): TweetResponse => ({
   id: tweet.id,
   body: tweet.body,
@@ -38,7 +41,7 @@ export const toTweetResponse = (
     const token = tokens.get(ref.mediaId);
     return token === undefined ? [] : [{ token }];
   }),
-  author: toAuthorEmbed(tweet.author, tokens),
+  author: { ...toAuthorEmbed(tweet.author, tokens), ...follow },
   likesCount: tweet._count.likes,
   commentsCount: tweet._count.comments,
   isLiked: (tweet.likes?.length ?? 0) > 0,
