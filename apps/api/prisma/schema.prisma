@@ -221,6 +221,16 @@ model Tweet {
   authorId  Int      @map("author_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  // When the *text* was last changed, or NULL if it never was.
+  //
+  // It exists because updatedAt cannot answer this: Prisma maintains @updatedAt
+  // whenever an update carries a field, so re-saving the same words moves it.
+  // Deriving "Edited" from updatedAt would announce an edit that never happened.
+  //
+  // Set only when a submitted body differs from the stored one — an image
+  // added, replaced, removed or reordered is not an edit, and neither is
+  // re-submitting the same text. Never cleared once set.
+  editedAt  DateTime? @map("edited_at")
 
   // Relations
   author   User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -285,6 +295,10 @@ model Comment {
   // cover both levels without a second query, so it is an invariant of the model
   // rather than a convenience.
   parentId  Int?     @map("parent_id")
+  // When the *text* was last changed, or NULL if it never was — the same rule
+  // the tweet's own column carries. A comment has no updatedAt at all, so this
+  // is its only edit timestamp; nothing here adds one.
+  editedAt  DateTime? @map("edited_at")
   // A single optional media file, held as a bare numeric Media Reference
   // (MediaObject.id): deliberately NO Prisma relation and NO DB foreign key,
   // exactly as User.avatarMediaId. MediaObject stays unaware of its referrers
