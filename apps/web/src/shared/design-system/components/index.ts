@@ -10,3 +10,4 @@ export * from "./fields/FileInput";
 export * from "./fields/Input";
 export * from "./fields/Textarea";
 export * from "./navigation/Link";
+export * from "./overlays/Menu";
