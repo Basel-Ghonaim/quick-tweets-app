@@ -3,9 +3,11 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-22
+> **Last Updated:** 2026-09-23
 > **Parent Issue:** [#793](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/793)
 > **Supersedes:** —
+
+**Start here.** New to the project: [CLAUDE.md](../../CLAUDE.md), then the [agent onboarding guide](../development/agent-onboarding.md). This track is worked under the [Engineering Execution Standard](../development/engineering-execution-standard.md) — nothing in this plan replaces it. §6 holds every reference; §7 records what each Work Item settled.
 
 ---
 
@@ -18,6 +20,15 @@ Several features behind the **Feed**, **Tweet details** and **Profile** need the
 - **What it leaves to the worker:** how each capability is built, **where it lives and who owns it**, how the work is split into Work Items, and in what order. These are settled with the owner in Execution Preparation.
 - **The current direction, not a decision:** these are called *shared components*. Where each one lives, whether `shared/`, a feature or the page, is decided per capability by analysis against the zone rules (§6), and may change.
 - **What stays the same:** the zone rules and the existing platform contracts. Where a capability needs a decision those rules do not already give, the decision is proposed and approved first.
+
+**From this plan to merged work.** A capability below is not a Work Item. The route is the Execution Standard's:
+
+1. **Execution Preparation** with the owner: agree the task, decide what one Work Item is, and write its contract — scope and acceptance criteria — into an **Issue** (§3 and §8 there).
+2. **One branch per Work Item**, cut from the latest `main`, in the worktree the track uses (§4, §5).
+3. **Atomic Conventional Commits**, and the documentation a change obligates lands in the **same pull request** ([Documentation Strategy](../architecture/documentation-strategy.md) §10).
+4. **A pull request** carrying its evidence: what was run, what was not, and the base it was rebased onto (§8). The browser lane runs in both directions and its result is stated.
+5. **Human review and merge.** The worker never merges, and never decides an architectural question alone — those are proposed and escalated (§9, §10).
+6. **When it merges,** the Work Item gets its entry in §7.
 
 ---
 
@@ -146,3 +157,11 @@ Sources marked *local* are working material in `.project/`, outside the reposito
 | Feed design brief (local: `.project/feed-design/design-brief.md`) and Profile and Tweet details brief (local: `.project/feed-design/profile-tweet-details-brief.md`) | The approved product and design decisions, with who approved each. | When a behaviour needs its reason. |
 | Feed implementation analysis (local: `.project/feed-design/feed-implementation-analysis.md`), §2 | The first inventory of shared needs, and the options for product presentation. | Starting the track, and settling §4. It predates the Tweet details and Profile designs, which add text with links, the image viewer, toasts and guest intents. |
 | [Backend plan](backend-plan.md) and [Design System plan](design-system-plan.md) | What the backend will provide and what the Design System will provide. | Before relying on either. |
+
+---
+
+## 7 · Execution log
+
+Appended when a Work Item's pull request merges, newest last: its Issue and pull request, what it settled, which sections of this plan it amended, and what it recorded. No status lives here — that is the tracker's ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3), and the conventions are in the [plans README](README.md).
+
+*No Work Item has merged yet.*
