@@ -220,6 +220,25 @@ no longer describe executable behavior and are retired rather than rewritten her
 | FOL-05 | FOL-01 | B unfollows A | 200; `isFollowing:false` | `follows` row removed | — | |
 | FOL-06 | login B | B follows A **twice** | **409** `conflict` — already following; no duplicate | single `follows` row (unique pair) | — | |
 
+## 7b · Follow state — what every Follow button reads ([#810](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/810))
+
+> **The graph is asymmetric on purpose.** B follows A and A does not follow back,
+> so the two directions can be told apart — a mutual pair would pass whichever way
+> the fields were wired. Folder 07 is **not** self-isolated: it needs folder 01's
+> tokens and handles, so seed them if folder 09 has already run (see the runbook).
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| FOL-01 | B follows A | Read **A's profile as B** | 200; `isFollowing: true`, `followsYou: false` | — | — | B follows A; A does not follow back |
+| FOL-02 | FOL-01 | Read **B's profile as A** | 200; `isFollowing: false`, `followsYou: true` | — | — | The mirror image — this is what *Follow back* is drawn from |
+| FOL-03 | FOL-01 | Read A's profile **as a guest** | 200; both `false` | — | — | `noauth` — see the runbook's note on inherited bearers |
+| FOL-04 | — | Read **your own** profile | 200; both `false` | — | — | Self-follow is refused, so the pair cannot say otherwise |
+| FOL-05 | FOL-01 | Read **A's followers as A** | 200; the row reads `isFollowing: false`, `followsYou: true` | — | — | The row is B, who follows A and is not followed back |
+| FOL-06 | FOL-01 | Read **B's following as B** | 200; the row reads `isFollowing: true`, `followsYou: false` | — | — | |
+| FOL-07 | FOL-01 | Read A's followers **as a guest** | 200; both `false`, **and the list still reads** | — | — | `noauth`. Optional auth widens what is answered, never who may ask |
+| FOL-08 | A post by A | Read **A's timeline as B** | 200; `author.isFollowing: true`, `author.followsYou: false` | — | — | The ⋯ menu draws its button from this, with no second request |
+| FOL-09 | A comment on that post | Read **its comments as B** | 200; the comment's author has **neither** field | — | — | The boundary: `AuthorEmbed` is shared, and only a post's author was widened |
+
 ## 8 · Username rename & locator stability (WI-F)
 
 > Editable username via **History + Reservation + Redirect**. Renaming a handle
@@ -392,6 +411,32 @@ collection carries a bearer token at its **root**, so a request that merely omit
 against. Re-run with a populated environment, LIK-08 failed and exposed it. All
 four now set `noauth` explicitly, and the trap is written up in the
 [runbook](verification-runbook.md#a-request-that-omits-auth-still-sends-one).
+
+---
+
+## Verification run — Follow state (2026-09-23)
+
+**Run against `feat/810-follow-state`, on the backend worktree's own port (`4001`)
+and database (`quicktweets_w2`). All of FOL-01…FOL-09 passed.** Newman: folder 07,
+**17 requests / 30 assertions, 0 failures**. Re-run because the payloads changed
+under them: folder 04 **25 assertions**, folder 12.1 **24**, folder 13 **25** — all
+0 failures.
+
+| Scenario | Outcome |
+|---|---|
+| FOL-01/02 — the pair, from each side | ✅ `true/false` then `false/true`; the directions are distinguishable |
+| FOL-03/07 — a guest, on a profile and on a list | ✅ both `false`, and both still readable |
+| FOL-04 — your own row | ✅ both `false` |
+| FOL-05/06 — both list tabs | ✅ each row reports the reader's own side |
+| FOL-08 — a post's author | ✅ carries the pair |
+| FOL-09 — a comment's author | ✅ carries neither |
+
+**One thing the run cost time, and it was not the code.** Folder 04 first reported
+15 failures — every one of them `file load error: "fixtures/sample.png", no such
+file`. Folder 04 uploads by **relative** path, so it needs
+`--working-dir docs/development/verification`, exactly as folder 12.2 does. Run
+that way it passes 25/25 untouched. The flag is now named for folder 04 in the
+runbook rather than only for 12.2.
 
 ---
 

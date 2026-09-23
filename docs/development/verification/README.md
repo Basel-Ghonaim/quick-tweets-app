@@ -217,6 +217,25 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## Follow state
+
+Folder **07 · Follows** gains the state every Follow button reads
+([#810](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/810)): both
+directions on a profile, on each row of both list tabs, and on a post's author.
+See scenarios **FOL-01…FOL-09**.
+
+Its graph is **asymmetric on purpose** — B follows A, A does not follow back —
+because a mutual pair passes whichever way the two fields are wired. The folder is
+**not self-isolated**: it needs folder 01's tokens and handles.
+
+Its guarantees, in one line each: **the two directions are distinguishable**, and
+each is reported from the reading account's own side; **a guest reads every
+surface and gets neither direction**, so optional auth widens what is answered
+rather than who may ask; **your own row reports neither**, which is what lets the
+client recognise it from ids alone; and **a comment's author carries neither
+field**, because a comment row has no Follow button and the author embed is
+shared.
+
 ## Comment likes
 
 Folder **13 · Comment likes** exercises likes on a comment and on a reply, the
