@@ -4,6 +4,7 @@
 > **Date:** 2026-07-14
 > **Deciders:** Basel Ghonaim
 > **Revised:** 2026-08-05 — the `Draft` stage gains a location: a plan is drafted outside the tracked tree and enters `docs/plans/` on approval. Lifecycle and home otherwise unchanged.
+> **Revised:** 2026-09-23 — Decision 2 admits efforts planned as **several tracks**: the "at most one Active plan" rule is now per track, and a plan may be adopted in a Documentation Work Item of its own rather than only in the first branch of its first Work Item. The home, the lifecycle and the ownership boundary are unchanged, and an effort still needs no plan at all.
 > **Revised:** 2026-08-17 — Decision 4 and its Consequences no longer gloss Principles 5 and 6 as requiring permanent reference documentation to describe only what exists; that wording predates [ADR 0014](0014-document-classes-and-committed-product-scope.md), under which a Contract and a Commitment are permanent reference documentation and assert something other than existence. The decision — plans are a distinct, lifecycle-governed class — is unchanged.
 
 ## Context
@@ -26,11 +27,11 @@ Introduce a formal home and lifecycle for execution plans, without a new governa
 1. **Home — `docs/plans/`.** Execution plans live in a **top-level** documentation category, because they are **project-level** artifacts (migration, execution, refactoring, release plans), not development-only. The category's operative convention (lifecycle, plan-header template, and boundary) lives in `docs/plans/README.md`.
 
 2. **Lifecycle — `Draft → Active → Historical`.**
-   - **Draft** — authored and under review; not yet governing, and **not yet project documentation**. A draft lives in the architect's working area outside the tracked tree; it enters `docs/plans/` on approval, in the first branch of its first Work Item.
+   - **Draft** — authored and under review; not yet governing, and **not yet project documentation**. A draft lives in the architect's working area outside the tracked tree; it enters `docs/plans/` on approval — in the first branch of its first Work Item, or, where an effort adopts several plans at once, in a Documentation Work Item of its own. Adoption is not implementation: either way the plan governs only from the commit that lands it.
    - **Active** — approved and governing an in-flight effort; the live reference, maintained for the effort's *strategy and shape* (not per-Work-Item status).
    - **Historical** — archived and read-only; the effort has concluded and the durable knowledge is now owned by the permanent documents, to which the plan links forward.
 
-   **One effort → at most one Active plan.** At any point in time an effort has at most one execution plan in the `Active` state; if it is replaced, the superseding plan becomes `Active` and the prior one moves to `Historical`.
+   **At most one Active plan per track.** An effort may be planned as one track or as several — a track being a strand of the effort with its own parent Issue, such as backend and frontend halves of one product change. Each track has at most one execution plan in the `Active` state; if it is replaced, the superseding plan becomes `Active` and the prior one moves to `Historical`. **An effort may also have no plan:** most Work Items are planned inside Execution Preparation and are governed by their Issue alone ([Engineering Execution Standard](../../development/engineering-execution-standard.md) §12).
 
    The `Active → Historical` transition is **gated by reconciliation**: the durable knowledge is migrated into the permanent documents (architecture docs, ADRs) and any findings are recorded **before** the plan is archived. "Completed" is that reconciliation transition, **not** a first-class state — just as an ADR has no "accepting" state between `Proposed` and `Accepted`. The *reason* for archival (completed, or superseded/abandoned) is recorded inside the plan, not modeled as a state.
 
