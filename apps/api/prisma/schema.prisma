@@ -6,6 +6,7 @@
 // - Tweet: User posts (280 chars max)
 // - Comment: Replies to tweets
 // - Like: User-tweet like relationship (unique pair)
+// - CommentLike: User-comment like relationship (unique pair)
 // - Follow: User-user follow relationship (social graph)
 // - MediaObject: Media registry — storage detail + identity (Media platform module)
 
@@ -48,6 +49,7 @@ model User {
   tweets        Tweet[]
   comments      Comment[]
   likes         Like[]
+  commentLikes  CommentLike[]
   followers     Follow[]       @relation("following")  // people who follow ME
   following     Follow[]       @relation("followers")  // people I follow
   mediaObjects  MediaObject[]  // media uploaded/owned (registry provenance)
@@ -309,6 +311,7 @@ model Comment {
   // removes the replies before their parent.
   parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Restrict)
   replies Comment[] @relation("CommentReplies")
+  likes   CommentLike[]
 
   // Indexes
   @@index([tweetId])
@@ -338,6 +341,36 @@ model Like {
   @@unique([userId, tweetId])
   @@index([tweetId])
   @@map("likes")
+}
+
+// ─── CommentLike ─────────────────────────────────────────────────────────────
+// A reader's like on a comment — the second level's counterpart to Like, which
+// stays tweets-only. Its own table rather than a nullable column on Like: a like
+// belongs to exactly one thing, and a table that can point at either invites a
+// row that points at both or neither.
+//
+// Both relations Cascade, and that is the difference from Comment itself: a like
+// holds no media reference, so nothing outlives the row and nothing has to be
+// told the row is gone. Deleting a comment may therefore take its likes at the
+// database, where deleting a comment's *replies* may not.
+
+model CommentLike {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  commentId Int      @map("comment_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  // Constraints & Indexes
+  // The unique pair is the idempotency: a second like cannot become a second
+  // row, so setting a like the reader already holds is a no-op the database
+  // enforces rather than a check the service has to win a race on.
+  @@unique([userId, commentId])
+  @@index([commentId]) // per-comment like counts
+  @@map("comment_likes")
 }
 
 // ─── Follow ──────────────────────────────────────────────────────────────────

@@ -3,6 +3,7 @@
  *
  * Purpose:
  * - list: parse the query → the tweet's thread or one comment's replies, cursor-paginated
+ * - setLike / clearLike: parse :id + userId → call service → return like state
  * - create: parse tweetId from body + userId → call service → return 201
  * - update: parse commentId + body + userId → call service → return updated
  * - delete: parse commentId + userId → call service → return 204
@@ -46,10 +47,12 @@ export const createCommentController = (
         limit: number;
       };
 
+      // optionalAuth: a reader if signed in, undefined for a guest. It decides
+      // `isLiked` and nothing else — a guest still sees the whole thread.
       const result =
         parentId === undefined
-          ? await service.getThread(tweetId!, { cursor, limit })
-          : await service.getReplies(parentId, { cursor, limit });
+          ? await service.getThread(tweetId!, { cursor, limit }, req.userId)
+          : await service.getReplies(parentId, { cursor, limit }, req.userId);
 
       sendSuccess(res, result.data, 200, { ...result.meta });
     } catch (err) {
@@ -106,6 +109,31 @@ export const createCommentController = (
       await service.delete(commentId, req.userId!);
 
       sendSuccess(res, null, 204);
+    } catch (err) {
+      next(err);
+    }
+  },
+  /**
+   * PUT /comments/:id/like
+   * Sets the reader's like. Idempotent. Requires authGuard (userId guaranteed).
+   */
+  setLike: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const commentId = parseId(req.params.id, "Comment ID");
+      sendSuccess(res, await service.setLike(req.userId!, commentId));
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  /**
+   * DELETE /comments/:id/like
+   * Clears the reader's like. Idempotent.
+   */
+  clearLike: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const commentId = parseId(req.params.id, "Comment ID");
+      sendSuccess(res, await service.clearLike(req.userId!, commentId));
     } catch (err) {
       next(err);
     }

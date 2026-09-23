@@ -5,6 +5,7 @@
  * - AuthorEmbed: lightweight user snapshot for tweet/comment responses
  * - CursorParams: cursor pagination input (cursor + limit)
  * - CursorMeta: cursor pagination metadata (nextCursor, hasMore)
+ * - LikeState: what a like or unlike answers, for every likeable thing
  *
  * These were originally in tweet.types.ts but are needed by
  * Comments, Users, and Follow modules — extracted here to avoid
@@ -37,4 +38,19 @@ export interface CursorMeta {
   nextCursor: string | null;
   limit: number;
   hasMore: boolean;
+}
+
+// ─── Like State ──────────────────────────────────────────────────────────────
+
+/**
+ * What setting or clearing a like answers, for a post and for a comment alike.
+ *
+ * The shape is shared because the API contract states it once; the machinery
+ * behind it is not — tweets and comments each own their own, since they resolve
+ * different readers and are coupled to different deletions.
+ */
+export interface LikeState {
+  /** Whether the reader holds a like *now* — not whether this call changed anything. */
+  liked: boolean;
+  likesCount: number;
 }

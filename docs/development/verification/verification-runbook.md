@@ -80,9 +80,9 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
    Postman may ask you to re-select the file — point it at
    `fixtures/sample.png` (Postman stores file paths per machine).
 
-## Running folders 11 and 12 from the command line (Newman)
+## Running folders 11, 12 and 13 from the command line (Newman)
 
-Two folders have scripted runners, and for opposite reasons. **Folder 11** is
+Three folders have scripted runners, and for more than one reason. **Folder 11** is
 scripted because its guarantees are cheap to break and invisible in a body.
 **Folder 12.1** is scripted because the opposite is true: every guarantee in it —
 which list a query asks for, which refusal an id earns, what a page's meta says —
@@ -92,8 +92,26 @@ which list a query asks for, which refusal an id earns, what a page's meta says 
 scripts fine, but whether a removed reply's media reference ended is invisible to
 every endpoint by design, so that half is Checkpoint K in pgAdmin.
 
+**Folder 13** is the clean case of the same argument: a like holds no media
+reference, so nothing about it is invisible to the API. Count and state are both
+in the body, and the folder therefore runs whole, with no pgAdmin half at all.
+
 The remaining folders stay hand-driven: they need pgAdmin beside them, and a green
 CLI run would say nothing about the coordination they exist to check.
+
+### Folder 13 — comment likes
+
+Self-isolated: its own account with a per-run handle, its own post and comments.
+
+```bash
+npm run verify:likes
+# from a linked worktree, as ever:
+npm run verify:likes -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+**Folder 06 changes with it** and is not self-isolated — it needs `accessTokenB`
+and the `tweetId` folder 05 leaves behind, so run `05` and `06` together, seeding
+the tokens by the note below if folder 09 has already run.
 
 ### Folder 12 — the comment thread
 
@@ -202,6 +220,18 @@ curl -s -X POST http://localhost:4001/api/v1/auth/login   -H "Content-Type: appl
 
 Note `identifier`, not `email` — the login body takes either a username or an
 address under that one key.
+
+## A request that omits auth still sends one
+
+**The collection carries a bearer at its root** (`{{accessTokenA}}`), so a request
+that simply leaves `auth` out **inherits it**. Any scenario whose subject is being
+*unauthenticated* — or being a *guest* — must set `auth` to `noauth` explicitly,
+or it tests nothing and passes for the wrong reason.
+
+This is not hypothetical: **LIK-08**, **CML-05**, **CML-10** and **CML-12** were
+written without it and passed only because `accessTokenA` happened to be empty in
+the environment they were first run against. They pass for the right reason now.
+Anything added later that reads *as a guest* needs the same.
 
 ## Rate-limit awareness (test-only friction, not a bug)
 

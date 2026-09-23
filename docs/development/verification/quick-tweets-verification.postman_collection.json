@@ -1734,12 +1734,12 @@
     },
     {
       "name": "06 · Likes",
-      "description": "Toggle like on/off. Uses the tweetId from 05.",
+      "description": "Set and clear a like on a post, and the idempotence that replaced the toggle. Uses the tweetId from 05.",
       "item": [
         {
-          "name": "Like (toggle on)",
+          "name": "LIK-01 · Like (PUT)",
           "request": {
-            "method": "POST",
+            "method": "PUT",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/tweets/{{tweetId}}/like",
@@ -1770,16 +1770,66 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"liked\", () => pm.expect(pm.response.json().data.liked).to.eql(true));"
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"liked, with a count\", () => {",
+                  "  pm.expect(d.liked).to.eql(true);",
+                  "  pm.expect(d).to.have.property(\"likesCount\");",
+                  "});",
+                  "pm.environment.set(\"likeCountAfterFirst\", d.likesCount);"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Unlike (toggle off)",
+          "name": "LIK-02 · Like again — idempotent, not a conflict",
           "request": {
-            "method": "POST",
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{tweetId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{tweetId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The failure the toggle had: a second press must not undo the first."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200, never 409\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"still liked\", () => pm.expect(d.liked).to.eql(true));",
+                  "pm.test(\"and the count did not move\", () => {",
+                  "  pm.expect(d.likesCount).to.eql(Number(pm.environment.get(\"likeCountAfterFirst\")));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "LIK-03 · Unlike (DELETE)",
+          "request": {
+            "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/tweets/{{tweetId}}/like",
@@ -1810,16 +1860,96 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"unliked\", () => pm.expect(pm.response.json().data.liked).to.eql(false));"
+                  "pm.test(\"not liked\", () => pm.expect(pm.response.json().data.liked).to.eql(false));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Like — non-existent tweet",
+          "name": "LIK-04 · Unlike again — idempotent, not a 404",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{tweetId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{tweetId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"still not liked\", () => pm.expect(pm.response.json().data.liked).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "LIK-05 · The retired toggle is gone",
           "request": {
             "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{tweetId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{tweetId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "POST was the toggle. It must no longer be routed at all."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "LIK-06 · Like a tweet that does not exist",
+          "request": {
+            "method": "PUT",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/tweets/999999999/like",
@@ -1849,8 +1979,78 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));",
-                  "pm.test(\"error type not_found\", () => pm.expect(pm.response.json().error.type).to.eql(\"not_found\"));"
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "LIK-07 · Unlike a tweet that does not exist",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/999999999/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "999999999",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "LIK-08 · Liking needs a reader",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{tweetId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{tweetId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
                 ]
               }
             }
@@ -6842,6 +7042,689 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "13 · Comment likes",
+      "description": "Likes on a comment and on a reply, the idempotence that replaced the toggle, and what a guest reads (#805). Self-isolated: its own account with a per-run handle, its own post and comments, non-destructive. Scenarios CML-01…CML-12.\n\nIt runs whole from the command line (npm run verify:likes) and needs no pgAdmin. That is the difference from folder 12: a like holds no media reference, so nothing about it is invisible to the API — the body tells the whole story, count and state alike.",
+      "item": [
+        {
+          "name": "0 · Setup — register this run's account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{likeUsername}}\",\n  \"email\": \"{{likeUsername}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Self-isolated: a per-run handle, so the folder collides with no other run."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"likeToken\", pm.response.json().data.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup — a post",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"A post whose comments get liked\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"likeTweetId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup — a comment, and a reply under it",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tweetId\": \"{{likeTweetId}}\",\n  \"body\": \"A comment to like\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"a fresh comment starts unliked\", () => {",
+                  "  pm.expect(d.likesCount).to.eql(0);",
+                  "  pm.expect(d.isLiked).to.eql(false);",
+                  "});",
+                  "pm.environment.set(\"likeCommentId\", d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup — the reply",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tweetId\": \"{{likeTweetId}}\",\n  \"body\": \"A reply to like\",\n  \"parentId\": \"{{likeCommentId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"likeReplyId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-01 · Like a comment",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{likeCommentId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{likeCommentId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"liked, count 1\", () => { pm.expect(d.liked).to.eql(true); pm.expect(d.likesCount).to.eql(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-02 · Like it again — idempotent",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{likeCommentId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{likeCommentId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200, never 409\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"still liked, still one\", () => { pm.expect(d.liked).to.eql(true); pm.expect(d.likesCount).to.eql(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-03 · A reply can be liked too",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{likeReplyId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{likeReplyId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "A reply is a comment, so one relation covers both levels."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"liked\", () => pm.expect(pm.response.json().data.liked).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-04 · The thread carries the reader's own state",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments?tweetId={{likeTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "tweetId",
+                  "value": "{{likeTweetId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const c = pm.response.json().data[0];",
+                  "pm.test(\"count and state, for this reader\", () => { pm.expect(c.likesCount).to.eql(1); pm.expect(c.isLiked).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-05 · A guest sees the count, never the state",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments?tweetId={{likeTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "tweetId",
+                  "value": "{{likeTweetId}}"
+                }
+              ]
+            },
+            "description": "No Authorization header. The count is public; only the state is personal.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200 — a guest still reads the thread\", () => pm.response.to.have.status(200));",
+                  "const c = pm.response.json().data[0];",
+                  "pm.test(\"count kept, state false\", () => { pm.expect(c.likesCount).to.eql(1); pm.expect(c.isLiked).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-06 · The replies list carries them as well",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments?parentId={{likeCommentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "parentId",
+                  "value": "{{likeCommentId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json().data[0];",
+                  "pm.test(\"the reply reports its like\", () => { pm.expect(r.likesCount).to.eql(1); pm.expect(r.isLiked).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-07 · Unlike the comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{likeCommentId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{likeCommentId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"cleared, count back to 0\", () => { pm.expect(d.liked).to.eql(false); pm.expect(d.likesCount).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-08 · Unlike it again — idempotent, not a 404",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{likeCommentId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{likeCommentId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"still cleared\", () => pm.expect(pm.response.json().data.liked).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-09 · Like a comment that does not exist",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/999999999/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "999999999",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-10 · Liking needs a reader",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{likeCommentId}}/like",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{likeCommentId}}",
+                "like"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-11 · Deleting the comment takes its likes with it",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{likeCommentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{likeCommentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{likeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The reply's like goes too, by cascade. CML-12 is the proof from the outside."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CML-12 · The replies list is gone with its parent",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments?parentId={{likeCommentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "parentId",
+                  "value": "{{likeCommentId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get('likeUsername')) {",
+              "  pm.environment.set('likeUsername', 'lik' + Date.now().toString(36));",
+              "}"
+            ]
+          }
         }
       ]
     }

@@ -7,7 +7,7 @@
  * - create(): create tweet and return as DTO
  * - update(): ownership check → update → return as DTO
  * - delete(): ownership check → delete
- * - toggleLike(): check existing → create or delete → return new state
+ * - setLike() / clearLike(): write the wanted state, idempotently
  *
  * Principle: SRP — only business rules, no HTTP or database concerns.
  * Principle: DIP — depends on ITweetRepository interface, not Prisma.
@@ -37,7 +37,7 @@ import type {
   TweetResponse,
   TweetWithRelations,
 } from "./tweet.types.js";
-import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
+import type { CursorParams, CursorMeta, LikeState } from "../../shared/types/index.js";
 import { avatarReferencesOf, isPrismaError } from "../../shared/utils/index.js";
 import { toTweetResponse } from "./tweet.mapper.js";
 
@@ -141,6 +141,17 @@ const asAttachFailure = (err: unknown): unknown =>
         media: ["One or more media items could not be attached; please re-upload and try again"],
       })
     : err;
+
+/**
+ * Liking something that is not there is a `404`, exactly as reading it is. The
+ * guard runs before the write so a like cannot be created against a tweet the
+ * reader can no longer see.
+ */
+const assertTweetExists = async (repo: ITweetRepository, tweetId: number): Promise<void> => {
+  if ((await repo.findById(tweetId)) === null) {
+    throw AppError.notFound("Tweet");
+  }
+};
 
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
@@ -355,60 +366,42 @@ export const createTweetService = (
     await repo.delete(id, client);
   },
 
-  // ─── Toggle Like ────────────────────────────────────────────────────
+  // ─── Set / Clear Like ───────────────────────────────────────────────
   //
-  // Race condition safety:
-  //   Rapid clicks can cause concurrent requests where findLike returns
-  //   stale data. We catch Prisma errors instead of crashing with 500:
-  //   - P2002 (unique violation) → createLike raced, like already exists
-  //   - P2025 (record not found) → deleteLike raced, like already gone
+  // Set and clear rather than toggle, because a toggle is not repeat-safe: with
+  // the like shown before the server answers, a double press or a retry cancels
+  // what the reader meant. These two say what the reader wants, so repeating one
+  // is a no-op rather than a reversal.
+  //
+  // Neither reads before it writes. The unique pair already decides the outcome,
+  // so attempting the write and accepting the expected conflict is both simpler
+  // and tighter than check-then-act, which has a window between the two:
+  //   - P2002 (unique violation) → this reader's own like is already there, from
+  //     a press that raced this one; still liked
+  //   - P2025 (record not found) → their like was already gone; still not liked
+  // Either way the answer is the state the reader asked for.
 
-  toggleLike: async (
-    userId: number,
-    tweetId: number,
-  ): Promise<{ liked: boolean; likesCount: number }> => {
-    // 1. Verify tweet exists
-    const tweet = await repo.findById(tweetId);
-    if (!tweet) {
-      throw AppError.notFound("Tweet");
+  setLike: async (userId: number, tweetId: number): Promise<LikeState> => {
+    await assertTweetExists(repo, tweetId);
+
+    try {
+      await repo.createLike(userId, tweetId);
+    } catch (error: unknown) {
+      if (!isPrismaError(error, "P2002")) throw error;
     }
 
-    // 2. Check if already liked
-    const existingLike = await repo.findLike(userId, tweetId);
+    return { liked: true, likesCount: await repo.getLikesCount(tweetId) };
+  },
 
-    let liked: boolean;
+  clearLike: async (userId: number, tweetId: number): Promise<LikeState> => {
+    await assertTweetExists(repo, tweetId);
 
-    if (existingLike) {
-      // Already liked → unlike
-      try {
-        await repo.deleteLike(userId, tweetId);
-        liked = false;
-      } catch (error: unknown) {
-        // P2025: another request already deleted this like
-        if (isPrismaError(error, "P2025")) {
-          liked = false;
-        } else {
-          throw error;
-        }
-      }
-    } else {
-      // Not liked → like
-      try {
-        await repo.createLike(userId, tweetId);
-        liked = true;
-      } catch (error: unknown) {
-        // P2002: another request already created this like
-        if (isPrismaError(error, "P2002")) {
-          liked = true;
-        } else {
-          throw error;
-        }
-      }
+    try {
+      await repo.deleteLike(userId, tweetId);
+    } catch (error: unknown) {
+      if (!isPrismaError(error, "P2025")) throw error;
     }
 
-    // 3. Get updated count (always accurate — reads after write)
-    const likesCount = await repo.getLikesCount(tweetId);
-
-    return { liked, likesCount };
+    return { liked: false, likesCount: await repo.getLikesCount(tweetId) };
   },
 });

@@ -53,7 +53,6 @@ const makeWorld = () => {
       calls.replace.push({ tweetId, refs, client });
       stored.set(tweetId, refs);
     },
-    findLike: async () => null,
     createLike: async () => {},
     deleteLike: async () => {},
     getLikesCount: async () => 0,

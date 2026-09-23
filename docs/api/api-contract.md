@@ -25,6 +25,7 @@
 | `AuthorEmbed`, the follower and following list items, and the user profile: `profileImage` removed, superseded by `avatar` | The field was deprecated and always `null` once the avatar became a Media Reference, so it never carried a value anything could depend on. No client reads it: nothing in the frontend references the field. |
 | `POST /auth/register` and `POST /auth/password-reset/apply`: a password containing any character outside printable ASCII is refused with `422` | A rule tightened on input rather than a shape removed, but a request valid before is refused after, so it is recorded. No consumer can depend on the wider rule: `v1` has no released consumer, the only client applies the same rule in the same change, and login still accepts any password set before it. |
 | `GET /comments`: offset pagination replaced by cursor pagination, and the default page size moves from 20 to 10 | The thread loads by infinite scroll, and a page number shifts every later page when a comment is added or removed mid-scroll, so comments are skipped or shown twice. The meta shape had to change for the list to be correct at all. No client reads it: nothing in the frontend calls `/comments`. |
+| `POST /tweets/:id/like` replaced by `PUT` and `DELETE /tweets/:id/like` | A toggle cannot be repeat-safe, which the product requires of liking: with the like shown before the server answers, a double press or a retry cancels what the reader meant. The fix is the verb, not the payload — `PUT` and `DELETE` carry idempotence by definition. The response shape is unchanged. No client reads it: nothing in the frontend calls the endpoint. |
 | `GET /comments?tweetId=`: returns top-level comments only, no longer every comment on the tweet | A comment may now answer another comment. Returning both levels in one flat list would give the client no way to tell them apart, and the thread is drawn as two. The replies have their own list, `?parentId=`. No client reads it, for the same reason. |
 
 ---
@@ -71,13 +72,16 @@ GET    /api/v1/tweets/:id
 POST   /api/v1/tweets
 PATCH  /api/v1/tweets/:id
 DELETE /api/v1/tweets/:id
-POST   /api/v1/tweets/:id/like
+PUT    /api/v1/tweets/:id/like
+DELETE /api/v1/tweets/:id/like
 
 GET    /api/v1/comments?tweetId=:tweetId    (a tweet's top-level comments)
 GET    /api/v1/comments?parentId=:commentId (one comment's replies)
 POST   /api/v1/comments
 PATCH  /api/v1/comments/:id
 DELETE /api/v1/comments/:id
+PUT    /api/v1/comments/:id/like
+DELETE /api/v1/comments/:id/like
 
 GET    /api/v1/users/:username
 GET    /api/v1/users/me
@@ -605,16 +609,13 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 ---
 
-### `POST /tweets/:id/like` — Toggle like
+### `PUT /tweets/:id/like` — Like a tweet
 
 **Auth:** Required
 
 ```jsonc
-// Response 200 (toggled ON)
+// Response 200
 { "success": true, "data": { "liked": true, "likesCount": 4 } }
-
-// Response 200 (toggled OFF)
-{ "success": true, "data": { "liked": false, "likesCount": 3 } }
 
 // Response 401
 { "success": false, "error": { "type": "unauthorized", "message": "Missing or invalid authorization header" } }
@@ -623,9 +624,32 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 { "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
 
-**Notes:**
-- Toggle behavior: if already liked → unlike. If not liked → like.
-- No separate unlike endpoint — one endpoint handles both.
+---
+
+### `DELETE /tweets/:id/like` — Unlike a tweet
+
+**Auth:** Required
+
+```jsonc
+// Response 200
+{ "success": true, "data": { "liked": false, "likesCount": 3 } }
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
+```
+
+**Notes on both — and on `PUT`/`DELETE …/like` wherever it appears:**
+- **`liked` is the state now, not what this call changed.** Both endpoints are
+  **idempotent**: liking something already liked answers `200` with `liked: true`,
+  and unliking something not liked answers `200` with `liked: false`. Neither is
+  ever a `409` or a `404` *for being redundant* — only a missing resource is `404`.
+- **That is the reason these replaced a toggle.** A client shows the like before
+  the server answers, so with a toggle a double press or a retry cancels what the
+  reader meant. Here, repeating a call cannot reverse it.
+- `likesCount` is read after the write, so it is the count as it stands.
+- **Follows are deliberately different.** `POST /follows/:username` answers `409`
+  on a repeat. Nothing requires repeat-safety there, and the asymmetry is
+  recorded rather than smoothed over.
 
 ---
 
@@ -633,7 +657,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 ### `GET /comments?tweetId=:id` — A tweet's top-level comments (cursor-paginated)
 
-**Auth:** None
+**Auth:** Optional — a signed-in reader gets their own `isLiked`; a guest reads the thread all the same
 **Query params:** `?tweetId=5&cursor=<id>&limit=10`
 
 Exactly one of `tweetId` or `parentId` is required. `tweetId` asks for the thread —
@@ -658,6 +682,8 @@ reached through its parent, below.
       "tweetId": 5,
       "parentId": null,           // null — this is a top-level comment
       "repliesCount": 3,          // top-level comments only; see the note below
+      "likesCount": 12,
+      "isLiked": false,           // this reader's own state; always false for a guest
       "createdAt": "2026-05-10T12:05:00.000Z"
     }
   ],
@@ -680,6 +706,9 @@ reached through its parent, below.
   creation, so it is both the order and a unique, stable cursor.
 - `repliesCount` is present on **top-level comments only**. A reply cannot be
   answered, so the field is absent rather than zero on a reply.
+- `likesCount` is on **every** comment at both levels, and is public. `isLiked` is
+  the **reading** account's own state and is `false` for a guest — who still sees
+  the count. Both come from the same query as the comment.
 - Returns `404` if the tweet doesn't exist.
 - The tweet's own `commentsCount` counts **both levels** — comments and replies
   together — so it does not match the length of this list.
@@ -688,7 +717,7 @@ reached through its parent, below.
 
 ### `GET /comments?parentId=:id` — One comment's replies (cursor-paginated)
 
-**Auth:** None
+**Auth:** Optional — as above
 **Query params:** `?parentId=1&cursor=<id>&limit=10`
 
 The second and last level. A replies list is fetched separately from the thread,
@@ -706,6 +735,8 @@ so the interface can keep it collapsed until a reader asks for it.
       "author": { "id": 3, "username": "rania", "name": "Rania", "avatar": null },
       "tweetId": 5,
       "parentId": 1,
+      "likesCount": 2,
+      "isLiked": true,
       "createdAt": "2026-05-10T12:09:00.000Z"
     }
   ],
@@ -718,7 +749,8 @@ so the interface can keep it collapsed until a reader asks for it.
 
 **Notes:**
 - Ordered by `id ASC`, and paginated exactly as the thread is.
-- A reply carries no `repliesCount`: the thread is two levels and stops here.
+- A reply carries no `repliesCount`: the thread is two levels and stops here. It
+  does carry `likesCount` and `isLiked` — a reply can be liked like anything else.
 
 ---
 
@@ -747,6 +779,8 @@ so the interface can keep it collapsed until a reader asks for it.
     "tweetId": 5,
     "parentId": 1,                     // null for a top-level comment
     "repliesCount": 0,                 // present only when parentId is null
+    "likesCount": 0,
+    "isLiked": false,
     "createdAt": "2026-05-10T14:35:00.000Z"
   }
 }
@@ -807,6 +841,8 @@ so the interface can keep it collapsed until a reader asks for it.
     "tweetId": 5,
     "parentId": null,
     "repliesCount": 2,
+    "likesCount": 7,
+    "isLiked": true,                   // the editor's own state, not a flat false
     "createdAt": "2026-05-10T12:05:00.000Z"
   }
 }
@@ -850,6 +886,41 @@ themselves survive unreferenced for reclamation to take.
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "Comment not found" } }
 ```
+
+---
+
+### `PUT /comments/:id/like` — Like a comment
+
+**Auth:** Required
+
+Works on a comment and on a reply alike — a reply is a comment.
+
+```jsonc
+// Response 200
+{ "success": true, "data": { "liked": true, "likesCount": 13 } }
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "Comment not found" } }
+```
+
+---
+
+### `DELETE /comments/:id/like` — Unlike a comment
+
+**Auth:** Required
+
+```jsonc
+// Response 200
+{ "success": true, "data": { "liked": false, "likesCount": 12 } }
+
+// Response 404
+{ "success": false, "error": { "type": "not_found", "message": "Comment not found" } }
+```
+
+**Notes:** idempotent in both directions, exactly as the tweet's are — see the
+notes under [`PUT /tweets/:id/like`](#put-tweetsidlike--like-a-tweet). Deleting a
+comment takes its likes with it, and deleting a tweet takes the likes of its
+comments at both levels.
 
 ---
 

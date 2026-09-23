@@ -3,7 +3,8 @@
  *
  * Purpose:
  * - Comment CRUD with cursor pagination (n+1 slice)
- * - Author embed and reply tally included in all read queries
+ * - Author embed, reply and like tallies included in all read queries
+ * - The reader's own like included only when a reader is known
  *
  * Cursor pagination:
  *   take = limit + 1; the service uses the extra row to set hasMore.
@@ -23,8 +24,12 @@ type PrismaInstance = typeof prisma;
 
 // ─── Shared Include ──────────────────────────────────────────────────────────
 
-/** Author snapshot and reply tally included in every comment query. */
-const commentInclude = {
+/**
+ * Author snapshot and tallies included in every comment query, plus the reader's
+ * own like when a reader is known. A guest's query omits `likes` entirely, which
+ * is why an absent array means "nobody asked", never "not liked".
+ */
+const commentInclude = (userId?: number) => ({
   author: {
     select: {
       id: true,
@@ -34,9 +39,10 @@ const commentInclude = {
     },
   },
   // Counted in the same query rather than stored: a duplicated tally drifts the
-  // moment a reply is removed by any path that forgets it.
-  _count: { select: { replies: true } },
-} as const;
+  // moment a reply or a like is removed by any path that forgets it.
+  _count: { select: { replies: true, likes: true } },
+  ...(userId ? { likes: { where: { userId }, select: { userId: true } } } : {}),
+});
 
 /** The n+1 slice and cursor clause both lists share. */
 const page = ({ cursor, limit }: CursorParams) => ({
@@ -67,20 +73,20 @@ export const createCommentRepository = (
 
   // ── The thread: a tweet's top-level comments ──
 
-  findThread: (tweetId, params) =>
+  findThread: (tweetId, params, userId) =>
     db.comment.findMany({
       where: { tweetId, parentId: null },
       ...page(params),
-      include: commentInclude,
+      include: commentInclude(userId),
     }),
 
   // ── A comment's replies ──
 
-  findReplies: (parentId, params) =>
+  findReplies: (parentId, params, userId) =>
     db.comment.findMany({
       where: { parentId },
       ...page(params),
-      include: commentInclude,
+      include: commentInclude(userId),
     }),
 
   // ── Parent lookup (existence + level) ──
@@ -91,12 +97,29 @@ export const createCommentRepository = (
       select: { id: true, tweetId: true, parentId: true },
     }),
 
+  // ── Existence check, for the like guard ──
+
+  commentExists: async (id) =>
+    (await db.comment.findUnique({ where: { id }, select: { id: true } })) !== null,
+
+  // ── Like Operations ──
+
+  createLike: async (userId, commentId) => {
+    await db.commentLike.create({ data: { userId, commentId } });
+  },
+
+  deleteLike: async (userId, commentId) => {
+    await db.commentLike.delete({ where: { userId_commentId: { userId, commentId } } });
+  },
+
+  getLikesCount: (commentId) => db.commentLike.count({ where: { commentId } }),
+
   // ── Single Comment ──
 
-  findById: (id, client: DbClient = db) =>
-    client.comment.findUnique({
+  findById: (id, userId) =>
+    db.comment.findUnique({
       where: { id },
-      include: commentInclude,
+      include: commentInclude(userId),
     }),
 
   // ── Create ──
@@ -110,16 +133,16 @@ export const createCommentRepository = (
         mediaId: data.mediaId ?? null,
         parentId: data.parentId ?? null,
       },
-      include: commentInclude,
+      include: commentInclude(),
     }),
 
   // ── Update ──
 
-  update: (id, data, client: DbClient = db) =>
+  update: (id, data, client: DbClient = db, userId) =>
     client.comment.update({
       where: { id },
       data,
-      include: commentInclude,
+      include: commentInclude(userId),
     }),
 
   // ── Delete ──
