@@ -28,7 +28,7 @@ const rawComment = (over: Partial<CommentWithRelations> = {}): CommentWithRelati
   mediaId: null,
   createdAt: new Date(),
   author: { id: AUTHOR, username: "ada", name: "Ada", avatarMediaId: null },
-  _count: { replies: 0 },
+  _count: { replies: 0, likes: 0 },
   ...over,
 });
 
@@ -42,6 +42,10 @@ const makeWorld = (ownerMediaId: number | null = null, ownerParentId: number | n
     findThread: async () => [],
     findReplies: async () => [],
     findParent: async () => null,
+    commentExists: async () => true,
+    createLike: async () => {},
+    deleteLike: async () => {},
+    getLikesCount: async () => 0,
     findById: async () => null,
     create: async (data, client) => {
       created.push({ body: data.body, mediaId: data.mediaId ?? null, client });

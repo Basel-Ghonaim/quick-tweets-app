@@ -7,6 +7,7 @@
  * - create(): verify tweet exists → resolve the parent, if any → create → DTO
  * - update(): double ownership (comment exists + belongs to tweet + user is author)
  * - delete(): double ownership → the comment, and its replies if it has any
+ * - setLike() / clearLike(): write the wanted state, idempotently
  *
  * Double ownership validation:
  *   1. Does the comment exist?
@@ -32,7 +33,7 @@ import {
   type IMediaReferences,
   type IMediaResolution,
 } from "../media/index.js";
-import { avatarReferencesOf, toAuthorEmbed } from "../../shared/utils/index.js";
+import { avatarReferencesOf, isPrismaError, toAuthorEmbed } from "../../shared/utils/index.js";
 import { createCommentRepository } from "./comment.repository.js";
 import type {
   ICommentRepository,
@@ -43,6 +44,7 @@ import type {
   CursorParams,
   CursorMeta,
 } from "./comment.types.js";
+import type { LikeState } from "../../shared/types/index.js";
 
 // ─── Media port ──────────────────────────────────────────────────────────────
 
@@ -112,6 +114,10 @@ const toCommentResponse = (
     // Top-level only: a reply cannot be answered, so its tally would always be
     // zero and would invite a client to render a control that does nothing.
     ...(comment.parentId === null ? { repliesCount: comment._count.replies } : {}),
+    likesCount: comment._count.likes,
+    // An absent `likes` means the query was made for a guest, which reads the
+    // same as unliked and is the answer a guest is owed either way.
+    isLiked: (comment.likes?.length ?? 0) > 0,
     createdAt: comment.createdAt,
   };
 };
@@ -198,6 +204,20 @@ const resolveParent = async (
 };
 
 /**
+ * Liking something that is not there is a `404`, exactly as reading it is. The
+ * guard runs before the write, so a like cannot be created against a comment the
+ * reader can no longer see.
+ */
+const assertCommentExists = async (
+  repo: ICommentRepository,
+  commentId: number,
+): Promise<void> => {
+  if (!(await repo.commentExists(commentId))) {
+    throw AppError.notFound("Comment");
+  }
+};
+
+/**
  * Turns an n+1 fetch into a page: the extra row is the answer to `hasMore` and
  * is dropped, and the cursor is the last id actually returned.
  */
@@ -240,13 +260,14 @@ export const createCommentService = (
   getThread: async (
     tweetId: number,
     params: CursorParams,
+    readerId?: number,
   ): Promise<{ data: CommentResponse[]; meta: CursorMeta }> => {
     const tweetFound = await repo.tweetExists(tweetId);
     if (!tweetFound) {
       throw AppError.notFound("Tweet");
     }
 
-    return sliceToPage(media, await repo.findThread(tweetId, params), params.limit);
+    return sliceToPage(media, await repo.findThread(tweetId, params, readerId), params.limit);
   },
 
   // ─── List Replies (cursor-paginated) ────────────────────────────────
@@ -254,13 +275,14 @@ export const createCommentService = (
   getReplies: async (
     parentId: number,
     params: CursorParams,
+    readerId?: number,
   ): Promise<{ data: CommentResponse[]; meta: CursorMeta }> => {
     const parent = await repo.findParent(parentId);
     if (parent === null) {
       throw AppError.notFound("Comment");
     }
 
-    return sliceToPage(media, await repo.findReplies(parentId, params), params.limit);
+    return sliceToPage(media, await repo.findReplies(parentId, params, readerId), params.limit);
   },
 
   // ─── Create Comment ─────────────────────────────────────────────────
@@ -335,7 +357,7 @@ export const createCommentService = (
     // 3a. Body-only edit (media omitted) — media untouched, no transaction. The
     //     existing reference is resolved for the response.
     if (data.media === undefined) {
-      return toResponse(media, await repo.update(commentId, { body: data.body }));
+      return toResponse(media, await repo.update(commentId, { body: data.body }, undefined, userId));
     }
 
     // 3b. Media edit (set / replace / remove) — coordinate in one transaction.
@@ -367,7 +389,12 @@ export const createCommentService = (
           }
         }
 
-        const updated = await repo.update(commentId, { body: data.body, mediaId: newMediaId }, tx);
+        const updated = await repo.update(
+          commentId,
+          { body: data.body, mediaId: newMediaId },
+          tx,
+          userId,
+        );
         return { updated, token };
       });
       return toResponse(media, updated, token);
@@ -438,6 +465,40 @@ export const createCommentService = (
   // referencing row is removed by the same statement — but that rests on when
   // the constraint is evaluated rather than on anything the schema states.
   // Deleting in dependency order says what is meant and does not depend on it.
+
+  // ─── Set / Clear Like ───────────────────────────────────────────────
+  //
+  // The same shape tweets carry, and idempotent for the same reason: a toggle
+  // lets a double press or a retry cancel what the reader meant. Neither reads
+  // before it writes — the unique pair decides the outcome, so the expected
+  // conflict *is* the answer rather than an error to report.
+  //
+  // These need no transaction and no reference coordination: a like holds no
+  // media, so there is nothing to tell Media about and nothing to roll back.
+
+  setLike: async (userId: number, commentId: number): Promise<LikeState> => {
+    await assertCommentExists(repo, commentId);
+
+    try {
+      await repo.createLike(userId, commentId);
+    } catch (error: unknown) {
+      if (!isPrismaError(error, "P2002")) throw error;
+    }
+
+    return { liked: true, likesCount: await repo.getLikesCount(commentId) };
+  },
+
+  clearLike: async (userId: number, commentId: number): Promise<LikeState> => {
+    await assertCommentExists(repo, commentId);
+
+    try {
+      await repo.deleteLike(userId, commentId);
+    } catch (error: unknown) {
+      if (!isPrismaError(error, "P2025")) throw error;
+    }
+
+    return { liked: false, likesCount: await repo.getLikesCount(commentId) };
+  },
 
   deleteForTweet: async (tweetId, client) => {
     await endReferences(media, await repo.findMediaRefsByTweet(tweetId, client), client);

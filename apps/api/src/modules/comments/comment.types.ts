@@ -12,7 +12,7 @@
  */
 
 import type { DbClient } from "../../shared/database/index.js";
-import type { AuthorEmbed, CursorParams, CursorMeta } from "../../shared/types/index.js";
+import type { AuthorEmbed, CursorParams, CursorMeta, LikeState } from "../../shared/types/index.js";
 import type { AuthorRow } from "../../shared/utils/index.js";
 
 // ─── Response DTOs ───────────────────────────────────────────────────────────
@@ -38,6 +38,10 @@ export interface CommentResponse {
    * renders and nothing keeps honest.
    */
   repliesCount?: number;
+  /** How many readers have liked this comment. Counted, never stored. */
+  likesCount: number;
+  /** Whether *this* reader has liked it. Always `false` for a guest. */
+  isLiked: boolean;
   createdAt: Date;
 }
 
@@ -63,8 +67,14 @@ export interface CommentWithRelations {
   mediaId: number | null;
   createdAt: Date;
   author: AuthorRow;
-  /** Reply tally from the same query — surfaced for top-level comments only. */
-  _count: { replies: number };
+  /** Reply and like tallies from the same query. */
+  _count: { replies: number; likes: number };
+  /**
+   * The reader's own like, or nothing. Present only when a reader was known:
+   * a non-empty array means they liked it, and an absent one means the query
+   * was made for a guest — never that the comment is unliked.
+   */
+  likes?: { userId: number }[];
 }
 
 // ─── Repository Interface ────────────────────────────────────────────────────
@@ -79,15 +89,31 @@ export interface ICommentRepository {
   tweetExists(tweetId: number): Promise<boolean>;
 
   /** A tweet's top-level comments, oldest first. Fetches `limit + 1` for `hasMore`. */
-  findThread(tweetId: number, params: CursorParams): Promise<CommentWithRelations[]>;
+  findThread(
+    tweetId: number,
+    params: CursorParams,
+    userId?: number,
+  ): Promise<CommentWithRelations[]>;
 
   /** One comment's replies, oldest first. Fetches `limit + 1` for `hasMore`. */
-  findReplies(parentId: number, params: CursorParams): Promise<CommentWithRelations[]>;
+  findReplies(
+    parentId: number,
+    params: CursorParams,
+    userId?: number,
+  ): Promise<CommentWithRelations[]>;
+
+  /** Does this comment exist? The guard a like runs before writing. */
+  commentExists(id: number): Promise<boolean>;
+
+  /** Like operations. The unique pair makes a repeated set a conflict, not a duplicate. */
+  createLike(userId: number, commentId: number): Promise<void>;
+  deleteLike(userId: number, commentId: number): Promise<void>;
+  getLikesCount(commentId: number): Promise<number>;
 
   /** The shape a parent must be checked against: does it exist, and is it top-level? */
   findParent(id: number): Promise<{ id: number; tweetId: number; parentId: number | null } | null>;
 
-  findById(id: number): Promise<CommentWithRelations | null>;
+  findById(id: number, userId?: number): Promise<CommentWithRelations | null>;
 
   create(
     data: {
@@ -104,6 +130,8 @@ export interface ICommentRepository {
     id: number,
     data: { body?: string; mediaId?: number | null },
     client?: DbClient,
+    /** The editor, so the answer reports their own like truthfully rather than as false. */
+    userId?: number,
   ): Promise<CommentWithRelations>;
 
   delete(id: number, client?: DbClient): Promise<void>;
@@ -151,17 +179,28 @@ export interface ICommentRepository {
  * Implemented by: createCommentService (comment.service.ts)
  */
 export interface ICommentService {
-  /** A tweet's top-level comments. `404` if the tweet does not exist. */
+  /**
+   * A tweet's top-level comments. `404` if the tweet does not exist.
+   * `readerId` is the signed-in reader, if any — it decides `isLiked` and nothing else.
+   */
   getThread(
     tweetId: number,
     params: CursorParams,
+    readerId?: number,
   ): Promise<{ data: CommentResponse[]; meta: CursorMeta }>;
 
   /** One comment's replies. `404` if the parent does not exist. */
   getReplies(
     parentId: number,
     params: CursorParams,
+    readerId?: number,
   ): Promise<{ data: CommentResponse[]; meta: CursorMeta }>;
+
+  /** Set the reader's like on a comment. Idempotent. */
+  setLike(userId: number, commentId: number): Promise<LikeState>;
+
+  /** Clear the reader's like on a comment. Idempotent. */
+  clearLike(userId: number, commentId: number): Promise<LikeState>;
 
   /**
    * `mediaToken` is the public read token of a file the author uploaded;

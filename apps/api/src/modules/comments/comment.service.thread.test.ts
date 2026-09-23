@@ -31,7 +31,7 @@ const raw = (over: Partial<CommentWithRelations> = {}): CommentWithRelations => 
   mediaId: null,
   createdAt: new Date(),
   author: { id: AUTHOR, username: "ada", name: "Ada", avatarMediaId: null },
-  _count: { replies: 0 },
+  _count: { replies: 0, likes: 0 },
   ...over,
 });
 
@@ -70,9 +70,14 @@ const makeWorld = () => {
     byTweet: [] as number[],
   };
   const clients: unknown[] = [];
+  const likes = { created: [] as [number, number][], deleted: [] as [number, number][] };
 
   const state = {
     tweetExists: true,
+    commentExists: true,
+    likesCount: 0,
+    createLikeError: null as unknown,
+    deleteLikeError: null as unknown,
     parent: null as { id: number; tweetId: number; parentId: number | null } | null,
     thread: [] as CommentWithRelations[],
     replyPage: [] as CommentWithRelations[],
@@ -92,6 +97,16 @@ const makeWorld = () => {
       return state.replyPage;
     },
     findParent: async () => state.parent,
+    commentExists: async () => state.commentExists,
+    createLike: async (userId, commentId) => {
+      likes.created.push([userId, commentId]);
+      if (state.createLikeError) throw state.createLikeError;
+    },
+    deleteLike: async (userId, commentId) => {
+      likes.deleted.push([userId, commentId]);
+      if (state.deleteLikeError) throw state.deleteLikeError;
+    },
+    getLikesCount: async () => state.likesCount,
     findById: async () => null,
     create: async (data) => raw({ id: 99, body: data.body, parentId: data.parentId ?? null }),
     update: async (id) => raw({ id }),
@@ -123,7 +138,7 @@ const makeWorld = () => {
     return fn(TX);
   };
 
-  return { repo, state, calls, deleted, clients, runInTransaction, opened: () => opened };
+  return { repo, state, calls, deleted, likes, clients, runInTransaction, opened: () => opened };
 };
 
 const statusOf = async (run: Promise<unknown>): Promise<number> =>
@@ -174,7 +189,7 @@ describe("getThread", () => {
 
   it("carries a reply count on a top-level comment", async () => {
     const w = makeWorld();
-    w.state.thread = [raw({ id: 10, _count: { replies: 4 } })];
+    w.state.thread = [raw({ id: 10, _count: { replies: 4, likes: 0 } })];
     const svc = createCommentService(w.repo, inertMedia(), w.runInTransaction);
 
     const { data } = await svc.getThread(TWEET, { limit: 10 });
