@@ -11,6 +11,7 @@ const rawTweet = (over: Partial<TweetWithRelations> = {}): TweetWithRelations =>
   authorId: 42,
   createdAt: new Date(),
   updatedAt: new Date(),
+  editedAt: null,
   author: { id: 42, username: "ada", name: "Ada", avatarMediaId: null },
   _count: { likes: 2, comments: 1 },
   media: [],

@@ -151,6 +151,19 @@ const asAttachFailure = (err: unknown): unknown =>
     : err;
 
 /**
+ * Whether a submitted body is an edit of the stored one, as the fields a Prisma
+ * update takes: `{ editedAt: <now> }` when the text changed, and `{}` when it did
+ * not, so the column is left exactly as it was.
+ *
+ * An absent body is not an edit, and neither is an identical one — the plan asks
+ * for a marker shown *"only when it was actually edited"*, and nothing a reader
+ * sees has changed in either case. The submitted value is already trimmed by the
+ * validator, so this compares like with like.
+ */
+const textChanged = (submitted: string | undefined, stored: string): { editedAt?: Date } =>
+  submitted !== undefined && submitted !== stored ? { editedAt: new Date() } : {};
+
+/**
  * Liking something that is not there is a `404`, exactly as reading it is. The
  * guard runs before the write so a like cannot be created against a tweet the
  * reader can no longer see.
@@ -328,12 +341,22 @@ export const createTweetService = (
       throw AppError.forbidden("You can only edit your own tweets");
     }
 
-    // 3. Body-only edits leave media untouched and need no transaction.
+    // 3. Did the *text* change? Decided once, here, so both branches below carry
+    //    the same answer — an edit that changes the body and the images together
+    //    must not lose its marker to the media path.
+    //
+    //    An image added, replaced, removed or reordered is **not** an edit, and
+    //    neither is re-submitting the same text: nothing a reader sees changed.
+    //    `editedAt: undefined` leaves the column exactly as it was, so a marker
+    //    already set is never cleared.
+    const edited = textChanged(data.body, owner.body);
+
+    // 4. Body-only edits leave media untouched and need no transaction.
     if (data.media === undefined) {
-      return toResponse(media, await repo.update(id, { body: data.body }, userId));
+      return toResponse(media, await repo.update(id, { body: data.body, ...edited }, userId));
     }
 
-    // 4. Full replacement: the submitted array *is* the tweet's media. The body
+    // 5. Full replacement: the submitted array *is* the tweet's media. The body
     //    edit, the new rows, and the coordination all commit together.
     const mediaTokens = data.media;
     try {
@@ -342,7 +365,7 @@ export const createTweetService = (
         const after = await authorizeRefs(media, mediaTokens, userId, tx);
         await repo.replaceMediaRefs(id, after, tx);
         await coordinateRefChange(media, id, before, after, tx);
-        return repo.update(id, { body: data.body }, userId, tx);
+        return repo.update(id, { body: data.body, ...edited }, userId, tx);
       });
       return toResponse(media, updated);
     } catch (err) {
