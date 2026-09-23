@@ -1,0 +1,28 @@
+/* Disposition: active */
+/* The order everything above the page stacks in — intent tier, with no primitive
+   scale beneath it (ADR 0011 Decision 1). A layer scale would name positions, and
+   a position is not a concept a consumer could bind; the names here are the whole
+   vocabulary and the numbers exist only to realise their order.
+
+   Named in full, including the two the layer does not build. An order is only
+   meaningful as a complete relative sequence (Finding 0012), so naming half of it
+   would leave pages inventing the rest against numbers they cannot see.
+
+   This governs things that compete for the front of the page. A component ordering
+   its own children inside its own positioned context is not competing with anything
+   and binds none of this. */
+:root {
+  /* Held against the page while it scrolls: a feed header, a phone's bars. */
+  --layer-sticky: 10;
+  /* A standing action the content passes under. */
+  --layer-floating-action: 15;
+  /* Raised by something on the page, and closed by looking away. */
+  --layer-menu: 20;
+  /* Takes the page: nothing beneath it is reachable until it closes. */
+  --layer-dialog: 30;
+  /* A question asked on top of a dialog, which must outrank the dialog asking it. */
+  --layer-confirmation: 40;
+  /* Outranks everything, because it reports what just happened and is never
+     blocked by what happened next. */
+  --layer-toast: 50;
+}

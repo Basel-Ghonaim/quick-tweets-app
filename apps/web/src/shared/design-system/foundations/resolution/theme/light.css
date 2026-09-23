@@ -25,6 +25,10 @@
   /* A separate token from --role-fill-error, not a shortcut to it: this answers to
      3:1 against the surface behind the ring, the fill to a boundary criterion. */
   --focus-ring-error: var(--palette-red-600);
+
+  /* What a dialog puts between itself and the page. A wash a component lays over
+     unpredictable media is not this, however alike the two look. */
+  --overlay-ground: rgba(23, 20, 36, 0.48);
 }
 
 /* The role as text on a neutral surface, resolved per theme because no single value

@@ -24,6 +24,10 @@
   /* A separate token from --role-fill-error, not a shortcut to it: this answers to
      3:1 against the surface behind the ring, the fill to a boundary criterion. */
   --focus-ring-error: var(--palette-red-400);
+
+  /* Heavier than the light theme's: the page beneath it is already dark, so the
+     same wash would not read as a page withdrawn. */
+  --overlay-ground: rgba(8, 6, 14, 0.66);
 }
 
 /* The role as text on a neutral surface, resolved per theme because no single value

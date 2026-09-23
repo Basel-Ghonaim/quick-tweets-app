@@ -5,8 +5,8 @@
 > **Scope:** The design language, independently of who consumes it.
 > **Stability:** This is a contract, not a description of the system's current state. Adding a component, a token member, or a feature must require **no change here**. A new token *family*, or a change to an existing family's architectural meaning, is what changes it.
 > **Class:** Contract ([Documentation Strategy §3](../../architecture/documentation-strategy.md)).
-> **Version:** 1.7
-> **Last Updated:** 2026-09-19
+> **Version:** 1.8
+> **Last Updated:** 2026-09-23
 > **Owner:** Basel Ghonaim
 
 ## What the language is for
@@ -30,6 +30,8 @@ Every visual value is a CSS custom property, organized across three tiers: **Pri
 Bind the **semantic (intent)** tier wherever the family has one. That is the whole point of the tier: it survives a change of value, and it is what makes the system re-themeable.
 
 Bind a **curated scale directly** only where the family carries its tier on the scale itself — where a step *is* the vocabulary and no role could add meaning. Composing internal layout from a spacing scale is the ordinary case; reaching into the palette is not, because colour always has a role.
+
+**A family may have an intent tier and no scale beneath it.** Where a family's values exist only to realise its roles — where no one would ever choose a step of it on its own — the roles are the whole vocabulary and there is nothing for a primitive tier to hold. [ADR 0011](../../architecture/decisions/0011-intent-layer-earned-not-assumed.md) Decision 1's two conditions decide whether a family that *has* a scale also earns roles; they do not ask a family with no scale to invent one.
 
 **A missing token is a stop, not a licence to reach lower.** The first reach for a primitive is what reintroduced the drift this layer was rebuilt to remove. Extend the vocabulary deliberately, or keep the value local.
 
@@ -79,6 +81,8 @@ A value stays with its owner until a shared design concept is actually establish
 - **Shared** — a concept more than one consumer must agree on, whether or not more than one exists yet.
 
 **Promotion is by concept, not by repetition.** When two owners need the same *concept*, neither depends on the other: the concept moves to the layer that can own it and both become consumers. When two owners merely happen to use the same *value*, nothing moves.
+
+**Stacking divides on the same line, and the division is easy to miss because both sides spell it `z-index`.** What sits *above the page* — a sticky header, a menu, a dialog, a toast — competes with every other such thing for the front, and which of them wins is a single order nobody can hold a private opinion about. A component ordering its own children **inside its own positioned context** competes with nothing, so it is component-local and binds none of that order. The shared vocabulary is meaningful only as a **complete relative sequence**, which is why it names layers this system does not itself build.
 
 **A treatment only one anatomy can carry is not a disagreement.** A disabled *field* keeps its surface reachable and shows `not-allowed` across it; a disabled *control* makes itself untargetable, so no cursor of its own can reach a pointer and it shows the ordinary one. That is one decision meeting two anatomies, not two answers to one question — but it is invisible in the code unless it is said, and a declaration on an element nothing can reach reads as agreement where there is none.
 

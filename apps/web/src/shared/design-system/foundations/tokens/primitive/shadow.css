@@ -2,9 +2,10 @@
 
    Elevation is one of the token types ADR 0010 Decision 3 names this
    architecture as governing, which is what grounds the family — not who consumes
-   it. Values are provisional (D9), and **no semantic tier is earned**: no
-   authoritative consumer has established an elevation role, so a --elevation-*
-   intent tier would be invention. */
+   it. Values are provisional (D9).
+
+   The scale a raised surface reaches through rather than for: the roles in
+   semantic/elevation.css derive from these, and a component binds one of those. */
 :root {
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);

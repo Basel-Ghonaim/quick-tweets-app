@@ -5,6 +5,7 @@
 > **Deciders:** Basel Ghonaim
 > **Amends:** [ADR 0010](0010-design-system-platform-reestablishment.md) — Decision 3
 > **Revised:** 2026-08-05 — Decision 1 now cites ADR 0010 Decision 2's corrected test for *speculative*; the criterion itself is unchanged.
+> **Revised:** 2026-09-23 — Decision 5's classification records shadow's, which its first consumer settled as this ADR required, and adds stacking's. Decision 1 states that its two conditions presuppose a scale to fall back to, so a family with none is not asked to invent one. The criterion itself is unchanged.
 
 ## Context
 
@@ -29,6 +30,8 @@ The test that survives both is neither. A family needs an intent layer when it h
 
    A family meeting neither is bound directly from its **curated primitive scale**, and its semantic tier stays **empty until a reason appears**. "A reason" is ADR 0010 Decision 2's test — a platform basis, a named commitment, or an axis this family completes — not the presence of a consumer.
 
+   **Both conditions presuppose a scale to fall back to.** They decide whether a family that *has* a curated scale **also** populates the intent tier. A family whose values exist only to realise its roles — where no step of it would ever be chosen on its own — has no such scale, so the question does not arise: its roles are its whole vocabulary and it populates the intent tier alone. Motion was already this shape; stacking is the case that made it explicit.
+
 2. **Token-type agnosticism means the model is defined once, not that every family populates every tier.** The architecture is authored once and governs any family, present or future; which tiers a given family populates is decided by the criterion in Decision 1. The **Component** tier was already optional under ADR 0010 Decision 3; the **Semantic** tier is now optional on the same terms and by the same reasoning. The tiers themselves, their order, and their meanings are unchanged.
 
 3. **The binding rule is restated, not relaxed.** A consumer binds to the **semantic** token where its family has one, and to the **curated primitive scale** where its family has none. **Hardcoded literals remain prohibited without exception** — that half of the rule is not touched, and a family without a semantic tier is not a licence to write a raw value.
@@ -44,7 +47,8 @@ The test that survives both is neither. A family needs an intent layer when it h
    | **Motion** | intent | **reduced motion is (a)** — the same structural need theme creates for colour |
    | **Spacing** | **hybrid** | control-scoped spacing qualifies under (a) via density; **layout spacing does not** and continues to bind the scale directly |
    | **Border radius, border width** | scale | neither condition met; a second brand would introduce (a) for radius, and the tier is authored then, not now |
-   | **Shadow** | undecided | classified at its first consumer — not to gate admission, but because whether black shadows on a dark surface force a theme resolution is *evidence* only a rendered consumer supplies |
+   | **Shadow** | intent | **(b)** — a menu, a floating action and a toast reach for one shadow today and are three decisions, so they must be free to diverge. Classified at its first consumer, as this decision required: the approved designs carry **one shadow set in both themes**, so no theme resolution is built. A dark theme in which a raised surface stops reading as raised would reopen it, as an axis rather than a value |
+   | **Stacking** | intent, with no scale beneath it | its roles are the whole vocabulary — a layer's number means nothing away from the order it realises, and a scale of them would be the granularity ADR 0010 Decision 2 refuses |
 
 6. **Typography's intent tier is composed of text styles, not sizes.** Where typography qualifies it exposes **composite styles** — size, weight, line-height and tracking bound together as one named intent — because those values are never independently chosen and choosing them separately is how typographic consistency decays. A font-size ramp with a separate weight token is not a semantic typography tier; it is the primitive scale with extra names.
 
@@ -62,7 +66,7 @@ The test that survives both is neither. A family needs an intent layer when it h
 
 - **Where a reduced-motion resolution lives.** Decision 1(a) establishes that motion *has* a contextual axis and therefore earns an intent tier. It does not decide the mechanism, and it does not extend ADR 0010 Decision 5's enumerated guarantees (contrast, a single focus indicator) to motion. The known complication is recorded so it is not lost: collapsing an animation's duration to zero freezes a spinner mid-rotation, which is worse than the motion it removes — so a token alone is not a sufficient mechanism.
 - **Concrete token names, values, or the size of any intent vocabulary** — Execution Plan and implementation concerns, unchanged from ADR 0010's deferrals.
-- **Shadow's classification** — deferred to its first consumer, by Decision 5's own reasoning.
+- ~~**Shadow's classification** — deferred to its first consumer, by Decision 5's own reasoning.~~ **Settled**, by that deferral rather than against it: the first consumer arrived and Decision 5 records what it supplied. Whether shadow resolves along a **theme** axis remains open, and is named there.
 
 ## Alternatives considered
 
