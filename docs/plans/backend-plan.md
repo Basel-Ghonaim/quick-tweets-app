@@ -3,9 +3,11 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-22
+> **Last Updated:** 2026-09-23
 > **Parent Issue:** [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791)
 > **Supersedes:** —
+
+**Start here.** New to the project: [CLAUDE.md](../../CLAUDE.md), then the [agent onboarding guide](../development/agent-onboarding.md). This track is worked under the [Engineering Execution Standard](../development/engineering-execution-standard.md) — nothing in this plan replaces it. §6 holds every reference; §7 records what each Work Item settled.
 
 ---
 
@@ -17,6 +19,15 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - **Who works it:** Worker 2, in the dedicated backend worktree.
 - **What it leaves to the worker:** how each capability is designed and built, how the work is split into Work Items, and in what order. These are settled with the owner in Execution Preparation.
 - **What stays the same:** the existing engineering rules. Every change to the API's behaviour is published in the [API contract](../api/api-contract.md) in the same pull request, so the frontend builds against what has merged.
+
+**From this plan to merged work.** A capability below is not a Work Item. The route is the Execution Standard's:
+
+1. **Execution Preparation** with the owner: agree the task, decide what one Work Item is, and write its contract — scope and acceptance criteria — into an **Issue** (§3 and §8 there). The detailed analysis in §6 is an input to this step, not a substitute for it.
+2. **One branch per Work Item**, cut from the latest `main`, in the **backend worktree**; backend work stays out of the main worktree (§4, §5).
+3. **Atomic Conventional Commits**, and the documentation a change obligates lands in the **same pull request** ([Documentation Strategy](../architecture/documentation-strategy.md) §10).
+4. **A pull request** carrying its evidence: what was run, what was not, and the base it was rebased onto (§8).
+5. **Human review and merge.** The worker never merges, and never decides an architectural question alone — those are proposed and escalated (§9, §10).
+6. **When it merges,** the Work Item gets its entry in §7.
 
 ---
 
@@ -106,3 +117,48 @@ These product questions shape the capabilities above. Each is settled with the o
 - **Repost:** its meaning is not yet defined. Nothing is built for it until it is.
 - The **search results page** and anything else not yet designed.
 - The **Likes tab** on a profile, which is deferred.
+
+---
+
+## 6 · References
+
+Read the architecture and the contracts before starting. Read the others when the question they answer comes up.
+
+### Architecture and contracts (settled; never reopened here)
+
+| Document | What it answers | Read when |
+|---|---|---|
+| [System overview](../architecture/system-overview.md) | How the two applications fit together, and a request's lifecycle. | First read. |
+| [API contract](../api/api-contract.md) | Every endpoint, payload, error and pagination shape the frontend consumes. **It changes in the same pull request as the code.** | Any capability that changes behaviour on the wire. |
+| [Data model](../architecture/data-model.md) | The entities, their relationships, indexes and deletion rules. | Any capability that changes stored data. |
+| [Backend conventions](../backend/conventions.md) | How a module is built on this tier. | Before writing anything. |
+| [Backend security](../backend/security.md) | Rate limiting, tokens and abuse control. | The edit limit, and anything a stranger can reach. |
+| [Media](../backend/media.md) and [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) | How an image is uploaded, referenced and served, and why a reference is never dropped silently. | Image descriptions, and any deletion that touches media. |
+| [Glossary](../project/glossary.md) | What the product's nouns mean. Two of them change with this track. | Naming anything a reader will see. |
+| [Documentation Strategy](../architecture/documentation-strategy.md) | One owner per fact, and which documents a change obligates (§10). | Every Work Item. |
+| [Testing topology](../development/testing-topology.md) and [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) | Which lane proves what: answers, not answerers. | Deciding where a capability is proven. |
+| [ADR 0013](../architecture/decisions/0013-applications-and-cross-tier-packages.md) | Applications, and the cross-tier packages layer. | Rules the frontend must state the same way (§2.4, §2.7). |
+| [Project overview](../project/overview.md) | The product's surfaces, capabilities and committed scope. | Checking that a capability is part of the product. |
+
+### The approved design
+
+| Source | What it holds | Read when |
+|---|---|---|
+| [Approved designs](https://claude.ai/artifact/LFz7oGKfFJbRNumTZzBAtY) (Claude Design canvas) | The **Feed**, **Tweet details**, **Profile** and **Shared pieces** pages, all approved, with every state in both languages. **Feed · v2** is still under review: until it is approved, the approved Feed governs. | Understanding what a capability is for, and what the interface will do with it. |
+| Working analysis, **local** to the effort's worktrees, not tracked: the backend register (`.project/feed-design/backend-changes-profile-tweet-details.md`), the two design briefs and the Feed analysis §5 | Per-decision detail: what the code does today, what must change, which documents each change obligates, and the questions still open. | Execution Preparation. Whatever a Work Item relies on is written into **its Issue**, which is where that detail becomes tracked and reviewable. |
+
+### The effort
+
+| Source | What it holds | Read when |
+|---|---|---|
+| [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791) | This track's parent Issue: its place in the sequence, and its Work Items. | Starting, and whenever the tracker is the question. |
+| [Frontend Features plan](frontend-features-plan.md) and [Shared Platform plan](shared-platform-plan.md) | Who consumes these capabilities, and what they expect of them. | Before changing a shape the frontend reads. |
+| [Design System plan](design-system-plan.md) and [Pages plan](pages-plan.md) | The rest of the effort. | Context. |
+
+---
+
+## 7 · Execution log
+
+Appended when a Work Item's pull request merges, newest last: its Issue and pull request, what it settled, which sections of this plan it amended, and what it recorded. No status lives here — that is the tracker's ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3), and the conventions are in the [plans README](README.md).
+
+*No Work Item has merged yet.*
