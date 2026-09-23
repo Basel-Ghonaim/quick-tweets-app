@@ -42,6 +42,12 @@ export interface CommentResponse {
   likesCount: number;
   /** Whether *this* reader has liked it. Always `false` for a guest. */
   isLiked: boolean;
+  /**
+   * When the *text* was last changed, or `null` if it never was. A comment has
+   * no `updatedAt`, so this is its only edit timestamp — and it means "edited",
+   * not "this row was written".
+   */
+  editedAt: Date | null;
   createdAt: Date;
 }
 
@@ -65,6 +71,7 @@ export interface CommentWithRelations {
   parentId: number | null;
   /** Internal media reference (MediaObject.id) or null; resolved to a token at the boundary. */
   mediaId: number | null;
+  editedAt: Date | null;
   createdAt: Date;
   author: AuthorRow;
   /** Reply and like tallies from the same query. */
@@ -128,7 +135,7 @@ export interface ICommentRepository {
 
   update(
     id: number,
-    data: { body?: string; mediaId?: number | null },
+    data: { body?: string; mediaId?: number | null; editedAt?: Date },
     client?: DbClient,
     /** The editor, so the answer reports their own like truthfully rather than as false. */
     userId?: number,
@@ -143,7 +150,13 @@ export interface ICommentRepository {
   findOwner(
     id: number,
     client?: DbClient,
-  ): Promise<{ authorId: number; mediaId: number | null; parentId: number | null } | null>;
+  ): Promise<{
+    authorId: number;
+    mediaId: number | null;
+    parentId: number | null;
+    /** The stored text, so the edit rule can see whether a submitted body differs. */
+    body: string;
+  } | null>;
 
   /** A comment's replies that hold a media reference — so each can be ended before deletion. */
   findReplyMediaRefs(

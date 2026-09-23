@@ -29,6 +29,7 @@ const raw = (over: Partial<CommentWithRelations> = {}): CommentWithRelations => 
   tweetId: TWEET,
   parentId: null,
   mediaId: null,
+  editedAt: null,
   createdAt: new Date(),
   author: { id: AUTHOR, username: "ada", name: "Ada", avatarMediaId: null },
   _count: { replies: 0, likes: 0 },
@@ -81,7 +82,7 @@ const makeWorld = () => {
     parent: null as { id: number; tweetId: number; parentId: number | null } | null,
     thread: [] as CommentWithRelations[],
     replyPage: [] as CommentWithRelations[],
-    owner: { authorId: AUTHOR, mediaId: null as number | null, parentId: null as number | null },
+    owner: { authorId: AUTHOR, mediaId: null as number | null, parentId: null as number | null, body: "nice" },
     replyMediaRefs: [] as { id: number; mediaId: number }[],
     tweetMediaRefs: [] as { id: number; mediaId: number }[],
   };
@@ -301,7 +302,7 @@ describe("create — the parent a reply names", () => {
 describe("delete — a comment takes its replies with it", () => {
   it("ends every reply's reference, removes the replies, then the parent — on one transaction", async () => {
     const w = makeWorld();
-    w.state.owner = { authorId: AUTHOR, mediaId: 77, parentId: null };
+    w.state.owner = { authorId: AUTHOR, mediaId: 77, parentId: null, body: "nice" };
     w.state.replyMediaRefs = [
       { id: 50, mediaId: 500 },
       { id: 51, mediaId: 501 },
@@ -344,7 +345,7 @@ describe("delete — a comment takes its replies with it", () => {
 
   it("403s someone else's comment before touching anything", async () => {
     const w = makeWorld();
-    w.state.owner = { authorId: AUTHOR + 1, mediaId: null, parentId: null };
+    w.state.owner = { authorId: AUTHOR + 1, mediaId: null, parentId: null, body: "nice" };
     const svc = createCommentService(w.repo, inertMedia(), w.runInTransaction);
 
     expect(await statusOf(svc.delete(1, AUTHOR))).toBe(403);

@@ -26,6 +26,7 @@ const raw = (over: Partial<CommentWithRelations> = {}): CommentWithRelations => 
   tweetId: 3,
   parentId: null,
   mediaId: null,
+  editedAt: null,
   createdAt: new Date(),
   author: { id: 1, username: "ada", name: "Ada", avatarMediaId: null },
   _count: { replies: 0, likes: 0 },

@@ -26,6 +26,7 @@ const rawComment = (over: Partial<CommentWithRelations> = {}): CommentWithRelati
   tweetId: TWEET,
   parentId: null,
   mediaId: null,
+  editedAt: null,
   createdAt: new Date(),
   author: { id: AUTHOR, username: "ada", name: "Ada", avatarMediaId: null },
   _count: { replies: 0, likes: 0 },
@@ -60,7 +61,7 @@ const makeWorld = (ownerMediaId: number | null = null, ownerParentId: number | n
     delete: async (id, client) => {
       deletes.push({ id, client });
     },
-    findOwner: async () => ({ authorId: AUTHOR, mediaId: ownerMediaId, parentId: ownerParentId }),
+    findOwner: async () => ({ authorId: AUTHOR, mediaId: ownerMediaId, parentId: ownerParentId, body: "nice" }),
     findReplyMediaRefs: async () => [],
     deleteRepliesOf: async (parentId, client) => {
       deletedReplies.push({ parentId, client });
