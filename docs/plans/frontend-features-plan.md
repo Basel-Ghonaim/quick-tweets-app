@@ -179,6 +179,6 @@ Sources marked *local* are working material in `.project/`, outside the reposito
 
 ## 7 · Execution log
 
-Appended when a Work Item's pull request merges, newest last: its Issue and pull request, what it settled, which sections of this plan it amended, and what it recorded. No status lives here — that is the tracker's ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3), and the conventions are in the [plans README](README.md).
+One entry per Work Item, newest last: its Issue and pull request, what it settled, which sections of this plan it amended, and what it recorded. No status lives here — that is the tracker's ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3). **When and where an entry is written** is the [plans README](README.md)'s, which owns this convention.
 
 *No Work Item has merged yet.*
