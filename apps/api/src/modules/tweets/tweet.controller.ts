@@ -7,7 +7,7 @@
  * - create: parse body + userId → call service → return 201
  * - update: parse :id + body + userId → call service → return updated tweet
  * - delete: parse :id + userId → call service → return 204
- * - toggleLike: parse :id + userId → call service → return like state
+ * - setLike / clearLike: parse :id + userId → call service → return like state
  *
  * Response format: All responses use sendSuccess() → { success: true, data, meta? }
  *
@@ -116,15 +116,28 @@ export const createTweetController = (
   },
 
   /**
-   * POST /tweets/:id/like
-   * Toggles like on a tweet. Requires authGuard (userId guaranteed).
+   * PUT /tweets/:id/like
+   * Sets the reader's like. Idempotent — liking twice is not an error, and does
+   * not undo. Requires authGuard (userId guaranteed).
    */
-  toggleLike: async (req: Request, res: Response, next: NextFunction) => {
+  setLike: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const tweetId = parseId(req.params.id, "Tweet ID");
-      const result = await service.toggleLike(req.userId!, tweetId);
+      sendSuccess(res, await service.setLike(req.userId!, tweetId));
+    } catch (err) {
+      next(err);
+    }
+  },
 
-      sendSuccess(res, result);
+  /**
+   * DELETE /tweets/:id/like
+   * Clears the reader's like. Idempotent — unliking something not liked answers
+   * the same state rather than a refusal.
+   */
+  clearLike: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const tweetId = parseId(req.params.id, "Tweet ID");
+      sendSuccess(res, await service.clearLike(req.userId!, tweetId));
     } catch (err) {
       next(err);
     }

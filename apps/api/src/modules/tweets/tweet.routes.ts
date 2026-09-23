@@ -7,7 +7,8 @@
  * - POST   /              → authGuard → validate(body) → controller.create
  * - PATCH  /:id           → authGuard → validate(body) → controller.update
  * - DELETE /:id           → authGuard → controller.delete
- * - POST   /:id/like      → authGuard → controller.toggleLike
+ * - PUT    /:id/like      → authGuard → controller.setLike
+ * - DELETE /:id/like      → authGuard → controller.clearLike
  *
  * Rate limiting: applied at app.ts level via apiLimiter (100 req/15min).
  *
@@ -36,4 +37,7 @@ tweetRoutes.get("/:id", optionalAuth, controller.getById);
 tweetRoutes.post("/", authGuard, validate(createTweetSchema), controller.create);
 tweetRoutes.patch("/:id", authGuard, validate(updateTweetSchema), controller.update);
 tweetRoutes.delete("/:id", authGuard, controller.delete);
-tweetRoutes.post("/:id/like", authGuard, controller.toggleLike);
+// Set and clear, not a toggle: the verbs carry the idempotency a repeated
+// press needs, rather than leaving it to a payload a client might omit.
+tweetRoutes.put("/:id/like", authGuard, controller.setLike);
+tweetRoutes.delete("/:id/like", authGuard, controller.clearLike);

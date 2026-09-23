@@ -12,7 +12,7 @@
  */
 
 import type { DbClient } from "../../shared/database/index.js";
-import type { AuthorEmbed, CursorParams, CursorMeta } from "../../shared/types/index.js";
+import type { AuthorEmbed, CursorParams, CursorMeta, LikeState } from "../../shared/types/index.js";
 import type { AuthorRow } from "../../shared/utils/index.js";
 
 /**
@@ -133,8 +133,6 @@ export interface ITweetRepository {
   findOwner(id: number, client?: DbClient): Promise<{ authorId: number } | null>;
 
   // ── Like Operations ──
-  findLike(userId: number, tweetId: number): Promise<{ id: number } | null>;
-
   createLike(userId: number, tweetId: number): Promise<void>;
 
   deleteLike(userId: number, tweetId: number): Promise<void>;
@@ -194,8 +192,9 @@ export interface ITweetService {
    */
   deleteWithMedia(id: number, client: DbClient): Promise<void>;
 
-  toggleLike(
-    userId: number,
-    tweetId: number,
-  ): Promise<{ liked: boolean; likesCount: number }>;
+  /** Set the reader's like. Idempotent: liking twice leaves one like. */
+  setLike(userId: number, tweetId: number): Promise<LikeState>;
+
+  /** Clear the reader's like. Idempotent: unliking twice is not an error. */
+  clearLike(userId: number, tweetId: number): Promise<LikeState>;
 }

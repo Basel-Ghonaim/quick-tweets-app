@@ -155,12 +155,6 @@ export const createTweetRepository = (
 
   // ── Like Operations ──
 
-  findLike: (userId, tweetId) =>
-    db.like.findUnique({
-      where: { userId_tweetId: { userId, tweetId } },
-      select: { id: true },
-    }),
-
   createLike: async (userId, tweetId) => {
     await db.like.create({ data: { userId, tweetId } });
   },
