@@ -16,14 +16,14 @@
 The approved designs for the **Feed**, **Tweet details** and **Profile** rely on behaviour the backend must provide. This plan states those needs as **capabilities the frontend can consume**. It does not decide how they are built.
 
 - **What this plan owns:** what must exist, and the product rules that behaviour must honour.
-- **Who works it:** Worker 2, in the dedicated backend worktree.
+- **Who works it:** Worker 2 — the worker whose working tree is the linked one this project calls the **backend worktree** ([setup](../development/setup.md#working-in-a-linked-worktree), which names it and its own database and port). Backend work stays out of the main tree.
 - **What it leaves to the worker:** how each capability is designed and built, how the work is split into Work Items, and in what order. These are settled with the owner in Execution Preparation.
 - **What stays the same:** the existing engineering rules. Every change to the API's behaviour is published in the [API contract](../api/api-contract.md) in the same pull request, so the frontend builds against what has merged.
 
 **From this plan to merged work.** A capability below is not a Work Item. The route is the Execution Standard's:
 
 1. **Execution Preparation** with the owner: agree the task, decide what one Work Item is, and write its contract — scope and acceptance criteria — into an **Issue** (§3 and §8 there). The detailed analysis in §6 is an input to this step, not a substitute for it.
-2. **One branch per Work Item**, cut from the latest `main`, in the **backend worktree**; backend work stays out of the main worktree (§4, §5).
+2. **One branch per Work Item**, cut from the latest `main`, in the **backend worktree** (§4, §5). A linked tree cannot check out the branch the main tree holds, so branch the way [setup](../development/setup.md#branching-from-main-inside-a-linked-worktree) shows.
 3. **Atomic Conventional Commits**, and the documentation a change obligates lands in the **same pull request** ([Documentation Strategy](../architecture/documentation-strategy.md) §10).
 4. **A pull request** carrying its evidence: what was run, what was not, and the base it was rebased onto (§8).
 5. **Human review and merge.** The worker never merges, and never decides an architectural question alone — those are proposed and escalated (§9, §10).
@@ -132,9 +132,10 @@ Read the architecture and the contracts before starting. Read the others when th
 | [API contract](../api/api-contract.md) | Every endpoint, payload, error and pagination shape the frontend consumes. **It changes in the same pull request as the code.** | Any capability that changes behaviour on the wire. |
 | [Data model](../architecture/data-model.md) | The entities, their relationships, indexes and deletion rules. | Any capability that changes stored data. |
 | [Backend conventions](../backend/conventions.md) | How a module is built on this tier. | Before writing anything. |
+| [Setup](../development/setup.md) | Running the two applications, the database, and **working in a linked worktree**: its own environment, its own database and port, and how to branch from `main` inside it. | Before the first branch, and whenever the environment misbehaves. |
 | [Backend security](../backend/security.md) | Rate limiting, tokens and abuse control. | The edit limit, and anything a stranger can reach. |
 | [Media](../backend/media.md) and [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) | How an image is uploaded, referenced and served, and why a reference is never dropped silently. | Image descriptions, and any deletion that touches media. |
-| [Glossary](../project/glossary.md) | What the product's nouns mean. Two of them change with this track. | Naming anything a reader will see. |
+| [Glossary](../project/glossary.md) | What the product's nouns mean. **Comment** ("a reply to a tweet") and **Like** ("on a tweet") both narrow the product this track widens, so both change with it. | Naming anything a reader will see. |
 | [Documentation Strategy](../architecture/documentation-strategy.md) | One owner per fact, and which documents a change obligates (§10). | Every Work Item. |
 | [Testing topology](../development/testing-topology.md) and [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) | Which lane proves what: answers, not answerers. | Deciding where a capability is proven. |
 | [ADR 0013](../architecture/decisions/0013-applications-and-cross-tier-packages.md) | Applications, and the cross-tier packages layer. | Rules the frontend must state the same way (§2.4, §2.7). |
@@ -145,7 +146,7 @@ Read the architecture and the contracts before starting. Read the others when th
 | Source | What it holds | Read when |
 |---|---|---|
 | [Approved designs](https://claude.ai/artifact/LFz7oGKfFJbRNumTZzBAtY) (Claude Design canvas) | The **Feed**, **Tweet details**, **Profile** and **Shared pieces** pages, all approved, with every state in both languages. **Feed · v2** is still under review: until it is approved, the approved Feed governs. | Understanding what a capability is for, and what the interface will do with it. |
-| Working analysis, **local** to the effort's worktrees, not tracked: the backend register (`.project/feed-design/backend-changes-profile-tweet-details.md`), the two design briefs and the Feed analysis §5 | Per-decision detail: what the code does today, what must change, which documents each change obligates, and the questions still open. | Execution Preparation. Whatever a Work Item relies on is written into **its Issue**, which is where that detail becomes tracked and reviewable. |
+| Working analysis, **local** to the effort's worktrees, not tracked: the backend register (`.project/feed-design/backend-changes-profile-tweet-details.md`), the Feed brief (`.project/feed-design/design-brief.md`), the Profile and Tweet details brief (`.project/feed-design/profile-tweet-details-brief.md`) and the Feed analysis §5 (`.project/feed-design/feed-implementation-analysis.md`) | Per-decision detail: what the code does today, what must change, which documents each change obligates, and the questions still open. | Execution Preparation. Whatever a Work Item relies on is written into **its Issue**, which is where that detail becomes tracked and reviewable. |
 
 ### The effort
 
