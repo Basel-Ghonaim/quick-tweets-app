@@ -191,9 +191,35 @@ harness cannot get there without a code change, and seeding the attempts table
 directly is the precondition this harness refuses to take. That property is
 proven where it can be, in `recipientCapReserve.integration.test.ts`.
 
+## The comment thread
+
+Folder **12 · Comment thread** exercises the two-level conversation under a post
+([#799](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/799)): a comment,
+a reply to it, and the refusals that keep the thread two levels deep. Like folders
+10 and 11 it is **self-isolated** (its own account with a per-run handle, its own
+two posts) and **non-destructive**. See scenarios **CMT-T01…CMT-T18** and
+**Checkpoint K**.
+
+It is split in two, and the split is the same line this whole harness is drawn on.
+**12.1 runs from the command line** (`npm run verify:thread`) because every
+guarantee in it is visible in a response body. **12.2's ledger half cannot**:
+whether a removed reply's media reference ended is invisible to every endpoint by
+design, so that half is Checkpoint K in pgAdmin.
+
+Its guarantees, in one line each: **a reply cannot be answered** — a `parentId`
+naming a reply is refused rather than quietly re-pointed at the comment above it;
+**the thread and the replies are separate lists**, so neither leaks into the other,
+and naming both or neither is refused rather than arbitrated; **a reply keeps its
+post**, so the post's comment count covers both levels; and **deleting a comment
+takes its replies with it**, ending every media reference before its row goes, so
+nothing they held is left behind.
+
+> Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
+> see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
+
 ## Scope
 
-This harness verifies **M1–M9**. It deliberately does **not**:
+This harness verifies **M1–M9**, and the comment thread (folder 12). It deliberately does **not**:
 
 - run any background execution or physical deletion — reclamation's destructive
   path is certified by the automated suite below;
