@@ -4,12 +4,13 @@
  * Purpose:
  * - createCommentSchema: validates POST /comments body
  * - updateCommentSchema: validates PATCH /comments/:id body
- * - commentQuerySchema: validates offset pagination query params (page, limit) and tweetId
+ * - commentQuerySchema: validates the list query — exactly one of tweetId or parentId, plus cursor params
  *
  * Principle: SRP — only schema definitions, no business logic.
  */
 
 import { z } from "zod";
+import { cursorQuerySchema } from "../../shared/validators/index.js";
 
 // ─── Media reference ─────────────────────────────────────────────────────────
 
@@ -35,6 +36,14 @@ export const createCommentSchema = z.object({
     .min(1, "Comment body cannot be empty")
     .max(280, "Comment body must be at most 280 characters")
     .trim(),
+  // The comment being answered. Absent means a top-level comment. Whether it
+  // exists, sits on this tweet and is itself top-level is the service's to
+  // answer — a validator cannot see the row.
+  parentId: z.coerce
+    .number({ error: "Comment ID must be a number" })
+    .int("Comment ID must be an integer")
+    .positive("Comment ID must be a positive number")
+    .optional(),
   media: mediaRefSchema.optional(),
 });
 
@@ -56,19 +65,35 @@ export const updateCommentSchema = z
     message: "At least one field must be provided",
   });
 
-// ─── Offset Query Params ─────────────────────────────────────────────────────
+// ─── List Query Params ───────────────────────────────────────────────────────
 
 /**
- * Validates query params for offset-paginated endpoints.
+ * Validates the list query. Exactly one of `tweetId` (a tweet's top-level
+ * comments) or `parentId` (one comment's replies) is required.
  *
- * Query strings arrive as strings, so we coerce to numbers.
- * Example: ?page=2&limit=20 → { page: 2, limit: 20 }
+ * Both together is refused rather than arbitrated: `parentId` already determines
+ * the tweet, so a pair that disagreed would leave the server picking a winner.
+ *
+ * Cursor params come from the shared schema, so comments do not carry a private
+ * pagination default.
  */
-export const commentQuerySchema = z.object({
-  tweetId: z.coerce
-    .number({ error: "Tweet ID is required" })
-    .int("Tweet ID must be an integer")
-    .positive("Tweet ID must be a positive number"),
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
+export const commentQuerySchema = cursorQuerySchema
+  .extend({
+    tweetId: z.coerce
+      .number()
+      .int("Tweet ID must be an integer")
+      .positive("Tweet ID must be a positive number")
+      .optional(),
+    parentId: z.coerce
+      .number()
+      .int("Comment ID must be an integer")
+      .positive("Comment ID must be a positive number")
+      .optional(),
+  })
+  .refine(
+    (data) => (data.tweetId === undefined) !== (data.parentId === undefined),
+    {
+      message: "Provide exactly one of tweetId or parentId",
+      path: ["tweetId"],
+    },
+  );

@@ -24,6 +24,8 @@
 | `POST /channel-verification/challenges`: the boolean `delivered` removed, superseded by the three-state `delivery` | The boolean asserted something no sender can promise. A relay's acceptance is not arrival, and a timeout leaves the outcome genuinely undetermined, so the field was **renamed rather than redefined** — a shape that kept its name while losing its meaning is the failure that makes a contract untrustworthy. No client reads it: no frontend calls channel verification. |
 | `AuthorEmbed`, the follower and following list items, and the user profile: `profileImage` removed, superseded by `avatar` | The field was deprecated and always `null` once the avatar became a Media Reference, so it never carried a value anything could depend on. No client reads it: nothing in the frontend references the field. |
 | `POST /auth/register` and `POST /auth/password-reset/apply`: a password containing any character outside printable ASCII is refused with `422` | A rule tightened on input rather than a shape removed, but a request valid before is refused after, so it is recorded. No consumer can depend on the wider rule: `v1` has no released consumer, the only client applies the same rule in the same change, and login still accepts any password set before it. |
+| `GET /comments`: offset pagination replaced by cursor pagination, and the default page size moves from 20 to 10 | The thread loads by infinite scroll, and a page number shifts every later page when a comment is added or removed mid-scroll, so comments are skipped or shown twice. The meta shape had to change for the list to be correct at all. No client reads it: nothing in the frontend calls `/comments`. |
+| `GET /comments?tweetId=`: returns top-level comments only, no longer every comment on the tweet | A comment may now answer another comment. Returning both levels in one flat list would give the client no way to tell them apart, and the thread is drawn as two. The replies have their own list, `?parentId=`. No client reads it, for the same reason. |
 
 ---
 
@@ -71,7 +73,8 @@ PATCH  /api/v1/tweets/:id
 DELETE /api/v1/tweets/:id
 POST   /api/v1/tweets/:id/like
 
-GET    /api/v1/comments?tweetId=:tweetId
+GET    /api/v1/comments?tweetId=:tweetId    (a tweet's top-level comments)
+GET    /api/v1/comments?parentId=:commentId (one comment's replies)
 POST   /api/v1/comments
 PATCH  /api/v1/comments/:id
 DELETE /api/v1/comments/:id
@@ -170,7 +173,7 @@ interface CursorPaginationMeta {
 
 **Query params:** `?cursor=<id>&limit=10`
 
-**Used by:** `GET /tweets`, `GET /tweets?author=username`, `GET /follows/:username/followers`, `GET /follows/:username/following`
+**Used by:** `GET /tweets`, `GET /tweets?author=username`, `GET /comments?tweetId=X`, `GET /comments?parentId=X`, `GET /follows/:username/followers`, `GET /follows/:username/following`
 
 ### OffsetPaginationMeta
 
@@ -189,7 +192,7 @@ interface OffsetPaginationMeta {
 
 **Query params:** `?page=1&limit=20` — `page` defaults to `1`, `limit` defaults to `20` (max `50`)
 
-**Used by:** `GET /comments?tweetId=X`
+**Used by:** no endpoint today. `GET /comments` was its last reader and is now cursor-paginated; the shape and the convention are kept for the bounded lists they are meant for ([backend pagination convention](../backend/conventions.md#pagination)), and whether a convention with no reader should stay documented is [Finding 0038](../architecture/findings/open/0038-offset-pagination-has-no-endpoint-left.md)'s.
 
 ### Error Response
 
@@ -628,10 +631,14 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 ## Comments
 
-### `GET /comments?tweetId=:id` — Comments for a tweet (offset-paginated)
+### `GET /comments?tweetId=:id` — A tweet's top-level comments (cursor-paginated)
 
 **Auth:** None
-**Query params:** `?tweetId=5&page=1&limit=20`
+**Query params:** `?tweetId=5&cursor=<id>&limit=10`
+
+Exactly one of `tweetId` or `parentId` is required. `tweetId` asks for the thread —
+the tweet's **top-level comments only**. Replies are not mixed in; each one is
+reached through its parent, below.
 
 ```jsonc
 // Response 200
@@ -649,32 +656,72 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
         "avatar": null
       },
       "tweetId": 5,
+      "parentId": null,           // null — this is a top-level comment
+      "repliesCount": 3,          // top-level comments only; see the note below
       "createdAt": "2026-05-10T12:05:00.000Z"
     }
   ],
   "meta": {
-    "currentPage": 1,
-    "limit": 20,
-    "totalPages": 1,
-    "totalRecords": 7,
-    "hasNextPage": false,
-    "hasPreviousPage": false
+    "nextCursor": "1",
+    "limit": 10,
+    "hasMore": false
   }
 }
 
-// Response 422 (missing or invalid tweetId)
-{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "tweetId": ["Tweet ID is required"] } } }
+// Response 422 (neither tweetId nor parentId, or both)
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "tweetId": ["Provide exactly one of tweetId or parentId"] } } }
 
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
 
 **Notes:**
-- `tweetId` is a required query param
-- Ordered by `createdAt ASC` (oldest first — like a conversation)
-- Returns `404` if the tweet doesn't exist
+- Ordered by `id ASC` (oldest first — like a conversation). `id` rises with
+  creation, so it is both the order and a unique, stable cursor.
+- `repliesCount` is present on **top-level comments only**. A reply cannot be
+  answered, so the field is absent rather than zero on a reply.
+- Returns `404` if the tweet doesn't exist.
+- The tweet's own `commentsCount` counts **both levels** — comments and replies
+  together — so it does not match the length of this list.
 
 ---
+
+### `GET /comments?parentId=:id` — One comment's replies (cursor-paginated)
+
+**Auth:** None
+**Query params:** `?parentId=1&cursor=<id>&limit=10`
+
+The second and last level. A replies list is fetched separately from the thread,
+so the interface can keep it collapsed until a reader asks for it.
+
+```jsonc
+// Response 200 — the same comment shape, with parentId set and no repliesCount
+{
+  "success": true,
+  "data": [
+    {
+      "id": 8,
+      "body": "@ahmed which edge case?",
+      "media": null,
+      "author": { "id": 3, "username": "rania", "name": "Rania", "avatar": null },
+      "tweetId": 5,
+      "parentId": 1,
+      "createdAt": "2026-05-10T12:09:00.000Z"
+    }
+  ],
+  "meta": { "nextCursor": "8", "limit": 10, "hasMore": false }
+}
+
+// Response 404 (no such comment)
+{ "success": false, "error": { "type": "not_found", "message": "Comment not found" } }
+```
+
+**Notes:**
+- Ordered by `id ASC`, and paginated exactly as the thread is.
+- A reply carries no `repliesCount`: the thread is two levels and stops here.
+
+---
+
 
 ### `POST /comments` — Add comment
 
@@ -685,6 +732,7 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 {
   "tweetId": 5,             // required — which tweet to comment on
   "body": "Nice tweet!",    // required, 1-280 characters
+  "parentId": 1,            // optional — the comment this one answers; omit for a top-level comment
   "media": { "token": "<token>" }  // optional — a single media file you uploaded (its read token)
 }
 
@@ -697,6 +745,8 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "media": { "token": "<token>" },  // the attached file, or null
     "author": { "id": 1, "username": "basel", "name": "Basel", "avatar": null },
     "tweetId": 5,
+    "parentId": 1,                     // null for a top-level comment
+    "repliesCount": 0,                 // present only when parentId is null
     "createdAt": "2026-05-10T14:35:00.000Z"
   }
 }
@@ -707,9 +757,28 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 // Response 422
 { "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "body": ["Comment body cannot be empty"] } } }
 
-// Response 404
+// Response 422 (the parent sits on a different tweet)
+{ "success": false, "error": { "type": "validation", "message": "Comment could not be saved", "errors": { "parentId": ["The comment being replied to belongs to a different post"] } } }
+
+// Response 422 (the parent is itself a reply — the thread is two levels)
+{ "success": false, "error": { "type": "validation", "message": "Comment could not be saved", "errors": { "parentId": ["A reply cannot be answered; reply to the comment it sits under"] } } }
+
+// Response 404 (no such tweet, or no such parent comment)
 { "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
 ```
+
+**Notes on `parentId`:**
+- Omit it for a top-level comment. Give it to answer a comment.
+- **The thread is two levels and no more.** A `parentId` naming a reply is
+  refused `422` rather than silently re-pointed at the top-level comment above
+  it — the server never moves a row the caller did not name. To answer a reply,
+  send the **top-level** comment's id and address the person in the body, which
+  is what the interface does.
+- A `parentId` that does not exist is `404`, the same answer a missing tweet
+  gets. A parent that exists but is wrong — another tweet, or another reply — is
+  `422`, because what is wrong is the request's meaning rather than the resource.
+- A reply keeps its tweet's id, which is why the tweet's `commentsCount` covers
+  both levels.
 
 ---
 
@@ -736,6 +805,8 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
     "media": { "token": "<token>" },  // the comment's single media file, or null
     "author": { "id": 2, "username": "ahmed", "name": "Ahmed", "avatar": null },
     "tweetId": 5,
+    "parentId": null,
+    "repliesCount": 2,
     "createdAt": "2026-05-10T12:05:00.000Z"
   }
 }
@@ -761,6 +832,11 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 ### `DELETE /comments/:id` — Delete own comment
 
 **Auth:** Required
+
+**Deleting a top-level comment deletes its replies too**, in one transaction —
+the reader is told so before confirming. Nothing the removed comments referenced
+is left behind: every media reference ends before its row does, and the objects
+themselves survive unreferenced for reclamation to take.
 
 ```jsonc
 // Response 204 (No Content — empty body)

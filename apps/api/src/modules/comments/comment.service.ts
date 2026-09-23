@@ -2,10 +2,11 @@
  * Comment service — business logic for comments.
  *
  * Purpose:
- * - getComments(): verify tweet exists → offset pagination math → DTO map
- * - create(): verify tweet exists → create → DTO
+ * - getThread(): verify tweet exists → cursor page of top-level comments → DTO map
+ * - getReplies(): verify parent exists → cursor page of its replies → DTO map
+ * - create(): verify tweet exists → resolve the parent, if any → create → DTO
  * - update(): double ownership (comment exists + belongs to tweet + user is author)
- * - delete(): double ownership → delete
+ * - delete(): double ownership → the comment, and its replies if it has any
  *
  * Double ownership validation:
  *   1. Does the comment exist?
@@ -19,6 +20,7 @@
 import { AppError } from "../../shared/errors/index.js";
 import {
   runInTransaction as defaultRunInTransaction,
+  type DbClient,
   type RunInTransaction,
 } from "../../shared/database/index.js";
 import {
@@ -38,8 +40,8 @@ import type {
   CommentResponse,
   CommentUpdate,
   CommentWithRelations,
-  OffsetParams,
-  OffsetMeta,
+  CursorParams,
+  CursorMeta,
 } from "./comment.types.js";
 
 // ─── Media port ──────────────────────────────────────────────────────────────
@@ -62,6 +64,24 @@ const defaultMediaPort: CommentMediaPort = {
  * the immutable comment id, so an end signal always matches its begin.
  */
 const commentReferrer = (commentId: number): string => `comment:${commentId}`;
+
+/**
+ * Ends the media reference of every comment about to be removed. Media must
+ * learn the reference is gone before the row is, or the registry keeps believing
+ * an object is referenced and never reclaims it.
+ */
+const endReferences = async (
+  media: CommentMediaPort,
+  refs: { id: number; mediaId: number }[],
+  client: DbClient,
+): Promise<void> => {
+  for (const { id, mediaId } of refs) {
+    await media.references.referenceEnded(
+      { mediaId, referrer: commentReferrer(id) },
+      client,
+    );
+  }
+};
 
 /** Media that could not be attached is a request problem, not a server fault. */
 const asAttachFailure = (err: unknown): unknown =>
@@ -88,6 +108,10 @@ const toCommentResponse = (
     media: token === undefined ? null : { token },
     author: toAuthorEmbed(comment.author, tokens),
     tweetId: comment.tweetId,
+    parentId: comment.parentId,
+    // Top-level only: a reply cannot be answered, so its tally would always be
+    // zero and would invite a client to render a control that does nothing.
+    ...(comment.parentId === null ? { repliesCount: comment._count.replies } : {}),
     createdAt: comment.createdAt,
   };
 };
@@ -139,6 +163,63 @@ const toResponse = async (
   return toCommentResponse(comment, tokens);
 };
 
+/**
+ * Resolves the comment a reply answers, or refuses.
+ *
+ * The three refusals are deliberately not one. A parent that does not exist is
+ * the same kind of answer a missing tweet already gets, so it is a `404`. A
+ * parent on another tweet, or one that is itself a reply, exists and was found —
+ * what is wrong is the request's meaning, which is a `422`.
+ *
+ * A reply to a reply is refused rather than quietly re-pointed at the top-level
+ * comment: the design already has the client answer at the second level, so
+ * leniency would buy nothing and would move a row the caller never named.
+ */
+const resolveParent = async (
+  repo: ICommentRepository,
+  parentId: number,
+  tweetId: number,
+): Promise<void> => {
+  const parent = await repo.findParent(parentId);
+
+  if (parent === null) {
+    throw AppError.notFound("Comment");
+  }
+  if (parent.tweetId !== tweetId) {
+    throw AppError.validation("Comment could not be saved", {
+      parentId: ["The comment being replied to belongs to a different post"],
+    });
+  }
+  if (parent.parentId !== null) {
+    throw AppError.validation("Comment could not be saved", {
+      parentId: ["A reply cannot be answered; reply to the comment it sits under"],
+    });
+  }
+};
+
+/**
+ * Turns an n+1 fetch into a page: the extra row is the answer to `hasMore` and
+ * is dropped, and the cursor is the last id actually returned.
+ */
+const sliceToPage = async (
+  media: CommentMediaPort,
+  fetched: CommentWithRelations[],
+  limit: number,
+): Promise<{ data: CommentResponse[]; meta: CursorMeta }> => {
+  const hasMore = fetched.length > limit;
+  const rows = hasMore ? fetched.slice(0, limit) : fetched;
+  const last = rows[rows.length - 1];
+
+  return {
+    data: await toResponses(media, rows),
+    meta: {
+      nextCursor: hasMore && last ? String(last.id) : null,
+      limit,
+      hasMore,
+    },
+  };
+};
+
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
@@ -154,42 +235,32 @@ export const createCommentService = (
   media: CommentMediaPort = defaultMediaPort,
   runInTransaction: RunInTransaction = defaultRunInTransaction,
 ): ICommentService => ({
-  // ─── List Comments (offset-paginated) ───────────────────────────────
+  // ─── The Thread: top-level comments (cursor-paginated) ──────────────
 
-  getComments: async (
+  getThread: async (
     tweetId: number,
-    params: OffsetParams,
-  ): Promise<{ data: CommentResponse[]; meta: OffsetMeta }> => {
-    // 1. Verify tweet exists
+    params: CursorParams,
+  ): Promise<{ data: CommentResponse[]; meta: CursorMeta }> => {
     const tweetFound = await repo.tweetExists(tweetId);
     if (!tweetFound) {
       throw AppError.notFound("Tweet");
     }
 
-    const { page, limit } = params;
-    const skip = (page - 1) * limit;
+    return sliceToPage(media, await repo.findThread(tweetId, params), params.limit);
+  },
 
-    // 2. Run count + findMany in parallel
-    const [totalRecords, comments] = await Promise.all([
-      repo.count(tweetId),
-      repo.findMany(tweetId, skip, limit),
-    ]);
+  // ─── List Replies (cursor-paginated) ────────────────────────────────
 
-    // 3. Compute pagination math
-    const totalPages = Math.ceil(totalRecords / limit) || 1;
-    const meta: OffsetMeta = {
-      currentPage: page,
-      limit,
-      totalPages,
-      totalRecords,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    };
+  getReplies: async (
+    parentId: number,
+    params: CursorParams,
+  ): Promise<{ data: CommentResponse[]; meta: CursorMeta }> => {
+    const parent = await repo.findParent(parentId);
+    if (parent === null) {
+      throw AppError.notFound("Comment");
+    }
 
-    return {
-      data: await toResponses(media, comments),
-      meta,
-    };
+    return sliceToPage(media, await repo.findReplies(parentId, params), params.limit);
   },
 
   // ─── Create Comment ─────────────────────────────────────────────────
@@ -199,6 +270,7 @@ export const createCommentService = (
     tweetId: number,
     body: string,
     mediaToken?: string,
+    parentId?: number,
   ): Promise<CommentResponse> => {
     // 1. Verify tweet exists
     const tweetFound = await repo.tweetExists(tweetId);
@@ -206,12 +278,19 @@ export const createCommentService = (
       throw AppError.notFound("Tweet");
     }
 
-    // 2a. No media — the plain path, no transaction.
-    if (mediaToken === undefined) {
-      return toResponse(media, await repo.create(authorId, tweetId, body));
+    // 2. A reply names a parent; it must exist, sit on this tweet, and be
+    //    top-level. Checked before any media is attached, so a refusal here
+    //    never leaves a reference behind.
+    if (parentId !== undefined) {
+      await resolveParent(repo, parentId, tweetId);
     }
 
-    // 2b. With media — the comment, its reference, and Media's record of that
+    // 3a. No media — the plain path, no transaction.
+    if (mediaToken === undefined) {
+      return toResponse(media, await repo.create({ authorId, tweetId, body, parentId }));
+    }
+
+    // 3b. With media — the comment, its reference, and Media's record of that
     //     reference all commit together, or not at all.
     try {
       const { comment, token } = await runInTransaction(async (tx) => {
@@ -219,7 +298,10 @@ export const createCommentService = (
           { token: mediaToken, ownerId: authorId },
           tx,
         );
-        const created = await repo.create(authorId, tweetId, body, referenceId, tx);
+        const created = await repo.create(
+          { authorId, tweetId, body, mediaId: referenceId, parentId },
+          tx,
+        );
         await media.references.referenceBegan(
           { mediaId: referenceId, referrer: commentReferrer(created.id) },
           tx,
@@ -311,38 +393,55 @@ export const createCommentService = (
       throw AppError.forbidden("You can only delete your own comments");
     }
 
-    // 3. No media — a plain delete.
-    const mediaId = owner.mediaId;
-    if (mediaId === null) {
-      await repo.delete(commentId);
+    // 3. A reply has no dependents — the thread is two levels deep.
+    if (owner.parentId !== null) {
+      if (owner.mediaId === null) {
+        await repo.delete(commentId);
+        return;
+      }
+      await runInTransaction(async (tx) => {
+        await endReferences(media, [{ id: commentId, mediaId: owner.mediaId! }], tx);
+        await repo.delete(commentId, tx);
+      });
       return;
     }
 
-    // 4. With media — end the reference and delete the row together.
+    // 4. A top-level comment takes its replies with it, in one transaction.
+    //    The order is forced twice over: the parent foreign key is RESTRICT, so
+    //    the replies must go first; and every reference must end before its row
+    //    does, or Media keeps believing the object is referenced.
+    //
+    //    No fast path here. Whether this comment has replies is not knowable
+    //    from the row itself, and a plain delete would meet the foreign key.
     await runInTransaction(async (tx) => {
-      await media.references.referenceEnded(
-        { mediaId, referrer: commentReferrer(commentId) },
-        tx,
-      );
+      await endReferences(media, await repo.findReplyMediaRefs(commentId, tx), tx);
+      await repo.deleteRepliesOf(commentId, tx);
+
+      if (owner.mediaId !== null) {
+        await endReferences(media, [{ id: commentId, mediaId: owner.mediaId }], tx);
+      }
       await repo.delete(commentId, tx);
     });
   },
 
   // ─── Delete every comment on a tweet (dependent-deletion primitive) ──
   //
-  // Called by the tweet-deletion use-case inside its transaction: end each
+  // Called by the tweet-deletion use-case inside its transaction: end every
   // comment's media reference (comments own the comment:{id} tag), then bulk
   // delete the rows. No ownership check here — the use-case authorizes the
   // tweet deletion; the comments are the tweet's dependents.
+  //
+  // A reply keeps its tweetId, so one reference sweep covers both levels.
+  //
+  // The rows go in two statements, replies first. One statement covering both
+  // levels is in fact accepted by Postgres — a RESTRICT check passes when the
+  // referencing row is removed by the same statement — but that rests on when
+  // the constraint is evaluated rather than on anything the schema states.
+  // Deleting in dependency order says what is meant and does not depend on it.
 
   deleteForTweet: async (tweetId, client) => {
-    const withMedia = await repo.findMediaRefsByTweet(tweetId, client);
-    for (const { id, mediaId } of withMedia) {
-      await media.references.referenceEnded(
-        { mediaId, referrer: commentReferrer(id) },
-        client,
-      );
-    }
+    await endReferences(media, await repo.findMediaRefsByTweet(tweetId, client), client);
+    await repo.deleteRepliesByTweet(tweetId, client);
     await repo.deleteByTweet(tweetId, client);
   },
 });

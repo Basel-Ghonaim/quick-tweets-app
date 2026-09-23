@@ -99,11 +99,46 @@ no longer describe executable behavior and are retired rather than rewritten her
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
 |----|---------------|--------|---------------------|-------------------|---------|----------------|
 | CMT-01 | Live tweet T; login A | Create comment on T | 201; comment body | `comments` row (author A, tweet T) | via CMT-04 | |
-| CMT-02 | CMT-01 | List comments (offset) `?tweetId=T` | 200; includes the comment; offset meta | — | — | |
+| CMT-02 | CMT-01 | List comments `?tweetId=T` | 200; includes the comment; **cursor meta** (`nextCursor` / `hasMore`, no `currentPage`); the comment carries `parentId: null` and a `repliesCount` | — | — | |
 | CMT-03 | CMT-01 | Update own comment | 200; edited body | row updated | — | |
 | CMT-04 | CMT-01 | Delete own comment | 204 | `comments` row removed | — | |
 | CMT-05 | Comment by A; login B | B updates A's comment | 403 | unchanged | — | |
 | CMT-06 | Folder 08's cascade tweet, deleted with its comment (E5) | List comments for that tweet (E6) | **404** `not_found` — the tweet is gone | no `comments` rows for it (CM-5) | — | |
+
+## 5c · The comment thread — two levels, pages and cascade ([#799](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/799))
+
+> **Self-isolated and non-destructive.** Folder 12 mints its own account with a
+> per-run handle and its own two posts, so it collides with no other folder and
+> needs no reset. **12.1 runs from the command line** (`npm run verify:thread`)
+> because every guarantee in it is visible in a response body. **12.2's ledger
+> half cannot**: whether a removed reply's media reference ended is invisible to
+> every endpoint by design, so that half is **Checkpoint K** in pgAdmin.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| CMT-T01 | Folder 12.1 setup (own account, two posts) | Create a top-level comment | 201; `parentId: null`, `repliesCount: 0` | `comments` row, `parent_id` NULL | via CMT-T14 | |
+| CMT-T02 | CMT-T01 | Create a reply naming that comment | 201; `parentId` = the parent; **no** `repliesCount` | `comments` row, `parent_id` set, **same `tweet_id`** | via CMT-T14 | |
+| CMT-T03 | CMT-T02 | Reply to the **reply** | **422**; the error names `parentId` | nothing written | — | The thread is two levels. Refused, never re-pointed at the comment above. |
+| CMT-T04 | Folder 12.1 setup | Create a reply naming a parent that does not exist | **404** | nothing written | — | The answer a missing tweet already gets. |
+| CMT-T05 | CMT-T01 | Create a reply on post B naming a parent on post A | **422**; the error names `parentId` | nothing written | — | |
+| CMT-T06 | CMT-T01, CMT-T02 | List `?tweetId=` | 200; **the reply is absent**; the parent reports `repliesCount: 1`; `hasMore false`, `nextCursor null` | — | — | |
+| CMT-T07 | CMT-T02 | List `?parentId=` | 200; the reply, and it alone; no `repliesCount` on it | — | — | |
+| CMT-T08 | — | List with neither `tweetId` nor `parentId` | **422** | — | — | |
+| CMT-T09 | — | List with **both** | **422** | — | — | `parentId` already determines the tweet; refused rather than arbitrated. |
+| CMT-T10 | — | List `?parentId=` for a comment that does not exist | **404** | — | — | |
+| CMT-T11 | CMT-T01, CMT-T02 | Read the post | 200; `commentsCount` = **2** | — | — | One comment and one reply. The count covers both levels. |
+| CMT-T12 | Folder 12.1 done | Upload an object (Bearer, this run's account) | 201; token | `media_objects` row, `status=ready` | — | Checkpoint K needs a reference to watch. |
+| CMT-T13 | CMT-T12 | Create a **second reply carrying that image** | 201 | `comments` row with `media_id`; **ledger: one `comment:{id}` row** | via CMT-T14 | **Record Checkpoint K "before" here.** |
+| CMT-T14 | CMT-T13 | **Delete the top-level comment** | 204 | **both replies and the parent gone**; every `comment:{id}` ledger row for them **ended**; the object survives `ready` + owned → **unreferenced** (Checkpoint K) | — | One transaction. |
+| CMT-T15 | CMT-T14 | List `?tweetId=` | 200; **empty** | no `comments` rows for the post | — | |
+| CMT-T16 | CMT-T14 | List `?parentId=` for the deleted parent | **404** | — | — | The list goes with its parent. |
+| CMT-T17 | CMT-T14 | Read the post | 200; `commentsCount` = **0** | — | — | Both levels left the count. |
+| CMT-T18 | A comment with a reply under it | **In pgAdmin**, raw `DELETE FROM comments WHERE id = <parent>` | DB **refuses**: FK violation on `comments_parent_id_fkey` (`ON DELETE RESTRICT`) | parent + reply untouched (wrap in `BEGIN … ROLLBACK`) | ROLLBACK | The backstop. A bypass fails loudly instead of leaking. |
+
+> **CMT-T14's DB column is Checkpoint K**, in the
+> [runbook](verification-runbook.md#checkpoint-k--the-reply-cascade-folder-12). **CMT-T18**
+> is pgAdmin-only, exactly as CMT-M11 is: no endpoint can ask the database to
+> bypass the application.
 
 ## 5b · Comment media — Attach, Coordination, Cascade (Comment Media)
 
@@ -264,6 +299,38 @@ implementation and this catalogue.
 
 Comment Media is verified by hand. The remaining Media milestone, **M11
 (reclamation)**, may proceed when scheduled.
+
+---
+
+## Verification run — The comment thread (2026-09-23)
+
+**Run against `feat/799-comment-thread-replies`, on the backend worktree's own
+port (`4001`) and database (`quicktweets_w2`). All of CMT-T01…CMT-T18 passed, and
+Checkpoint K matched exactly.** Newman: folder 12.1, **14 requests / 24 assertions,
+0 failures**; folder 12.2, **6 requests / 8 assertions, 0 failures**, run in two
+legs with Checkpoint K read between them. Folder 05 re-run after its CMT-02 change:
+**6 requests / 9 assertions, 0 failures**.
+
+| Scenario | Outcome |
+|---|---|
+| CMT-T01/T02 — a comment, then a reply naming it | ✅ `parentId` null then set; `repliesCount` on the parent only |
+| CMT-T03 — reply to a reply | ✅ 422 naming `parentId`; nothing written |
+| CMT-T04/T05 — parent absent / parent on another post | ✅ 404 and 422 respectively — the two refusals stay distinct |
+| CMT-T06/T07 — the two lists | ✅ the reply is absent from the thread and alone in its own list |
+| CMT-T08/T09/T10 — neither, both, and a missing parent | ✅ 422, 422, 404 |
+| CMT-T11 — the post's count | ✅ 2 — one comment and one reply |
+| CMT-T13/T14 — the cascade | ✅ 204; both replies and the parent gone in one transaction |
+| **Checkpoint K** | ✅ before: 3 comments, ledger `["comment:97"]`. After: 0 comments, ledger `[]`, object `2531` still `ready` + owned, `refs = 0` → **unreferenced** |
+| CMT-T15/T16/T17 — after the cascade | ✅ empty thread, 404 on the replies list, count back to 0 |
+| CMT-T18 — the raw-delete backstop | ✅ refused: `violates RESTRICT setting of foreign key constraint "comments_parent_id_fkey"`; rolled back |
+
+**One thing the run found, and it was not in the code.** Folder 05 first answered
+401 throughout and looked broken. It was not: folder 09 had renamed the two
+harness users in this database, leaving `verify_alice` free but
+`alice@verify.local` taken, so `Register — User A` answered 409 and
+`{{accessTokenA}}` stayed empty. Seeding the two tokens by logging in on the
+**email** made folder 05 pass unchanged, 9/9. The trap is now written up in the
+[runbook](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
 ---
 

@@ -80,14 +80,49 @@ The pre-auth grant **"abandoned"** class — a grant-provenance object never ado
    Postman may ask you to re-select the file — point it at
    `fixtures/sample.png` (Postman stores file paths per machine).
 
-## Running folder 11 from the command line (Newman)
+## Running folders 11 and 12 from the command line (Newman)
 
-Folder 11 is the one folder with a scripted runner, because it is the one whose
-guarantees are cheap to break and invisible in a body. The other folders stay
-hand-driven: they need pgAdmin beside them, and a green CLI run would say nothing
-about the coordination they exist to check.
+Two folders have scripted runners, and for opposite reasons. **Folder 11** is
+scripted because its guarantees are cheap to break and invisible in a body.
+**Folder 12.1** is scripted because the opposite is true: every guarantee in it —
+which list a query asks for, which refusal an id earns, what a page's meta says —
+*is* the body, so a CLI run checks exactly the thing the folder exists for.
 
-**It runs in three legs, and the breaks are not arbitrary.** The first is the
+**Folder 12.2 is split off precisely because that stops being true.** Its API half
+scripts fine, but whether a removed reply's media reference ended is invisible to
+every endpoint by design, so that half is Checkpoint K in pgAdmin.
+
+The remaining folders stay hand-driven: they need pgAdmin beside them, and a green
+CLI run would say nothing about the coordination they exist to check.
+
+### Folder 12 — the comment thread
+
+Self-isolated: it mints its own account with a per-run handle and its own posts,
+so it needs no reset and collides with nothing.
+
+```bash
+# 12.1 — shape, levels, pages and refusals. Exports the environment 12.2 needs.
+npm run verify:thread
+
+# 12.2 — the cascade. Pause between its two halves for Checkpoint K.
+npm run verify:thread:cascade
+```
+
+**Pause after CMT-T13** (the reply carrying an image) and record Checkpoint K's
+"before" counts, then let CMT-T14 run and record the "after". Running 12.2 straight
+through is fine for the API assertions, but it steps over the one thing the folder
+cannot assert.
+
+From a linked worktree, append the tree's own base URL to each — a linked tree
+runs on its own port ([local setup](../setup.md#working-in-a-linked-worktree)):
+
+```bash
+npm run verify:thread -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+### Folder 11 — password reset
+
+Folder 11 **runs in three legs, and the breaks are not arbitrary.** The first is the
 manual code paste — the code is knowable to nobody by design, so no runner can
 cross it. The second is a restart, because the limiter counter is in memory.
 The subfolders are named for those breaks.
@@ -146,6 +181,27 @@ Against a server somewhere other than the default, append
   logging in as B overwrites A's refresh cookie. That is why cross-principal tests
   authorize with the **per-user Bearer token**, never the cookie. Do not "fix"
   this by juggling cookies — the Bearer tokens are the source of truth.
+
+## Folder 01 cannot re-register once folder 09 has run (test-only friction)
+
+Folder 09 **renames** the two users. Their rows keep the harness's *emails* and
+take new *usernames*, so a later folder 01 finds `verify_alice` free and
+`alice@verify.local` taken, and `Register — User A` answers **409 "Email already
+in use"**. The register script never runs, `{{accessTokenA}}` stays empty, and
+every authenticated request after it answers **401** — including all of folder 05,
+which then looks broken while nothing is wrong with it.
+
+Deleting the `verify_alice` / `verify_bob` *usernames* does not help, because the
+rows holding those emails no longer carry them. Either do a reset
+([below](#reset-strategy)), or log in to the existing accounts by **email** and
+seed the two tokens:
+
+```bash
+curl -s -X POST http://localhost:4001/api/v1/auth/login   -H "Content-Type: application/json"   -d '{"identifier":"alice@verify.local","password":"Passw0rd!23"}'
+```
+
+Note `identifier`, not `email` — the login body takes either a username or an
+address under that one key.
 
 ## Rate-limit awareness (test-only friction, not a bug)
 
@@ -585,6 +641,61 @@ ROLLBACK;   -- leaves the tweet + comment intact
 > Likes still cascade (untouched by Comment Media); the restrict comment is
 > deliberately **media-free**, so `comments_tweet_id_fkey` is the *only* thing
 > that can refuse the delete — the proof is unambiguous.
+
+## Checkpoint K — the reply cascade (folder 12)
+
+**What it is for.** CMT-T14 deletes a top-level comment that has two replies, one
+of them carrying an image. The endpoint answers `204` and says nothing more. Three
+facts matter and none of them is in that response: the replies really went, the
+removed reply's media reference really ended, and the object itself survived to be
+reclaimed rather than being dropped.
+
+**Before CMT-T14** — with the thread built by 12.1 and CMT-T13:
+
+```sql
+-- The shape the cascade is about to remove: one parent, two replies, one image.
+SELECT id, parent_id, media_id FROM comments WHERE tweet_id = :thrTweetId ORDER BY id;
+
+-- The ledger rows those comments hold.
+SELECT referrer FROM media_references
+WHERE referrer IN (SELECT 'comment:' || id FROM comments WHERE tweet_id = :thrTweetId);
+```
+
+Expect three comment rows — one with `parent_id` NULL, two pointing at it, one of
+those carrying a `media_id` — and **one** ledger row, `comment:{the media reply}`.
+
+**After CMT-T14:**
+
+```sql
+-- Nothing at either level is left.
+SELECT id FROM comments WHERE tweet_id = :thrTweetId;                      -- expect 0 rows
+
+-- Every reference those comments held has ended.
+SELECT referrer FROM media_references WHERE referrer = 'comment:' || :thrMediaReplyId;  -- expect 0 rows
+
+-- The object itself survived, owned and unreferenced — reclamation's to take.
+SELECT o.id, o.status, o.uploader_id,
+       (SELECT count(*) FROM media_references r WHERE r.media_id = o.id) AS refs
+FROM media_objects o WHERE o.token = :thrMediaToken;
+```
+
+Expect `status = ready`, `uploader_id` set, `refs = 0`. **That last row is the
+whole point.** A reply deleted while Media still believed its object referenced
+would leak the object permanently, and nothing in the API would ever say so.
+
+**CMT-T18 is pgAdmin-only**, exactly as CMT-M11 is — no endpoint can ask the
+database to bypass the application:
+
+```sql
+BEGIN;
+DELETE FROM comments WHERE id = :aParentWithReplies;  -- expect: violates comments_parent_id_fkey
+ROLLBACK;
+```
+
+A single-row delete of a comment that still has replies is refused. (One statement
+covering *both* levels is accepted, because a RESTRICT check passes when the
+referencing row goes in that same statement — which is why the application deletes
+in dependency order rather than resting on when the constraint is evaluated.)
 
 ## Incremental workflow
 
