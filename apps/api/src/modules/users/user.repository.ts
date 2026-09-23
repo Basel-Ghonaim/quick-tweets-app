@@ -3,7 +3,6 @@
  *
  * Purpose:
  * - findByUsernameWithCounts / findByIdWithCounts: profile with _count
- * - isFollowing: check if one user follows another
  * - countLikesReceived: nested aggregate — total likes across all user's tweets
  * - findAvatar / updateProfile: the avatar/profile write path (WI-2)
  *
@@ -57,18 +56,6 @@ export const createUserRepository = (
 
   findByIdWithCounts: (userId) =>
     db.user.findUnique({ where: { id: userId }, select: profileSelect }),
-
-  // ── Follow Check ──
-
-  isFollowing: async (followerId, followingId) => {
-    const follow = await db.follow.findUnique({
-      where: {
-        followerId_followingId: { followerId, followingId },
-      },
-      select: { id: true },
-    });
-    return follow !== null;
-  },
 
   // ── Nested Aggregate: Likes Received ──
 

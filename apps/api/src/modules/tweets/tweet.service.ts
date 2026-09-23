@@ -40,6 +40,7 @@ import type {
 import type { CursorParams, CursorMeta, LikeState } from "../../shared/types/index.js";
 import { avatarReferencesOf, isPrismaError } from "../../shared/utils/index.js";
 import { toTweetResponse } from "./tweet.mapper.js";
+import { resolveFollowState, followStateOf } from "../../shared/social/index.js";
 
 // ─── Media port ──────────────────────────────────────────────────────────────
 
@@ -119,20 +120,27 @@ const coordinateRefChange = async (
 const toResponses = async (
   media: TweetMediaPort,
   tweets: TweetWithRelations[],
+  readerId?: number,
 ): Promise<TweetResponse[]> => {
   const referenceIds = [
     ...tweets.flatMap((tweet) => tweet.media.map((ref) => ref.mediaId)),
     ...avatarReferencesOf(tweets.map((tweet) => tweet.author)),
   ];
-  const tokens = await media.resolution.resolveTokens(referenceIds);
-  return tweets.map((tweet) => toTweetResponse(tweet, tokens));
+  const [tokens, follow] = await Promise.all([
+    media.resolution.resolveTokens(referenceIds),
+    resolveFollowState(readerId, tweets.map((tweet) => tweet.author.id)),
+  ]);
+  return tweets.map((tweet) =>
+    toTweetResponse(tweet, tokens, followStateOf(follow, tweet.author.id)),
+  );
 };
 
 /** One tweet, resolved through the same batched path. */
 const toResponse = async (
   media: TweetMediaPort,
   tweet: TweetWithRelations,
-): Promise<TweetResponse> => (await toResponses(media, [tweet]))[0]!;
+  readerId?: number,
+): Promise<TweetResponse> => (await toResponses(media, [tweet], readerId))[0]!;
 
 /** Media that could not be attached is a request problem, not a server fault. */
 const asAttachFailure = (err: unknown): unknown =>
@@ -192,7 +200,7 @@ export const createTweetService = (
     };
 
     return {
-      data: await toResponses(media, sliced),
+      data: await toResponses(media, sliced, userId),
       meta,
     };
   },
@@ -219,7 +227,7 @@ export const createTweetService = (
     };
 
     return {
-      data: await toResponses(media, sliced),
+      data: await toResponses(media, sliced, userId),
       meta,
     };
   },
@@ -249,7 +257,7 @@ export const createTweetService = (
     };
 
     return {
-      data: await toResponses(media, sliced),
+      data: await toResponses(media, sliced, userId),
       meta,
     };
   },
@@ -263,7 +271,7 @@ export const createTweetService = (
       throw AppError.notFound("Tweet");
     }
 
-    return toResponse(media, tweet);
+    return toResponse(media, tweet, userId);
   },
 
   // ─── Create ─────────────────────────────────────────────────────────
@@ -294,6 +302,8 @@ export const createTweetService = (
         // `created` was read before its media rows existed.
         return { ...created, media: await repo.findMediaRefs(created.id, tx) };
       });
+      // No reader passed: the answer goes to the author, and following yourself
+      // is refused — so the pair is known without spending a query on it.
       return toResponse(media, tweet);
     } catch (err) {
       throw asAttachFailure(err);

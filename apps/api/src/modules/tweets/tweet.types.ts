@@ -13,6 +13,7 @@
 
 import type { DbClient } from "../../shared/database/index.js";
 import type { AuthorEmbed, CursorParams, CursorMeta, LikeState } from "../../shared/types/index.js";
+import type { FollowState } from "../../shared/social/index.js";
 import type { AuthorRow } from "../../shared/utils/index.js";
 
 /**
@@ -46,12 +47,20 @@ export interface TweetMediaResponse {
 }
 
 /** Tweet shape returned to the frontend. */
+/**
+ * A post's author, widened by what the row's ⋯ menu needs: Follow, Following or
+ * Follow back. `AuthorEmbed` itself stays as it is — it is shared with comments
+ * and with the follow lists, and a comment's author has no Follow button, so
+ * widening it would make every thread page resolve a relation nothing renders.
+ */
+export interface TweetAuthorEmbed extends AuthorEmbed, FollowState {}
+
 export interface TweetResponse {
   id: number;
   body: string;
   /** Ordered media attachments. */
   media: TweetMediaResponse[];
-  author: AuthorEmbed;
+  author: TweetAuthorEmbed;
   likesCount: number;
   commentsCount: number;
   isLiked: boolean;

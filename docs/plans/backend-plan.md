@@ -67,7 +67,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - **Search:** find posts, including by hashtag, in **Arabic and English** alike. What else is searched, and how results are ranked, is decided before it is built.
 - **Trending:** a short list of current terms, each with how many posts mention it. Guests can see it too.
 - **Hashtags** mean the same thing everywhere: the text that links them, the search that finds them and the trend that counts them all follow **one shared rule**, in any script.
-- **Mentions** follow the username rule, so a mention links exactly what could be a username.
+- **Mentions** follow the username rule, so a mention links exactly what could be a username. They are **not checked against real accounts**: an unknown name simply leads to a profile that is not found, which is what these designs need and all they need.
 
 ### 2.6 · Images
 
@@ -106,8 +106,7 @@ These product questions shape the capabilities above. Each is settled with the o
 - the **description** length, and whether one is required;
 - what a **trend** is, over what time window, and how trends are ranked;
 - what **search** covers beyond posts, and its ranking;
-- how **suggested accounts** are chosen, and what a guest sees;
-- whether **mentions** are ever checked against real accounts. They need not be for these designs: an unknown name simply leads to a profile that is not found.
+- how **suggested accounts** are chosen, and what a guest sees.
 
 ---
 
@@ -173,3 +172,9 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 - **Settled.** Liking is **set and cleared, never toggled**, and the guarantee lives in the verb rather than in a payload a client might omit: repeating either call is a no-op, so a double press or a retry cannot reverse what the reader meant. Neither call reads before it writes — the unique pair decides the outcome, so the expected conflict *is* the answer. A comment's likes are their own table, cascading from both sides, which is where a like differs from a comment: it holds no media reference, so nothing outlives the row. **The count is public and the state is personal**, which is why comment reads take an optional reader and a guest reads the same number and always `false`. Comments are the second likeable thing and a shared mechanism was still declined; only the wire shape is stated once.
 - **Amended.** None. §2.2 states what must exist and still does.
 - **Recorded.** No finding. The one defect found was in the verification harness rather than the product — the collection carries a bearer at its root, so four scenarios whose subject was being unauthenticated inherited a token and passed for the wrong reason; they are fixed and the trap is written into the [runbook](../development/verification/verification-runbook.md). `ICommentRepository.findById` was also found to have no callers, and was left alone rather than removed.
+
+**Follow state wherever a Follow button appears.** [#810](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/810) · [#811](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/811).
+
+- **Settled.** Both directions of the relation resolve from **one shared function** in `shared/social/`, so the profile, both list tabs and a post's author cannot disagree about the same pair — the users module's own one-at-a-time check went with it. **One query for a whole page, never one per row**, and **a guest asks nothing at all**; neither promise is visible in a response, so both are counted rather than reviewed. The server reports **two booleans and no third field**: which of the four states the button draws is the client's to derive, and your own row is recognised from ids. **`AuthorEmbed` was deliberately not widened** — only a post's row draws the button, so a comment's author carries neither field, and that boundary has cases of its own. Nothing here is breaking: fields added and an auth mode widened are additive, so this Work Item needed no pre-release exception.
+- **Amended.** §2.5 and §4, by the correction this branch carried as its first commit: whether mentions are checked against real accounts was settled during [#799](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/799)'s preparation, so the answer moved to §2.5 and left the list of open decisions. **§4 now holds six questions, not seven.**
+- **Recorded.** No finding. Two notes went to the verification harness rather than the product: folders that upload a fixture need `--working-dir`, which had been documented for one folder and applies to three; and the harness graph is kept asymmetric on purpose, since a mutual pair passes whichever way the two fields are wired.

@@ -70,7 +70,9 @@ export const createFollowController = (
       const username = String(req.params.username);
       const { cursor, limit } = req.query as unknown as { cursor?: number; limit: number };
 
-      const result = await service.getFollowers(username, { cursor, limit });
+      // optionalAuth: a reader if signed in, undefined for a guest. It decides
+      // each row's follow state and nothing else — a guest still reads the list.
+      const result = await service.getFollowers(username, { cursor, limit }, req.userId);
 
       sendSuccess(res, result.data, 200, { ...result.meta });
     } catch (err) {
@@ -87,7 +89,7 @@ export const createFollowController = (
       const username = String(req.params.username);
       const { cursor, limit } = req.query as unknown as { cursor?: number; limit: number };
 
-      const result = await service.getFollowing(username, { cursor, limit });
+      const result = await service.getFollowing(username, { cursor, limit }, req.userId);
 
       sendSuccess(res, result.data, 200, { ...result.meta });
     } catch (err) {

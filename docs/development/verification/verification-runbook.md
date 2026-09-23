@@ -99,6 +99,20 @@ in the body, and the folder therefore runs whole, with no pgAdmin half at all.
 The remaining folders stay hand-driven: they need pgAdmin beside them, and a green
 CLI run would say nothing about the coordination they exist to check.
 
+### Folder 07 — follows, and the state every Follow button reads
+
+**Not self-isolated**: it needs folder 01's tokens and handles, so seed them by
+the note below if folder 09 has already run.
+
+```bash
+npm run verify:follows -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+Like folder 13 it needs no pgAdmin: follow state is two booleans in a body, and
+the graph it asserts against is deliberately **asymmetric** — B follows A and A
+does not follow back — so the two directions can be told apart. A mutual pair
+would pass whichever way the fields were wired.
+
 ### Folder 13 — comment likes
 
 Self-isolated: its own account with a per-run handle, its own post and comments.
@@ -162,6 +176,19 @@ npm run verify:reset:limiter
 
 Against a server somewhere other than the default, append
 `-- --env-var baseUrl=http://localhost:4300/api/v1` to each.
+
+### `--working-dir`, for any folder that uploads a fixture
+
+**Folders 04, 08 and 12.2 upload files by a path relative to `fixtures/`**, so a
+run started from the repository root cannot find them and every upload fails with
+`file load error: "fixtures/sample.png", no such file` — which then cascades into
+every assertion downstream of it. It looks like a broken folder and is not:
+
+```bash
+npx -y newman@6.2.2 run <collection> -e <env>   --working-dir docs/development/verification --folder "04 · Tweets + media (M7–M9)"
+```
+
+The folders that upload nothing — 07, 12.1, 13 — do not need it.
 
 > **Leg 2 will not work without leg 1's cookie jar**, and it fails in the most
 > misleading way available: every request from PWR-07 answers `400`,

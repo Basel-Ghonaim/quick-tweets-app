@@ -30,6 +30,7 @@ import type {
 } from "./follow.types.js";
 import type { CursorParams, CursorMeta } from "../../shared/types/index.js";
 import { avatarReferencesOf, isPrismaError, toAuthorEmbed } from "../../shared/utils/index.js";
+import { resolveFollowState, followStateOf } from "../../shared/social/index.js";
 
 // ─── Helper: Resolve username to userId or throw 404 ─────────────────────────
 
@@ -44,13 +45,25 @@ const resolveUser = async (
   return userId;
 };
 
-/** A page's avatars resolve in one batch, as a page of tweets or comments does. */
+/**
+ * A page's avatars and its follow state each resolve in one batch, as a page of
+ * tweets or comments resolves its media — never one query per row.
+ */
 const toItems = async (
   resolution: IMediaResolution,
   users: FollowUserRow[],
+  readerId?: number,
 ): Promise<FollowUserItem[]> => {
-  const tokens = await resolution.resolveTokens(avatarReferencesOf(users));
-  return users.map((user) => ({ ...toAuthorEmbed(user, tokens), bio: user.bio }));
+  const [tokens, follow] = await Promise.all([
+    resolution.resolveTokens(avatarReferencesOf(users)),
+    resolveFollowState(readerId, users.map((user) => user.id)),
+  ]);
+
+  return users.map((user) => ({
+    ...toAuthorEmbed(user, tokens),
+    bio: user.bio,
+    ...followStateOf(follow, user.id),
+  }));
 };
 
 // ─── Service Factory ─────────────────────────────────────────────────────────
@@ -127,6 +140,7 @@ export const createFollowService = (
   getFollowers: async (
     username: string,
     params: CursorParams,
+    readerId?: number,
   ): Promise<{ data: FollowUserItem[]; meta: CursorMeta }> => {
     // 1. Resolve user
     const userId = await resolveUser(repo, username);
@@ -139,7 +153,7 @@ export const createFollowService = (
     const sliced = hasMore ? follows.slice(0, limit) : follows;
 
     // 3. Map to FollowUserItem (extract the follower side)
-    const data = await toItems(resolution, sliced.map((f: FollowWithUser) => f.follower!));
+    const data = await toItems(resolution, sliced.map((f: FollowWithUser) => f.follower!), readerId);
 
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {
@@ -156,6 +170,7 @@ export const createFollowService = (
   getFollowing: async (
     username: string,
     params: CursorParams,
+    readerId?: number,
   ): Promise<{ data: FollowUserItem[]; meta: CursorMeta }> => {
     // 1. Resolve user
     const userId = await resolveUser(repo, username);
@@ -168,7 +183,7 @@ export const createFollowService = (
     const sliced = hasMore ? follows.slice(0, limit) : follows;
 
     // 3. Map to FollowUserItem (extract the following side)
-    const data = await toItems(resolution, sliced.map((f: FollowWithUser) => f.following!));
+    const data = await toItems(resolution, sliced.map((f: FollowWithUser) => f.following!), readerId);
 
     const lastItem = sliced[sliced.length - 1];
     const meta: CursorMeta = {

@@ -2,7 +2,7 @@
  * User service — business logic for user profile and the self-profile write path.
  *
  * Purpose:
- * - getProfile(): public profile with counts + isFollowing + resolved avatar
+ * - getProfile(): public profile with counts + follow state + resolved avatar
  * - getMe(): the authenticated user's own profile
  * - updateMe(): PATCH name/bio/avatar — avatar is a full-replacement, User-owned
  *   authenticated Media producer (ADR 0008)
@@ -42,6 +42,12 @@ import {
   channelVerificationStatus,
   type IChannelVerificationStatus,
 } from "../channel-verification/index.js";
+import {
+  resolveFollowState,
+  followStateOf,
+  NO_FOLLOW_STATE,
+  type FollowState,
+} from "../../shared/social/index.js";
 import { createUserRepository } from "./user.repository.js";
 import { assertAvatarPolicy } from "./user.avatar-policy.js";
 import type {
@@ -99,7 +105,7 @@ export const createUserService = (
     user: UserWithCounts,
     avatarToken: string | null,
     likesCount: number,
-    isFollowing: boolean,
+    follow: FollowState,
   ): UserProfileResponse => ({
     id: user.id,
     username: user.username,
@@ -110,7 +116,8 @@ export const createUserService = (
     likesCount,
     followersCount: user._count.followers,
     followingCount: user._count.following,
-    isFollowing,
+    isFollowing: follow.isFollowing,
+    followsYou: follow.followsYou,
     createdAt: user.createdAt,
   });
 
@@ -144,13 +151,15 @@ export const createUserService = (
         throw AppError.notFound("User");
       }
 
-      const [isFollowing, likesCount, avatarToken] = await Promise.all([
-        reqUserId ? userRepo.isFollowing(reqUserId, user.id) : false,
+      // Both directions from the one resolver every Follow button composes, so a
+      // profile and a list row can never disagree about the same pair.
+      const [follow, likesCount, avatarToken] = await Promise.all([
+        resolveFollowState(reqUserId, [user.id]),
         userRepo.countLikesReceived(user.id),
         resolveAvatar(user.avatarMediaId),
       ]);
 
-      return buildResponse(user, avatarToken, likesCount, isFollowing);
+      return buildResponse(user, avatarToken, likesCount, followStateOf(follow, user.id));
     },
 
     // ─── Self Profile ─────────────────────────────────────────────────
@@ -173,7 +182,7 @@ export const createUserService = (
       // Self-view: the public profile plus `email` and its verification state —
       // both the account holder's own, neither exposed publicly.
       return {
-        ...buildResponse(user, avatarToken, likesCount, false),
+        ...buildResponse(user, avatarToken, likesCount, NO_FOLLOW_STATE),
         email: user.email,
         emailVerification,
       };
@@ -195,7 +204,7 @@ export const createUserService = (
           verification.statusOf(userId, updated.email),
         ]);
         return {
-          ...buildResponse(updated, avatarToken, likesCount, false),
+          ...buildResponse(updated, avatarToken, likesCount, NO_FOLLOW_STATE),
           email: updated.email,
           emailVerification,
         };
@@ -269,7 +278,7 @@ export const createUserService = (
           verification.statusOf(userId, updated.email),
         ]);
         return {
-          ...buildResponse(updated, avatarToken, likesCount, false),
+          ...buildResponse(updated, avatarToken, likesCount, NO_FOLLOW_STATE),
           email: updated.email,
           emailVerification,
         };

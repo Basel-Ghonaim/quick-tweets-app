@@ -149,6 +149,34 @@ interface AuthorEmbed {
 }
 ```
 
+**It deliberately carries no follow state.** A *post's* author does — see
+[FollowState](#followstate) — because the post's ⋯ menu draws a Follow button. A
+*comment's* author does not, because a comment row has no such button, and a
+follow-list row carries the pair on the row itself. Putting the fields here would
+make every thread page resolve a relation nothing renders.
+
+### FollowState
+
+The two facts a **Follow button** needs, from the reading account's side. Carried
+by the user profile, by each follower/following list row, and by a post's author.
+
+```typescript
+interface FollowState {
+  isFollowing: boolean;   // the reader follows this person
+  followsYou: boolean;    // this person follows the reader — what "Follow back" is drawn from
+}
+```
+
+**Both are `false` for a guest**, and both are `false` on the reader's own row —
+following yourself is refused, so the pair cannot say otherwise.
+
+**There is no third field, and that is deliberate.** Which of the four states the
+button draws is the client's to derive: *Following* from `isFollowing`, *Follow
+back* from `followsYou` alone, *Follow* from neither, and **nothing at all** on
+your own row, which the client recognises by comparing ids with
+`GET /users/me`. A relation computed on the server would put a presentation
+choice in the payload.
+
 ### TweetMediaEmbed
 
 Embedded in tweet responses as an **ordered** array — the array order *is* the display order.
@@ -265,7 +293,7 @@ Every limiter below is **per IP**, over a fixed window, and answers with `type: 
 | Mode         | Header                                     | Behavior                                                                                 |
 | ------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | **Required** | `Authorization: Bearer <token>`            | 401 if missing or invalid                                                                |
-| **Optional** | `Authorization: Bearer <token>` (optional) | If present, attaches `userId`. If missing, continues as guest. Used e.g. for `isLiked` / `isFollowing` fields. |
+| **Optional** | `Authorization: Bearer <token>` (optional) | If present, attaches `userId`. If missing, continues as guest. Used e.g. for `isLiked` and for follow state ([FollowState](#followstate)). |
 | **None**     | —                                          | No auth needed                                                                           |
 
 ---
@@ -419,7 +447,9 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
         "id": 1,
         "username": "basel",
         "name": "Basel",
-        "avatar": null
+        "avatar": null,
+        "isFollowing": false,   // see FollowState — both false for a guest
+        "followsYou": true      // so this row's menu offers "Follow back"
       },
       "likesCount": 3,
       "commentsCount": 2,
@@ -439,6 +469,10 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 **Notes:**
 - Ordered by `id DESC` (newest first)
 - `isLiked` is `false` for unauthenticated users
+- **The author carries [FollowState](#followstate)**, so the row's ⋯ menu can draw
+  Follow, Following or Follow back without a second request. It is resolved once
+  for the whole page, never once per post, and a guest costs no lookup at all.
+  A **comment's** author does not carry it
 - `limit` capped at 50
 - First request: no cursor. Next page: pass `cursor=<last item id>`
 
@@ -945,6 +979,7 @@ comments at both levels.
     "followersCount": 120,
     "followingCount": 45,
     "isFollowing": true,
+    "followsYou": false,
     "createdAt": "2026-04-20T10:00:00.000Z"
   }
 }
@@ -962,12 +997,14 @@ comments at both levels.
 - `tweetsCount`: total tweets authored by this user
 - `likesCount`: total likes received across all their tweets
 - `followersCount` / `followingCount`: computed via `COUNT()` on follows table
-- `isFollowing`: `true` if the authenticated user follows this profile, `false` for guests
+- `isFollowing` / `followsYou`: the pair a Follow button needs — see
+  [FollowState](#followstate). Both `false` for a guest, and both `false` on your
+  own profile
 - `:username` accepts a current **or** a former handle: a former handle (freed by a rename, held indefinitely) **`301`-redirects** to the current canonical URL, so historical profile links never `404`. Only a handle that was never assigned returns `404`.
 
 ### `GET /users/me` — Own profile
 
-**Auth:** Required. Returns the authenticated user's own profile — the `GET /users/:username` shape **plus `email` and `emailVerification`** (self-view-only fields; the public view omits both), with `isFollowing: false`. `me` is a reserved self-alias resolved from the token. This is the canonical current-user resource.
+**Auth:** Required. Returns the authenticated user's own profile — the `GET /users/:username` shape **plus `email` and `emailVerification`** (self-view-only fields; the public view omits both), with `isFollowing: false` and `followsYou: false` — you cannot follow yourself. `me` is a reserved self-alias resolved from the token. This is the canonical current-user resource.
 
 `emailVerification` is `"unproven" | "pending" | "proven"` — a **projection** resolved at read time from [Channel Verification](#channel-verification), which owns the fact. Nothing about it is stored on the account, and changing the address reads as `unproven` because the proof was about the previous value.
 
@@ -1060,7 +1097,7 @@ comments at both levels.
 
 ### `GET /follows/:username/followers` — Follower list (cursor-paginated)
 
-**Auth:** None
+**Auth:** Optional — a signed-in reader gets each row's follow state; a guest reads the list all the same
 **Query params:** `?cursor=<id>&limit=20`
 
 ```jsonc
@@ -1073,7 +1110,9 @@ comments at both levels.
       "username": "ahmed",
       "name": "Ahmed",
       "avatar": null,
-      "bio": "Developer"
+      "bio": "Developer",
+      "isFollowing": false,   // see FollowState — both false for a guest
+      "followsYou": true
     }
   ],
   "meta": {
@@ -1091,7 +1130,7 @@ comments at both levels.
 
 ### `GET /follows/:username/following` — Following list (cursor-paginated)
 
-**Auth:** None
+**Auth:** Optional — as above
 **Query params:** `?cursor=<id>&limit=20`
 
 ```jsonc
@@ -1104,7 +1143,9 @@ comments at both levels.
       "username": "sara",
       "name": "Sara",
       "avatar": null,
-      "bio": "Designer"
+      "bio": "Designer",
+      "isFollowing": true,
+      "followsYou": false
     }
   ],
   "meta": {
@@ -1117,6 +1158,15 @@ comments at both levels.
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "User not found" } }
 ```
+
+**Notes on both lists:**
+- Each row carries [FollowState](#followstate), so its Follow button can be drawn
+  without a request per row. Both fields are `false` for a guest, and `false` on
+  the reader's own row.
+- **Resolved once for the whole page**, alongside the avatars — a page of fifty
+  costs the same two lookups as a page of one, and a guest costs none.
+- Adding these fields and widening the auth mode are **additive**: no field was
+  removed or redefined, so no `v2` and no pre-release exception.
 
 ---
 

@@ -2060,7 +2060,7 @@
     },
     {
       "name": "07 · Follows",
-      "description": "B follows A, lists, then unfollows.",
+      "description": "B follows A, lists, then unfollows — and the follow state every Follow button reads. B follows A and A does not follow back, so the pair is asymmetric on purpose: a symmetric graph cannot tell the two directions apart.",
       "item": [
         {
           "name": "B follows A",
@@ -2135,6 +2135,495 @@
                 "exec": [
                   "pm.test(\"status 409\", () => pm.response.to.have.status(409));",
                   "pm.test(\"error type conflict\", () => pm.expect(pm.response.json().error.type).to.eql(\"conflict\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-01 · A's profile, read by B — B follows A, A does not follow back",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userA_username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userA_username}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "const person = Array.isArray(d) ? d[0] : d;",
+                  "pm.test(\"isFollowing true, followsYou false\", () => {",
+                  "  pm.expect(person.isFollowing).to.eql(true);",
+                  "  pm.expect(person.followsYou).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-02 · B's profile, read by A — the mirror image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userB_username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userB_username}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenA}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "const person = Array.isArray(d) ? d[0] : d;",
+                  "pm.test(\"isFollowing false, followsYou true\", () => {",
+                  "  pm.expect(person.isFollowing).to.eql(false);",
+                  "  pm.expect(person.followsYou).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-03 · A's profile, read by a guest — neither direction",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userA_username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userA_username}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "const person = Array.isArray(d) ? d[0] : d;",
+                  "pm.test(\"isFollowing false, followsYou false\", () => {",
+                  "  pm.expect(person.isFollowing).to.eql(false);",
+                  "  pm.expect(person.followsYou).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-04 · Your own profile reports neither direction",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userA_username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userA_username}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Following yourself is refused, so the pair cannot say otherwise — which is what lets the client derive 'this is you' from ids alone."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"both false on your own row\", () => {",
+                  "  pm.expect(d.isFollowing).to.eql(false);",
+                  "  pm.expect(d.followsYou).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-05 · A's followers, read by A — B follows A, A does not follow back",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{userA_username}}/followers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{userA_username}}",
+                "followers"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenA}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "const person = Array.isArray(d) ? d[0] : d;",
+                  "pm.test(\"isFollowing false, followsYou true\", () => {",
+                  "  pm.expect(person.isFollowing).to.eql(false);",
+                  "  pm.expect(person.followsYou).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-06 · B's following, read by B — B follows A, A does not follow back",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{userB_username}}/following",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{userB_username}}",
+                "following"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "const person = Array.isArray(d) ? d[0] : d;",
+                  "pm.test(\"isFollowing true, followsYou false\", () => {",
+                  "  pm.expect(person.isFollowing).to.eql(true);",
+                  "  pm.expect(person.followsYou).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-07 · A's followers, read by a guest — neither direction, list still readable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{userA_username}}/followers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{userA_username}}",
+                "followers"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "const person = Array.isArray(d) ? d[0] : d;",
+                  "pm.test(\"isFollowing false, followsYou false\", () => {",
+                  "  pm.expect(person.isFollowing).to.eql(false);",
+                  "  pm.expect(person.followsYou).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-08 · Setup — a post by A",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"A post whose author relation is read\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"folTweetId\", pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-09 · Setup — a comment on it",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenA}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tweetId\": \"{{folTweetId}}\",\n  \"body\": \"A comment whose author has no Follow button\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-08b · A post's author carries the reader's relation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets?author={{userA_username}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ],
+              "query": [
+                {
+                  "key": "author",
+                  "value": "{{userA_username}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The row's menu draws Follow back from this, without a second request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const post = pm.response.json().data[0];",
+                  "pm.test(\"the author carries the pair\", () => {",
+                  "  pm.expect(post.author.isFollowing).to.eql(true);",
+                  "  pm.expect(post.author.followsYou).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOL-09b · A comment's author carries neither — it has no Follow button",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments?tweetId={{folTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "tweetId",
+                  "value": "{{folTweetId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessTokenB}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "The boundary: AuthorEmbed is shared, and only a post's author was widened."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const rows = pm.response.json().data;",
+                  "pm.test(\"no follow state on a comment author\", () => {",
+                  "  pm.expect(rows.length).to.be.above(0);",
+                  "  pm.expect(rows[0].author).to.not.have.property(\"isFollowing\");",
+                  "  pm.expect(rows[0].author).to.not.have.property(\"followsYou\");",
+                  "});"
                 ]
               }
             }

@@ -70,11 +70,27 @@ describe("toTweetResponse — author", () => {
     });
     const tokens = new Map([[11, "tok-a"], [90, "tok-avatar"]]);
 
+    // No follow state supplied, so neither direction — the mapper never invents
+    // one, and the shape is asserted whole so a stray field would fail here.
     expect(toTweetResponse(tweet, tokens).author).toEqual({
       id: 42,
       username: "ada",
       name: "Ada",
       avatar: { token: "tok-avatar" },
+      isFollowing: false,
+      followsYou: false,
     });
+  });
+
+  it("carries the follow state it is given, and only on the author", () => {
+    const tweet = rawTweet({ author: { id: 42, username: "ada", name: "Ada", avatarMediaId: null } });
+
+    const response = toTweetResponse(tweet, new Map(), { isFollowing: false, followsYou: true });
+
+    expect(response.author.followsYou).toBe(true);
+    expect(response.author.isFollowing).toBe(false);
+    // The relation belongs to the author, not to the post.
+    expect(response).not.toHaveProperty("followsYou");
+    expect(response).not.toHaveProperty("isFollowing");
   });
 });
