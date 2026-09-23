@@ -23,10 +23,19 @@ The Work Item that admits the component was scoped to the admission and its evid
 
 The class-reference gap is the one item here that is not about this component at all. It is a limitation of the check, of the same family as [Finding 0009](0009-checker-blind-to-hardcoded-literals.md) and [Finding 0021](../resolved/0021-token-reference-check-sees-one-interpolation-name.md) — an owned rule the mechanism cannot fully see. Whether the check learns to read a dynamic index, or components are required not to use one, is a decision about the check rather than about its first subject.
 
+## Update — 2026-09-23
+
+**The same patterns also report a class that was never referenced.** Admitting `Avatar` ([#800](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/800)) put a sentence in that component's comment describing this very check, and the check read the prose as a call site: it failed on a class the component does not use and its stylesheet does not define. Rewording the comment cleared it.
+
+The two are one regex seen from both sides. It scans a source file as text, so it cannot tell a dynamic index from no reference at all, and it cannot tell a comment from code. Only the first costs a guarantee — a missed reference is silent, while prose read as code fails loudly and is fixed in the next minute — but both follow from the same choice, and a decision that widens the patterns should answer for both.
+
+Nothing here changes what is recorded above; it adds the second half of the evidence the decision below will be taken on.
+
 ## Affected
 
 - The component itself, on all four counts.
 - Any component admitted later that indexes its styles dynamically, on the fourth.
+- Any component whose comments name a class reference, which the check reads as code.
 
 ## Not decided here
 

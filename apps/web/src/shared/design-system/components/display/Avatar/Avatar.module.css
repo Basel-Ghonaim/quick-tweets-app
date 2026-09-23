@@ -1,0 +1,52 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-full);
+  /* The circle clips the picture, so any proportion arrives already cropped. */
+  overflow: hidden;
+  /* An avatar sits beside text that may be long, and never yields its size. */
+  flex-shrink: 0;
+  background: var(--surface-subtle);
+  color: var(--text-tertiary);
+}
+
+/* Literal because a diameter is this component's own geometry rather than
+   shared language (foundation.md, the local / shared boundary). */
+.small {
+  inline-size: 32px;
+  block-size: 32px;
+}
+
+.medium {
+  inline-size: 40px;
+  block-size: 40px;
+}
+
+.large {
+  inline-size: 48px;
+  block-size: 48px;
+}
+
+.xlarge {
+  inline-size: 72px;
+  block-size: 72px;
+}
+
+.xxlarge {
+  inline-size: 96px;
+  block-size: 96px;
+}
+
+.image {
+  inline-size: 100%;
+  block-size: 100%;
+  /* Crop rather than distort: a picture that is not square keeps its shape. */
+  object-fit: cover;
+}
+
+/* Proportional, so one glyph serves every size. */
+.fallback {
+  inline-size: 55%;
+  block-size: 55%;
+}
