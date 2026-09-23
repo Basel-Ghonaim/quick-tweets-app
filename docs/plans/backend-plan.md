@@ -67,7 +67,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - **Search:** find posts, including by hashtag, in **Arabic and English** alike. What else is searched, and how results are ranked, is decided before it is built.
 - **Trending:** a short list of current terms, each with how many posts mention it. Guests can see it too.
 - **Hashtags** mean the same thing everywhere: the text that links them, the search that finds them and the trend that counts them all follow **one shared rule**, in any script.
-- **Mentions** follow the username rule, so a mention links exactly what could be a username.
+- **Mentions** follow the username rule, so a mention links exactly what could be a username. They are **not checked against real accounts**: an unknown name simply leads to a profile that is not found, which is what these designs need and all they need.
 
 ### 2.6 · Images
 
@@ -106,8 +106,7 @@ These product questions shape the capabilities above. Each is settled with the o
 - the **description** length, and whether one is required;
 - what a **trend** is, over what time window, and how trends are ranked;
 - what **search** covers beyond posts, and its ranking;
-- how **suggested accounts** are chosen, and what a guest sees;
-- whether **mentions** are ever checked against real accounts. They need not be for these designs: an unknown name simply leads to a profile that is not found.
+- how **suggested accounts** are chosen, and what a guest sees.
 
 ---
 
