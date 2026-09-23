@@ -9,6 +9,7 @@
  * API contract:
  *   - follow/unfollow return { isFollowing, followersCount }
  *   - followers/following lists use cursor pagination with AuthorEmbed-like shape
+ *   - each list item carries the follow state its row's button needs
  *
  * Principle: DIP — service depends on IFollowRepository, not on Prisma.
  * Principle: ISP — repository and service contracts are separate.
@@ -25,13 +26,19 @@ export interface FollowActionResponse {
   followersCount: number;
 }
 
-/** A single user item in follower/following lists. */
+/**
+ * A single user item in follower/following lists. Carries what the row's Follow
+ * button needs: both directions, each `false` for a guest and on the reader's
+ * own row.
+ */
 export interface FollowUserItem {
   id: number;
   username: string;
   name: string | null;
   avatar: { token: string } | null;
   bio: string;
+  isFollowing: boolean;
+  followsYou: boolean;
 }
 
 // ─── Raw DB Types ────────────────────────────────────────────────────────────
@@ -99,13 +106,16 @@ export interface IFollowService {
     targetUsername: string,
   ): Promise<FollowActionResponse>;
 
+  /** `readerId` is the signed-in reader, if any — it decides each row's follow state. */
   getFollowers(
     username: string,
     params: CursorParams,
+    readerId?: number,
   ): Promise<{ data: FollowUserItem[]; meta: CursorMeta }>;
 
   getFollowing(
     username: string,
     params: CursorParams,
+    readerId?: number,
   ): Promise<{ data: FollowUserItem[]; meta: CursorMeta }>;
 }

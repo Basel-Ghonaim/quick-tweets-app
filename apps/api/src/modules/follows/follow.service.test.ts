@@ -60,7 +60,17 @@ describe("follow lists — the avatar", () => {
 
     const { data } = await svc.getFollowers("ada", { limit: 20 });
 
-    expect(data[0]).toEqual({ id: 1, username: "user1", name: null, avatar: { token: "tok-90" }, bio: "" });
+    // No reader, so neither direction — and the shape is asserted whole, so a
+    // field added without the contract knowing would fail here.
+    expect(data[0]).toEqual({
+      id: 1,
+      username: "user1",
+      name: null,
+      avatar: { token: "tok-90" },
+      bio: "",
+      isFollowing: false,
+      followsYou: false,
+    });
   });
 
   it("an avatar that does not resolve is null", async () => {
