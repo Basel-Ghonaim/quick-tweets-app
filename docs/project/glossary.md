@@ -14,7 +14,7 @@
 | **User** | An account — a unique `username`, a display `name`, an email, and an optional profile image and bio. The root entity that owns all others. |
 | **Tweet** | A short post authored by a user, at most 280 characters. The central unit of content. |
 | **Comment** | A reply to a tweet, or to a comment on it, at most 280 characters. Belongs to exactly one tweet and one author, and — when it is a reply — to exactly one top-level comment. A reply cannot itself be answered: the thread is two levels. |
-| **Like** | A user's mark of approval on a tweet. Each user–tweet pair is unique, and liking is a toggle (like / unlike). |
+| **Like** | A user's mark of approval on a tweet, or on a comment. Each user–item pair is unique, so a reader likes a thing at most once. Liking is **set and cleared, not toggled**: repeating either cannot reverse what the reader intended. |
 | **Follow** | A one-directional relationship from a *follower* to a *followed* user. Follows together form the **social graph**. |
 | **Feed** | The global list of all tweets in reverse-chronological order (newest first). |
 | **Author timeline** | The slice of the feed authored by a single user — "that user's tweets". |
