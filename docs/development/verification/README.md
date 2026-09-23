@@ -217,6 +217,22 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## The edited marker
+
+Folder **14 · Edited marker** exercises when a post or comment says "Edited" and
+— mostly — when it does not
+([#813](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/813)).
+**Self-isolated**, runs whole from the command line (`npm run verify:edited`),
+no pgAdmin. See scenarios **EDT-01…EDT-10**.
+
+**The rule is narrow on purpose:** an edit is a change to the **text**. An image
+added, replaced, removed or reordered is not an edit, and neither is re-saving
+the same words — which still moves `updatedAt`. That is precisely why the marker
+is a column of its own rather than something derived.
+
+**EDT-05 lives in folder 04**, where a media-only PATCH already follows a text
+edit, so the before/after is real rather than staged.
+
 ## Follow state
 
 Folder **07 · Follows** gains the state every Follow button reads

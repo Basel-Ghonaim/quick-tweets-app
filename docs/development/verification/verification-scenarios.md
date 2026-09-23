@@ -239,6 +239,28 @@ no longer describe executable behavior and are retired rather than rewritten her
 | FOL-08 | A post by A | Read **A's timeline as B** | 200; `author.isFollowing: true`, `author.followsYou: false` | — | — | The ⋯ menu draws its button from this, with no second request |
 | FOL-09 | A comment on that post | Read **its comments as B** | 200; the comment's author has **neither** field | — | — | The boundary: `AuthorEmbed` is shared, and only a post's author was widened |
 
+## 7c · The edited marker — and mostly, what is not an edit ([#813](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/813))
+
+> **The rule is narrow on purpose.** An edit is a change to the **text**. An image
+> added, replaced, removed or reordered is **not**, and neither is re-saving the
+> same words — which still moves `updatedAt`, and is exactly why the marker is a
+> column of its own. Folder 14 is **self-isolated** and runs whole from the
+> command line; **EDT-05 lives in folder 04**, where the media-only PATCH already
+> is, and folder 04 needs `--working-dir`.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| EDT-01 | Folder 14 setup | Create a post | 201; `editedAt: null` | `edited_at` NULL | — | Nothing is born edited |
+| EDT-02 | EDT-01 | Create a comment on it | 201; `editedAt: null` | NULL | — | |
+| EDT-03 | EDT-01 | PATCH the post's **text** | 200; `editedAt` **set** | `edited_at` set | — | |
+| EDT-04 | EDT-03 | PATCH the **same words again** | 200; `editedAt` **unchanged** | unchanged | — | `updatedAt` moves here; the marker does not |
+| **EDT-05** | Folder 04: a text edit, then a **media-only** reorder | PATCH media only | 200; `editedAt` **neither set nor refreshed** | unchanged | — | **In folder 04.** Its `EDT-05a` asserts the preceding text edit did mark it, so this is a real before/after |
+| EDT-06 | EDT-03 | PATCH the post's media only | 200; `editedAt` unchanged | unchanged | — | The marker is never taken back |
+| EDT-07 | EDT-02 | PATCH the comment's **text** | 200; `editedAt` set | set | — | |
+| EDT-08 | EDT-07 | PATCH the comment's image away | 200; `editedAt` unchanged | unchanged | — | |
+| EDT-09 | EDT-03 | Read the post **as a guest** | 200; `editedAt` as set | — | — | The marker is public |
+| EDT-10 | EDT-02 | Read the thread | 200; the row has `editedAt` and **no `updatedAt`** | — | — | Deliberate — comments never had one and this did not add one |
+
 ## 8 · Username rename & locator stability (WI-F)
 
 > Editable username via **History + Reservation + Redirect**. Renaming a handle
@@ -437,6 +459,25 @@ file`. Folder 04 uploads by **relative** path, so it needs
 `--working-dir docs/development/verification`, exactly as folder 12.2 does. Run
 that way it passes 25/25 untouched. The flag is now named for folder 04 in the
 runbook rather than only for 12.2.
+
+---
+
+## Verification run — The edited marker (2026-09-23)
+
+**Run against `feat/813-edited-marker`, on the backend worktree's own port
+(`4001`) and database (`quicktweets_w2`). All of EDT-01…EDT-10 passed.** Newman:
+folder 14, **10 requests / 19 assertions, 0 failures**; folder 04 (which carries
+EDT-05), **27 assertions, 0 failures**. Re-run because their payloads changed:
+folders 05 (**9**), 07 (**30**), 12.1 (**24**), 13 (**25**) — all 0 failures.
+
+**The run corrected a premise, and it was mine rather than the code's.** EDT-05
+was first written as *"a media-only edit leaves `editedAt` null"*, which failed —
+correctly, because folder 04 edits the body **before** it reorders the media, so
+the post is already marked by then. The assertion is now a genuine before/after:
+`EDT-05a` records that the text edit marked the post, and `EDT-05` asserts the
+media-only reorder leaves that exact instant alone. It is a stronger check than
+the one it replaced, since it proves the marker is neither **set** nor
+**refreshed** — and it runs inside the real media transaction.
 
 ---
 

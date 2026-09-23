@@ -1023,7 +1023,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"media unchanged when omitted\", () => pm.expect(pm.response.json().data.media.map((m) => m.token)).to.eql([pm.environment.get(\"mediaTokenA1\"), pm.environment.get(\"mediaTokenA2\")]));"
+                  "pm.test(\"media unchanged when omitted\", () => pm.expect(pm.response.json().data.media.map((m) => m.token)).to.eql([pm.environment.get(\"mediaTokenA1\"), pm.environment.get(\"mediaTokenA2\")]));",
+                  "const ed = pm.response.json().data.editedAt;",
+                  "pm.test(\"a text edit marks the post (EDT-05a)\", () => pm.expect(ed).to.not.eql(null));",
+                  "pm.environment.set(\"tweetMarkedAt\", ed);"
                 ]
               }
             }
@@ -1071,7 +1074,10 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"still 2 media, order swapped\", () => pm.expect(pm.response.json().data.media.map((m) => m.token)).to.eql([pm.environment.get(\"mediaTokenA2\"), pm.environment.get(\"mediaTokenA1\")]));"
+                  "pm.test(\"still 2 media, order swapped\", () => pm.expect(pm.response.json().data.media.map((m) => m.token)).to.eql([pm.environment.get(\"mediaTokenA2\"), pm.environment.get(\"mediaTokenA1\")]));",
+                  "pm.test(\"a media-only edit neither sets nor refreshes the marker (EDT-05)\", () => {",
+                  "  pm.expect(pm.response.json().data.editedAt).to.eql(pm.environment.get(\"tweetMarkedAt\"));",
+                  "});"
                 ]
               }
             }
@@ -8211,6 +8217,493 @@
             "exec": [
               "if (!pm.environment.get('likeUsername')) {",
               "  pm.environment.set('likeUsername', 'lik' + Date.now().toString(36));",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 · Edited marker",
+      "description": "When a post or comment says \"Edited\", and — mostly — when it does not (#813). Self-isolated: its own account with a per-run handle, its own post and comment. Scenarios EDT-01…EDT-10, plus EDT-05 which lives in folder 04, where the media-only PATCH already is.\n\nIt runs whole from the command line (npm run verify:edited) and needs no pgAdmin: the marker is a field in a body.\n\nThe rule is narrow on purpose. An edit is a change to the TEXT. An image added, replaced, removed or reordered is not an edit, and neither is re-saving the same words — which still moves updatedAt, and is exactly why the marker is a column of its own.",
+      "item": [
+        {
+          "name": "0 · Setup — register this run's account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{edUsername}}\",\n  \"email\": \"{{edUsername}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Self-isolated: a per-run handle, so the folder collides with no other run."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"edToken\", pm.response.json().data.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup — a post",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{edToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"The original words\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"EDT-01 · a fresh post is not edited\", () => pm.expect(d.editedAt).to.eql(null));",
+                  "pm.environment.set(\"edTweetId\", d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup — a comment on it",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{edToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tweetId\": \"{{edTweetId}}\",\n  \"body\": \"The original comment\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"EDT-02 · a fresh comment is not edited\", () => pm.expect(d.editedAt).to.eql(null));",
+                  "pm.environment.set(\"edCommentId\", d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EDT-03 · Editing the text marks the post",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{edTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{edTweetId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{edToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Different words entirely\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"editedAt is set\", () => pm.expect(d.editedAt).to.not.eql(null));",
+                  "pm.environment.set(\"edMarkedAt\", d.editedAt);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EDT-04 · Re-saving the same words is not an edit",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{edTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{edTweetId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{edToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Different words entirely\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "updatedAt moves here — which is exactly why the marker is a column of its own."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"the marker did not move\", () => {",
+                  "  pm.expect(d.editedAt).to.eql(pm.environment.get(\"edMarkedAt\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EDT-06 · A later edit does not clear the marker",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{edTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{edTweetId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{edToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"media\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"still marked, and by the same instant\", () => {",
+                  "  pm.expect(pm.response.json().data.editedAt).to.eql(pm.environment.get(\"edMarkedAt\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EDT-07 · Editing a comment's text marks it",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{edCommentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{edCommentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{edToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"A different comment\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"editedAt is set\", () => pm.expect(d.editedAt).to.not.eql(null));",
+                  "pm.environment.set(\"edCommentMarkedAt\", d.editedAt);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EDT-08 · Removing a comment's image is not an edit",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{edCommentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{edCommentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{edToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"media\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"the marker did not move\", () => {",
+                  "  pm.expect(pm.response.json().data.editedAt).to.eql(pm.environment.get(\"edCommentMarkedAt\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EDT-09 · The marker survives a read, on both",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{edTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{edTweetId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"a read returns the marker, for a guest too\", () => {",
+                  "  pm.expect(pm.response.json().data.editedAt).to.eql(pm.environment.get(\"edMarkedAt\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EDT-10 · A comment carries no updatedAt",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments?tweetId={{edTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ],
+              "query": [
+                {
+                  "key": "tweetId",
+                  "value": "{{edTweetId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Deliberate: comments never had one, and this Work Item did not add one."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const row = pm.response.json().data[0];",
+                  "pm.test(\"editedAt present, updatedAt absent\", () => {",
+                  "  pm.expect(row).to.have.property(\"editedAt\");",
+                  "  pm.expect(row).to.not.have.property(\"updatedAt\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get('edUsername')) {",
+              "  pm.environment.set('edUsername', 'edt' + Date.now().toString(36));",
               "}"
             ]
           }
