@@ -265,7 +265,7 @@ Folder 10 was executed under **Newman**, against the collection and the ordering
 
 **What that run does not cover, stated so the gap is not mistaken for coverage:** CHV-11 and CHV-12 are runbook steps and are not requests in the collection, so no automated run reaches them; CHV-13 sends its single request **once**, where the scenario is eleven attempts, so the limiter leg was not exercised. Two steps the collection documents as manual were performed by the driver rather than by hand — reading the code from the capture file, and waiting out the resend cooldown.
 
-**The human Postman gate remains `Deferred — Not Run`.** It is tracked in [#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450), whose original WI-8 criterion is **retired rather than met** under the [mail-delivery plan](mail-delivery.md)'s D11, and it is the one act still standing between this plan and `Historical`.
+**The human Postman gate remains `Deferred — Not Run`.** It is tracked in [#450](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/450), whose original WI-8 criterion is **retired rather than met** under the [mail-delivery plan](historical/mail-delivery.md)'s D11, and it is the one act still standing between this plan and `Historical`.
 
 ### Findings and follow-ups recorded
 

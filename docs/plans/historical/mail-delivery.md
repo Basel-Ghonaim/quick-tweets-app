@@ -6,13 +6,13 @@
 > **Last Updated:** 2026-09-17
 > **Parent Issue:** [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598)
 > **Supersedes:** —
-> **Archived:** 2026-09-17 — completed, the human Postman gate on folder 10 and the real-inbox delivery check having been run by hand and passed, as the owner reported that day. Its durable facts now live in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), [`backend/mail.md`](../backend/mail.md), the [data model](../architecture/data-model.md), the [API contract](../api/api-contract.md), [Backend Security](../backend/security.md) and the [system overview](../architecture/system-overview.md); this plan is retained as provenance.
+> **Archived:** 2026-09-17 — completed, the human Postman gate on folder 10 and the real-inbox delivery check having been run by hand and passed, as the owner reported that day. Its durable facts now live in [ADR 0015](../../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), [`backend/mail.md`](../../backend/mail.md), the [data model](../../architecture/data-model.md), the [API contract](../../api/api-contract.md), [Backend Security](../../backend/security.md) and the [system overview](../../architecture/system-overview.md); this plan is retained as provenance.
 
 **Implementation status: Complete** · **Engineering work: Complete** · **Human Postman Gate (folder 10): Run and passed** · **Closure status: Complete**
 
 All six Work Items are merged and the mechanism is code-complete — every criterion recorded, criterion by criterion, in [§9](#9--reconciliation). The two criteria only a person could meet — the human Postman gate, and the defining outcome of a code received in a real inbox — were performed by hand, as the owner reported on 2026-09-17. No repository artefact reproduces either; this record states them as that report.
 
-This plan sequences the implementation of a **real outbound mail mechanism** into six independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), which owns the boundary, the production posture, the abuse controls and the result semantics, and which this plan never reopens. The mechanism as it exists today is owned by [`backend/mail.md`](../backend/mail.md).
+This plan sequences the implementation of a **real outbound mail mechanism** into six independently reviewable Work Items. Its architecture is **closed** — recorded in [ADR 0015](../../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md), which owns the boundary, the production posture, the abuse controls and the result semantics, and which this plan never reopens. The mechanism as it exists today is owned by [`backend/mail.md`](../../backend/mail.md).
 
 It is a **strategy document**: it owns the effort's execution order, boundaries, invariants, and the rationale for that order. Each Work Item's granular acceptance criteria and status belong to its Issue, which this plan links and never mirrors.
 
@@ -235,7 +235,7 @@ Two things hold whatever the identifiers turn out to be. **Credentials carry a p
 
 ## 8.1 · Reconciliation with the Channel Verification plan
 
-The [Channel Verification plan](channel-verification.md) is still **Active**, and its completion criteria name the API contract and a full harness run — both of which this effort changes. Nothing here invalidates that plan; what changes is that the artefacts it points at move on.
+The [Channel Verification plan](../channel-verification.md) is still **Active**, and its completion criteria name the API contract and a full harness run — both of which this effort changes. Nothing here invalidates that plan; what changes is that the artefacts it points at move on.
 
 Two consequences follow. Its **WI-8 criterion is retired, not met** (**D11**), and that retirement is recorded in **#450** rather than only here. And whichever plan reaches `Historical` second carries the forward links for both, so a reader of either lands on the documents that now own the facts.
 
@@ -245,13 +245,13 @@ Two consequences follow. Its **WI-8 criterion is retired, not met** (**D11**), a
 
 | What | Now owned by |
 |---|---|
-| The boundary, the production posture, the abuse controls, the result's semantics | [ADR 0015](../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md) |
-| The mechanism — the port, its three backends, how one is selected, what a send reports, the controls, the recipient key's equality, the sweep | [`backend/mail.md`](../backend/mail.md) |
-| The send-attempt table's relationship, cascade and indexing rationale | [data model](../architecture/data-model.md) |
-| The wire field, and the removal of the boolean it replaced | [API contract](../api/api-contract.md), the latter as a recorded pre-release exception |
-| The cession of outbound limits from edge rate limiting | [Backend Security](../backend/security.md), by name |
-| The mechanism's place in the topology, and the background tier's ownership | [system overview](../architecture/system-overview.md) |
-| The consumer's own behaviour — composing the message, sending after commit | [`backend/channel-verification.md`](../backend/channel-verification.md) |
+| The boundary, the production posture, the abuse controls, the result's semantics | [ADR 0015](../../architecture/decisions/0015-mail-delivery-boundary-and-abuse-control.md) |
+| The mechanism — the port, its three backends, how one is selected, what a send reports, the controls, the recipient key's equality, the sweep | [`backend/mail.md`](../../backend/mail.md) |
+| The send-attempt table's relationship, cascade and indexing rationale | [data model](../../architecture/data-model.md) |
+| The wire field, and the removal of the boolean it replaced | [API contract](../../api/api-contract.md), the latter as a recorded pre-release exception |
+| The cession of outbound limits from edge rate limiting | [Backend Security](../../backend/security.md), by name |
+| The mechanism's place in the topology, and the background tier's ownership | [system overview](../../architecture/system-overview.md) |
+| The consumer's own behaviour — composing the message, sending after commit | [`backend/channel-verification.md`](../../backend/channel-verification.md) |
 
 ### Completion criteria, as they actually stand
 
@@ -271,7 +271,7 @@ Folder 10 was executed under **Newman** against the collection as it stands afte
 
 ### Findings and follow-ups recorded
 
-A closing review of this effort recorded, and deliberately did not fix: the codebase-wide *declared-without-producer* pattern (`MediaStatus "pending"`, `ErrorType "service_unavailable"`, two uncalled `AppError` factories, `ITweetService.getByAuthor`, `IMediaReferences.isReferenced`) · the mail repository's unreached transaction seam, and the advisory lock's scope implication for the first caller that uses it · `MailResult.reason`, produced everywhere and read nowhere · the pre-existing `Future expansion:` blocks and milestone tags, which [Engineering Principles §12](../development/engineering-principles.md) forbids pursuing as a campaign — of which the two this effort named by file, in `auth.repository.ts` and `auth.types.ts`, were since removed by [Password Reset](password-reset.md)'s WI-2, the Work Item that legitimately touched both and built the very work they proposed as future; that is §12's Boy Scout clause rather than the campaign it forbids, and the remaining blocks and tags stand · [`project/overview.md`](../project/overview.md)'s denial of two capabilities that exist · `api-contract.md`'s missing currency header · the `npm audit` chain, whose remediation is a major downgrade · [#348](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/348) and [#449](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/449).
+A closing review of this effort recorded, and deliberately did not fix: the codebase-wide *declared-without-producer* pattern (`MediaStatus "pending"`, `ErrorType "service_unavailable"`, two uncalled `AppError` factories, `ITweetService.getByAuthor`, `IMediaReferences.isReferenced`) · the mail repository's unreached transaction seam, and the advisory lock's scope implication for the first caller that uses it · `MailResult.reason`, produced everywhere and read nowhere · the pre-existing `Future expansion:` blocks and milestone tags, which [Engineering Principles §12](../../development/engineering-principles.md) forbids pursuing as a campaign — of which the two this effort named by file, in `auth.repository.ts` and `auth.types.ts`, were since removed by [Password Reset](password-reset.md)'s WI-2, the Work Item that legitimately touched both and built the very work they proposed as future; that is §12's Boy Scout clause rather than the campaign it forbids, and the remaining blocks and tags stand · [`project/overview.md`](../../project/overview.md)'s denial of two capabilities that exist · `api-contract.md`'s missing currency header · the `npm audit` chain, whose remediation is a major downgrade · [#348](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/348) and [#449](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/449).
 
 ### Status
 

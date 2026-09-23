@@ -6,9 +6,9 @@
 > **Last Updated:** 2026-08-14
 > **Parent Issue:** [#357](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/357)
 > **Supersedes:** —
-> **Archived:** 2026-08-11 — completed. Its durable facts now live in [ADR 0008](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md), [`schema.prisma`](../../apps/api/prisma/schema.prisma), the [API contract](../api/api-contract.md), the [data model](../architecture/data-model.md), and [`backend/media.md`](../backend/media.md); this plan is retained as provenance.
+> **Archived:** 2026-08-11 — completed. Its durable facts now live in [ADR 0008](../../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md), [`schema.prisma`](../../../apps/api/prisma/schema.prisma), the [API contract](../../api/api-contract.md), the [data model](../../architecture/data-model.md), and [`backend/media.md`](../../backend/media.md); this plan is retained as provenance.
 
-This plan translates **[ADR 0008 — Auth-First Onboarding and Retirement of the Pre-auth Upload Grant](../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md)** into an ordered set of independently reviewable Work Items. ADR 0008 is **settled**: this plan **sequences its implementation and never reopens its boundaries, ownership, contracts, or invariants.** It owns the effort's strategy, sequence, ordering invariants, gates, and risks; each Work Item's acceptance criteria, status, and progress belong to that Work Item's Issue (created when it begins), which this plan links and never mirrors.
+This plan translates **[ADR 0008 — Auth-First Onboarding and Retirement of the Pre-auth Upload Grant](../../architecture/decisions/0008-auth-first-onboarding-grant-retirement.md)** into an ordered set of independently reviewable Work Items. ADR 0008 is **settled**: this plan **sequences its implementation and never reopens its boundaries, ownership, contracts, or invariants.** It owns the effort's strategy, sequence, ordering invariants, gates, and risks; each Work Item's acceptance criteria, status, and progress belong to that Work Item's Issue (created when it begins), which this plan links and never mirrors.
 
 ## 1. Purpose & goals
 
@@ -83,7 +83,7 @@ This plan translates **[ADR 0008 — Auth-First Onboarding and Retirement of the
 
 **Phase 6 — M11 reconciliation**
 
-- **WI-8 · Reconcile M11's *semantics* to the single unreferenced-owned model.** *(D8, D13, D14; deps: WI-6 ∧ WI-7)* With the executable abandoned path already removed (WI-6), this WI owns only the semantic/documentation reconciliation — it has **no grant-column dependency**: remove the now-inert `abandoned` `ReclaimReason` variant and reconcile reason/audit terminology to the single class; retire the abandoned scenarios in the [verification catalogue](../development/verification/verification-scenarios.md) and reconcile the [Media execution plan](media-implementation.md) (M11 description) + api-contract/data-model wording; run the **final report-only, single-class verification**. **Hands off** to the M11 destructive-verification effort (#354/#356 + the controlled oracle), which builds against this final lifecycle and is **out of this plan's scope**. *Why:* leaves the Media lifecycle in its final, verifiable form. *(Boundary with WI-6: WI-6 removes column-reading executable code and its direct tests to keep the build green; WI-8 removes the vestigial type/terminology and updates scenarios/docs — no responsibility is shared.)*
+- **WI-8 · Reconcile M11's *semantics* to the single unreferenced-owned model.** *(D8, D13, D14; deps: WI-6 ∧ WI-7)* With the executable abandoned path already removed (WI-6), this WI owns only the semantic/documentation reconciliation — it has **no grant-column dependency**: remove the now-inert `abandoned` `ReclaimReason` variant and reconcile reason/audit terminology to the single class; retire the abandoned scenarios in the [verification catalogue](../../development/verification/verification-scenarios.md) and reconcile the [Media execution plan](../media-implementation.md) (M11 description) + api-contract/data-model wording; run the **final report-only, single-class verification**. **Hands off** to the M11 destructive-verification effort (#354/#356 + the controlled oracle), which builds against this final lifecycle and is **out of this plan's scope**. *Why:* leaves the Media lifecycle in its final, verifiable form. *(Boundary with WI-6: WI-6 removes column-reading executable code and its direct tests to keep the build green; WI-8 removes the vestigial type/terminology and updates scenarios/docs — no responsibility is shared.)*
 
 ### ADR 0008 coverage
 
@@ -123,14 +123,14 @@ The boundaries are settled by ADR 0008; these are contained Work-Item choices, e
 
 ## 7. Reconciliation targets
 
-*Where the effort's durable knowledge landed. Verified on `main` at archival: `MediaObject.uploaderId` is `NOT NULL` and carries no grant columns; `MEDIA_GRANT_SECRET` is absent from the env schema and `.env.example`; the API contract exposes no grant endpoint or evidence header and does expose `PATCH`/`GET /users/me`; and `ReclaimReason` is the single `"unreferenced"` class. One finding was recorded and is [Resolved](../architecture/findings/resolved/0007-grant-access-token-shared-secret.md).*
+*Where the effort's durable knowledge landed. Verified on `main` at archival: `MediaObject.uploaderId` is `NOT NULL` and carries no grant columns; `MEDIA_GRANT_SECRET` is absent from the env schema and `.env.example`; the API contract exposes no grant endpoint or evidence header and does expose `PATCH`/`GET /users/me`; and `ReclaimReason` is the single `"unreferenced"` class. One finding was recorded and is [Resolved](../../architecture/findings/resolved/0007-grant-access-token-shared-secret.md).*
 
 - **`server/prisma/schema.prisma`** — `uploaderId NOT NULL`; `grantId`/`grantExpiresAt`/grant uniqueness removed.
 - **`docs/api/api-contract.md`** — remove `POST /media/grants` + grant evidence; `POST /media` auth-required; register loses `avatar`; add `PATCH`/`GET /users/me`; profile responses resolve the avatar.
 - **`docs/architecture/data-model.md`** — single-provenance ownership; the avatar producer; abandonment via unreferenced-owned only.
 - **`server/.env.example`** + env schema — `MEDIA_GRANT_SECRET` removed.
-- **[ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md)** — Decisions 3/5/8 as amended by ADR 0008 (reconciled into `docs/backend/media.md` at M12).
-- **[media-implementation.md](media-implementation.md)** — M11 reconciled to the single class; abandonment terminology.
+- **[ADR 0005](../../architecture/decisions/0005-media-file-upload-architecture.md)** — Decisions 3/5/8 as amended by ADR 0008 (reconciled into `docs/backend/media.md` at M12).
+- **[media-implementation.md](../media-implementation.md)** — M11 reconciled to the single class; abandonment terminology.
 - **Verification catalogue/runbook** — abandoned scenarios retired.
 - Any discovered deviations become **findings**.
 
