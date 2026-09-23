@@ -275,6 +275,14 @@ model Comment {
   body      String   @db.VarChar(280)
   authorId  Int      @map("author_id")
   tweetId   Int      @map("tweet_id")
+  // The comment this one answers, or NULL for a top-level comment. The thread is
+  // two levels: a reply always points at a top-level comment, never at another
+  // reply — enforced in the service, since no column can express it.
+  //
+  // A reply keeps its own tweetId. That is what makes the post's comment count
+  // cover both levels without a second query, so it is an invariant of the model
+  // rather than a convenience.
+  parentId  Int?     @map("parent_id")
   // A single optional media file, held as a bare numeric Media Reference
   // (MediaObject.id): deliberately NO Prisma relation and NO DB foreign key,
   // exactly as User.avatarMediaId. MediaObject stays unaware of its referrers
@@ -294,10 +302,23 @@ model Comment {
   // The author (User) relation stays Cascade — the account-deletion path is
   // dormant (no route) and is coordinated separately (its own Issue).
   tweet  Tweet @relation(fields: [tweetId], references: [id], onDelete: Restrict)
+  // onDelete: Restrict for the reason the tweet relation carries it, not a
+  // different one: a reply may hold a media reference, so a cascade would drop
+  // it while the registry still believed the object referenced. Deletion is
+  // coordinated in the application, which ends each reply's reference and
+  // removes the replies before their parent.
+  parent  Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Restrict)
+  replies Comment[] @relation("CommentReplies")
 
   // Indexes
   @@index([tweetId])
   @@index([authorId])
+  // "a comment's replies, oldest first" — the replies page.
+  @@index([parentId, id], map: "comments_replies_idx")
+  // "a tweet's top-level comments, oldest first" — the thread page. Partial,
+  // because the replies are excluded from it and would otherwise be the bulk of
+  // the rows the index carries.
+  @@index([tweetId, id], where: { parentId: null }, map: "comments_thread_idx")
   @@map("comments")
 }
 
