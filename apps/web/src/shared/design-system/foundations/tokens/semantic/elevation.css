@@ -1,0 +1,17 @@
+/* Disposition: active */
+/* What a raised surface uses — intent tier, earned by role divergence (ADR 0011
+   Decision 1b): three of the four resolve to the same shadow today and must stay
+   free to move apart, because coincidence is not identity.
+
+   Declared axis-invariantly: the approved designs carry one shadow set in both
+   themes, which is the rendered evidence ADR 0011 Decision 5 deferred this
+   family's classification for. What would reopen it is a dark theme in which a
+   raised surface stops reading as raised — a shadow is drawn in black, and a dark
+   page gives it little to darken. That is a resolution axis, not a value tweak,
+   so it returns here rather than into a component. */
+:root {
+  --elevation-menu: var(--shadow-lg);
+  --elevation-dialog: var(--shadow-xl);
+  --elevation-floating-action: var(--shadow-lg);
+  --elevation-toast: var(--shadow-lg);
+}
