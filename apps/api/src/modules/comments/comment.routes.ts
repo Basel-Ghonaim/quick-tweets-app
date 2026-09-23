@@ -2,7 +2,7 @@
  * Comment routes — Express router wiring validators, guards, and controller.
  *
  * Purpose:
- * - GET    /              → validate(query) → controller.getComments
+ * - GET    /              → validate(query) → controller.list
  * - POST   /              → authGuard → validate(body) → controller.create
  * - PATCH  /:id    → authGuard → validate(body) → controller.update
  * - DELETE /:id    → authGuard → controller.delete
@@ -26,7 +26,7 @@ export const commentRoutes = Router();
 
 // ─── Public Routes (no auth required) ────────────────────────────────────────
 
-commentRoutes.get("/", validate(commentQuerySchema, "query"), controller.getComments);
+commentRoutes.get("/", validate(commentQuerySchema, "query"), controller.list);
 
 // ─── Protected Routes (auth required) ────────────────────────────────────────
 

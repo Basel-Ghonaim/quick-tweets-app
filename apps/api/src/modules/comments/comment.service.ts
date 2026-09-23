@@ -2,7 +2,8 @@
  * Comment service — business logic for comments.
  *
  * Purpose:
- * - getComments(): verify tweet exists → offset pagination math → DTO map
+ * - getThread(): verify tweet exists → cursor page of top-level comments → DTO map
+ * - getReplies(): verify parent exists → cursor page of its replies → DTO map
  * - create(): verify tweet exists → create → DTO
  * - update(): double ownership (comment exists + belongs to tweet + user is author)
  * - delete(): double ownership → delete
@@ -38,8 +39,8 @@ import type {
   CommentResponse,
   CommentUpdate,
   CommentWithRelations,
-  OffsetParams,
-  OffsetMeta,
+  CursorParams,
+  CursorMeta,
 } from "./comment.types.js";
 
 // ─── Media port ──────────────────────────────────────────────────────────────
@@ -88,6 +89,10 @@ const toCommentResponse = (
     media: token === undefined ? null : { token },
     author: toAuthorEmbed(comment.author, tokens),
     tweetId: comment.tweetId,
+    parentId: comment.parentId,
+    // Top-level only: a reply cannot be answered, so its tally would always be
+    // zero and would invite a client to render a control that does nothing.
+    ...(comment.parentId === null ? { repliesCount: comment._count.replies } : {}),
     createdAt: comment.createdAt,
   };
 };
@@ -139,6 +144,29 @@ const toResponse = async (
   return toCommentResponse(comment, tokens);
 };
 
+/**
+ * Turns an n+1 fetch into a page: the extra row is the answer to `hasMore` and
+ * is dropped, and the cursor is the last id actually returned.
+ */
+const sliceToPage = async (
+  media: CommentMediaPort,
+  fetched: CommentWithRelations[],
+  limit: number,
+): Promise<{ data: CommentResponse[]; meta: CursorMeta }> => {
+  const hasMore = fetched.length > limit;
+  const rows = hasMore ? fetched.slice(0, limit) : fetched;
+  const last = rows[rows.length - 1];
+
+  return {
+    data: await toResponses(media, rows),
+    meta: {
+      nextCursor: hasMore && last ? String(last.id) : null,
+      limit,
+      hasMore,
+    },
+  };
+};
+
 // ─── Service Factory ─────────────────────────────────────────────────────────
 
 /**
@@ -154,42 +182,32 @@ export const createCommentService = (
   media: CommentMediaPort = defaultMediaPort,
   runInTransaction: RunInTransaction = defaultRunInTransaction,
 ): ICommentService => ({
-  // ─── List Comments (offset-paginated) ───────────────────────────────
+  // ─── The Thread: top-level comments (cursor-paginated) ──────────────
 
-  getComments: async (
+  getThread: async (
     tweetId: number,
-    params: OffsetParams,
-  ): Promise<{ data: CommentResponse[]; meta: OffsetMeta }> => {
-    // 1. Verify tweet exists
+    params: CursorParams,
+  ): Promise<{ data: CommentResponse[]; meta: CursorMeta }> => {
     const tweetFound = await repo.tweetExists(tweetId);
     if (!tweetFound) {
       throw AppError.notFound("Tweet");
     }
 
-    const { page, limit } = params;
-    const skip = (page - 1) * limit;
+    return sliceToPage(media, await repo.findThread(tweetId, params), params.limit);
+  },
 
-    // 2. Run count + findMany in parallel
-    const [totalRecords, comments] = await Promise.all([
-      repo.count(tweetId),
-      repo.findMany(tweetId, skip, limit),
-    ]);
+  // ─── List Replies (cursor-paginated) ────────────────────────────────
 
-    // 3. Compute pagination math
-    const totalPages = Math.ceil(totalRecords / limit) || 1;
-    const meta: OffsetMeta = {
-      currentPage: page,
-      limit,
-      totalPages,
-      totalRecords,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    };
+  getReplies: async (
+    parentId: number,
+    params: CursorParams,
+  ): Promise<{ data: CommentResponse[]; meta: CursorMeta }> => {
+    const parent = await repo.findParent(parentId);
+    if (parent === null) {
+      throw AppError.notFound("Comment");
+    }
 
-    return {
-      data: await toResponses(media, comments),
-      meta,
-    };
+    return sliceToPage(media, await repo.findReplies(parentId, params), params.limit);
   },
 
   // ─── Create Comment ─────────────────────────────────────────────────

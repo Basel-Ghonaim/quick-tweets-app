@@ -24,9 +24,11 @@ const rawComment = (over: Partial<CommentWithRelations> = {}): CommentWithRelati
   body: "nice",
   authorId: AUTHOR,
   tweetId: TWEET,
+  parentId: null,
   mediaId: null,
   createdAt: new Date(),
   author: { id: AUTHOR, username: "ada", name: "Ada", avatarMediaId: null },
+  _count: { replies: 0 },
   ...over,
 });
 
@@ -35,8 +37,9 @@ const makeWorld = (ownerMediaId: number | null = null) => {
   const updates: { id: number; data: { body?: string; mediaId?: number | null } }[] = [];
   const repo: ICommentRepository = {
     tweetExists: async () => true,
-    findMany: async () => [],
-    count: async () => 0,
+    findThread: async () => [],
+    findReplies: async () => [],
+    findParent: async () => null,
     findById: async () => null,
     create: async (_authorId, _tweetId, body, mediaId = null, client) => {
       created.push({ body, mediaId, client });
@@ -220,13 +223,13 @@ describe("comment list — media resolution", () => {
       resolveCalls += 1;
       return new Map(ids.map((id) => [id, `tok-${id}` as never]));
     };
-    w.repo.findMany = async () => [
+    w.repo.findThread = async () => [
       rawComment({ id: 1, mediaId: 100 }),
       rawComment({ id: 2, mediaId: null }),
     ];
     const svc = createCommentService(w.repo, media, w.runInTransaction);
 
-    const { data } = await svc.getComments(TWEET, { page: 1, limit: 20 });
+    const { data } = await svc.getThread(TWEET, { limit: 20 });
 
     expect(data[0]!.media).toEqual({ token: "tok-100" });
     expect(data[1]!.media).toBeNull();
@@ -307,10 +310,10 @@ describe("comment responses — the author's avatar", () => {
   it("a page resolves its media and its authors' avatars in one batch", async () => {
     const w = makeAvatarWorld();
     const { media, batches } = recording();
-    w.repo.findMany = async () => [withAvatar(rawComment({ id: 1, mediaId: 100 })), rawComment({ id: 2 })];
+    w.repo.findThread = async () => [withAvatar(rawComment({ id: 1, mediaId: 100 })), rawComment({ id: 2 })];
     const svc = createCommentService(w.repo, media, w.runInTransaction);
 
-    const { data } = await svc.getComments(TWEET, { page: 1, limit: 20 });
+    const { data } = await svc.getThread(TWEET, { limit: 20 });
 
     expect(data.map((comment) => comment.author.avatar)).toEqual([{ token: "tok-90" }, null]);
     expect(batches).toEqual([[100, AVATAR]]);
@@ -348,11 +351,11 @@ describe("comment responses — the author's avatar", () => {
     const w = makeAvatarWorld();
     const { media } = makeMedia({});
     media.resolution.resolveTokens = async () => new Map();
-    w.repo.findMany = async () => [withAvatar(rawComment({ id: 1 }))];
+    w.repo.findThread = async () => [withAvatar(rawComment({ id: 1 }))];
     const svc = createCommentService(w.repo, media, w.runInTransaction);
     const errors = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const { data } = await svc.getComments(TWEET, { page: 1, limit: 20 });
+    const { data } = await svc.getThread(TWEET, { limit: 20 });
     const logged = errors.mock.calls.length;
     errors.mockRestore();
 

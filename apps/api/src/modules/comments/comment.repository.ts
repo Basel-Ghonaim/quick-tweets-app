@@ -2,27 +2,28 @@
  * Comment repository — Prisma implementation of ICommentRepository.
  *
  * Purpose:
- * - Comment CRUD with offset pagination (skip/take + count)
- * - Author embed included in all read queries
+ * - Comment CRUD with cursor pagination (n+1 slice)
+ * - Author embed and reply tally included in all read queries
  *
- * Offset pagination:
- *   page=2, limit=20 → skip=20, take=20
- *   count(tweetId) provides totalRecords for the service to compute totalPages.
+ * Cursor pagination:
+ *   take = limit + 1; the service uses the extra row to set hasMore.
  *
- * Comments are ordered by createdAt ASC (oldest first — conversation order).
+ * Both lists order and cursor on `id`, which rises with creation, so `id ASC` is
+ * already conversation order and a unique, stable cursor with no createdAt ties
+ * to break — the answer Finding 0003 reached for the feed.
  *
  * Principle: SRP — only executes database queries, no business logic.
  * Principle: Factory Pattern — createCommentRepository(db?) enables mock injection.
  */
 
 import { prisma, type DbClient } from "../../shared/database/index.js";
-import type { ICommentRepository } from "./comment.types.js";
+import type { CursorParams, ICommentRepository } from "./comment.types.js";
 
 type PrismaInstance = typeof prisma;
 
 // ─── Shared Include ──────────────────────────────────────────────────────────
 
-/** Author snapshot included in every comment query. */
+/** Author snapshot and reply tally included in every comment query. */
 const commentInclude = {
   author: {
     select: {
@@ -32,7 +33,17 @@ const commentInclude = {
       avatarMediaId: true,
     },
   },
+  // Counted in the same query rather than stored: a duplicated tally drifts the
+  // moment a reply is removed by any path that forgets it.
+  _count: { select: { replies: true } },
 } as const;
+
+/** The n+1 slice and cursor clause both lists share. */
+const page = ({ cursor, limit }: CursorParams) => ({
+  take: limit + 1,
+  ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+  orderBy: { id: "asc" as const },
+});
 
 // ─── Comment Repository ──────────────────────────────────────────────────────
 
@@ -54,21 +65,31 @@ export const createCommentRepository = (
     return tweet !== null;
   },
 
-  // ── List (offset paginated) ──
+  // ── The thread: a tweet's top-level comments ──
 
-  findMany: (tweetId, skip, limit) =>
+  findThread: (tweetId, params) =>
     db.comment.findMany({
-      where: { tweetId },
-      skip,
-      take: limit,
-      orderBy: { createdAt: "asc" },
+      where: { tweetId, parentId: null },
+      ...page(params),
       include: commentInclude,
     }),
 
-  // ── Count (for pagination math) ──
+  // ── A comment's replies ──
 
-  count: (tweetId) =>
-    db.comment.count({ where: { tweetId } }),
+  findReplies: (parentId, params) =>
+    db.comment.findMany({
+      where: { parentId },
+      ...page(params),
+      include: commentInclude,
+    }),
+
+  // ── Parent lookup (existence + level) ──
+
+  findParent: (id) =>
+    db.comment.findUnique({
+      where: { id },
+      select: { id: true, tweetId: true, parentId: true },
+    }),
 
   // ── Single Comment ──
 

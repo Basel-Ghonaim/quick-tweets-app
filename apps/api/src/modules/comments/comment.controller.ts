@@ -2,7 +2,7 @@
  * Comment controller — HTTP request handling for comment endpoints.
  *
  * Purpose:
- * - getComments: parse tweetId from query → call service → return offset-paginated comments
+ * - list: parse the query → the tweet's thread or one comment's replies, cursor-paginated
  * - create: parse tweetId from body + userId → call service → return 201
  * - update: parse commentId + body + userId → call service → return updated
  * - delete: parse commentId + userId → call service → return 204
@@ -31,15 +31,25 @@ export const createCommentController = (
 ) => ({
 
   /**
-   * GET /comments?tweetId=1
-   * Returns offset-paginated comments for a tweet. No auth required.
+   * GET /comments?tweetId=1  → the tweet's top-level comments
+   * GET /comments?parentId=8 → that comment's replies
+   *
+   * The validator has already guaranteed exactly one of the two is present, so
+   * the branch here is a routing choice, not a second validation.
    */
-  getComments: async (req: Request, res: Response, next: NextFunction) => {
+  list: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tweetId = parseId(req.query.tweetId as string, "Tweet ID");
-      const { page, limit } = req.query as unknown as { page: number; limit: number };
+      const { tweetId, parentId, cursor, limit } = req.query as unknown as {
+        tweetId?: number;
+        parentId?: number;
+        cursor?: number;
+        limit: number;
+      };
 
-      const result = await service.getComments(tweetId, { page, limit });
+      const result =
+        parentId === undefined
+          ? await service.getThread(tweetId!, { cursor, limit })
+          : await service.getReplies(parentId, { cursor, limit });
 
       sendSuccess(res, result.data, 200, { ...result.meta });
     } catch (err) {
