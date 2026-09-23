@@ -160,6 +160,10 @@ Read the architecture and the contracts before starting. Read the others when th
 
 ## 7 · Execution log
 
-Appended when a Work Item's pull request merges, newest last: its Issue and pull request, what it settled, which sections of this plan it amended, and what it recorded. No status lives here — that is the tracker's ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3), and the conventions are in the [plans README](README.md).
+One entry per Work Item, newest last: its Issue and pull request, what it settled, which sections of this plan it amended, and what it recorded. No status lives here — that is the tracker's ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3). **When and where an entry is written** is the [plans README](README.md)'s, which owns this convention.
 
-*No Work Item has merged yet.*
+**The comment thread — two levels, cursor pagination, cascading deletion.** [#799](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/799) · [#803](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/803).
+
+- **Settled.** A comment may answer another comment, and the thread stops at two: a parent that is itself a reply is refused rather than re-pointed, so the server never moves a row the caller did not name. A reply is reached through its parent (`?parentId=`) and excluded from the thread list, and **both lists cursor on `id`**. **A reply keeps its `tweetId`** — the invariant that lets a post's comment count cover both levels with no second query. The parent link is **not** a database cascade, for the reason the comment-to-tweet link is not: deletion is coordinated in the application so no media reference is dropped silently. Comments took the shared cursor default, so they no longer carry a pagination default of their own.
+- **Amended.** None. §2.3 states what must exist and still does; delivery is the tracker's.
+- **Recorded.** [Finding 0038](../architecture/findings/open/0038-offset-pagination-has-no-endpoint-left.md) — moving the thread to a cursor left offset pagination with no endpoint anywhere, and whether the convention survives its last reader is not this Work Item's to decide. [#801](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/801) and [#802](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/802), the two text defects §2.7 and §4 will have to settle together.

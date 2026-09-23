@@ -60,14 +60,17 @@ A new plan is drafted outside the tracked tree — under `.project/`, or whereve
 
 A plan **may** carry an execution log as its last section — the one section a worker appends to while the track runs. It exists so that the plan, read on its own, tells a newcomer what the track has settled, without the plan becoming a second tracker.
 
-- **An entry is written when a Work Item's pull request merges** — never while it is open, so the log records what happened rather than what is planned.
+- **An entry is written in its Work Item's own branch**, as the **last commit before the branch merges** — never in a branch, a Work Item or a pull request of its own. That is *Updating a Plan* applied to the log, and the two rules must agree: a plan is never updated in a branch of its own, and requiring the entry only *after* the merge left no branch to write it in. An entry rides the work it describes.
+- **Last, not first**, and the difference is what each one is. A plan *correction* is the **first** commit of the branch that revealed it, before implementation — it changes what the branch is built against. A log entry is the **last**, because it records what the branch did.
+- **It may share the branch's final documentation commit** rather than taking one of its own, where that commit's subject is already the documentation this Work Item obligates — the entry is then the same subject, not a second one, so commits stay atomic ([Engineering Execution Standard](../development/engineering-execution-standard.md) §6). Where the last commit is about something else, the entry gets its own.
+- **Write it once the pull request exists**, so the entry can name it, and once the work is self-reviewed, so it records what the branch did rather than what it set out to do. **If review changes what the Work Item settled, the entry changes with it** — it is under review with the branch, not a postscript to it. A branch that never merges takes its entry with it, which is the property the old wording was reaching for.
 - **An entry holds** its Work Item's Issue and pull request, what it **settled** that outlives it, which sections of the plan it **amended**, and what it **recorded** (a finding, or an Issue raised). Three to six lines.
 - **It carries no live status.** Nothing is in progress, next, blocked or scheduled here, and acceptance criteria are not restated: that is the tracker's, and the plan links it rather than mirroring it ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3).
 - **The plan's other sections change only by amendment**, per *Updating a Plan*, and the entry names the amendment in one line.
 - **A pointer near the top of the plan names the log's section** — a pointer only, never a position marker, which would be the same fact kept in two places.
 - **At `Historical`,** the log is what Reconciliation is written from.
 
-This convention is new: it is reviewed when the first track carrying a log reaches `Historical`.
+This convention is new, and its **first entry found its placement rule wrong**: as originally written it required an entry only once the pull request had merged, which no branch could satisfy — by then the branch is gone, and writing it anywhere else is the plan-only branch *Updating a Plan* forbids. The wording above is the correction. The convention is reviewed again when the first track carrying a log reaches `Historical`.
 
 ## Plan Index
 
