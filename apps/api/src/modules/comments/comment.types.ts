@@ -90,10 +90,13 @@ export interface ICommentRepository {
   findById(id: number): Promise<CommentWithRelations | null>;
 
   create(
-    authorId: number,
-    tweetId: number,
-    body: string,
-    mediaId?: number | null,
+    data: {
+      authorId: number;
+      tweetId: number;
+      body: string;
+      mediaId?: number | null;
+      parentId?: number | null;
+    },
     client?: DbClient,
   ): Promise<CommentWithRelations>;
 
@@ -139,12 +142,17 @@ export interface ICommentService {
     params: CursorParams,
   ): Promise<{ data: CommentResponse[]; meta: CursorMeta }>;
 
-  /** `mediaToken` is the public read token of a file the author uploaded; attach-authorized. */
+  /**
+   * `mediaToken` is the public read token of a file the author uploaded;
+   * attach-authorized. `parentId` makes this a reply: the parent must exist
+   * (`404`), sit on the same tweet and be top-level (`422` for either).
+   */
   create(
     authorId: number,
     tweetId: number,
     body: string,
     mediaToken?: string,
+    parentId?: number,
   ): Promise<CommentResponse>;
 
   update(

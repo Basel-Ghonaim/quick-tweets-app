@@ -36,6 +36,14 @@ export const createCommentSchema = z.object({
     .min(1, "Comment body cannot be empty")
     .max(280, "Comment body must be at most 280 characters")
     .trim(),
+  // The comment being answered. Absent means a top-level comment. Whether it
+  // exists, sits on this tweet and is itself top-level is the service's to
+  // answer — a validator cannot see the row.
+  parentId: z.coerce
+    .number({ error: "Comment ID must be a number" })
+    .int("Comment ID must be an integer")
+    .positive("Comment ID must be a positive number")
+    .optional(),
   media: mediaRefSchema.optional(),
 });
 

@@ -41,9 +41,9 @@ const makeWorld = (ownerMediaId: number | null = null) => {
     findReplies: async () => [],
     findParent: async () => null,
     findById: async () => null,
-    create: async (_authorId, _tweetId, body, mediaId = null, client) => {
-      created.push({ body, mediaId, client });
-      return rawComment({ id: 1, body, mediaId });
+    create: async (data, client) => {
+      created.push({ body: data.body, mediaId: data.mediaId ?? null, client });
+      return rawComment({ id: 1, body: data.body, mediaId: data.mediaId ?? null, parentId: data.parentId ?? null });
     },
     update: async (id, data) => {
       updates.push({ id, data });

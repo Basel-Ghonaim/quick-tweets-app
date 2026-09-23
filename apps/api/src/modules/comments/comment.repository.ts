@@ -101,9 +101,15 @@ export const createCommentRepository = (
 
   // ── Create ──
 
-  create: (authorId, tweetId, body, mediaId = null, client: DbClient = db) =>
+  create: (data, client: DbClient = db) =>
     client.comment.create({
-      data: { authorId, tweetId, body, mediaId },
+      data: {
+        authorId: data.authorId,
+        tweetId: data.tweetId,
+        body: data.body,
+        mediaId: data.mediaId ?? null,
+        parentId: data.parentId ?? null,
+      },
       include: commentInclude,
     }),
 

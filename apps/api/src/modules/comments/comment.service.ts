@@ -4,7 +4,7 @@
  * Purpose:
  * - getThread(): verify tweet exists → cursor page of top-level comments → DTO map
  * - getReplies(): verify parent exists → cursor page of its replies → DTO map
- * - create(): verify tweet exists → create → DTO
+ * - create(): verify tweet exists → resolve the parent, if any → create → DTO
  * - update(): double ownership (comment exists + belongs to tweet + user is author)
  * - delete(): double ownership → delete
  *
@@ -145,6 +145,40 @@ const toResponse = async (
 };
 
 /**
+ * Resolves the comment a reply answers, or refuses.
+ *
+ * The three refusals are deliberately not one. A parent that does not exist is
+ * the same kind of answer a missing tweet already gets, so it is a `404`. A
+ * parent on another tweet, or one that is itself a reply, exists and was found —
+ * what is wrong is the request's meaning, which is a `422`.
+ *
+ * A reply to a reply is refused rather than quietly re-pointed at the top-level
+ * comment: the design already has the client answer at the second level, so
+ * leniency would buy nothing and would move a row the caller never named.
+ */
+const resolveParent = async (
+  repo: ICommentRepository,
+  parentId: number,
+  tweetId: number,
+): Promise<void> => {
+  const parent = await repo.findParent(parentId);
+
+  if (parent === null) {
+    throw AppError.notFound("Comment");
+  }
+  if (parent.tweetId !== tweetId) {
+    throw AppError.validation("Comment could not be saved", {
+      parentId: ["The comment being replied to belongs to a different post"],
+    });
+  }
+  if (parent.parentId !== null) {
+    throw AppError.validation("Comment could not be saved", {
+      parentId: ["A reply cannot be answered; reply to the comment it sits under"],
+    });
+  }
+};
+
+/**
  * Turns an n+1 fetch into a page: the extra row is the answer to `hasMore` and
  * is dropped, and the cursor is the last id actually returned.
  */
@@ -217,6 +251,7 @@ export const createCommentService = (
     tweetId: number,
     body: string,
     mediaToken?: string,
+    parentId?: number,
   ): Promise<CommentResponse> => {
     // 1. Verify tweet exists
     const tweetFound = await repo.tweetExists(tweetId);
@@ -224,12 +259,19 @@ export const createCommentService = (
       throw AppError.notFound("Tweet");
     }
 
-    // 2a. No media — the plain path, no transaction.
-    if (mediaToken === undefined) {
-      return toResponse(media, await repo.create(authorId, tweetId, body));
+    // 2. A reply names a parent; it must exist, sit on this tweet, and be
+    //    top-level. Checked before any media is attached, so a refusal here
+    //    never leaves a reference behind.
+    if (parentId !== undefined) {
+      await resolveParent(repo, parentId, tweetId);
     }
 
-    // 2b. With media — the comment, its reference, and Media's record of that
+    // 3a. No media — the plain path, no transaction.
+    if (mediaToken === undefined) {
+      return toResponse(media, await repo.create({ authorId, tweetId, body, parentId }));
+    }
+
+    // 3b. With media — the comment, its reference, and Media's record of that
     //     reference all commit together, or not at all.
     try {
       const { comment, token } = await runInTransaction(async (tx) => {
@@ -237,7 +279,10 @@ export const createCommentService = (
           { token: mediaToken, ownerId: authorId },
           tx,
         );
-        const created = await repo.create(authorId, tweetId, body, referenceId, tx);
+        const created = await repo.create(
+          { authorId, tweetId, body, mediaId: referenceId, parentId },
+          tx,
+        );
         await media.references.referenceBegan(
           { mediaId: referenceId, referrer: commentReferrer(created.id) },
           tx,

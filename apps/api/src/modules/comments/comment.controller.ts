@@ -59,12 +59,19 @@ export const createCommentController = (
 
   /**
    * POST /comments
-   * Adds a comment to a tweet. Requires authGuard (userId guaranteed).
+   * Adds a comment to a tweet, or a reply when `parentId` is given.
+   * Requires authGuard (userId guaranteed).
    */
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const tweetId = parseId(req.body.tweetId as string, "Tweet ID");
-      const comment = await service.create(req.userId!, tweetId, req.body.body, req.body.media?.token);
+      const comment = await service.create(
+        req.userId!,
+        tweetId,
+        req.body.body,
+        req.body.media?.token,
+        req.body.parentId,
+      );
 
       sendSuccess(res, comment, 201);
     } catch (err) {
