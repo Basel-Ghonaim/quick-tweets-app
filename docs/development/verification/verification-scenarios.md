@@ -177,9 +177,37 @@ no longer describe executable behavior and are retired rather than rewritten her
 
 | ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
 |----|---------------|--------|---------------------|-------------------|---------|----------------|
-| LIK-01 | Live tweet T; login B | Like T (toggle on) | 200; `liked:true`, `likesCount` +1 | `likes` row (B,T) | via LIK-02 | |
-| LIK-02 | LIK-01 | Like T again (toggle off) | 200; `liked:false`, `likesCount` −1 | `likes` row removed | — | |
-| LIK-03 | — | Like a non-existent tweet | 404 | no row | — | |
+| LIK-01 | Live tweet T; login B | **`PUT`** T's like | 200; `liked:true`, with a `likesCount` | `likes` row (B,T) | via LIK-03 | |
+| LIK-02 | LIK-01 | `PUT` it **again** | 200 — **never `409`**; still `liked:true`, and the count **has not moved** | still exactly one row | — | The failure the toggle had: a second press must not undo the first |
+| LIK-03 | LIK-01 | **`DELETE`** T's like | 200; `liked:false` | row removed | — | |
+| LIK-04 | LIK-03 | `DELETE` it **again** | 200 — **never `404`** for being redundant; still `liked:false` | still no row | — | |
+| LIK-05 | — | **`POST`** T's like — the retired toggle | **404** — the verb is no longer routed | unchanged | — | |
+| LIK-06 | — | `PUT` a non-existent tweet's like | 404 | no row | — | |
+| LIK-07 | — | `DELETE` a non-existent tweet's like | 404 | no row | — | |
+| LIK-08 | — | `PUT` with **no** Authorization header | 401 | no row | — | The request sets `noauth`: the collection carries a bearer at its root, so a request that merely omits one still inherits it |
+
+## 6b · Comment likes ([#805](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/805))
+
+> **Self-isolated and non-destructive**, like folders 10–12: its own account with
+> a per-run handle, its own post and comments. **It runs whole from the command
+> line** (`npm run verify:likes`) and needs **no pgAdmin** — which is the
+> difference from folder 12. A like holds no media reference, so nothing about it
+> is invisible to the API: the body carries the count and the state alike.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| CML-01 | Folder 13 setup (own account, post, comment, reply) | `PUT` the comment's like | 200; `liked:true`, `likesCount` 1 | one `comment_likes` row | via CML-11 | A fresh comment is asserted to start at 0 / false in setup |
+| CML-02 | CML-01 | `PUT` it again | 200; still `liked:true`, **still count 1** | still one row | — | Idempotent — the unique pair, not a check |
+| CML-03 | Setup | `PUT` the **reply's** like | 200; `liked:true` | one row | via CML-11 | A reply is a comment; one relation covers both levels |
+| CML-04 | CML-01 | Read the thread **as the reader** | 200; `likesCount` 1, `isLiked` **true** | — | — | |
+| CML-05 | CML-01 | Read the thread **as a guest** | 200; `likesCount` 1, `isLiked` **false** | — | — | The count is public; only the state is personal. `noauth` — see LIK-08 |
+| CML-06 | CML-03 | Read the replies list | 200; the reply reports its like and state | — | — | |
+| CML-07 | CML-01 | `DELETE` the comment's like | 200; `liked:false`, count 0 | row removed | — | |
+| CML-08 | CML-07 | `DELETE` it again | 200 — not a `404`; still `liked:false` | still no row | — | |
+| CML-09 | — | `PUT` a non-existent comment's like | 404 | no row | — | |
+| CML-10 | — | `PUT` with no Authorization header | 401 | no row | — | `noauth` |
+| CML-11 | CML-03 | **Delete the comment** | 204 | the comment, its reply, **and both likes** gone — by cascade, with nothing in the application ending them | — | |
+| CML-12 | CML-11 | Read the replies list of the deleted parent | 404 | — | — | |
 
 ## 7 · Follows
 
@@ -331,6 +359,39 @@ harness users in this database, leaving `verify_alice` free but
 `{{accessTokenA}}` stayed empty. Seeding the two tokens by logging in on the
 **email** made folder 05 pass unchanged, 9/9. The trap is now written up in the
 [runbook](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
+
+---
+
+## Verification run — Likes, set and cleared (2026-09-23)
+
+**Run against `feat/805-likes-on-comments`, on the backend worktree's own port
+(`4001`) and database (`quicktweets_w2`). All of LIK-01…LIK-08 and
+CML-01…CML-12 passed.** Newman: folder 13, **16 requests / 25 assertions, 0
+failures**; folders 05 + 06 together, **14 requests / 22 assertions, 0 failures**;
+folder 12.1 re-run because the comment payload changed under it, **24 assertions,
+0 failures**.
+
+| Scenario | Outcome |
+|---|---|
+| LIK-01/02 — `PUT`, then `PUT` again | ✅ 200 both times, count unmoved; no `409` |
+| LIK-03/04 — `DELETE`, then again | ✅ 200 both times; no `404` for redundancy |
+| LIK-05 — the retired toggle | ✅ `POST …/like` answers 404; the verb is gone |
+| LIK-06/07/08 — missing tweet, and no reader | ✅ 404, 404, 401 |
+| CML-01/02/03 — comment, again, and a reply | ✅ idempotent; a reply likes like anything else |
+| CML-04/05 — reader vs guest | ✅ same `likesCount`, `isLiked` true then false |
+| CML-06 — the replies list | ✅ carries both fields |
+| CML-07/08 — clear, and clear again | ✅ count 0, and not a refusal |
+| CML-09/10 — missing comment, no reader | ✅ 404, 401 |
+| CML-11/12 — delete the comment | ✅ 204; both likes gone by cascade, replies list 404s |
+
+**One thing the run found, and it was in the harness rather than the code.**
+LIK-08, CML-05, CML-10 and CML-12 first passed for the wrong reason. The
+collection carries a bearer token at its **root**, so a request that merely omits
+`auth` inherits it — those four only behaved as unauthenticated because
+`accessTokenA` happened to be empty in the environment they were first run
+against. Re-run with a populated environment, LIK-08 failed and exposed it. All
+four now set `noauth` explicitly, and the trap is written up in the
+[runbook](verification-runbook.md#a-request-that-omits-auth-still-sends-one).
 
 ---
 

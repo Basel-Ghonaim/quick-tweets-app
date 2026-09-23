@@ -217,9 +217,31 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## Comment likes
+
+Folder **13 · Comment likes** exercises likes on a comment and on a reply, the
+idempotence that replaced the toggle, and what a guest reads
+([#805](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/805)). Like
+folders 10–12 it is **self-isolated** and **non-destructive**. See scenarios
+**CML-01…CML-12**.
+
+**It runs whole from the command line** (`npm run verify:likes`) and needs no
+pgAdmin — the one folder in this harness for which that is true without
+qualification. A like holds no media reference, so nothing about it is invisible
+to the API.
+
+Its guarantees, in one line each: **repeating a call cannot reverse it** — liking
+twice stays liked and does not move the count, unliking twice is not a `404`;
+**the retired toggle is gone**, so `POST …/like` is no longer routed at all; **the
+count is public and the state is personal**, so a guest reads the same number and
+always `false`; and **a comment's likes go with the comment**, at either level, by
+cascade rather than by anything the application does.
+
+> **Folder 06 changed with this** and is not self-isolated — see the runbook.
+
 ## Scope
 
-This harness verifies **M1–M9**, and the comment thread (folder 12). It deliberately does **not**:
+This harness verifies **M1–M9**, the comment thread (folder 12) and comment likes (folder 13). It deliberately does **not**:
 
 - run any background execution or physical deletion — reclamation's destructive
   path is certified by the automated suite below;
