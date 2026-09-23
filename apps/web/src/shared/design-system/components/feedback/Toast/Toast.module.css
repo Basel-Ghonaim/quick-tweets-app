@@ -1,0 +1,46 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 320px;
+  max-inline-size: min(480px, 100%);
+  padding-inline: var(--space-4) var(--space-2);
+  padding-block: var(--space-2);
+  background: var(--surface-default);
+  color: var(--text-primary);
+  border: var(--border-width-thin) solid var(--border-strong);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--elevation-toast);
+  font: var(--type-body-medium);
+}
+
+/* The layer colours the glyph by role; which glyph it is stays the caller's. */
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--toast-icon-color, var(--text-secondary));
+}
+
+.message {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.region {
+  position: fixed;
+  /* Held off the block-end edge by a distance the page can raise, so a surface
+     with its own bar underneath clears it without this layer knowing it exists. */
+  inset-block-end: var(--toast-region-inset, var(--space-5));
+  inset-inline: 0;
+  z-index: var(--layer-toast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  /* The band spans the page, so it must not swallow what is under it. */
+  pointer-events: none;
+}
+
+.region > * {
+  pointer-events: auto;
+}

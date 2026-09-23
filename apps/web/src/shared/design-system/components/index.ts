@@ -5,6 +5,7 @@ export * from "./display/Avatar";
 export * from "./display/Typography";
 export * from "./feedback/MessageRegion";
 export * from "./feedback/Spinner";
+export * from "./feedback/Toast";
 export * from "./fields/Checkbox";
 export * from "./fields/FileInput";
 export * from "./fields/Input";
