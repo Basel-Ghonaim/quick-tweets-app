@@ -28,7 +28,8 @@ export interface UserProfileResponse {
   likesCount: number;      // total likes received across all user's tweets
   followersCount: number;
   followingCount: number;
-  isFollowing: boolean;    // does req.userId follow this profile?
+  isFollowing: boolean;    // does the reader follow this profile?
+  followsYou: boolean;     // does this profile follow the reader? (for Follow back)
   createdAt: Date;
 }
 
@@ -94,7 +95,6 @@ export interface IUserRepository {
   findByIdWithCounts(userId: number): Promise<UserWithCounts | null>;
 
   /** Check if followerId follows followingId. */
-  isFollowing(followerId: number, followingId: number): Promise<boolean>;
 
   /** Count total likes received across all user's tweets. */
   countLikesReceived(userId: number): Promise<number>;

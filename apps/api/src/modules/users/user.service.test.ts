@@ -49,7 +49,6 @@ const makeWorld = (currentAvatar: number | null = null) => {
   const repo: IUserRepository = {
     findByUsernameWithCounts: async () => rawUser({ avatarMediaId: stored, username }),
     findByIdWithCounts: async () => rawUser({ avatarMediaId: stored, username }),
-    isFollowing: async () => false,
     countLikesReceived: async () => 0,
     findAvatar: async () => ({ avatarMediaId: stored }),
     updateProfile: async (_userId, data, client) => {
@@ -258,7 +257,7 @@ describe("user profile reads resolve the avatar", () => {
     const svc = createUserService(w.repo, media, w.runInTransaction, undefined, verificationStub);
     const publicFields = [
       "avatar", "bio", "createdAt", "followersCount", "followingCount",
-      "id", "isFollowing", "likesCount", "name", "tweetsCount", "username",
+      "followsYou", "id", "isFollowing", "likesCount", "name", "tweetsCount", "username",
     ];
     const selfFields = [...publicFields, "email", "emailVerification"].sort();
     const keys = (response: object) => Object.keys(response).sort();
