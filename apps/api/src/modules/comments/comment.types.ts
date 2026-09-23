@@ -108,8 +108,23 @@ export interface ICommentRepository {
 
   delete(id: number, client?: DbClient): Promise<void>;
 
-  /** Lightweight query — authorId (ownership) + the current media reference (to end it). */
-  findOwner(id: number, client?: DbClient): Promise<{ authorId: number; mediaId: number | null } | null>;
+  /**
+   * Lightweight query — authorId (ownership), the current media reference (to
+   * end it), and the level, which decides whether this delete has dependents.
+   */
+  findOwner(
+    id: number,
+    client?: DbClient,
+  ): Promise<{ authorId: number; mediaId: number | null; parentId: number | null } | null>;
+
+  /** A comment's replies that hold a media reference — so each can be ended before deletion. */
+  findReplyMediaRefs(
+    parentId: number,
+    client?: DbClient,
+  ): Promise<{ id: number; mediaId: number }[]>;
+
+  /** Delete every reply under one comment; returns the number removed. */
+  deleteRepliesOf(parentId: number, client?: DbClient): Promise<number>;
 
   /** The tweet's comments that hold a media reference — so each can be ended before deletion. */
   findMediaRefsByTweet(
@@ -117,7 +132,13 @@ export interface ICommentRepository {
     client?: DbClient,
   ): Promise<{ id: number; mediaId: number }[]>;
 
-  /** Delete every comment on a tweet (bulk); returns the number removed. */
+  /**
+   * Delete every reply on a tweet (bulk); returns the number removed. Runs
+   * before `deleteByTweet`, because the parent foreign key is RESTRICT.
+   */
+  deleteRepliesByTweet(tweetId: number, client?: DbClient): Promise<number>;
+
+  /** Delete every remaining comment on a tweet (bulk); returns the number removed. */
   deleteByTweet(tweetId: number, client?: DbClient): Promise<number>;
 }
 
@@ -161,6 +182,7 @@ export interface ICommentService {
     data: CommentUpdate,
   ): Promise<CommentResponse>;
 
+  /** Deleting a top-level comment takes its replies with it, in one transaction. */
   delete(commentId: number, userId: number): Promise<void>;
 
   /**

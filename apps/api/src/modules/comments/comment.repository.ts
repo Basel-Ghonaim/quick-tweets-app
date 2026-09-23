@@ -133,8 +133,21 @@ export const createCommentRepository = (
   findOwner: (id, client: DbClient = db) =>
     client.comment.findUnique({
       where: { id },
-      select: { authorId: true, mediaId: true },
+      select: { authorId: true, mediaId: true, parentId: true },
     }),
+
+  // ── Reply-deletion helpers (used when a top-level comment goes) ──
+
+  findReplyMediaRefs: (parentId, client: DbClient = db) =>
+    client.comment.findMany({
+      where: { parentId, mediaId: { not: null } },
+      select: { id: true, mediaId: true },
+    }) as Promise<{ id: number; mediaId: number }[]>,
+
+  deleteRepliesOf: async (parentId, client: DbClient = db) => {
+    const { count } = await client.comment.deleteMany({ where: { parentId } });
+    return count;
+  },
 
   // ── Dependent-deletion helpers (used by the tweet-deletion use-case) ──
 
@@ -143,6 +156,13 @@ export const createCommentRepository = (
       where: { tweetId, mediaId: { not: null } },
       select: { id: true, mediaId: true },
     }) as Promise<{ id: number; mediaId: number }[]>,
+
+  deleteRepliesByTweet: async (tweetId, client: DbClient = db) => {
+    const { count } = await client.comment.deleteMany({
+      where: { tweetId, parentId: { not: null } },
+    });
+    return count;
+  },
 
   deleteByTweet: async (tweetId, client: DbClient = db) => {
     const { count } = await client.comment.deleteMany({ where: { tweetId } });

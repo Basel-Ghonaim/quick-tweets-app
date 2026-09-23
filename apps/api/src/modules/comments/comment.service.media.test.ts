@@ -32,8 +32,10 @@ const rawComment = (over: Partial<CommentWithRelations> = {}): CommentWithRelati
   ...over,
 });
 
-const makeWorld = (ownerMediaId: number | null = null) => {
+const makeWorld = (ownerMediaId: number | null = null, ownerParentId: number | null = null) => {
   const created: { body: string; mediaId: number | null; client: unknown }[] = [];
+  const deletedReplies: { parentId: number; client: unknown }[] = [];
+  const deletedRepliesByTweet: { tweetId: number; client: unknown }[] = [];
   const updates: { id: number; data: { body?: string; mediaId?: number | null } }[] = [];
   const repo: ICommentRepository = {
     tweetExists: async () => true,
@@ -54,7 +56,16 @@ const makeWorld = (ownerMediaId: number | null = null) => {
     delete: async (id, client) => {
       deletes.push({ id, client });
     },
-    findOwner: async () => ({ authorId: AUTHOR, mediaId: ownerMediaId }),
+    findOwner: async () => ({ authorId: AUTHOR, mediaId: ownerMediaId, parentId: ownerParentId }),
+    findReplyMediaRefs: async () => [],
+    deleteRepliesOf: async (parentId, client) => {
+      deletedReplies.push({ parentId, client });
+      return 0;
+    },
+    deleteRepliesByTweet: async (tweetId, client) => {
+      deletedRepliesByTweet.push({ tweetId, client });
+      return 0;
+    },
     findMediaRefsByTweet: async () => [],
     deleteByTweet: async (tweetId, client) => {
       deletedByTweet.push({ tweetId, client });
@@ -70,7 +81,7 @@ const makeWorld = (ownerMediaId: number | null = null) => {
     return fn(TX);
   };
 
-  return { repo, created, updates, deletes, deletedByTweet, runInTransaction, opened: () => opened };
+  return { repo, created, updates, deletes, deletedByTweet, deletedReplies, deletedRepliesByTweet, runInTransaction, opened: () => opened };
 };
 
 /** A media port that authorizes tokens by a fixed token→reference map. */
@@ -238,8 +249,8 @@ describe("comment list — media resolution", () => {
 });
 
 describe("comment delete — coordination", () => {
-  it("deletes a comment with no media directly, no transaction", async () => {
-    const w = makeWorld(null);
+  it("deletes a reply with no media directly, no transaction", async () => {
+    const w = makeWorld(null, 9); // a reply — it can have no dependents of its own
     const { media, ended } = makeMedia({});
     const svc = createCommentService(w.repo, media, w.runInTransaction);
 
@@ -247,6 +258,21 @@ describe("comment delete — coordination", () => {
 
     expect(w.opened()).toBe(0);
     expect(ended).toHaveLength(0);
+    expect(w.deletes).toHaveLength(1);
+  });
+
+  it("opens a transaction for a top-level comment even with no media, because it may have replies", async () => {
+    const w = makeWorld(null); // top-level
+    const { media, ended } = makeMedia({});
+    const svc = createCommentService(w.repo, media, w.runInTransaction);
+
+    await svc.delete(1, AUTHOR);
+
+    // Whether this comment has replies is not knowable from its own row, and a
+    // plain delete would meet the RESTRICT foreign key.
+    expect(w.opened()).toBe(1);
+    expect(ended).toHaveLength(0);
+    expect(w.deletedReplies).toHaveLength(1);
     expect(w.deletes).toHaveLength(1);
   });
 

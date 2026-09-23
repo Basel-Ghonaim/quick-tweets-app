@@ -6,7 +6,7 @@
  * - getReplies(): verify parent exists → cursor page of its replies → DTO map
  * - create(): verify tweet exists → resolve the parent, if any → create → DTO
  * - update(): double ownership (comment exists + belongs to tweet + user is author)
- * - delete(): double ownership → delete
+ * - delete(): double ownership → the comment, and its replies if it has any
  *
  * Double ownership validation:
  *   1. Does the comment exist?
@@ -20,6 +20,7 @@
 import { AppError } from "../../shared/errors/index.js";
 import {
   runInTransaction as defaultRunInTransaction,
+  type DbClient,
   type RunInTransaction,
 } from "../../shared/database/index.js";
 import {
@@ -63,6 +64,24 @@ const defaultMediaPort: CommentMediaPort = {
  * the immutable comment id, so an end signal always matches its begin.
  */
 const commentReferrer = (commentId: number): string => `comment:${commentId}`;
+
+/**
+ * Ends the media reference of every comment about to be removed. Media must
+ * learn the reference is gone before the row is, or the registry keeps believing
+ * an object is referenced and never reclaims it.
+ */
+const endReferences = async (
+  media: CommentMediaPort,
+  refs: { id: number; mediaId: number }[],
+  client: DbClient,
+): Promise<void> => {
+  for (const { id, mediaId } of refs) {
+    await media.references.referenceEnded(
+      { mediaId, referrer: commentReferrer(id) },
+      client,
+    );
+  }
+};
 
 /** Media that could not be attached is a request problem, not a server fault. */
 const asAttachFailure = (err: unknown): unknown =>
@@ -374,38 +393,55 @@ export const createCommentService = (
       throw AppError.forbidden("You can only delete your own comments");
     }
 
-    // 3. No media — a plain delete.
-    const mediaId = owner.mediaId;
-    if (mediaId === null) {
-      await repo.delete(commentId);
+    // 3. A reply has no dependents — the thread is two levels deep.
+    if (owner.parentId !== null) {
+      if (owner.mediaId === null) {
+        await repo.delete(commentId);
+        return;
+      }
+      await runInTransaction(async (tx) => {
+        await endReferences(media, [{ id: commentId, mediaId: owner.mediaId! }], tx);
+        await repo.delete(commentId, tx);
+      });
       return;
     }
 
-    // 4. With media — end the reference and delete the row together.
+    // 4. A top-level comment takes its replies with it, in one transaction.
+    //    The order is forced twice over: the parent foreign key is RESTRICT, so
+    //    the replies must go first; and every reference must end before its row
+    //    does, or Media keeps believing the object is referenced.
+    //
+    //    No fast path here. Whether this comment has replies is not knowable
+    //    from the row itself, and a plain delete would meet the foreign key.
     await runInTransaction(async (tx) => {
-      await media.references.referenceEnded(
-        { mediaId, referrer: commentReferrer(commentId) },
-        tx,
-      );
+      await endReferences(media, await repo.findReplyMediaRefs(commentId, tx), tx);
+      await repo.deleteRepliesOf(commentId, tx);
+
+      if (owner.mediaId !== null) {
+        await endReferences(media, [{ id: commentId, mediaId: owner.mediaId }], tx);
+      }
       await repo.delete(commentId, tx);
     });
   },
 
   // ─── Delete every comment on a tweet (dependent-deletion primitive) ──
   //
-  // Called by the tweet-deletion use-case inside its transaction: end each
+  // Called by the tweet-deletion use-case inside its transaction: end every
   // comment's media reference (comments own the comment:{id} tag), then bulk
   // delete the rows. No ownership check here — the use-case authorizes the
   // tweet deletion; the comments are the tweet's dependents.
+  //
+  // A reply keeps its tweetId, so one reference sweep covers both levels.
+  //
+  // The rows go in two statements, replies first. One statement covering both
+  // levels is in fact accepted by Postgres — a RESTRICT check passes when the
+  // referencing row is removed by the same statement — but that rests on when
+  // the constraint is evaluated rather than on anything the schema states.
+  // Deleting in dependency order says what is meant and does not depend on it.
 
   deleteForTweet: async (tweetId, client) => {
-    const withMedia = await repo.findMediaRefsByTweet(tweetId, client);
-    for (const { id, mediaId } of withMedia) {
-      await media.references.referenceEnded(
-        { mediaId, referrer: commentReferrer(id) },
-        client,
-      );
-    }
+    await endReferences(media, await repo.findMediaRefsByTweet(tweetId, client), client);
+    await repo.deleteRepliesByTweet(tweetId, client);
     await repo.deleteByTweet(tweetId, client);
   },
 });
