@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import {
   UploadIcon,
   TrashIcon,
@@ -11,6 +12,8 @@ import {
   UserIcon,
   CameraIcon,
 } from "./components";
+import { HeartIcon } from "./components";
+import * as everyIcon from "./components";
 import type { IconProps } from "./icon.types";
 
 /** Wrapper component so Storybook controls work on a single icon */
@@ -118,4 +121,75 @@ export const Sizes: Story = {
       <UploadIcon size={48} />
     </div>
   ),
+};
+
+/**
+ * "Liked" is the same glyph, filled by whoever owns the meaning. The design
+ * fills it from a consumer's own rule rather than swapping in a second icon,
+ * so the set carries no filled twin and the shared contract gains no prop.
+ *
+ * The rule has to name the icon, not its container: `fill="none"` is a
+ * presentation attribute on the glyph, which beats a value inherited from
+ * above it and loses to a rule that targets it.
+ */
+export const AConsumerFillsTheHeart: Story = {
+  args: { icon: "Upload" },
+  render: () => (
+    <>
+      <style>{`.story-filled { fill: currentColor; }`}</style>
+      <div style={{ display: "flex", gap: "0.75rem" }}>
+        <span data-glyph="outline">
+          <HeartIcon />
+        </span>
+        <span data-glyph="filled">
+          <HeartIcon className="story-filled" />
+        </span>
+      </div>
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    const fillOf = (name: string) =>
+      getComputedStyle(
+        canvasElement.querySelector<SVGElement>(`[data-glyph="${name}"] svg`)!,
+      ).fill;
+
+    await expect(fillOf("outline")).toBe("none");
+    await expect(fillOf("filled")).not.toBe("none");
+  },
+};
+
+/**
+ * Every glyph in the set, taken from the barrel rather than a list, so an icon
+ * added later is covered without anyone remembering to add it here.
+ *
+ * An icon names nothing: a control's accessible name is its text, and a glyph
+ * that announced itself would say it twice. Nothing else catches this — a
+ * decorative `svg` with no role raises no accessibility violation, so its
+ * silence has to be asserted rather than observed.
+ */
+export const EveryGlyphHidesItself: Story = {
+  args: { icon: "Upload" },
+  render: () => {
+    const all = Object.entries(everyIcon) as Array<
+      [string, React.FC<IconProps>]
+    >;
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+        {all.map(([name, Icon]) => (
+          <span key={name} data-icon={name}>
+            <Icon />
+          </span>
+        ))}
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const glyphs = [...canvasElement.querySelectorAll("svg")];
+
+    // A vacuous pass is the failure mode here: an empty set hides itself.
+    await expect(glyphs.length).toBeGreaterThan(30);
+
+    for (const glyph of glyphs)
+      await expect(glyph).toHaveAttribute("aria-hidden", "true");
+  },
 };
