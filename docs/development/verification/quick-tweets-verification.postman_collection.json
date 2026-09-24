@@ -9198,6 +9198,674 @@
           }
         }
       ]
+    },
+    {
+      "name": "16 · Text safety",
+      "description": "Text other readers see, made safe to show among their words (#822, closing #775 and fixing #819). Self-isolated: its own account with a per-run handle, its own post, comment and profile. Scenarios TXT-01…TXT-13.\n\nIt runs whole from the command line (npm run verify:text-safety) and needs no pgAdmin.\n\nStored in NFC; a direction control refused, and never repeated in the response; text made only of invisible characters counts as empty, so a body and a name are refused and a bio is cleared. Every character is sent as a JSON escape, so nothing depends on how a shell or a terminal encodes it.",
+      "item": [
+        {
+          "name": "0 · Setup · register this run's account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{txUsername}}\",\n  \"email\": \"{{txUsername}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Self-isolated: a per-run handle, so the folder collides with no other run."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"txToken\", pm.response.json().data.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-01 · A post written decomposed is stored composed",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Cafe\\u0301 au lait\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"stored in NFC\", () => pm.expect(d.body).to.eql(\"Caf\\u00e9 au lait\"));",
+                  "pm.environment.set(\"txTweetId\", d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-02 · A post carrying an override is refused",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"hi\\u202Eolleh\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"body: Tweet body cannot contain text-direction control characters\", () => pm.expect(e.errors.body).to.eql([\"Tweet body cannot contain text-direction control characters\"]));",
+                  "pm.test(\"the response never carries the character\", () => pm.expect(pm.response.text()).to.not.include(\"\\u202E\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-03 · A direction mark is accepted",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"\\u0645\\u0631\\u062d\\u0628\\u0627\\u200F!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"the mark is kept\", () => pm.expect(d.body).to.include(\"\\u200F\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-04 · A post of zero-width characters alone is refused",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"\\u200B\\u200B\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"body: Tweet body cannot be empty\", () => pm.expect(e.errors.body).to.eql([\"Tweet body cannot be empty\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-05 · A comment carrying an isolate is refused",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tweetId\": {{txTweetId}},\n  \"body\": \"ok\\u2066x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"body: Comment body cannot contain text-direction control characters\", () => pm.expect(e.errors.body).to.eql([\"Comment body cannot contain text-direction control characters\"]));",
+                  "pm.test(\"the response never carries the character\", () => pm.expect(pm.response.text()).to.not.include(\"\\u2066\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-06 · A name of spaces is refused, not stored empty",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"name: Name is required\", () => pm.expect(e.errors.name).to.eql([\"Name is required\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-07 · A name of zero-width characters is refused",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\\u200B\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"name: Name is required\", () => pm.expect(e.errors.name).to.eql([\"Name is required\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-08 · A name carrying an override is refused",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ada\\u202E\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"name: Name cannot contain text-direction control characters\", () => pm.expect(e.errors.name).to.eql([\"Name cannot contain text-direction control characters\"]));",
+                  "pm.test(\"the response never carries the character\", () => pm.expect(pm.response.text()).to.not.include(\"\\u202E\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-09 · A name written decomposed is stored composed",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rene\\u0301\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"stored in NFC\", () => pm.expect(d.name).to.eql(\"Ren\\u00e9\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-10 · A bio of invisible characters alone is cleared",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"\\u200B\\u200D\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"cleared to the empty string\", () => pm.expect(d.bio).to.eql(\"\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-11 · A bio carrying an isolate is refused",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{txToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"hi\\u2067\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"bio: Bio cannot contain text-direction control characters\", () => pm.expect(e.errors.bio).to.eql([\"Bio cannot contain text-direction control characters\"]));",
+                  "pm.test(\"the response never carries the character\", () => pm.expect(pm.response.text()).to.not.include(\"\\u2067\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-12 · A guest reads the profile as stored",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{txUsername}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{txUsername}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "noauth: the collection's root bearer would otherwise make this a signed-in read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"the composed name\", () => pm.expect(d.name).to.eql(\"Ren\\u00e9\"));",
+                  "pm.test(\"the cleared bio\", () => pm.expect(d.bio).to.eql(\"\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TXT-13 · A guest reads the post as stored",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{txTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{txTweetId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"the composed body\", () => pm.expect(d.body).to.eql(\"Caf\\u00e9 au lait\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get('txUsername')) {",
+              "  pm.environment.set('txUsername', 'txt' + Date.now().toString(36));",
+              "}"
+            ]
+          }
+        }
+      ]
     }
   ],
   "auth": {

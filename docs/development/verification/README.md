@@ -217,6 +217,26 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## Text safety
+
+Folder **16 · Text safety** exercises what the server does to text other
+readers see ([#822](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/822),
+closing [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775) and
+fixing [#819](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/819)).
+**Self-isolated**, runs whole from the command line (`npm run verify:text-safety`),
+no pgAdmin. See scenarios **TXT-01…TXT-13**.
+
+**Its guarantees:**
+
+- text is **stored in NFC**;
+- a **direction control is refused, and never repeated in the response**;
+- text made only of **invisible characters counts as empty**, so a body and a
+  name are refused and a bio is cleared;
+- **a name of spaces is refused** rather than stored blank.
+
+Every character travels as a JSON escape, so no shell or terminal encoding can
+change what is sent.
+
 ## The character rule
 
 Folder **15 · Character rule** exercises how a body's length is counted
