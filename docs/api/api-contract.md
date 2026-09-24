@@ -308,6 +308,7 @@ interface ErrorBody {
     | "conflict"
     | "validation"
     | "rate_limit"            // emitted by the rate-limiter middleware (429)
+    | "edit_rate_limit"       // emitted by the edit limiter (429), per account
     | "too_many_requests"
     | "payload_too_large"
     | "unsupported_media_type"
@@ -330,16 +331,17 @@ interface ErrorBody {
 | 415         | `unsupported_media_type`| Wrong file format uploaded                                             |
 | 422         | `validation`            | Invalid request body or query params (field-level errors)              |
 | 429         | `rate_limit`            | Too many requests — rate limit exceeded (emitted by rate-limiter)      |
+| 429         | `edit_rate_limit`       | Too many post edits by this account — the edit limit (per account)     |
 | 500         | `server`                | Unexpected server error                                                |
 | 503         | `service_unavailable`   | Service temporarily unavailable (maintenance)                          |
 
-> **Note:** two different `429`s exist, and they mean different things. Every per-IP limiter answers through the rate-limiter middleware with `type: "rate_limit"`. `too_many_requests` is Channel Verification's own per-address cooldown, raised through the `AppError` pipeline and carrying `Retry-After`. What conflating them costs a reader is stated under Rate Limiting below.
+> **Note:** three different `429`s exist, and they mean different things. Every per-IP limiter answers through the rate-limiter middleware with `type: "rate_limit"`. `edit_rate_limit` is the one limiter keyed **per account**: this account has edited posts too often, whatever address it writes from. `too_many_requests` is Channel Verification's own per-address cooldown, raised through the `AppError` pipeline and carrying `Retry-After`. What conflating them costs a reader is stated under Rate Limiting below.
 
 **Across the stack:** this error contract is *produced* by the backend error model ([backend conventions](../backend/conventions.md)), *normalized on the client* by the [frontend error handling](../frontend/error-handling.md) pipeline, and rests on the one-typed-error principle ([Engineering Principles §4](../development/engineering-principles.md)).
 
 ### Rate Limiting
 
-Every limiter below is **per IP**, over a fixed window, and answers with `type: "rate_limit"`. Routes are limited by prefix **except** where a route's own cost earns it something tighter — which is why `/media` and `/channel-verification` carry a limiter per route rather than one across the prefix. Their writes therefore fall outside the general cap; the verification read names that cap explicitly, since a route in a prefix with no blanket limiter has none unless it says so.
+Every limiter below is **per IP**, over a fixed window, and answers with `type: "rate_limit"` — **except the edit limit**, which is keyed **per account**, answers with `type: "edit_rate_limit"` and carries `Retry-After`. It counts every signed-in `PATCH /tweets/:id`, whether or not the edit is accepted, and an edit still counts against the general cap as well. Routes are limited by prefix **except** where a route's own cost earns it something tighter — which is why `/media` and `/channel-verification` carry a limiter per route rather than one across the prefix. Their writes therefore fall outside the general cap; the verification read names that cap explicitly, since a route in a prefix with no blanket limiter has none unless it says so.
 
 | Scope | Endpoints | Limit | 429 Message |
 |---|---|---|---|
@@ -348,6 +350,7 @@ Every limiter below is **per IP**, over a fixed window, and answers with `type: 
 | Verification issue | `POST /channel-verification/challenges` | **10 req / 15 min** | "Too many verification requests. Please wait 15 minutes before trying again." |
 | Verification confirm | `POST /channel-verification/challenges/confirm` | **10 req / 15 min** | "Too many confirmation attempts. Please wait 15 minutes before trying again." |
 | API | `/tweets`, `/comments`, `/users`, `/follows`, `/onboarding`, `POST /media`, and `GET /channel-verification/challenges/current` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
+| Edit (per account) | `PATCH /tweets/:id` | **10 req / 1 hour, per account** | "You have edited posts too often. Please wait and try again later." |
 | Reset request | `POST /auth/password-reset` **and** `POST /auth/password-reset/resend` | **10 req / 15 min, shared** | "Too many password reset requests. Please wait 15 minutes before trying again." |
 | Reset confirm | `POST /auth/password-reset/confirm` | **10 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
 | Reset apply | `POST /auth/password-reset/apply` | **5 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
@@ -692,6 +695,9 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 // Response 403
 { "success": false, "error": { "type": "forbidden", "message": "You can only edit your own tweets" } }
+
+// Response 429 — the edit limit: 10 edits an hour per account (see Rate Limiting). Carries Retry-After.
+{ "success": false, "error": { "type": "edit_rate_limit", "message": "You have edited posts too often. Please wait and try again later." } }
 
 // Response 404
 { "success": false, "error": { "type": "not_found", "message": "Tweet not found" } }
