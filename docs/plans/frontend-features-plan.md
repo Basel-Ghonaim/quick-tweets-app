@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-23
+> **Last Updated:** 2026-09-24
 > **Parent Issue:** [#794](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/794)
 > **Supersedes:** —
 
@@ -43,7 +43,7 @@ The names below are working names. Each feature's final boundary is decided in E
 
 - **Read:** the feed, a single post, and a person's posts, each loaded progressively where it is a list.
 - **Write:**
-  - create a post with text and images, each image optionally described;
+  - create a post with text and images. Images carry no description, because the backend does not support one ([Backend plan](backend-plan.md) §2.6);
   - edit your own post, text and images alike;
   - delete your own post.
 - **Act:**

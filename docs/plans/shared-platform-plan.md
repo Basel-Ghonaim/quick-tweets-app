@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-23
+> **Last Updated:** 2026-09-24
 > **Parent Issue:** [#793](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/793)
 > **Supersedes:** —
 
@@ -43,7 +43,7 @@ Several features behind the **Feed**, **Tweet details** and **Profile** need the
 ### 2.2 · Media
 
 - **Uploading and showing images for any feature:** the composer, the reply box and the profile alike. This includes progress, failure, retry and refusal.
-- A posted image's **description** travels with it wherever it is shown.
+- A posted image carries **no description**, because the backend does not support one ([Backend plan](backend-plan.md) §2.6).
 
 ### 2.3 · Language and formats
 
