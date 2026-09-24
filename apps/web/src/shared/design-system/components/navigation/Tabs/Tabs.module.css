@@ -1,0 +1,46 @@
+.root {
+  display: grid;
+  grid-auto-flow: column;
+  /* Equal columns, so a longer word does not buy its tab more room. */
+  grid-auto-columns: minmax(0, 1fr);
+  background: var(--surface-default);
+  border-block-end: var(--border-width-thin) solid var(--border-default);
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 52px;
+  padding-inline: var(--space-3);
+  font: var(--type-label-large);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition:
+    background-color var(--motion-interactive),
+    color var(--motion-interactive);
+}
+
+.tab:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.tab[aria-current="page"] {
+  color: var(--text-primary);
+}
+
+/* Drawn from the same attribute a reader is told by, so the mark and the
+   announcement cannot disagree. */
+.tab[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: 50%;
+  margin-inline: -28px;
+  inline-size: 56px;
+  block-size: 3px;
+  border-radius: var(--border-radius-full);
+  background: var(--role-fill-primary);
+}
