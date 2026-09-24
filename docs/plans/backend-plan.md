@@ -38,6 +38,10 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - **Editing a post stays as it is** (its text and its images, with no time limit); what follows is what must be added to it.
 - A post shows **"Edited"** only when it was actually edited, not when anything else about it changed.
 - Editing is **protected against abuse**, so it cannot be repeated without limit. When a reader hits that limit, the answer is one the frontend can recognise and explain.
+  - **Per account**, not per network address: an edit is always signed in, and an account's limit cannot be escaped by changing address.
+  - **10 edits per hour**, counting **every edit request**, held **in memory** like every other limiter.
+  - **Posts only.** Editing a comment stays under the general limit alone.
+  - **Its own error type**, not the general limit's, because the design words the two differently: *too many edits* and *too fast*.
 - A post tells a signed-in reader **whether they follow its author**.
 
 ### 2.2 · Likes
@@ -61,22 +65,39 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - Wherever a Follow button appears, the reader learns both **whether they follow that person** and **whether that person follows them** (for Follow back). This covers a profile, the Followers and Following lists, the suggested accounts and a post's author. For a guest, both are false.
 - The **Followers and Following lists** carry what each row's button needs.
 - **Suggested accounts ("Who to follow"):** a short list with a way to see more. It never includes the reader, people the reader already follows, or the person whose profile is being viewed.
+  - **Chosen from the people followed by the accounts the reader follows**, ranked by how many of them follow each. Where that runs short, **the most-followed accounts** fill the list. The order is **the same on every request**.
+  - **A guest** sees the most-followed accounts.
+  - **Every account may be suggested**, apart from those excluded above.
+  - **A bounded list, not paged:** 3 in the sidebar, and up to 20 behind "Show more".
 
 ### 2.5 · Discovery
 
-- **Search:** find posts, including by hashtag, in **Arabic and English** alike. What else is searched, and how results are ranked, is decided before it is built.
+- **Search:** find posts, including by hashtag, in **Arabic and English** alike.
+  - **Posts only**, **newest first**. Guests can search too.
+  - A query that begins with `#` finds **that hashtag exactly**.
+  - Any other query matches **whole words, and longer words that begin with one**, on the database's built-in text search, with no extension and no stemming. So `كتاب` finds `كتابة` but not `الكتاب`: the cost of a search that needs no extension.
 - **Trending:** a short list of current terms, each with how many posts mention it. Guests can see it too.
+  - A term is **a hashtag**. Plain words and phrases do not trend.
+  - Counted over **the last 7 days**, by **distinct posts**, and ranked by that count. Comments and replies do not count.
+  - A hashtag appears once **at least 2 posts** used it. The list holds **at most 5**, and is empty when none qualifies.
 - **Hashtags** mean the same thing everywhere: the text that links them, the search that finds them and the trend that counts them all follow **one shared rule**, in any script.
+  - Two hashtags are the same when they match **ignoring case**, after the text is normalised (§2.7), with the Arabic alef forms (أ إ آ ٱ) read as ا, and diacritics and tatweel ignored. **ة and ه, and ى and ي, stay distinct.**
+  - Where one hashtag is written several ways, **the spelling used most** in the window is the one shown.
 - **Mentions** follow the username rule, so a mention links exactly what could be a username. They are **not checked against real accounts**: an unknown name simply leads to a profile that is not found, which is what these designs need and all they need.
 
 ### 2.6 · Images
 
-- Each image attached to a post, comment or reply can have a **description**, written by the author and returned wherever the image is read.
-- The description belongs to **that use of the image**, not to the stored file.
+- **Images carry no description.** Image descriptions are **not supported** (§5):
+  - there is no description in the API, in the schema, or on the media object;
+  - no validation or length limit applies to one;
+  - none takes part in the **"Edited"** marker (§2.1) or in counting characters (§2.7).
+- The approved design draws a description field. **That does not make it a backend capability.**
 
 ### 2.7 · Text
 
 - **One definition of a character**, shared by the frontend and the backend, so a post the counter accepts is never refused. It binds posts, comments and replies alike.
+  - A character is **a Unicode code point**, which is what the approved design's counter counts.
+  - Length is measured **after** the text is trimmed, so the limit applies to what is stored. Once text is normalised (below), the order is **normalise, trim, then count**.
 - Text is **safe to show among other people's words** in both directions. This is already tracked as [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775), and settled as follows:
   - **Which text:** post and comment bodies, a display name and a bio, which is the text other readers see. Usernames are ASCII already.
   - **Normalised to NFC** when it is written.
@@ -85,6 +106,8 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
   - **At write only, with no backfill.** Rows written before it ships stay as they are: the data is test data, and `v1` has no released consumer.
   - **It lands before the first surface that shows other readers' text.** That is the trigger #775 was recorded with.
 - Text made only of spaces is not accepted as content.
+  - A space is **what the standard trim removes**: Unicode white space and line ends.
+  - Refusing such text tightens what the API accepts, so it is recorded as a **pre-release exception** in the contract when it ships.
 
 ---
 
@@ -106,13 +129,17 @@ Anything the worker finds missing from these belongs in §2 and is raised with t
 
 ## 4 · Decisions to settle in Execution Preparation
 
-These product questions shape the capabilities above. Each is settled with the owner before the capability it affects is built:
-- what counts as a **character**;
-- the **edit limit**: whether it applies per account or per network address, and how tight it is;
-- the **description** length, and whether one is required;
-- what a **trend** is, over what time window, and how trends are ranked;
-- what **search** covers beyond posts, and its ranking;
-- how **suggested accounts** are chosen, and what a guest sees.
+These product questions shape the capabilities above, and each is settled with the owner before the capability it affects is built.
+
+**None is open.** The owner settled all six on 2026-09-24. Each answer is written once, in the section it binds, and not repeated here:
+- what counts as a **character** → §2.7;
+- the **edit limit** → §2.1;
+- image **descriptions** → §2.6: not supported;
+- what a **trend** is → §2.5;
+- what **search** covers, and its ranking → §2.5;
+- how **suggested accounts** are chosen, and what a guest sees → §2.4.
+
+A question that later work finds open is added here, and leaves when it is settled.
 
 ---
 
@@ -122,6 +149,9 @@ These product questions shape the capabilities above. Each is settled with the o
 - **Repost:** its meaning is not yet defined. Nothing is built for it until it is.
 - The **search results page** and anything else not yet designed.
 - The **Likes tab** on a profile, which is deferred.
+- **Image descriptions:** not supported, whatever the design draws (§2.6).
+- **Trends made of words or phrases:** a trend is a hashtag (§2.5).
+- **Searching people or comments:** search covers posts (§2.5).
 
 ---
 
