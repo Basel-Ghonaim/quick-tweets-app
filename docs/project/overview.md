@@ -72,7 +72,7 @@ Naming something here does not design it, and does not decide which layer owns i
 
 **Whether a named element belongs to the Design System or to a feature is decided by the [component-admission test](../frontend/design-system/components.md), never by appearing on this list.**
 
-Alert · Avatar · Badge · Brand mark · Button · Checkbox · Comment · Dialog · FileInput · Header · Icon · IconButton · Input · Link · Menu · Navigation · One-time-code input · Radio · Select · Skeleton · Spinner · Stepper · Switch · Tabs · Textarea · Toast · Toggle button · Tooltip · Tweet action row · Tweet card · Typography
+Alert · Avatar · Badge · Brand mark · Button · Checkbox · Comment · Dialog · FileInput · Header · Icon · IconButton · Input · Link · Menu · Navigation · One-time-code input · Progress · Radio · Select · Skeleton · Spinner · Stepper · Switch · Tabs · Textarea · Toast · Toggle button · Tooltip · Tweet action row · Tweet card · Typography
 
 ### Language and direction
 

@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-25
+> **Last Updated:** 2026-09-26
 > **Parent Issue:** [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792)
 > **Supersedes:** —
 
@@ -54,7 +54,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 ### 2.3 · Changes to existing parts
 
 - **Icons:** the additions the designs use, and mirroring in right to left where the meaning has a direction. A filled "liked" is not a second glyph — the design fills the shared one from the consumer.
-- **Textarea:** hosts a character count. The limit is passed in and never known to the Design System.
+- **Textarea:** no change. The designs place the character count in the composer's own toolbar, a sibling of the field rather than something it hosts, so the count is the consumer's composition and the limit never reaches this layer at all.
 - **Input:** no change. The approved designs draw the search field on the stock filled variant and override the component nowhere, so the pill the extension log named was never settled.
 - **Navigation drawn as an action:** the designs draw an anchor carrying a button's appearance, so it is a button that navigates rather than a link that looks like one (§4).
 
@@ -193,3 +193,9 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 - **Settled.** **The artboards outrank the extension log.** Three of its entries have now proved wrong in the same direction — an avatar size it omitted, a filled glyph it invented, and a pill nothing draws — so a part is built from what the design renders, never from what the log says is needed. A **filled form is the consumer's**, not a second glyph: the design fills one heart from its own rule, which outranks the attribute the icon carries. A **ramp is as long as the design makes it**, and this layer owns the colour while the meaning, its per-theme resolution and the wash beneath it stay the product's. The shared class helper now sits where all three peers reach it, so the next icon composes its class rather than hand-rolling one.
 - **Amended.** §2.3 — `Input` needs no change, and navigation-drawn-as-an-action is a button that navigates rather than a link that looks like one, which §4 already said and §2.3 contradicted.
 - **Recorded.** No finding. [Finding 0016](../architecture/findings/open/0016-class-name-helper-is-not-reachable-by-its-peers.md) is closed by the move rather than recorded again, and the withdrawn pill is marked in the design's own extension log so it is not proposed a second time.
+
+**Skeleton and Progress.** [#828](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/828) · [#830](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/830).
+
+- **Settled.** **An indicator says nothing of its own.** A placeholder, a bar and a ring are all silent and `aria-hidden`, because what is loading and whether it matters is known only to the surface that composes them — the Spinner's rule, now the rule for everything of its kind. **Past its maximum, a fraction draws as done rather than as more:** overrunning is real, it is the consumer's to word, and a circle cannot mean more than once round. **Geometry gets a module and unit tests of its own**, since a dasharray plausible at half way is exactly what a rendered story samples and passes. And `Progress` is grounded by **adoption rather than by the platform** — a ring cannot be the `progress` element, so the element's semantics do not admit it and the committed vocabulary does.
+- **Amended.** §2.3 — `Textarea` needs no change: the designs place the character count in the composer's own toolbar, so the limit never reaches this layer. The fourth extension-log divergence, and the second Work Item running to the rule that the artboards outrank the log.
+- **Recorded.** No finding. Two guarantees were unproven until a mutation said so — a removed `aria-hidden` raises no accessibility violation, and a quarter arc drawn from three o'clock is as long as one drawn from the top — so both are asserted directly rather than inferred.

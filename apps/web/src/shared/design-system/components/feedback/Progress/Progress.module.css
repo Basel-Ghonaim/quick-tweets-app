@@ -1,0 +1,47 @@
+.root {
+  display: inline-flex;
+}
+
+.linear {
+  inline-size: 100%;
+  block-size: 4px;
+  border-radius: var(--border-radius-full);
+  background: var(--surface-subtle);
+  overflow: hidden;
+}
+
+.bar {
+  display: block;
+  inline-size: var(--progress-done);
+  block-size: 100%;
+  border-radius: var(--border-radius-full);
+  background: var(--progress-fill, var(--role-fill-primary));
+}
+
+/* Sized here rather than by the caller: a ring's box is its own geometry, and
+   the caller changes it by changing the font size around it. */
+.ring {
+  inline-size: 1.375em;
+  block-size: 1.375em;
+}
+
+.ringBox {
+  inline-size: 100%;
+  block-size: 100%;
+  /* The fill starts at the top rather than at three o'clock, because that is
+     where a reader expects a circle to begin. */
+  transform: rotate(-90deg);
+}
+
+.track {
+  fill: none;
+  stroke: var(--border-default);
+  stroke-width: 2.5;
+}
+
+.fill {
+  fill: none;
+  stroke: var(--progress-fill, var(--role-fill-primary));
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
