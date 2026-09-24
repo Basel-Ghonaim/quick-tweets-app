@@ -65,7 +65,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - Wherever a Follow button appears, the reader learns both **whether they follow that person** and **whether that person follows them** (for Follow back). This covers a profile, the Followers and Following lists, the suggested accounts and a post's author. For a guest, both are false.
 - The **Followers and Following lists** carry what each row's button needs.
 - **Suggested accounts ("Who to follow"):** a short list with a way to see more. It never includes the reader, people the reader already follows, or the person whose profile is being viewed.
-  - **Chosen from the people followed by the accounts the reader follows**, ranked by how many of them follow each. Where that runs short, **the most-followed accounts** fill the list. The order is **the same on every request**.
+  - **Chosen from the people followed by the accounts the reader follows**, ranked by how many of them follow each. Where that runs short, **the most-followed accounts** fill the list. The order is **the same on every request**: where two rank equally, the one with **more followers** comes first, then the **newest account**, since a new account with no followers is likelier to be active than an old one that never gained any.
   - **A guest** sees the most-followed accounts.
   - **Every account may be suggested**, apart from those excluded above.
   - **A bounded list, not paged:** 3 in the sidebar, and up to 20 behind "Show more".
