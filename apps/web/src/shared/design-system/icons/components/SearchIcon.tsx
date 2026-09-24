@@ -1,6 +1,7 @@
 import type { IconProps } from "../icon.types";
 import { ICON_DEFAULTS } from "../icon.types";
 import mirror from "../../foundations/composition/iconMirror.module.css";
+import { classNames } from "../../foundations/helpers";
 
 /** The handle points along the reading axis, so it changes side with it. */
 export const SearchIcon = ({
@@ -17,11 +18,7 @@ export const SearchIcon = ({
     strokeWidth={strokeWidth}
     strokeLinecap="round"
     strokeLinejoin="round"
-    // Composed here rather than through the shared class-name helper: that
-    // helper lives under `components/`, which already imports this directory,
-    // and the return edge would leave two peer subsystems looking mutually
-    // dependent for the sake of joining two strings.
-    className={className ? `${mirror.mirrors} ${className}` : mirror.mirrors}
+    className={classNames(mirror.mirrors, className)}
     aria-hidden="true"
   >
     <circle cx="11" cy="11" r="8" />
