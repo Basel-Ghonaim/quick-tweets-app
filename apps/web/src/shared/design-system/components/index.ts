@@ -4,6 +4,7 @@ export * from "./controls/ToggleButton";
 export * from "./display/Avatar";
 export * from "./display/Typography";
 export * from "./feedback/MessageRegion";
+export * from "./feedback/Skeleton";
 export * from "./feedback/Spinner";
 export * from "./feedback/Toast";
 export * from "./fields/Checkbox";

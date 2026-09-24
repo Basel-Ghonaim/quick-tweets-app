@@ -1,0 +1,22 @@
+.root {
+  display: block;
+  background: var(--surface-subtle);
+}
+
+.block {
+  border-radius: var(--border-radius-sm);
+}
+
+/* A run of text, so it carries the height of one and the caller sets its width. */
+.line {
+  block-size: 12px;
+  border-radius: var(--border-radius-sm);
+}
+
+/* Square by default because a circle that is not is an ellipse; a caller
+   changing one axis is expected to change both. */
+.circle {
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--border-radius-full);
+}
