@@ -217,6 +217,20 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## The character rule
+
+Folder **15 · Character rule** exercises how a body's length is counted
+([#818](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/818), fixing
+[#801](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/801) and
+[#802](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/802)).
+**Self-isolated**, runs whole from the command line (`npm run verify:characters`),
+no pgAdmin. See scenarios **CHR-01…CHR-09**.
+
+**A character is a code point, counted after trimming.** An emoji counts once
+rather than as its two UTF-16 units, and a body of white space alone is refused
+rather than stored empty. The folder builds its 280- and 281-emoji bodies in its
+own pre-request script, so no request carries them by hand.
+
 ## The edited marker
 
 Folder **14 · Edited marker** exercises when a post or comment says "Edited" and

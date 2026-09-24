@@ -16,6 +16,7 @@
     "test": "npm run test --workspaces --if-present",
     "lint": "eslint .",
     "check:boundaries": "tsc -p checks/tsconfig.json && vitest run checks/boundaries.test.ts",
+    "verify:characters": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"15 · Character rule\"",
     "verify:edited": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"14 · Edited marker\"",
     "verify:follows": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"07 · Follows\"",
     "verify:likes": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"13 · Comment likes\"",

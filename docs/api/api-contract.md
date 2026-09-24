@@ -27,6 +27,7 @@
 | `GET /comments`: offset pagination replaced by cursor pagination, and the default page size moves from 20 to 10 | The thread loads by infinite scroll, and a page number shifts every later page when a comment is added or removed mid-scroll, so comments are skipped or shown twice. The meta shape had to change for the list to be correct at all. No client reads it: nothing in the frontend calls `/comments`. |
 | `POST /tweets/:id/like` replaced by `PUT` and `DELETE /tweets/:id/like` | A toggle cannot be repeat-safe, which the product requires of liking: with the like shown before the server answers, a double press or a retry cancels what the reader meant. The fix is the verb, not the payload — `PUT` and `DELETE` carry idempotence by definition. The response shape is unchanged. No client reads it: nothing in the frontend calls the endpoint. |
 | `GET /comments?tweetId=`: returns top-level comments only, no longer every comment on the tweet | A comment may now answer another comment. Returning both levels in one flat list would give the client no way to tell them apart, and the thread is drawn as two. The replies have their own list, `?parentId=`. No client reads it, for the same reason. |
+| `POST` and `PATCH` on `/tweets` and `/comments`: a `body` of white space alone is refused with `422` | A rule tightened on input rather than a shape removed. Such a body used to pass the length check before it was trimmed, and was stored empty. No consumer can depend on that: nothing in the frontend writes a post or a comment. Counting code points instead of UTF-16 units only admits more, so it needs no exception. |
 
 ---
 
@@ -197,6 +198,23 @@ stays exactly as it was and keeps its own meaning — *this row was written*.
 **Comments carry `editedAt` and no `updatedAt`.** They never had one, and this
 did not add one: the only question a reader's interface asks is whether the text
 was edited.
+
+### Body text
+
+The `body` of a post, a comment and a reply follows **one rule**, on create and
+on edit:
+
+- **It is trimmed first**, and what is left is what is measured and stored.
+  Trimming removes Unicode white space and line ends from both ends.
+- **At least 1 character.** A body of white space alone is refused with `422`
+  and *"… cannot be empty"*, so a body is never stored empty.
+- **At most 280 characters, where a character is a Unicode code point.** An
+  emoji counts once, not as its two UTF-16 units; a sequence that draws as one
+  symbol counts each code point in it. Past 280, the answer is `422` with
+  *"… must be at most 280 characters"*.
+
+A client counting what it sends — `Array.from(text.trim()).length` in
+JavaScript — counts what the server counts.
 
 ### TweetMediaEmbed
 
@@ -569,6 +587,8 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 
 **Auth:** Required
 
+**`body`** follows [Body text](#body-text).
+
 ```jsonc
 // Request body
 {
@@ -607,6 +627,8 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 ### `PATCH /tweets/:id` — Edit own tweet
 
 **Auth:** Required
+
+**`body`** follows [Body text](#body-text).
 
 ```jsonc
 // Request body (at least one field required)
@@ -821,6 +843,8 @@ so the interface can keep it collapsed until a reader asks for it.
 
 **Auth:** Required
 
+**`body`** follows [Body text](#body-text).
+
 ```jsonc
 // Request body
 {
@@ -882,6 +906,8 @@ so the interface can keep it collapsed until a reader asks for it.
 ### `PATCH /comments/:id` — Edit own comment
 
 **Auth:** Required
+
+**`body`** follows [Body text](#body-text).
 
 ```jsonc
 // Request body (at least one field required)

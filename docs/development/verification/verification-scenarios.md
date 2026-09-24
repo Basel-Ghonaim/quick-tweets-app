@@ -261,6 +261,26 @@ no longer describe executable behavior and are retired rather than rewritten her
 | EDT-09 | EDT-03 | Read the post **as a guest** | 200; `editedAt` as set | — | — | The marker is public |
 | EDT-10 | EDT-02 | Read the thread | 200; the row has `editedAt` and **no `updatedAt`** | — | — | Deliberate — comments never had one and this did not add one |
 
+## 7d · The character rule — a code point, counted after trimming ([#818](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/818))
+
+> **What the folder proves.** A body is trimmed, then measured in **code
+> points**, the unit the design's counter counts: an emoji counts once, not as
+> its two UTF-16 units. A body of white space alone is refused rather than
+> stored empty. Folder 15 is **self-isolated** and runs whole from the command
+> line.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| CHR-01 | Folder 15 setup | Create a post of **280 emoji** | 201; the body returned whole, 280 code points | stored whole | — | Refused before #802: it is 560 UTF-16 units |
+| CHR-02 | Setup | Create a post of **281 emoji** | 422; `body`: "Tweet body must be at most 280 characters" | — | — | |
+| CHR-03 | Setup | Create a post of spaces, a tab and a line end | 422; `body`: "Tweet body cannot be empty" | — | — | Stored as `""` before #801 |
+| CHR-04 | Setup | Create a post of `"   hello   "` | 201; body `"hello"` | stored trimmed | — | Padding is neither stored nor counted |
+| CHR-05 | CHR-01 | PATCH the post to spaces | 422; "Tweet body cannot be empty" | unchanged | — | The rule binds edits too |
+| CHR-06 | CHR-01 | Comment **280 emoji** on it | 201; body returned whole | stored whole | — | |
+| CHR-07 | CHR-01 | Comment two **no-break spaces** | 422; "Comment body cannot be empty" | — | — | Trimming removes Unicode white space, not only ASCII |
+| CHR-08 | CHR-06 | PATCH the comment to **281 emoji** | 422; "Comment body must be at most 280 characters" | unchanged | — | |
+| CHR-09 | CHR-01 | Read the post **as a guest** | 200; the 280 emoji intact | — | — | `noauth`, so the root bearer does not make it a signed-in read |
+
 ## 8 · Username rename & locator stability (WI-F)
 
 > Editable username via **History + Reservation + Redirect**. Renaming a handle
@@ -478,6 +498,27 @@ the post is already marked by then. The assertion is now a genuine before/after:
 media-only reorder leaves that exact instant alone. It is a stronger check than
 the one it replaced, since it proves the marker is neither **set** nor
 **refreshed** — and it runs inside the real media transaction.
+
+## Verification run — The character rule (2026-09-24)
+
+**Run against `fix/818-character-rule`, on the backend worktree's own port
+(`4001`) and database (`quicktweets_w2`). All of CHR-01…CHR-09 passed.** Newman:
+folder 15, **10 requests / 25 assertions, 0 failures**. Re-run because they post
+and edit bodies: folders 12 (**24**), 13 (**25**) and 14 (**19**), and folders
+00, 01, 04, 05 and 08 together (**59 requests / 102 assertions**). All 0 failures.
+
+**The first combined run failed 90 of 94 assertions, and none of it was the
+rule.** Three states of the harness, not of the code:
+
+- `mediaOrigin` still pointed at port `4000`, which folder 00's health check
+  reads. It is overridden like `baseUrl` when folders 00 or 02 run from the
+  command line.
+- The auth limiter was spent by the runs before it, so `Register` answered
+  `429`, and everything after it was unauthenticated.
+- Folder 01's fixed users already existed, so `Register` answered `409`
+  ([the known friction](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction)).
+  The run passed once users A and B were given per-run handles and e-mails
+  through `--env-var`.
 
 ---
 

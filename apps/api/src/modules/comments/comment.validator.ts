@@ -10,6 +10,7 @@
  */
 
 import { z } from "zod";
+import { bodyTextField } from "../../shared/validation/index.js";
 import { cursorQuerySchema } from "../../shared/validators/index.js";
 
 // ─── Media reference ─────────────────────────────────────────────────────────
@@ -31,11 +32,7 @@ export const createCommentSchema = z.object({
     .number({ error: "Tweet ID is required" })
     .int("Tweet ID must be an integer")
     .positive("Tweet ID must be a positive number"),
-  body: z
-    .string({ error: "Comment body is required" })
-    .min(1, "Comment body cannot be empty")
-    .max(280, "Comment body must be at most 280 characters")
-    .trim(),
+  body: bodyTextField("Comment body", z.string({ error: "Comment body is required" })),
   // The comment being answered. Absent means a top-level comment. Whether it
   // exists, sits on this tweet and is itself top-level is the service's to
   // answer — a validator cannot see the row.
@@ -51,12 +48,7 @@ export const createCommentSchema = z.object({
 
 export const updateCommentSchema = z
   .object({
-    body: z
-      .string()
-      .min(1, "Comment body cannot be empty")
-      .max(280, "Comment body must be at most 280 characters")
-      .trim()
-      .optional(),
+    body: bodyTextField("Comment body").optional(),
     // Full-replacement media: omitted → unchanged; `{ token }` → set/replace;
     // `null` → remove. `.nullable().optional()` allows all three.
     media: mediaRefSchema.nullable().optional(),

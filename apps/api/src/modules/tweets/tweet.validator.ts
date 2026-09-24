@@ -13,6 +13,7 @@
  */
 
 import { z } from "zod";
+import { bodyTextField } from "../../shared/validation/index.js";
 import { cursorQuerySchema } from "../../shared/validators/index.js";
 import { MAX_TWEET_MEDIA } from "./tweet.types.js";
 
@@ -41,11 +42,7 @@ export const feedQuerySchema = cursorQuerySchema.extend({
 // ─── Create Tweet ────────────────────────────────────────────────────────────
 
 export const createTweetSchema = z.object({
-  body: z
-    .string({ error: "Tweet body is required" })
-    .min(1, "Tweet body cannot be empty")
-    .max(280, "Tweet body must be at most 280 characters")
-    .trim(),
+  body: bodyTextField("Tweet body", z.string({ error: "Tweet body is required" })),
   media: mediaTokensSchema.optional(),
 });
 
@@ -53,12 +50,7 @@ export const createTweetSchema = z.object({
 
 export const updateTweetSchema = z
   .object({
-    body: z
-      .string()
-      .min(1, "Tweet body cannot be empty")
-      .max(280, "Tweet body must be at most 280 characters")
-      .trim()
-      .optional(),
+    body: bodyTextField("Tweet body").optional(),
     // Full replacement: the complete ordered array, not a delta. Omitted leaves
     // the tweet's media untouched; an empty array removes all of it.
     media: mediaTokensSchema.optional(),

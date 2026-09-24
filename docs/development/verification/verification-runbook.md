@@ -113,6 +113,19 @@ the graph it asserts against is deliberately **asymmetric** — B follows A and 
 does not follow back — so the two directions can be told apart. A mutual pair
 would pass whichever way the fields were wired.
 
+### Folder 15 — the character rule
+
+Self-isolated, and needs no pgAdmin: every outcome is a status and a body.
+
+```bash
+npm run verify:characters -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+Like folders 12–14 it registers an account on each run, and so spends the auth
+limiter's budget (10 per 15 minutes, per IP, in memory). After several runs in a
+row, a `429` on `Register` is that limiter rather than a defect: restart the API
+or wait out the window.
+
 ### Folder 14 — the edited marker
 
 Self-isolated, and needs no pgAdmin: the marker is a field in a body.
