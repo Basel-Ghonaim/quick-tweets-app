@@ -1,10 +1,7 @@
 import type { IconProps } from "../icon.types";
 import { ICON_DEFAULTS } from "../icon.types";
-import mirror from "../../foundations/composition/iconMirror.module.css";
-import { classNames } from "../../foundations/helpers";
 
-/** The handle points along the reading axis, so it changes side with it. */
-export const SearchIcon = ({
+export const RepostIcon = ({
   size = ICON_DEFAULTS.size,
   strokeWidth = ICON_DEFAULTS.strokeWidth,
   className,
@@ -18,10 +15,12 @@ export const SearchIcon = ({
     strokeWidth={strokeWidth}
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={classNames(mirror.mirrors, className)}
+    className={className}
     aria-hidden="true"
   >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <polyline points="17 1 21 5 17 9" />
+    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+    <polyline points="7 23 3 19 7 15" />
+    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
   </svg>
 );

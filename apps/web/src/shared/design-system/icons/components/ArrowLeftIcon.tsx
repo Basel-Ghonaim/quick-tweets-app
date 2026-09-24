@@ -3,8 +3,8 @@ import { ICON_DEFAULTS } from "../icon.types";
 import mirror from "../../foundations/composition/iconMirror.module.css";
 import { classNames } from "../../foundations/helpers";
 
-/** The handle points along the reading axis, so it changes side with it. */
-export const SearchIcon = ({
+/** Back is where a reader came from, which is the side they start at. */
+export const ArrowLeftIcon = ({
   size = ICON_DEFAULTS.size,
   strokeWidth = ICON_DEFAULTS.strokeWidth,
   className,
@@ -21,7 +21,7 @@ export const SearchIcon = ({
     className={classNames(mirror.mirrors, className)}
     aria-hidden="true"
   >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <line x1="19" y1="12" x2="5" y2="12" />
+    <polyline points="12 19 5 12 12 5" />
   </svg>
 );

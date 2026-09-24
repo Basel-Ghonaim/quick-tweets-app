@@ -3,8 +3,8 @@ import { ICON_DEFAULTS } from "../icon.types";
 import mirror from "../../foundations/composition/iconMirror.module.css";
 import { classNames } from "../../foundations/helpers";
 
-/** The handle points along the reading axis, so it changes side with it. */
-export const SearchIcon = ({
+/** Leaving points away from the page, which is the side a reader ends on. */
+export const SignOutIcon = ({
   size = ICON_DEFAULTS.size,
   strokeWidth = ICON_DEFAULTS.strokeWidth,
   className,
@@ -21,7 +21,8 @@ export const SearchIcon = ({
     className={classNames(mirror.mirrors, className)}
     aria-hidden="true"
   >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
   </svg>
 );

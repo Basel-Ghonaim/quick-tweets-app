@@ -3,8 +3,8 @@ import { ICON_DEFAULTS } from "../icon.types";
 import mirror from "../../foundations/composition/iconMirror.module.css";
 import { classNames } from "../../foundations/helpers";
 
-/** The handle points along the reading axis, so it changes side with it. */
-export const SearchIcon = ({
+/** The line climbs in the reading direction, so it changes hands with it. */
+export const TrendingIcon = ({
   size = ICON_DEFAULTS.size,
   strokeWidth = ICON_DEFAULTS.strokeWidth,
   className,
@@ -21,7 +21,7 @@ export const SearchIcon = ({
     className={classNames(mirror.mirrors, className)}
     aria-hidden="true"
   >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+    <polyline points="17 6 23 6 23 12" />
   </svg>
 );

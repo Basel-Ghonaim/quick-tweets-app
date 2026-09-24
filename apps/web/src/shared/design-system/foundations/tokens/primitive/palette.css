@@ -85,6 +85,13 @@
   --palette-red-600-vivid: #e80000;
   --palette-red-700: #b91c1c;
 
+  /* Two rungs, because the designs settle two: a ramp's length is a claim about
+     the product, and nothing here makes a longer one. What these are *for* is
+     not this layer's — the product names the meaning and resolves it per theme
+     (ADR 0010 Decision 8), and the wash it draws underneath is its own. */
+  --palette-rose-400: #f472b6;
+  --palette-rose-600: #c81e5f;
+
   --palette-violet-a10: rgba(124, 92, 255, 0.1);
   --palette-blue-a10: rgba(59, 130, 246, 0.1);
   --palette-neutral-a10: rgba(107, 114, 128, 0.1);

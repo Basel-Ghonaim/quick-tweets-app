@@ -1,10 +1,7 @@
 import type { IconProps } from "../icon.types";
 import { ICON_DEFAULTS } from "../icon.types";
-import mirror from "../../foundations/composition/iconMirror.module.css";
-import { classNames } from "../../foundations/helpers";
 
-/** The handle points along the reading axis, so it changes side with it. */
-export const SearchIcon = ({
+export const AlertTriangleIcon = ({
   size = ICON_DEFAULTS.size,
   strokeWidth = ICON_DEFAULTS.strokeWidth,
   className,
@@ -18,10 +15,11 @@ export const SearchIcon = ({
     strokeWidth={strokeWidth}
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={classNames(mirror.mirrors, className)}
+    className={className}
     aria-hidden="true"
   >
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
   </svg>
 );
