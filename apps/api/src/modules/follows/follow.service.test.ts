@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import type { IMediaResolution } from "../media/index.js";
 import { createFollowService } from "./follow.service";
-import type { FollowUserRow, IFollowRepository } from "./follow.types";
+import type { FollowUserRow, IFollowRepository, SuggestionQuery } from "./follow.types";
 
 const user = (id: number, avatarMediaId: number | null): FollowUserRow => ({
   id,
@@ -81,5 +81,53 @@ describe("follow lists — the avatar", () => {
     const { data } = await svc.getFollowing("ada", { limit: 20 });
 
     expect(data[0]!.avatar).toBeNull();
+  });
+});
+
+describe("suggested accounts — what the service asks the ranking for", () => {
+  const suggestionRepo = (known: Record<string, number>) => {
+    const asked: SuggestionQuery[] = [];
+    const repo: IFollowRepository = {
+      ...makeRepo([]),
+      findUserIdByUsername: async (handle) => known[handle] ?? null,
+      findSuggestions: async (query) => {
+        asked.push(query);
+        return [user(7, 90), user(8, null)];
+      },
+    };
+    return { repo, asked };
+  };
+
+  it("passes the limit, and the person to leave out as the account the handle names", async () => {
+    const { repo, asked } = suggestionRepo({ ada_old: 42 });
+
+    await createFollowService(repo, recording().resolution).getSuggestions(undefined, { limit: 20, exclude: "ada_old" });
+
+    expect(asked).toEqual([{ readerId: undefined, excludedId: 42, limit: 20 }]);
+  });
+
+  it("ignores a handle that names nobody, rather than refusing the list", async () => {
+    const { repo, asked } = suggestionRepo({});
+
+    const { data } = await createFollowService(repo, recording().resolution).getSuggestions(undefined, {
+      limit: 3,
+      exclude: "nobody_here",
+    });
+
+    expect(asked[0].excludedId).toBeUndefined();
+    expect(data).toHaveLength(2);
+  });
+
+  it("gives a guest rows with both follow flags false, and asks for no follow state", async () => {
+    const { repo } = suggestionRepo({});
+    const { resolution, batches } = recording();
+
+    const { data } = await createFollowService(repo, resolution).getSuggestions(undefined, { limit: 3 });
+
+    expect(data).toEqual([
+      { id: 7, username: "user7", name: null, avatar: { token: "tok-90" }, bio: "", isFollowing: false, followsYou: false },
+      { id: 8, username: "user8", name: null, avatar: null, bio: "", isFollowing: false, followsYou: false },
+    ]);
+    expect(batches).toEqual([[90]]);
   });
 });

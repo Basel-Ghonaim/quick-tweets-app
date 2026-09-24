@@ -96,4 +96,20 @@ export const createFollowController = (
       next(err);
     }
   },
+
+  /**
+   * GET /follows/suggestions
+   * Accounts to follow, best first. A guest gets the most-followed.
+   */
+  getSuggestions: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { limit, exclude } = req.query as unknown as { limit: number; exclude?: string };
+
+      const result = await service.getSuggestions(req.userId, { limit, exclude });
+
+      sendSuccess(res, result.data);
+    } catch (err) {
+      next(err);
+    }
+  },
 });

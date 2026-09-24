@@ -12,9 +12,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { prisma } from "../../shared/database/index.js";
 import { createFollowRepository } from "./follow.repository.js";
+import { createFollowService } from "./follow.service.js";
 
 const TAG = `itsug${process.pid}x${Math.floor(process.hrtime()[1])}`;
 const repo = createFollowRepository();
+const service = createFollowService();
 
 let reachable = false;
 // Created in this order, so ids rise with it: E is older than D, and X is the newest.
@@ -47,8 +49,11 @@ beforeAll(async () => {
     [A, X], [B, X], // X: two, and as many followers as C. X is newer.
     [B, D], // D: one, with one follower.
     [B, E], [Z, E], // E: one, with two followers. E is older than D.
+    [C, R], // C follows the reader back, so C's row says so.
   ];
   await prisma.follow.createMany({ data: edges.map(([followerId, followingId]) => ({ followerId, followingId })) });
+  // X once went by another handle; a profile address can still carry it.
+  await prisma.usernameAlias.create({ data: { username: `${TAG}xold`, userId: X } });
 }, 30_000);
 
 afterAll(async () => {
@@ -147,5 +152,31 @@ describe("the fill: the most-followed, where the ranked part runs short", () => 
     expect(suggested.length).toBeGreaterThan(4);
     expect(new Set(suggested).size).toBe(suggested.length);
     expect(await isMostFollowedFirst(suggested.slice(4))).toBe(true);
+  });
+});
+
+describe("the service: exclude by handle, and each row's follow state", () => {
+  it("leaves out the person being viewed when the address carries their former handle", async () => {
+    if (!reachable) return;
+    const { data } = await service.getSuggestions(ids.R, { limit: 3, exclude: `${TAG}xold` });
+
+    expect(data.map((item) => nameOf(item.id))).toEqual(["C", "E", "D"]);
+  });
+
+  it("tells the reader who follows them back, and never that they follow anyone listed", async () => {
+    if (!reachable) return;
+    const { data } = await service.getSuggestions(ids.R, { limit: 4 });
+    const c = data.find((item) => item.id === ids.C);
+
+    expect(c).toMatchObject({ isFollowing: false, followsYou: true });
+    expect(data.every((item) => !item.isFollowing)).toBe(true);
+  });
+
+  it("gives a guest the same list with both flags false", async () => {
+    if (!reachable) return;
+    const { data } = await service.getSuggestions(undefined, { limit: 20 });
+
+    expect(data.length).toBeGreaterThan(0);
+    expect(data.every((item) => !item.isFollowing && !item.followsYou)).toBe(true);
   });
 });

@@ -130,4 +130,10 @@ export interface IFollowService {
     params: CursorParams,
     readerId?: number,
   ): Promise<{ data: FollowUserItem[]; meta: CursorMeta }>;
+
+  /** `readerId` is absent for a guest, who gets the most-followed. Not paged. */
+  getSuggestions(
+    readerId: number | undefined,
+    params: { limit: number; exclude?: string },
+  ): Promise<{ data: FollowUserItem[] }>;
 }
