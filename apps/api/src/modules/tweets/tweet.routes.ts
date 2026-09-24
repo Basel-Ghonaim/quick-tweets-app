@@ -19,6 +19,7 @@
 import { Router } from "express";
 import { validate } from "../../middleware/validate.js";
 import { authGuard } from "../../middleware/authGuard.js";
+import { editLimiter } from "../../middleware/rateLimiter.js";
 import { optionalAuth } from "../../middleware/optionalAuth.js";
 import { createTweetController } from "./tweet.controller.js";
 import { createTweetSchema, updateTweetSchema, feedQuerySchema } from "./tweet.validator.js";
@@ -35,7 +36,8 @@ tweetRoutes.get("/:id", optionalAuth, controller.getById);
 // ─── Protected Routes (auth required) ────────────────────────────────────────
 
 tweetRoutes.post("/", authGuard, validate(createTweetSchema), controller.create);
-tweetRoutes.patch("/:id", authGuard, validate(updateTweetSchema), controller.update);
+// After auth, which names the account it counts; before validation, so every attempt counts.
+tweetRoutes.patch("/:id", authGuard, editLimiter, validate(updateTweetSchema), controller.update);
 tweetRoutes.delete("/:id", authGuard, controller.delete);
 // Set and clear, not a toggle: the verbs carry the idempotency a repeated
 // press needs, rather than leaving it to a payload a client might omit.
