@@ -22,6 +22,7 @@ const makeRepo = (users: FollowUserRow[]): IFollowRepository => ({
   countFollowers: async () => 0,
   getFollowers: async () => users.map((follower, i) => ({ id: i + 1, follower })),
   getFollowing: async () => users.map((following, i) => ({ id: i + 1, following })),
+  findSuggestions: async () => [],
 });
 
 /** A resolution that records every batch it is asked for; `unresolved` stay absent. */
