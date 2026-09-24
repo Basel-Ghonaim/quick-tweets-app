@@ -5,8 +5,8 @@
 > **Authority:** The authoritative source for the frontend's **outer architecture** — the four zones (`app/` · `pages/` · `features/` · `shared/`), the dependency boundaries between them, the page-group contract, the composition root, and the thin platform utilities no other document owns — and for the **capability structure**, the one internal organisation every capability shares. It owns the **structure between subsystems** and the layers a capability is organised in, not any subsystem's mechanism: each platform subsystem's mechanism is owned by its own document (see the platform index below), per-feature behavior by the feature documents, the system topology and request lifecycle by the [system overview](../architecture/system-overview.md), and the underlying principles by [Engineering Principles §3](../development/engineering-principles.md).
 > **Scope:** The structure of `apps/web/src/` — how the frontend is zoned, how the zones may depend on each other, where features meet the platform, and how each capability inside them is organised.
 > **Maturity:** This document describes the **intended and settled** architecture; where the code currently deviates from a rule, the deviation is **recorded in the [findings register](../architecture/findings/)** — never silently absorbed into this document. The capability structure was written once authentication, recovery, the session and channel verification had been built in two different shapes, and reconciles them ([Engineering Principles §3](../development/engineering-principles.md)). Anything not described here is not yet stabilized, not architecturally rejected.
-> **Version:** 3.1
-> **Last Updated:** 2026-09-22
+> **Version:** 3.2
+> **Last Updated:** 2026-09-24
 > **Owner:** Basel Ghonaim
 
 ## Why zones at all
@@ -43,7 +43,7 @@ Each zone may import the zones below it and never a zone above.
 - **`pages/` import `features/` and `shared/`**, never `app/`. A page may not reach transport directly and may not own state.
 - **`app/` may import all three** — composing them is precisely its job.
 
-**A slice never imports a sibling in its own zone**: one feature never imports another, and one page group never imports another. **The rule does not reach `shared/`**, which is divided by mechanism rather than by domain, so its parts compose one another freely; what bounds them is the direction above ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 1, as revised).
+**A slice never imports a sibling in its own zone**: one feature never imports another, and one page group never imports another. **The rule does not reach `shared/`**, which is divided by mechanism rather than by domain, so its parts compose one another freely; what bounds them is the direction above ([ADR 0018](../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 1, as revised). **The Design System is the one exception**: it imports nothing from outside itself, siblings in `shared/` included, and the reason is the [layer's own](design-system/README.md).
 
 **Story files are exempt from the zone direction** — a story renders a thing in the composition a reader actually meets, and that composition is a page (Decision 9). Production code is not exempt.
 
