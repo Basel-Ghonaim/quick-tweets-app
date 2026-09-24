@@ -21,11 +21,13 @@ export const updateMeSchema = z
   .object({
     // Optional profile data: omitted = unchanged, `null` = clear (set to NULL),
     // a string = set/replace (validated). name is never derived from username.
+    // Length is counted before trimming, as the profile form counts it; emptiness
+    // after, so white space alone is not a name.
     name: z
       .string()
-      .min(1, "Name is required")
       .max(50, "Name must be at most 50 characters")
       .trim()
+      .min(1, "Name is required")
       .nullable()
       .optional(),
     // Rename: omitted = unchanged, a string = new handle. Same lowercase-only rule
