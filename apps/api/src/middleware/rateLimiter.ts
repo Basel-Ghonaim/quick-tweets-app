@@ -98,6 +98,27 @@ export const apiLimiter = rateLimit({
   },
 });
 
+// ─── Edit Limiter (per account) ──────────────────────────────────────────────
+
+/**
+ * Keyed on the account, not the address: an edit is always signed in, and moving
+ * address must not buy more edits. It must run after authGuard, which supplies it.
+ */
+export const editLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  keyGenerator: (req) => `edit:${req.userId}`,
+  message: {
+    success: false,
+    error: {
+      type: "edit_rate_limit",
+      message: "You have edited posts too often. Please wait and try again later.",
+    },
+  },
+});
+
 // ─── Channel Verification Limiters ───────────────────────────────────────────
 
 /**

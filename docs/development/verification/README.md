@@ -217,6 +217,23 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## The edit limit
+
+Folder **17 · Edit limit** exercises the limit on editing a post
+([#826](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/826)): ten
+edits an hour per account, then `429` with `type: "edit_rate_limit"` and
+`Retry-After`. **Self-isolated**, runs whole from the command line
+(`npm run verify:edit-limit`), no pgAdmin. See scenarios **EDL-01…EDL-05**.
+
+**Its guarantees:**
+
+- the limit is kept **per account**: another account on the same address still
+  edits;
+- it covers **posts only**: a comment still edits;
+- it sits **after authentication**: an unsigned edit gets `401`, not `429`.
+
+The ten edits are one request that queues itself ten times.
+
 ## Text safety
 
 Folder **16 · Text safety** exercises what the server does to text other

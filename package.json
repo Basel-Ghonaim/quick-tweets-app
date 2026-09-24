@@ -18,6 +18,7 @@
     "check:boundaries": "tsc -p checks/tsconfig.json && vitest run checks/boundaries.test.ts",
     "check:docs": "vitest run checks/documentation.test.ts",
     "verify:characters": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"15 · Character rule\"",
+    "verify:edit-limit": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"17 · Edit limit\"",
     "verify:edited": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"14 · Edited marker\"",
     "verify:follows": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"07 · Follows\"",
     "verify:likes": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"13 · Comment likes\"",

@@ -113,6 +113,22 @@ the graph it asserts against is deliberately **asymmetric** — B follows A and 
 does not follow back — so the two directions can be told apart. A mutual pair
 would pass whichever way the fields were wired.
 
+### Folder 17 — the edit limit
+
+Self-isolated, and needs no pgAdmin. Each run registers two new accounts, so it
+starts with a fresh budget and reruns safely.
+
+```bash
+npm run verify:edit-limit -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+**The edit limit can catch other folders.** It allows ten post edits per
+account per hour, in the API process's memory. Folder 04 edits as the
+environment's **fixed** user A four times per run, so a third run of folder 04
+within an hour, on one API process, answers `429 edit_rate_limit`. Nothing is
+wrong in that case. Restart the API, or give user A a per-run handle through
+`--env-var` as the combined regression run does.
+
 ### Folder 16 — text safety
 
 Self-isolated, and needs no pgAdmin: every outcome is a status and a body.

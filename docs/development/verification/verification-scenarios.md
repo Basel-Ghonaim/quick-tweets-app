@@ -308,6 +308,25 @@ no longer describe executable behavior and are retired rather than rewritten her
 | TXT-12 | TXT-10 | Read the profile **as a guest** | 200; `René`, `bio: ""` | — | — | `noauth` |
 | TXT-13 | TXT-01 | Read the post **as a guest** | 200; `Café` composed | — | — | `noauth` |
 
+## 7f · The edit limit — ten post edits an hour, per account ([#826](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/826))
+
+> **What the folder proves:**
+> - Editing a post is limited **per account**, not per address.
+> - The eleventh edit in an hour is refused with its **own type** and a
+>   `Retry-After`.
+> - Comment edits are not included.
+> - The limit sits **after authentication**.
+>
+> Folder 17 is **self-isolated**: two new accounts per run.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| EDL-01 | Setup: accounts A and B; A's post and comment; B's post | A edits the post **ten times** | 200 each | edited | — | One request, queued ten times |
+| EDL-02 | EDL-01 | A edits it an **eleventh** time | **429**; `type: "edit_rate_limit"`, its own message, `Retry-After` > 0 | unchanged | — | Not `rate_limit`: the frontend words the two differently |
+| EDL-03 | EDL-02 | A edits the **comment** | 200 | edited | — | Posts only |
+| EDL-04 | EDL-02 | **B**, from the same address, edits B's post | 200 | edited | — | Per account, not per IP |
+| EDL-05 | EDL-02 | An **unsigned** edit of A's post | **401**, not 429 | unchanged | — | `noauth`: the limit counts accounts, so it runs after authentication |
+
 ## 8 · Username rename & locator stability (WI-F)
 
 > Editable username via **History + Reservation + Redirect**. Renaming a handle
@@ -565,6 +584,23 @@ a fresh limiter, and per-run users A and B.
 **Before the change, the same probes showed the gap:** a guest read a name of
 spaces as `""`, a bio carrying U+202E, and a name made only of a zero-width
 space.
+
+## Verification run — The edit limit (2026-09-24)
+
+**Run against `feat/826-edit-limit`, on the backend worktree's own port
+(`4001`) and database (`quicktweets_w2`). All of EDL-01…EDL-05 passed.**
+
+- **Newman, folder 17:** **19 requests / 23 assertions, 0 failures**, the ten
+  edits counted as ten requests.
+- **Rerun at once,** it passed again, since each run brings new accounts.
+
+**Re-run as regression:**
+- folders 16 (**32**), 15 (**25**), 14 (**19**), 13 (**25**) and 12 (**24**);
+- folders 00, 01, 04, 05, 08 and 09, together (**71 requests / 125
+  assertions**). Folder 04 edits posts, so it is the folder the limit could
+  catch.
+
+All 0 failures.
 
 ---
 

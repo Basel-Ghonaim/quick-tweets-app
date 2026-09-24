@@ -3,7 +3,7 @@
 > **Status:** Active.
 > **Authority:** The authoritative source for the backend's **security mechanisms and the reasoning behind them** — authentication and the token model, password handling, the auth cookie, rate limiting, text safety, and HTTP hardening. It owns the *how* and the *why*. It does **not** own the wire contract (the auth endpoints, the rate-limit figures, and the auth modes are the [API contract](../api/api-contract.md)'s), the security *principles* it applies ([Engineering Principles §7](../development/engineering-principles.md)), or the **frontend** side of the token model (the in-memory access token and the 401-refresh flow belong to the [frontend API client](../frontend/api-client.md)).
 > **Scope:** Server-side security mechanisms shared across the backend. Per-feature authorization rules live in the feature documents; the request lifecycle in the [system overview](../architecture/system-overview.md).
-> **Version:** 1.5
+> **Version:** 1.6
 > **Last Updated:** 2026-09-24
 > **Owner:** Basel Ghonaim
 
@@ -70,7 +70,7 @@ Beyond authentication, **authorization is re-checked server-side**: mutating end
 
 ## Rate limiting
 
-Eight per-IP rate limiters protect different surfaces over a fixed window, each tier sized to its own threat rather than sharing one global cap:
+Nine rate limiters protect different surfaces over a fixed window, each tier sized to its own threat rather than sharing one global cap. Eight are keyed per IP; one is keyed per account:
 
 - **auth** (login/register) — strict, to blunt brute-force password guessing;
 - **refresh** — generous, because the silent refresh is automated and a tight limit would lock out normal browsing;
@@ -78,6 +78,7 @@ Eight per-IP rate limiters protect different surfaces over a fixed window, each 
 - **verification issue** — guards outbound spend and sender reputation rather than secrecy; the durable control is the per-address cooldown [Channel Verification](channel-verification.md) enforces, and this limiter is only the cheap outer layer;
 - **verification confirm** — sized for people mistyping rather than for attackers, since a single-use code of that length is out of brute-force reach whatever this limiter says;
 - **the three password-reset tiers**, across four routes — requesting a code and resending one share a budget, because minting from either is the same act and separate budgets would make the real ceiling their sum. The actor is the reason they are sized differently from the verification pair rather than the operation: those endpoints sit behind the auth guard, so a caller must already hold a session to reach them, while these are anonymous. **Applying is the tightest**, since it hashes a password before the code is examined, so even a rejected request costs real work. The shared mint budget is the widest of the three because it is sized for a whole recovery — a request, its resends, and a correction if the address was mistyped — rather than for one call. As with verification, the durable controls sit beneath them — the per-account cooldown [Password Reset](password-reset.md) enforces and the per-recipient cap [Mail Delivery](mail.md) does.
+- **editing a post** — the one limiter keyed **per account**, not per address. An edit is always signed in, so the account is known, and a budget keyed on the address could be refilled by moving to another one. It sits after authentication, which names the account, and before validation, so every attempt counts, whether or not the edit is accepted. Editing a comment is not included, as the plan settled.
 
 The exact windows, limits, and `429` messages are owned by the [API contract](../api/api-contract.md). The app **trusts one proxy hop** so the limiter keys on the real client IP behind a reverse proxy — otherwise everyone behind the proxy would share a single counter.
 
