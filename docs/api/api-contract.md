@@ -93,6 +93,7 @@ POST   /api/v1/follows/:username
 DELETE /api/v1/follows/:username
 GET    /api/v1/follows/:username/followers
 GET    /api/v1/follows/:username/following
+GET    /api/v1/follows/suggestions
 
 GET    /api/v1/onboarding/journey                       (authenticated)
 POST   /api/v1/onboarding/journey/advance               (authenticated)
@@ -1259,6 +1260,40 @@ comments at both levels.
   costs the same two lookups as a page of one, and a guest costs none.
 - Adding these fields and widening the auth mode are **additive**: no field was
   removed or redefined, so no `v2` and no pre-release exception.
+
+### `GET /follows/suggestions` — Suggested accounts ("Who to follow")
+
+**Auth:** Optional. A guest gets the most-followed accounts.
+**Query params:** `?limit=3&exclude=<username>`
+- `limit` — how many to return: **1 to 20, default 3**. A bounded list, **not paged**: the sidebar asks for 3, and "Show more" for up to 20. Anything else is `422`.
+- `exclude` — the person whose profile is being viewed, by **current or former** username. A username that names nobody is ignored rather than refused.
+
+```jsonc
+// Response 200 — no meta: the list is not paged
+{
+  "success": true,
+  "data": [
+    {
+      "id": 9,
+      "username": "noor",
+      "name": "Noor",
+      "avatar": null,
+      "bio": "",
+      "isFollowing": false,
+      "followsYou": true
+    }
+  ]
+}
+
+// Response 422
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "limit": ["Too big: expected number to be <=20"] } } }
+```
+
+- **Who is suggested.** For a signed-in reader: first the people followed by the accounts the reader follows, ranked by **how many of them** follow each; then, where that runs short, the **most-followed** accounts. A guest gets the most-followed alone.
+- **Never included:** the reader, anyone the reader already follows, and `exclude`. So `isFollowing` is always `false`, and `followsYou` says who would be followed back.
+- **The same order on every request:** at equal rank, **more followers first, then the newest account**.
+- **Rows are the follower lists' own shape**, carrying [FollowState](#followstate), and follow state is resolved once for the whole list, as it is for those lists.
+- The path is under `/follows`, not `/users`: `suggestions` is a legal username, and `GET /users/:username` would lose that person's profile to it.
 
 ---
 
