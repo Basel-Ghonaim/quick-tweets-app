@@ -1,7 +1,7 @@
 import { forwardRef, type MouseEvent } from "react";
 import styles from "./ToggleButton.module.css";
 import type { ToggleButtonProps } from "./ToggleButton.types";
-import type { ButtonProps } from "../Button/Button.types";
+import type { ButtonActionProps } from "../Button/Button.types";
 import type { IconButtonProps } from "../IconButton/IconButton.types";
 import { Button } from "../Button";
 import { IconButton } from "../IconButton";
@@ -29,7 +29,7 @@ export const ToggleButton = forwardRef<HTMLButtonElement, ToggleButtonProps>(
     return "icon" in props ? (
       <IconButton {...(props as IconButtonProps)} {...shared} />
     ) : (
-      <Button {...(props as ButtonProps)} {...shared} />
+      <Button {...(props as ButtonActionProps)} {...shared} />
     );
   },
 );

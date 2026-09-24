@@ -1,4 +1,4 @@
-import type { ButtonProps } from "../Button/Button.types";
+import type { ButtonActionProps } from "../Button/Button.types";
 import type { IconButtonProps } from "../IconButton/IconButton.types";
 
 /**
@@ -18,4 +18,4 @@ interface PressedState {
 export type ToggleButtonProps =
   | (PressedState &
       Omit<IconButtonProps, "aria-pressed"> & { children?: never })
-  | (PressedState & Omit<ButtonProps, "aria-pressed"> & { icon?: never });
+  | (PressedState & Omit<ButtonActionProps, "aria-pressed"> & { icon?: never });
