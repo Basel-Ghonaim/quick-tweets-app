@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-24
+> **Last Updated:** 2026-09-25
 > **Parent Issue:** [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792)
 > **Supersedes:** —
 
@@ -53,10 +53,10 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 
 ### 2.3 · Changes to existing parts
 
-- **Icons:** the additions the designs use, including a filled form for "liked" and mirroring in right to left where the meaning has a direction.
+- **Icons:** the additions the designs use, and mirroring in right to left where the meaning has a direction. A filled "liked" is not a second glyph — the design fills the shared one from the consumer.
 - **Textarea:** hosts a character count. The limit is passed in and never known to the Design System.
-- **Input:** a rounded (pill) shape, for the search field.
-- **Navigation drawn as an action:** a link that looks like a button.
+- **Input:** no change. The approved designs draw the search field on the stock filled variant and override the component nowhere, so the pill the extension log named was never settled.
+- **Navigation drawn as an action:** the designs draw an anchor carrying a button's appearance, so it is a button that navigates rather than a link that looks like one (§4).
 
 ### 2.4 · Qualities every addition keeps
 
@@ -94,15 +94,16 @@ Also not the Design System's:
 
 What remains outstanding, and what each one gates:
 
-- **How a component navigates**, now that a second and a third need to. `Link` takes the navigating element from its caller; the [frontend architecture](../frontend/architecture.md) holds that a second such component converts that pattern to a **seam**. *Gates Tabs (§2.2) and navigation drawn as an action (§2.3) — the design draws the latter as an anchor carrying a button's appearance, so it is a Button that navigates rather than a Link that looks like one.*
-- **Where determinate progress lives.** The composer's character count is drawn as a ring, and an upload is drawn as a bar; both are the same concept, and the HTML `progress` element is its platform basis. *Gates the character count (§2.3), and answers the upload bar the page would otherwise own.*
-- **Whether `Alert` is built here and the interim migrated separately.** `MessageRegion` stands in for it across ten consumers in authentication and recovery, so building and migrating are different sizes of work ([Finding 0024](../architecture/findings/open/0024-message-region-enters-the-layer-below-its-conventions.md)). *Gates nothing already listed; decides whether new surfaces keep adopting the interim.*
-- **How an icon expresses a filled form.** Every icon in the set is stroke-only, and "liked" needs a filled one. *Gates the icon additions (§2.3).*
+*Nothing is outstanding. The four questions that were, are answered below.*
 
 ### Settled, and where each answer lives
 
 | Question | Answer |
 |---|---|
+| **How a component navigates** | **The seam.** `Link` takes the navigating element today; Tabs and navigation-drawn-as-an-action are the second and third that need one, which the [frontend architecture](../frontend/architecture.md) holds converts that pattern to an inversion. Its own Work Item, before either consumer |
+| **Where determinate progress lives** | **One `Progress` part**, linear and ring, on the `progress` element's platform basis. The composer's count ring and an upload's bar are the same concept, so the part precedes the count |
+| **`Alert`** | **Built with its migration, not before it:** implementing `Alert` includes replacing `MessageRegion` at its consumers, rather than leaving two message components standing. It waits on a design — the approved designs draw no `Alert` and compose the interim instead ([Finding 0024](../architecture/findings/open/0024-message-region-enters-the-layer-below-its-conventions.md)) |
+| **How an icon expresses a filled form** | **The caller fills it.** The design renders one heart glyph in both states and fills it from a consumer class, so the set gains no filled twin and the shared icon contract gains no prop |
 | The **stacking order** as a shared concept | Built. The approved designs supplied the complete sequence, and [Finding 0012](../architecture/findings/resolved/0012-no-shared-stacking-concept.md) closed with it |
 | A larger **touch target** for coarse pointers | No token. Five parts want five sizes above one agreed floor, which is five decisions rather than one concept — the [Foundation contract](../frontend/design-system/foundation.md) holds the reasoning |
 | The **reduced-motion** answer, for this track | Gates nothing here: the approved designs animate none of these parts, Skeleton included. [Finding 0013](../architecture/findings/open/0013-motion-claims-an-unbuilt-reduced-motion-resolution.md) stays open on its own merits |
