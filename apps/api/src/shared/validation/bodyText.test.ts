@@ -26,3 +26,21 @@ describe("bodyTextField — measured after trimming", () => {
     expect(field.parse(padded)).toBe("a".repeat(280));
   });
 });
+
+describe("bodyTextField — a character is a code point", () => {
+  it("accepts 280 characters that each take two UTF-16 units", () => {
+    expect(field.safeParse("👍".repeat(280)).success).toBe(true);
+  });
+
+  it("refuses the 281st character", () => {
+    expect(messagesOf("👍".repeat(281))).toEqual(["Body must be at most 280 characters"]);
+    expect(messagesOf(`${"a".repeat(280)}👍`)).toEqual(["Body must be at most 280 characters"]);
+  });
+
+  it("counts code points, not what a reader sees as one symbol", () => {
+    const family = "👨‍👩‍👧"; // five code points joined into one glyph
+
+    expect(field.safeParse(family.repeat(56)).success).toBe(true);
+    expect(messagesOf(family.repeat(57))).toEqual(["Body must be at most 280 characters"]);
+  });
+});

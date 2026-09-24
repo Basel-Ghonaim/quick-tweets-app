@@ -11,12 +11,20 @@ const bodyMessages = (result: { success: boolean; error?: { issues: { path: Prop
   result.error?.issues.filter((i) => i.path[0] === "body").map((i) => i.message) ?? [];
 
 describe("createTweetSchema — the body rule", () => {
+  it("accepts 280 characters of emoji, counting each once", () => {
+    expect(createTweetSchema.safeParse({ body: "👍".repeat(280) }).success).toBe(true);
+  });
+
   it("refuses a body of spaces rather than storing it empty", () => {
     expect(bodyMessages(createTweetSchema.safeParse({ body: "     " }))).toEqual(["Tweet body cannot be empty"]);
   });
 });
 
 describe("updateTweetSchema — the body rule", () => {
+  it("accepts 280 characters of emoji, counting each once", () => {
+    expect(updateTweetSchema.safeParse({ body: "👍".repeat(280) }).success).toBe(true);
+  });
+
   it("refuses a body of spaces rather than storing it empty", () => {
     expect(bodyMessages(updateTweetSchema.safeParse({ body: "     " }))).toEqual(["Tweet body cannot be empty"]);
   });

@@ -86,6 +86,10 @@ const bodyIssues = (result: { success: boolean; error?: { issues: { path: Proper
   result.error?.issues.filter((i) => i.path[0] === "body").map((i) => i.message) ?? [];
 
 describe("createCommentSchema — the body rule", () => {
+  it("accepts 280 characters of emoji, counting each once", () => {
+    expect(createCommentSchema.safeParse({ tweetId: 5, body: "👍".repeat(280) }).success).toBe(true);
+  });
+
   it("refuses a body of spaces rather than storing it empty", () => {
     expect(bodyIssues(createCommentSchema.safeParse({ tweetId: 5, body: "     " }))).toEqual([
       "Comment body cannot be empty",
@@ -94,6 +98,10 @@ describe("createCommentSchema — the body rule", () => {
 });
 
 describe("updateCommentSchema — the body rule", () => {
+  it("accepts 280 characters of emoji, counting each once", () => {
+    expect(updateCommentSchema.safeParse({ body: "👍".repeat(280) }).success).toBe(true);
+  });
+
   it("refuses a body of spaces rather than storing it empty", () => {
     expect(bodyIssues(updateCommentSchema.safeParse({ body: "     " }))).toEqual([
       "Comment body cannot be empty",
