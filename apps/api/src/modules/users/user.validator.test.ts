@@ -44,3 +44,61 @@ describe("updateMeSchema — a name must have something in it", () => {
     expect(nameMessages(` ${"a".repeat(50)} `)).toEqual(["Name must be at most 50 characters"]);
   });
 });
+
+const bioMessages = (value: unknown) => {
+  const result = updateMeSchema.safeParse({ bio: value });
+  return result.success ? [] : result.error.issues.filter((i) => i.path[0] === "bio").map((i) => i.message);
+};
+
+describe("updateMeSchema — a name safe among other readers' words", () => {
+  it("is stored in NFC", () => {
+    expect(updateMeSchema.parse({ name: "Rene\u0301" }).name).toBe("René");
+  });
+
+  it("refuses a direction control, with one message", () => {
+    expect(nameMessages("Ada\u202E")).toEqual(["Name cannot contain text-direction control characters"]);
+  });
+
+  it("refuses a name made only of invisible characters", () => {
+    expect(nameMessages("\u200B")).toEqual(["Name is required"]);
+  });
+
+  it("counts length on the normalised name, so the limit protects what is stored", () => {
+    expect(nameMessages("\u0958".repeat(25))).toEqual([]);
+    expect(nameMessages("\u0958".repeat(26))).toEqual(["Name must be at most 50 characters"]);
+  });
+});
+
+describe("updateMeSchema — bio", () => {
+  it("is cleared by the empty string and by white space, as before", () => {
+    expect(updateMeSchema.parse({ bio: "" }).bio).toBe("");
+    expect(updateMeSchema.parse({ bio: "   " }).bio).toBe("");
+  });
+
+  it("is cleared, not refused, when it is made only of invisible characters", () => {
+    expect(updateMeSchema.parse({ bio: "\u200B\u200D" }).bio).toBe("");
+  });
+
+  it("is stored in NFC, and refuses a direction control", () => {
+    expect(updateMeSchema.parse({ bio: "cafe\u0301" }).bio).toBe("café");
+    expect(bioMessages("hi\u2066")).toEqual(["Bio cannot contain text-direction control characters"]);
+  });
+
+  it("still refuses null, and counts length before trimming", () => {
+    expect(bioMessages(null)).toHaveLength(1);
+    expect(bioMessages("a".repeat(160))).toEqual([]);
+    expect(bioMessages("a".repeat(161))).toEqual(["Bio must be at most 160 characters"]);
+    expect(bioMessages(` ${"a".repeat(160)}`)).toEqual(["Bio must be at most 160 characters"]);
+  });
+});
+
+describe("updateMeSchema — username is not text for readers", () => {
+  it("keeps its own rule: refused for its characters, not by text safety", () => {
+    const result = updateMeSchema.safeParse({ username: "ada\u202E" });
+
+    expect(result.success).toBe(false);
+    expect(result.error?.issues.map((i) => i.message)).toEqual([
+      "Username can only contain lowercase letters, numbers, and underscores",
+    ]);
+  });
+});
