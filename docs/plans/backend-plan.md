@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-23
+> **Last Updated:** 2026-09-24
 > **Parent Issue:** [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791)
 > **Supersedes:** —
 
@@ -77,7 +77,13 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 ### 2.7 · Text
 
 - **One definition of a character**, shared by the frontend and the backend, so a post the counter accepts is never refused. It binds posts, comments and replies alike.
-- Text is **safe to show among other people's words** in both directions. This is already tracked as [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775).
+- Text is **safe to show among other people's words** in both directions. This is already tracked as [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775), and settled as follows:
+  - **Which text:** post and comment bodies, a display name and a bio, which is the text other readers see. Usernames are ASCII already.
+  - **Normalised to NFC** when it is written.
+  - **Direction controls refused** when written: the embeddings, overrides and isolates (U+202A–U+202E, U+2066–U+2069). The refusal is a `422` that names the field and never echoes the character. The direction **marks** (U+200E, U+200F, U+061C) are accepted, because Arabic text uses them legitimately.
+  - **Text made only of invisible characters**, such as a zero-width space, is treated as empty.
+  - **At write only, with no backfill.** Rows written before it ships stay as they are: the data is test data, and `v1` has no released consumer.
+  - **It lands before the first surface that shows other readers' text.** That is the trigger #775 was recorded with.
 - Text made only of spaces is not accepted as content.
 
 ---
