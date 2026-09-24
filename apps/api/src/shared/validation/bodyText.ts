@@ -8,6 +8,7 @@ const MAX_CHARACTERS = 280;
  */
 export const bodyTextField = (noun: string, base: z.ZodString = z.string()) =>
   base
+    // Zod checks in chain order, so trimming first makes the length see what is stored.
+    .trim()
     .min(1, `${noun} cannot be empty`)
-    .max(MAX_CHARACTERS, `${noun} must be at most ${MAX_CHARACTERS} characters`)
-    .trim();
+    .max(MAX_CHARACTERS, `${noun} must be at most ${MAX_CHARACTERS} characters`);

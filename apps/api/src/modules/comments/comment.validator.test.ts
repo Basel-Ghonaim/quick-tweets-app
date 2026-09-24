@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { commentQuerySchema, createCommentSchema } from "./comment.validator";
+import { commentQuerySchema, createCommentSchema, updateCommentSchema } from "./comment.validator";
 
 const issuesOf = (result: { success: boolean; error?: { issues: { message: string }[] } }) =>
   result.error?.issues.map((i) => i.message) ?? [];
@@ -79,5 +79,24 @@ describe("createCommentSchema — answering a comment", () => {
     expect(createCommentSchema.safeParse({ tweetId: 5, body: "hi", parentId: "0" }).success).toBe(
       false,
     );
+  });
+});
+
+const bodyIssues = (result: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) =>
+  result.error?.issues.filter((i) => i.path[0] === "body").map((i) => i.message) ?? [];
+
+describe("createCommentSchema — the body rule", () => {
+  it("refuses a body of spaces rather than storing it empty", () => {
+    expect(bodyIssues(createCommentSchema.safeParse({ tweetId: 5, body: "     " }))).toEqual([
+      "Comment body cannot be empty",
+    ]);
+  });
+});
+
+describe("updateCommentSchema — the body rule", () => {
+  it("refuses a body of spaces rather than storing it empty", () => {
+    expect(bodyIssues(updateCommentSchema.safeParse({ body: "     " }))).toEqual([
+      "Comment body cannot be empty",
+    ]);
   });
 });
