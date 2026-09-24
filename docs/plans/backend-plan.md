@@ -98,15 +98,17 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - **One definition of a character**, shared by the frontend and the backend, so a post the counter accepts is never refused. It binds posts, comments and replies alike.
   - A character is **a Unicode code point**, which is what the approved design's counter counts.
   - Length is measured **after** the text is trimmed, so the limit applies to what is stored. Once text is normalised (below), the order is **normalise, trim, then count**.
+  - **It does not bind a display name or a bio.** Theirs count as they always have: UTF-16 units measured before trimming, up to 50 and 160, as the profile form counts them. They are measured on the **normalised** text, so the limit protects what is stored.
 - Text is **safe to show among other people's words** in both directions. This is already tracked as [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775), and settled as follows:
   - **Which text:** post and comment bodies, a display name and a bio, which is the text other readers see. Usernames are ASCII already.
   - **Normalised to NFC** when it is written.
   - **Direction controls refused** when written: the embeddings, overrides and isolates (U+202A–U+202E, U+2066–U+2069). The refusal is a `422` that names the field and never echoes the character. The direction **marks** (U+200E, U+200F, U+061C) are accepted, because Arabic text uses them legitimately.
-  - **Text made only of invisible characters**, such as a zero-width space, is treated as empty.
+  - **Text made only of invisible characters**, such as a zero-width space, is treated as empty. **Invisible** means Unicode white space and the default-ignorable characters: joiners, the direction marks, variation selectors and the like. A body or a name made only of them is refused. A bio made only of them is **cleared**, because an empty bio is how a bio is cleared.
   - **At write only, with no backfill.** Rows written before it ships stay as they are: the data is test data, and `v1` has no released consumer.
   - **It lands before the first surface that shows other readers' text.** That is the trigger #775 was recorded with.
 - Text made only of spaces is not accepted as content.
   - A space is **what the standard trim removes**: Unicode white space and line ends.
+  - **It binds a display name too.** A name of white space alone is refused, not stored empty ([#819](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/819)).
   - Refusing such text tightens what the API accepts, so it is recorded as a **pre-release exception** in the contract when it ships.
 
 ---
