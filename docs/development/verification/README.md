@@ -217,6 +217,28 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## Suggested accounts
+
+Folder **18 · Suggested accounts** exercises "Who to follow"
+([#831](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/831)).
+**Self-isolated**, runs whole from the command line
+(`npm run verify:suggestions`), no pgAdmin. See scenarios **SUG-01…SUG-06**.
+
+It builds its own graph each run: A follows B; B follows C and D; E follows D;
+C follows A.
+
+**Its guarantees:**
+
+- A is suggested **D, then C**: both are followed by B, and D has more
+  followers;
+- A **never sees A or B**;
+- the viewed profile is **left out**;
+- **C's row says it follows A back**;
+- a **guest** gets a list with both follow flags false;
+- more than twenty is refused.
+
+The ranking's finer points, including the tie-break, are the integration lane's.
+
 ## The edit limit
 
 Folder **17 · Edit limit** exercises the limit on editing a post

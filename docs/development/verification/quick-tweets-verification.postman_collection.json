@@ -10351,6 +10351,681 @@
           }
         }
       ]
+    },
+    {
+      "name": "18 · Suggested accounts",
+      "description": "Who to follow (#831): people followed by the accounts the reader follows, ranked by how many of them do, then the most-followed. Never the reader, anyone they follow, or the profile being viewed. A guest gets the most-followed. Self-isolated: five new accounts and their follows per run. Scenarios SUG-01…SUG-06.\n\nIt runs whole from the command line (npm run verify:suggestions) and needs no pgAdmin. It registers five accounts, half the sign-in limiter's budget.",
+      "item": [
+        {
+          "name": "0 · Setup · register A",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{sgUserA}}\",\n  \"email\": \"{{sgUserA}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"sgTokenA\", pm.response.json().data.accessToken);",
+                  "pm.environment.set(\"sgIdA\", pm.response.json().data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · register B",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{sgUserB}}\",\n  \"email\": \"{{sgUserB}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"sgTokenB\", pm.response.json().data.accessToken);",
+                  "pm.environment.set(\"sgIdB\", pm.response.json().data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · register C",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{sgUserC}}\",\n  \"email\": \"{{sgUserC}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"sgTokenC\", pm.response.json().data.accessToken);",
+                  "pm.environment.set(\"sgIdC\", pm.response.json().data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · register D",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{sgUserD}}\",\n  \"email\": \"{{sgUserD}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"sgTokenD\", pm.response.json().data.accessToken);",
+                  "pm.environment.set(\"sgIdD\", pm.response.json().data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · register E",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{sgUserE}}\",\n  \"email\": \"{{sgUserE}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"sgTokenE\", pm.response.json().data.accessToken);",
+                  "pm.environment.set(\"sgIdE\", pm.response.json().data.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · A follows B",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{sgUserB}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{sgUserB}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenA}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · B follows C",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{sgUserC}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{sgUserC}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · B follows D",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{sgUserD}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{sgUserD}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenB}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · E follows D",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{sgUserD}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{sgUserD}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenE}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0 · Setup · C follows A",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/{{sgUserA}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "{{sgUserA}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenC}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SUG-01 · A is suggested who A's follows follow, the more followed first",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/suggestions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "suggestions"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenA}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const rows = pm.response.json().data;",
+                  "const id = (who) => Number(pm.environment.get(\"sgId\" + who));",
+                  "pm.test(\"three by default\", () => pm.expect(rows).to.have.lengthOf(3));",
+                  "pm.test(\"D, then C: both followed by B, and D has more followers\", () => pm.expect(rows.slice(0, 2).map((u) => u.id)).to.eql([id(\"D\"), id(\"C\")]));",
+                  "pm.test(\"not paged: no meta\", () => pm.expect(pm.response.json().meta).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SUG-02 · A never sees A, or anyone A follows",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/suggestions?limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "suggestions"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenA}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const rows = pm.response.json().data;",
+                  "const id = (who) => Number(pm.environment.get(\"sgId\" + who));",
+                  "pm.test(\"not A\", () => pm.expect(rows.map((u) => u.id)).to.not.include(id(\"A\")));",
+                  "pm.test(\"not B, whom A follows\", () => pm.expect(rows.map((u) => u.id)).to.not.include(id(\"B\")));",
+                  "pm.test(\"no more than twenty\", () => pm.expect(rows.length).to.be.at.most(20));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SUG-03 · The profile being viewed is left out",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/suggestions?exclude={{sgUserD}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "suggestions"
+              ],
+              "query": [
+                {
+                  "key": "exclude",
+                  "value": "{{sgUserD}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenA}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const rows = pm.response.json().data;",
+                  "const id = (who) => Number(pm.environment.get(\"sgId\" + who));",
+                  "pm.test(\"C comes first once D is excluded\", () => pm.expect(rows[0].id).to.eql(id(\"C\")));",
+                  "pm.test(\"D is not listed\", () => pm.expect(rows.map((u) => u.id)).to.not.include(id(\"D\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SUG-04 · A row says who would be followed back",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/suggestions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "suggestions"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{sgTokenA}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const rows = pm.response.json().data;",
+                  "const id = (who) => Number(pm.environment.get(\"sgId\" + who));",
+                  "const c = rows.find((u) => u.id === id(\"C\"));",
+                  "pm.test(\"C follows A, and A does not follow C\", () => pm.expect(c).to.include({ followsYou: true, isFollowing: false }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SUG-05 · A guest gets a list, with no follow state",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/suggestions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "suggestions"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "noauth: the collection's root bearer would otherwise make this a signed-in read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const rows = pm.response.json().data;",
+                  "pm.test(\"three by default\", () => pm.expect(rows).to.have.lengthOf(3));",
+                  "pm.test(\"both flags false on every row\", () => pm.expect(rows.every((u) => !u.isFollowing && !u.followsYou)).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "SUG-06 · More than twenty is refused",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/follows/suggestions?limit=21",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "follows",
+                "suggestions"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "21"
+                }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"the limit is named\", () => pm.expect(pm.response.json().error.errors.limit).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get('sgUserA')) {",
+              "  const run = Date.now().toString(36);",
+              "  ['A', 'B', 'C', 'D', 'E'].forEach((who) => pm.environment.set('sgUser' + who, 'sg' + who.toLowerCase() + run));",
+              "}"
+            ]
+          }
+        }
+      ]
     }
   ],
   "auth": {

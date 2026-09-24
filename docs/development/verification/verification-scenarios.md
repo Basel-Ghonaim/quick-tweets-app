@@ -327,6 +327,26 @@ no longer describe executable behavior and are retired rather than rewritten her
 | EDL-04 | EDL-02 | **B**, from the same address, edits B's post | 200 | edited | — | Per account, not per IP |
 | EDL-05 | EDL-02 | An **unsigned** edit of A's post | **401**, not 429 | unchanged | — | `noauth`: the limit counts accounts, so it runs after authentication |
 
+## 7g · Suggested accounts — who to follow ([#831](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/831))
+
+> **What the folder proves:**
+> - A reader is suggested the people their follows follow, **the more followed
+>   first**, and never themselves or anyone they follow.
+> - The viewed profile is left out.
+> - Each row says who would be followed back.
+> - A guest gets a list with no follow state.
+>
+> Folder 18 is **self-isolated**: five new accounts and their follows per run.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| SUG-01 | Setup: A→B, B→C, B→D, E→D, C→A | A asks, no parameters | 200; three rows; **D then C** first; no `meta` | — | — | Both followed by B; D has more followers |
+| SUG-02 | Setup | A asks with `limit=20` | 200; neither A nor B; at most 20 | — | — | Never the reader, never anyone followed |
+| SUG-03 | Setup | A asks with `exclude=` D's handle | 200; C first; no D | — | — | The viewed profile |
+| SUG-04 | Setup | A asks | 200; C's row `followsYou: true`, `isFollowing: false` | — | — | What Follow back is drawn from |
+| SUG-05 | — | A **guest** asks | 200; three rows, both flags false on every row | — | — | `noauth` |
+| SUG-06 | — | Ask with `limit=21` | 422; `limit` named | — | — | Bounded, not paged |
+
 ## 8 · Username rename & locator stability (WI-F)
 
 > Editable username via **History + Reservation + Redirect**. Renaming a handle
@@ -601,6 +621,26 @@ space.
   catch.
 
 All 0 failures.
+
+## Verification run — Suggested accounts (2026-09-24)
+
+**Run against `feat/831-suggested-accounts`, on the backend worktree's own port
+(`4001`) and database (`quicktweets_w2`). All of SUG-01…SUG-06 passed.**
+Newman, folder 18: **16 requests / 28 assertions, 0 failures**.
+
+**Re-run as regression:**
+- folders 17 (**23**), 16 (**32**), 15 (**25**), 14 (**19**), 13 (**25**) and
+  12 (**24**);
+- folders 00, 01, 04, 05, **07**, 08 and 09, together (**88 requests / 155
+  assertions**). Folder 07 is the follows folder this endpoint joins.
+
+All 0 failures.
+
+**The first runs of folder 18 failed, and none of it was the endpoint:**
+- A test script declaring `data`, one of the Postman sandbox's own names, threw
+  before asserting.
+- The follow setup expected `201` where following answers `200`.
+- Consecutive runs spent the sign-in limiter's budget.
 
 ---
 
