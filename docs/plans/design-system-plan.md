@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-26
+> **Last Updated:** 2026-09-27
 > **Parent Issue:** [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792)
 > **Supersedes:** —
 
@@ -47,7 +47,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 - **Skeleton:** placeholder shapes while content loads.
 - **Menu:** anchored to what opens it, with ordinary, checked and dangerous items, and correct placement in both directions.
 - **Dialog:** a modal dialog, an alert dialog for confirmations, and a full-screen form for phones. It can host a confirmation above itself.
-- **Tabs:** tabs that can also be navigation, where each tab is its own address.
+- **Tabs:** navigation, where each tab is its own address. The designs draw no other form — nothing uses the tablist role — so a form that switches panels in place stays owed until one is drawn.
 - **Toast:** a brief, polite confirmation, optionally with an action, placed above the page and clear of the phone's bottom bar.
 - **Tooltip:** names for icon-only controls on the collapsed navigation. **Deferred until it is drawn:** the approved designs name it in a comment and draw it nowhere, and §5 keeps parts for undesigned surfaces out. It stays owed.
 
