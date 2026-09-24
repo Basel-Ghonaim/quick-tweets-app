@@ -11,7 +11,7 @@ const messagesOf = (value: unknown) => {
 
 describe("bodyTextField — measured after trimming", () => {
   it("refuses a body of white space alone, whichever white space it is", () => {
-    for (const blank of ["     ", "\t\t", "\n\r\n", "  ", " 　 "]) {
+    for (const blank of ["     ", "\t\t", "\n\r\n", "\u00A0\u00A0", " \u3000 "]) {
       expect(messagesOf(blank)).toEqual(["Body cannot be empty"]);
     }
   });
@@ -42,5 +42,27 @@ describe("bodyTextField — a character is a code point", () => {
 
     expect(field.safeParse(family.repeat(56)).success).toBe(true);
     expect(messagesOf(family.repeat(57))).toEqual(["Body must be at most 280 characters"]);
+  });
+});
+
+describe("bodyTextField — safe among other readers' words", () => {
+  it("refuses a direction control with one message, saying only why", () => {
+    expect(messagesOf("hi\u202E")).toEqual(["Body cannot contain text-direction control characters"]);
+    expect(messagesOf("\u202E")).toEqual(["Body cannot contain text-direction control characters"]);
+  });
+
+  it("refuses text made only of invisible characters, as it refuses white space", () => {
+    expect(messagesOf("\u200B\u200B")).toEqual(["Body cannot be empty"]);
+  });
+
+  it("normalises before counting: 280 decomposed letters are 280 characters", () => {
+    const decomposed = "e\u0301".repeat(280);
+
+    expect(field.parse(decomposed)).toBe("é".repeat(280));
+  });
+
+  it("normalises before counting: a letter NFC splits in two counts as two", () => {
+    expect(field.safeParse("\u0958".repeat(140)).success).toBe(true);
+    expect(messagesOf("\u0958".repeat(141))).toEqual(["Body must be at most 280 characters"]);
   });
 });
