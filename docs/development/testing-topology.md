@@ -72,7 +72,7 @@ This is an obligation on the lane, never an exemption for a case. It decides not
 
 | Lane | State |
 |---|---|
-| Web unit · **Component** · Repository boundaries · API unit | **built**, and gated by CI |
+| Web unit · **Component** · Repository checks · API unit | **built**, and gated by CI |
 | Browser · API integration · Manual harness | **built**, and **not** gated — a green CI run says nothing about them, so a Work Item that could affect one runs it and says so |
 | **Frontend integration** | **adopted, not built** ([ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) Decision 7). A behavior belongs to it from today; building it is a Work Item of its own |
 | **E2E** | **not adopted.** It becomes warranted when a reader's journey crosses more than one page group and no narrower lane can prove that it connects. That is a condition on the state of the code, not a date, and this is not a prohibition ([Documentation Strategy §8](../architecture/documentation-strategy.md)) |

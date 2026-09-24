@@ -2,8 +2,8 @@
 
 > **Status:** Active.
 > **Authority:** The entry point for the Design System's documentation — its boundary, its ownership and stability model, its public surface, and where each kind of information lives. **It states no design rules of its own**; it names the document that owns each one.
-> **Version:** 1.1
-> **Last Updated:** 2026-09-22
+> **Version:** 1.2
+> **Last Updated:** 2026-09-24
 > **Owner:** Basel Ghonaim
 
 ## What the Design System is
@@ -40,6 +40,16 @@ The two are independent, and conflating them is the error this structure exists 
 **The barrels are the only public surface.** Everything inside a component — variant folders, hooks, parts, helpers — is private implementation. A consumer imports the layer's root and nothing deeper, and the layer never imports itself through its own alias.
 
 That boundary is what keeps the internals free to move: a restructure is cheap precisely because no consumer can see it.
+
+**The boundary is export-only: the layer imports nothing from outside itself.** Not a feature, not a page, not the application — and **not a sibling in `shared/` either**, which is what makes this stricter than the zone rule. The [frontend architecture](../architecture.md) lets `shared/`'s parts compose one another freely; this layer is the exception, and takes it deliberately.
+
+The reason is what the layer is for. It owns the presentation language and nothing else, so anything it reached for would be a second owner of something it renders — words, formats, transport, a router. Each already has an answer here: words arrive from the caller, a navigating element is taken rather than imported, and a value that is not language stays with whoever owns it. Closure is those answers stated once as a rule, rather than re-derived each time a component is tempted.
+
+Closure is also what lets the layer be lifted whole. A language that depends on one application's helpers is that application's, whatever its folder says.
+
+**Stories are outside the closure**, on the exemption [ADR 0018](../../architecture/decisions/0018-composition-has-a-home-four-frontend-zones.md) Decision 9 already grants them and for its reason: a story renders a thing in the composition a reader actually meets, so it stands in for a **consumer** rather than for the layer. A consumer supplies the words, which is what one story reaches the localisation mechanism to do. The exemption is bounded as that decision bounds it — rendering and evidence — and **production code, tests included, is closed**. A check holds both halves, and records which stories use the exemption, so widening it is a decision rather than a drift.
+
+**A dependency the layer genuinely cannot serve itself is a stop**, not a licence to import: it is either not the language's, or the language is missing something and must grow. What closure never means is a component hardcoding what it would otherwise have imported.
 
 ## Where each fact lives
 

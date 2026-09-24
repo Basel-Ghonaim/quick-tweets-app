@@ -39,4 +39,4 @@ Choosing a mechanism *and* a scale with neither a design nor a consumer would ha
 ## Related
 
 - [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 2 — consumer count is evidence, never a gate; what is admitted is a shared concept.
-- [Finding 0012](0012-no-shared-stacking-concept.md) — the other family WI-9 removed, on different grounds.
+- [Finding 0012](../resolved/0012-no-shared-stacking-concept.md) — the other family WI-9 removed, on different grounds.

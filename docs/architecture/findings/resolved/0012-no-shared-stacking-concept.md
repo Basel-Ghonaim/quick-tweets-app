@@ -1,6 +1,6 @@
 # Finding 0012: There is no shared stacking concept, so the z-index family named an order nothing had agreed
 
-> **Status:** Open
+> **Status:** Resolved — 2026-09-24. The condition below was met and answered: `foundations/tokens/semantic/layer.css` names the complete order the approved designs settled, in [#809](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/809). See the update at the end.
 > **Date:** 2026-08-10
 > **Affected areas:** the removed `foundations/tokens/primitive/z-index.css`
 > **Reported by:** Basel Ghonaim (surfaced while preparing WI-9)
@@ -39,4 +39,16 @@ The conclusion is unchanged, and so is the status: **nothing in the codebase yet
 ## Related
 
 - [ADR 0010](../../decisions/0010-design-system-platform-reestablishment.md) Decision 2 — roles are admissible, granularities are not.
-- [Finding 0011](0011-breakpoint-tokens-unconsumable-mechanism.md) — the other family WI-9 removed, on different grounds.
+- [Finding 0011](../open/0011-breakpoint-tokens-unconsumable-mechanism.md) — the other family WI-9 removed, on different grounds.
+
+## Update — 2026-09-24 · Resolved
+
+**Both objections were answered rather than set aside.**
+
+*No shared concept existed.* One does now, and the designs are where it came from: a menu over a sticky header, a dialog over both, a confirmation over the dialog asking it, and a toast over all of them. That is the *complete relative sequence* this finding said was the whole content of the decision.
+
+*Granularity, not role.* The family names roles — sticky, floating action, menu, dialog, confirmation, toast — not positions on a scale. A layer scale remains refused; what shipped is the thing this finding said would be admissible when it existed.
+
+**What the resolution also established**, and is easy to miss: three of the six layers name surfaces the browser raises into its own top layer, where `z-index` does not reach. The order therefore governs what the page positions itself, and the family stays complete rather than consumed. The [Foundation contract](../../../frontend/design-system/foundation.md) owns that statement.
+
+The local stacking this finding described — a component ordering its own children inside its own positioned context — still binds none of it, exactly as recorded above.

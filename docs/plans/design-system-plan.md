@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-23
+> **Last Updated:** 2026-09-24
 > **Parent Issue:** [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792)
 > **Supersedes:** —
 
@@ -49,7 +49,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 - **Dialog:** a modal dialog, an alert dialog for confirmations, and a full-screen form for phones. It can host a confirmation above itself.
 - **Tabs:** tabs that can also be navigation, where each tab is its own address.
 - **Toast:** a brief, polite confirmation, optionally with an action, placed above the page and clear of the phone's bottom bar.
-- **Tooltip:** names for icon-only controls on the collapsed navigation.
+- **Tooltip:** names for icon-only controls on the collapsed navigation. **Deferred until it is drawn:** the approved designs name it in a comment and draw it nowhere, and §5 keeps parts for undesigned surfaces out. It stays owed.
 
 ### 2.3 · Changes to existing parts
 
@@ -90,17 +90,27 @@ Also not the Design System's:
 
 ## 4 · Decisions to settle in Execution Preparation
 
-Each is settled with the owner before the part it affects is built:
-- **the design's departures from Design System values.** The approved designs record each one (§6, the extension logs). Each is either admitted into the language or brought back to the existing value;
-- how **responsive widths** are made consumable ([Finding 0011](../architecture/findings/open/0011-breakpoint-tokens-unconsumable-mechanism.md));
-- the **stacking order** as a shared concept ([Finding 0012](../architecture/findings/open/0012-no-shared-stacking-concept.md));
-- the **reduced-motion** answer for anything that animates ([Finding 0013](../architecture/findings/open/0013-motion-claims-an-unbuilt-reduced-motion-resolution.md));
-- which existing part takes **navigation drawn as an action**;
-- whether the **image viewer** is a form of Dialog or a product surface;
-- whether the phone's **bottom sheet** is a form of Dialog;
-- whether **upload progress** is a Design System part or product presentation;
-- whether a larger **touch target** for coarse pointers is earned;
-- whether **Alert** replaces the interim MessageRegion now or later ([Finding 0024](../architecture/findings/open/0024-message-region-enters-the-layer-below-its-conventions.md)).
+**Every Work Item settles the approved design's departures for the part it builds** — the extension logs (§6) record each one, and each is either admitted into the language or brought back to the existing value. That is a standing obligation of Execution Preparation rather than an item on this list, and it is how the departures settled so far were settled.
+
+What remains outstanding, and what each one gates:
+
+- **How a component navigates**, now that a second and a third need to. `Link` takes the navigating element from its caller; the [frontend architecture](../frontend/architecture.md) holds that a second such component converts that pattern to a **seam**. *Gates Tabs (§2.2) and navigation drawn as an action (§2.3) — the design draws the latter as an anchor carrying a button's appearance, so it is a Button that navigates rather than a Link that looks like one.*
+- **Where determinate progress lives.** The composer's character count is drawn as a ring, and an upload is drawn as a bar; both are the same concept, and the HTML `progress` element is its platform basis. *Gates the character count (§2.3), and answers the upload bar the page would otherwise own.*
+- **Whether `Alert` is built here and the interim migrated separately.** `MessageRegion` stands in for it across ten consumers in authentication and recovery, so building and migrating are different sizes of work ([Finding 0024](../architecture/findings/open/0024-message-region-enters-the-layer-below-its-conventions.md)). *Gates nothing already listed; decides whether new surfaces keep adopting the interim.*
+- **How an icon expresses a filled form.** Every icon in the set is stroke-only, and "liked" needs a filled one. *Gates the icon additions (§2.3).*
+
+### Settled, and where each answer lives
+
+| Question | Answer |
+|---|---|
+| The **stacking order** as a shared concept | Built. The approved designs supplied the complete sequence, and [Finding 0012](../architecture/findings/resolved/0012-no-shared-stacking-concept.md) closed with it |
+| A larger **touch target** for coarse pointers | No token. Five parts want five sizes above one agreed floor, which is five decisions rather than one concept — the [Foundation contract](../frontend/design-system/foundation.md) holds the reasoning |
+| The **reduced-motion** answer, for this track | Gates nothing here: the approved designs animate none of these parts, Skeleton included. [Finding 0013](../architecture/findings/open/0013-motion-claims-an-unbuilt-reduced-motion-resolution.md) stays open on its own merits |
+| **Responsive widths** | Still owed by §2.1, and gating nothing here: no remaining part needs a breakpoint, and a dialog's phone form is a variant its caller passes. The mechanism ([Finding 0011](../architecture/findings/open/0011-breakpoint-tokens-unconsumable-mechanism.md)) is settled when the first consumer appears, which is a page composing layout rather than a part built here |
+
+### Not this plan's to settle
+
+The **image viewer** and the phone's **bottom sheet** are product surfaces composed from `Dialog`, which now exists with the forms they would extend. Both belong to the preparation of the track whose pages compose them, where their consumers can be seen; deciding them here would be designing for a caller this plan cannot see.
 
 ---
 
