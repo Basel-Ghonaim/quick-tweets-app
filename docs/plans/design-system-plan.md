@@ -192,7 +192,7 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 
 - **Settled.** **The artboards outrank the extension log.** Three of its entries have now proved wrong in the same direction — an avatar size it omitted, a filled glyph it invented, and a pill nothing draws — so a part is built from what the design renders, never from what the log says is needed. A **filled form is the consumer's**, not a second glyph: the design fills one heart from its own rule, which outranks the attribute the icon carries. A **ramp is as long as the design makes it**, and this layer owns the colour while the meaning, its per-theme resolution and the wash beneath it stay the product's. The shared class helper now sits where all three peers reach it, so the next icon composes its class rather than hand-rolling one.
 - **Amended.** §2.3 — `Input` needs no change, and navigation-drawn-as-an-action is a button that navigates rather than a link that looks like one, which §4 already said and §2.3 contradicted.
-- **Recorded.** No finding. [Finding 0016](../architecture/findings/open/0016-class-name-helper-is-not-reachable-by-its-peers.md) is closed by the move rather than recorded again, and the withdrawn pill is marked in the design's own extension log so it is not proposed a second time.
+- **Recorded.** No finding. [Finding 0016](../architecture/findings/resolved/0016-class-name-helper-is-not-reachable-by-its-peers.md) is closed by the move rather than recorded again, and the withdrawn pill is marked in the design's own extension log so it is not proposed a second time.
 
 **Skeleton and Progress.** [#828](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/828) · [#830](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/830).
 
