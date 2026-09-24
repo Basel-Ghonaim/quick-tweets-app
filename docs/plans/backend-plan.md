@@ -98,15 +98,17 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - **One definition of a character**, shared by the frontend and the backend, so a post the counter accepts is never refused. It binds posts, comments and replies alike.
   - A character is **a Unicode code point**, which is what the approved design's counter counts.
   - Length is measured **after** the text is trimmed, so the limit applies to what is stored. Once text is normalised (below), the order is **normalise, trim, then count**.
+  - **It does not bind a display name or a bio.** Theirs count as they always have: UTF-16 units measured before trimming, up to 50 and 160, as the profile form counts them. They are measured on the **normalised** text, so the limit protects what is stored.
 - Text is **safe to show among other people's words** in both directions. This is already tracked as [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775), and settled as follows:
   - **Which text:** post and comment bodies, a display name and a bio, which is the text other readers see. Usernames are ASCII already.
   - **Normalised to NFC** when it is written.
   - **Direction controls refused** when written: the embeddings, overrides and isolates (U+202A–U+202E, U+2066–U+2069). The refusal is a `422` that names the field and never echoes the character. The direction **marks** (U+200E, U+200F, U+061C) are accepted, because Arabic text uses them legitimately.
-  - **Text made only of invisible characters**, such as a zero-width space, is treated as empty.
+  - **Text made only of invisible characters**, such as a zero-width space, is treated as empty. **Invisible** means Unicode white space and the default-ignorable characters: joiners, the direction marks, variation selectors and the like. A body or a name made only of them is refused. A bio made only of them is **cleared**, because an empty bio is how a bio is cleared.
   - **At write only, with no backfill.** Rows written before it ships stay as they are: the data is test data, and `v1` has no released consumer.
   - **It lands before the first surface that shows other readers' text.** That is the trigger #775 was recorded with.
 - Text made only of spaces is not accepted as content.
   - A space is **what the standard trim removes**: Unicode white space and line ends.
+  - **It binds a display name too.** A name of white space alone is refused, not stored empty ([#819](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/819)).
   - Refusing such text tightens what the API accepts, so it is recorded as a **pre-release exception** in the contract when it ships.
 
 ---
@@ -232,3 +234,9 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 - **Settled.** A body is **trimmed, then measured in code points**, by **one shared field** in `shared/validation/` that posts and comments both use, as the username rule is shared. The order is the fix for #801: Zod runs a chain's checks in order, so the length used to see the text before it was trimmed. Counting code points is the fix for #802, and it needed **no migration**, because `VarChar(280)` already counts code points; the integration lane shows the columns refuse the 281st on their own. The contract now defines a character once, and refusing white space alone is recorded as a pre-release exception.
 - **Amended.** None. §2.7 already stated the rule.
 - **Recorded.** [#819](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/819): the display name has the same trim-order defect and is stored as `""` when blank, outside this Work Item's scope. The harness also taught a lesson about itself rather than the product: a combined command-line run needs `mediaOrigin` overridden as well as `baseUrl`, a fresh auth-limiter budget, and per-run users when folder 01 has run before. That is written into the verification-run notes.
+
+**Text safety, and a blank name refused.** [#822](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/822) · [#824](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/824), closing [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775) and fixing [#819](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/819).
+
+- **Settled.** Text other readers see is **stored in NFC**. A **direction control is refused** with one message that never repeats it. Text made only of **invisible characters counts as empty**, which each field interprets in its own terms: a body and a name are refused, and a bio is cleared. It is **one shared step**, and each field keeps its own rules for emptiness and length. A name's and a bio's lengths still count UTF-16 units before trimming, now **on the normalised text**, which is the one length change the step required. **#819 was fixed in the same Work Item** because making the name safe runs through its broken check; it still has a commit of its own.
+- **Amended.** §2.7, by the correction this branch carried as its first commit: the definition of invisible, a bio cleared rather than refused, a name of white space refused, and how a name's and a bio's lengths are measured. Each was settled in this Work Item's preparation.
+- **Recorded.** [Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)'s clearing-forms gap is **closed**, and the finding stays open for the rest. One lesson was about the tools rather than the product: a `\u` escape typed into a file's content arrives as the raw character, so the first draft of this branch held real bidi controls in its source. They were caught before review, while the mutation proofs were being set up, and every one is now an escape.

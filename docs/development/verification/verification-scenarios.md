@@ -281,6 +281,33 @@ no longer describe executable behavior and are retired rather than rewritten her
 | CHR-08 | CHR-06 | PATCH the comment to **281 emoji** | 422; "Comment body must be at most 280 characters" | unchanged | — | |
 | CHR-09 | CHR-01 | Read the post **as a guest** | 200; the 280 emoji intact | — | — | `noauth`, so the root bearer does not make it a signed-in read |
 
+## 7e · Text safety — what other readers are shown ([#822](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/822))
+
+> **What the folder proves:**
+> - Text other readers see is **stored in NFC**.
+> - It **refuses a direction control** without repeating it.
+> - Text made only of **invisible characters counts as empty**, which means
+>   refused for a body and a name and cleared for a bio.
+> - **A name of spaces is refused** (#819).
+>
+> Folder 16 is **self-isolated** and runs whole from the command line.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| TXT-01 | Folder 16 setup | Post `Cafe` + U+0301 (decomposed) | 201; body `Café` composed | stored in NFC | — | |
+| TXT-02 | Setup | Post containing **U+202E** | 422; "Tweet body cannot contain text-direction control characters" | — | — | The response text is checked for the character |
+| TXT-03 | Setup | Post Arabic ending in **U+200F** (a mark) | 201; the mark kept | stored | — | Marks are not controls |
+| TXT-04 | Setup | Post of **zero-width spaces** alone | 422; "Tweet body cannot be empty" | — | — | Invisible is empty |
+| TXT-05 | TXT-01 | Comment containing **U+2066** | 422; "Comment body cannot contain …" | — | — | Not echoed |
+| TXT-06 | Setup | PATCH `name: "   "` | 422; "Name is required" | unchanged | — | **#819**: stored `""` before |
+| TXT-07 | Setup | PATCH `name` = U+200B | 422; "Name is required" | unchanged | — | |
+| TXT-08 | Setup | PATCH `name` containing **U+202E** | 422; "Name cannot contain …" | unchanged | — | Not echoed |
+| TXT-09 | Setup | PATCH `name: "Rene"` + U+0301 | 200; `René` composed | stored in NFC | — | |
+| TXT-10 | TXT-09 | PATCH `bio` = U+200B U+200D | 200; `bio: ""` | cleared | — | A bio is cleared, not refused |
+| TXT-11 | TXT-10 | PATCH `bio` containing **U+2067** | 422; "Bio cannot contain …" | unchanged | — | Not echoed |
+| TXT-12 | TXT-10 | Read the profile **as a guest** | 200; `René`, `bio: ""` | — | — | `noauth` |
+| TXT-13 | TXT-01 | Read the post **as a guest** | 200; `Café` composed | — | — | `noauth` |
+
 ## 8 · Username rename & locator stability (WI-F)
 
 > Editable username via **History + Reservation + Redirect**. Renaming a handle
@@ -519,6 +546,25 @@ rule.** Three states of the harness, not of the code:
   ([the known friction](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction)).
   The run passed once users A and B were given per-run handles and e-mails
   through `--env-var`.
+
+## Verification run — Text safety (2026-09-24)
+
+**Run against `feat/822-text-safety`, on the backend worktree's own port
+(`4001`) and database (`quicktweets_w2`). All of TXT-01…TXT-13 passed.** Newman:
+folder 16, **14 requests / 32 assertions, 0 failures**.
+
+**Re-run because they write or read the same text:**
+- folders 15 (**25**), 14 (**19**), 13 (**25**) and 12 (**24**);
+- folders 00, 01, 04, 05, 08 and **09**, together (**71 requests / 125
+  assertions**). Folder 09 is included because it goes through
+  `PATCH /users/me`, the endpoint whose `name` and `bio` changed.
+
+All 0 failures, run as the character rule's run describes: `mediaOrigin` set,
+a fresh limiter, and per-run users A and B.
+
+**Before the change, the same probes showed the gap:** a guest read a name of
+spaces as `""`, a bio carrying U+202E, and a name made only of a zero-width
+space.
 
 ---
 

@@ -11,6 +11,13 @@ const bodyMessages = (result: { success: boolean; error?: { issues: { path: Prop
   result.error?.issues.filter((i) => i.path[0] === "body").map((i) => i.message) ?? [];
 
 describe("createTweetSchema — the body rule", () => {
+  it("refuses a direction control, and text made only of invisible characters", () => {
+    expect(bodyMessages(createTweetSchema.safeParse({ body: "hi\u202E" }))).toEqual([
+      "Tweet body cannot contain text-direction control characters",
+    ]);
+    expect(bodyMessages(createTweetSchema.safeParse({ body: "\u200B" }))).toEqual(["Tweet body cannot be empty"]);
+  });
+
   it("accepts 280 characters of emoji, counting each once", () => {
     expect(createTweetSchema.safeParse({ body: "👍".repeat(280) }).success).toBe(true);
   });
@@ -21,6 +28,13 @@ describe("createTweetSchema — the body rule", () => {
 });
 
 describe("updateTweetSchema — the body rule", () => {
+  it("refuses a direction control, and text made only of invisible characters", () => {
+    expect(bodyMessages(updateTweetSchema.safeParse({ body: "hi\u202E" }))).toEqual([
+      "Tweet body cannot contain text-direction control characters",
+    ]);
+    expect(bodyMessages(updateTweetSchema.safeParse({ body: "\u200B" }))).toEqual(["Tweet body cannot be empty"]);
+  });
+
   it("accepts 280 characters of emoji, counting each once", () => {
     expect(updateTweetSchema.safeParse({ body: "👍".repeat(280) }).success).toBe(true);
   });

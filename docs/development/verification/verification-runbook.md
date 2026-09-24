@@ -113,6 +113,20 @@ the graph it asserts against is deliberately **asymmetric** — B follows A and 
 does not follow back — so the two directions can be told apart. A mutual pair
 would pass whichever way the fields were wired.
 
+### Folder 16 — text safety
+
+Self-isolated, and needs no pgAdmin: every outcome is a status and a body.
+
+```bash
+npm run verify:text-safety -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+**Probing it by hand needs care.** A control character typed into a shell
+command can be changed before it is sent: on Windows, a command-line argument
+passes through the ANSI code page and arrives as `?`. Read a response as bytes,
+not through a console's decoding. The folder avoids both by sending `\u`
+escapes inside JSON.
+
 ### Folder 15 — the character rule
 
 Self-isolated, and needs no pgAdmin: every outcome is a status and a body.

@@ -11,7 +11,7 @@
  */
 
 import { z } from "zod";
-import { usernameField } from "../../shared/validation/index.js";
+import { isInvisibleOnly, readerTextField, usernameField } from "../../shared/validation/index.js";
 
 const avatarRefSchema = z.object({
   token: z.string().trim().min(1, "An avatar reference cannot be empty"),
@@ -21,20 +21,22 @@ export const updateMeSchema = z
   .object({
     // Optional profile data: omitted = unchanged, `null` = clear (set to NULL),
     // a string = set/replace (validated). name is never derived from username.
-    name: z
-      .string()
-      .min(1, "Name is required")
+    // Length is counted before trimming, as the profile form counts it; emptiness
+    // after, so white space alone is not a name.
+    name: readerTextField("Name")
       .max(50, "Name must be at most 50 characters")
       .trim()
+      .refine((text) => !isInvisibleOnly(text), "Name is required")
       .nullable()
       .optional(),
     // Rename: omitted = unchanged, a string = new handle. Same lowercase-only rule
     // as registration (the single shared source); never cleared.
     username: usernameField.optional(),
-    bio: z
-      .string()
+    // An empty bio is how a bio is cleared, so one that shows nothing becomes one.
+    bio: readerTextField("Bio")
       .max(160, "Bio must be at most 160 characters")
       .trim()
+      .overwrite((text) => (isInvisibleOnly(text) ? "" : text))
       .optional(),
     // Full-replacement avatar: omitted → unchanged; `{ token }` → set/replace;
     // `null` → remove. `.nullable().optional()` allows all three.
