@@ -8709,6 +8709,495 @@
           }
         }
       ]
+    },
+    {
+      "name": "15 · Character rule",
+      "description": "A body's length, counted the way the design's counter counts it (#818, fixing #801 and #802). Self-isolated: its own account with a per-run handle, its own post and comment. Scenarios CHR-01…CHR-09.\n\nIt runs whole from the command line (npm run verify:characters) and needs no pgAdmin.\n\nA character is a Unicode code point, counted after the body is trimmed: an emoji counts once, and a body of white space alone is refused rather than stored empty.",
+      "item": [
+        {
+          "name": "0 · Setup · register this run's account",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{chUsername}}\",\n  \"email\": \"{{chUsername}}@verify.local\",\n  \"password\": \"Passw0rd!23\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Self-isolated: a per-run handle, so the folder collides with no other run."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.environment.set(\"chToken\", pm.response.json().data.accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-01 · 280 emoji are 280 characters",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{chToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"{{chAtLimit}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"stored whole\", () => pm.expect(d.body).to.eql(pm.environment.get(\"chAtLimit\")));",
+                  "pm.test(\"280 code points\", () => pm.expect(Array.from(d.body).length).to.eql(280));",
+                  "pm.environment.set(\"chTweetId\", d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-02 · The 281st character is refused",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{chToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"{{chPastLimit}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"type validation\", () => pm.expect(e.type).to.eql(\"validation\"));",
+                  "pm.test(\"body: Tweet body must be at most 280 characters\", () => pm.expect(e.errors.body).to.eql([\"Tweet body must be at most 280 characters\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-03 · White space alone is refused, not stored empty",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{chToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"   \\t\\n  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"type validation\", () => pm.expect(e.type).to.eql(\"validation\"));",
+                  "pm.test(\"body: Tweet body cannot be empty\", () => pm.expect(e.errors.body).to.eql([\"Tweet body cannot be empty\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-04 · Padding is trimmed, and stored trimmed",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{chToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"   hello   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"stored trimmed\", () => pm.expect(pm.response.json().data.body).to.eql(\"hello\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-05 · An edit to white space alone is refused",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{chTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{chTweetId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{chToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"     \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"type validation\", () => pm.expect(e.type).to.eql(\"validation\"));",
+                  "pm.test(\"body: Tweet body cannot be empty\", () => pm.expect(e.errors.body).to.eql([\"Tweet body cannot be empty\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-06 · A comment of 280 emoji is accepted",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{chToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tweetId\": {{chTweetId}},\n  \"body\": \"{{chAtLimit}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.test(\"stored whole\", () => pm.expect(d.body).to.eql(pm.environment.get(\"chAtLimit\")));",
+                  "pm.environment.set(\"chCommentId\", d.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-07 · A comment of no-break spaces is refused",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{chToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tweetId\": {{chTweetId}},\n  \"body\": \"\\u00a0\\u00a0\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"type validation\", () => pm.expect(e.type).to.eql(\"validation\"));",
+                  "pm.test(\"body: Comment body cannot be empty\", () => pm.expect(e.errors.body).to.eql([\"Comment body cannot be empty\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-08 · A comment edit past 280 is refused",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/comments/{{chCommentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "comments",
+                "{{chCommentId}}"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{chToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"{{chPastLimit}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "const e = pm.response.json().error;",
+                  "pm.test(\"type validation\", () => pm.expect(e.type).to.eql(\"validation\"));",
+                  "pm.test(\"body: Comment body must be at most 280 characters\", () => pm.expect(e.errors.body).to.eql([\"Comment body must be at most 280 characters\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CHR-09 · A guest reads the post exactly as written",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/tweets/{{chTweetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "tweets",
+                "{{chTweetId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "noauth: the collection's root bearer would otherwise make this a signed-in read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"the 280 emoji are intact\", () => pm.expect(pm.response.json().data.body).to.eql(pm.environment.get(\"chAtLimit\")));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.environment.get('chUsername')) {",
+              "  pm.environment.set('chUsername', 'chr' + Date.now().toString(36));",
+              "}",
+              "pm.environment.set('chAtLimit', '\\u{1F44D}'.repeat(280));",
+              "pm.environment.set('chPastLimit', '\\u{1F44D}'.repeat(281));"
+            ]
+          }
+        }
+      ]
     }
   ],
   "auth": {
