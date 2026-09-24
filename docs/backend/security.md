@@ -1,10 +1,10 @@
 # Backend Security
 
 > **Status:** Active.
-> **Authority:** The authoritative source for the backend's **security mechanisms and the reasoning behind them** — authentication and the token model, password handling, the auth cookie, rate limiting, and HTTP hardening. It owns the *how* and the *why*. It does **not** own the wire contract (the auth endpoints, the rate-limit figures, and the auth modes are the [API contract](../api/api-contract.md)'s), the security *principles* it applies ([Engineering Principles §7](../development/engineering-principles.md)), or the **frontend** side of the token model (the in-memory access token and the 401-refresh flow belong to the [frontend API client](../frontend/api-client.md)).
+> **Authority:** The authoritative source for the backend's **security mechanisms and the reasoning behind them** — authentication and the token model, password handling, the auth cookie, rate limiting, text safety, and HTTP hardening. It owns the *how* and the *why*. It does **not** own the wire contract (the auth endpoints, the rate-limit figures, and the auth modes are the [API contract](../api/api-contract.md)'s), the security *principles* it applies ([Engineering Principles §7](../development/engineering-principles.md)), or the **frontend** side of the token model (the in-memory access token and the 401-refresh flow belong to the [frontend API client](../frontend/api-client.md)).
 > **Scope:** Server-side security mechanisms shared across the backend. Per-feature authorization rules live in the feature documents; the request lifecycle in the [system overview](../architecture/system-overview.md).
-> **Version:** 1.4
-> **Last Updated:** 2026-09-07
+> **Version:** 1.5
+> **Last Updated:** 2026-09-24
 > **Owner:** Basel Ghonaim
 
 ## Authentication: the token model
@@ -93,6 +93,20 @@ Applied once, at the edge, before any route:
 - the server **fails fast** if it cannot reach the database at startup, **shuts down gracefully** (draining in-flight requests, then disconnecting the pool) on `SIGTERM`/`SIGINT`, and exposes a **health check that actually pings the database**.
 
 The **Media read route** (`GET /media/:token`) deliberately overrides the `same-origin` CORP baseline with a route-scoped `Cross-Origin-Resource-Policy: cross-origin`, so public, opaque-token media can be embedded cross-origin — this is not an authorization control (a direct GET bypasses it). That read-side security posture — the content-derived, non-sniffable served type, the CORP override, and the bounded cache window — is a Media mechanism owned by [`backend/media.md`](media.md).
+
+## Text safety
+
+Text a reader writes is shown to other readers, and Unicode lets text misrepresent itself in two ways. The server closes both **when text is written**, so text that could mislead never enters the system, and no client or future consumer has to defend against it.
+
+- **Direction controls reorder what surrounds them.** An override (U+202E) or an isolate can make a name or a post display in an order other than the one it was written in, and in a feed that mixes Arabic and English a reader cannot tell. They are **refused**, not stripped: stripping would silently change what the writer sent. The direction **marks** are accepted, because they only declare a direction and Arabic text needs them. This is the server half of a split the [Arabic and RTL plan](../plans/historical/arabic-rtl-support.md) made: the client already isolates user text where it renders it.
+- **Invisible characters can pass for content.** Text made only of zero-width characters survives a trim and reads as nothing, so an empty post or a blank name gets past a check for emptiness. **Emptiness is judged on what would be seen**: text made only of white space and Unicode's default-ignorable characters counts as empty.
+- **NFC makes one visible text one stored text**, so the same words typed two ways compare equal. Search and trending depend on that.
+
+**One shared step, at the boundary.** `shared/validation/readerText.ts` normalises and refuses controls, and each field composes it while keeping its own rules for emptiness and length. It runs in validation, where untrusted input is typed and refused before any business logic sees it. A refusal never repeats the character: its message is fixed, and the validation middleware returns only messages.
+
+**At write only, with no backfill.** Rows written before the rule are left as they were.
+
+Which fields it covers, the exact ranges and the messages are the [API contract](../api/api-contract.md)'s.
 
 ## Principles applied
 
