@@ -28,6 +28,7 @@
 | `POST /tweets/:id/like` replaced by `PUT` and `DELETE /tweets/:id/like` | A toggle cannot be repeat-safe, which the product requires of liking: with the like shown before the server answers, a double press or a retry cancels what the reader meant. The fix is the verb, not the payload — `PUT` and `DELETE` carry idempotence by definition. The response shape is unchanged. No client reads it: nothing in the frontend calls the endpoint. |
 | `GET /comments?tweetId=`: returns top-level comments only, no longer every comment on the tweet | A comment may now answer another comment. Returning both levels in one flat list would give the client no way to tell them apart, and the thread is drawn as two. The replies have their own list, `?parentId=`. No client reads it, for the same reason. |
 | `POST` and `PATCH` on `/tweets` and `/comments`: a `body` of white space alone is refused with `422` | A rule tightened on input rather than a shape removed. Such a body used to pass the length check before it was trimmed, and was stored empty. No consumer can depend on that: nothing in the frontend writes a post or a comment. Counting code points instead of UTF-16 units only admits more, so it needs no exception. |
+| Text safety, on the `body` of `/tweets` and `/comments` and on `PATCH /users/me`'s `name` and `bio`: a direction control is refused with `422`; a body or a name made only of invisible characters is refused; a name of white space alone is refused rather than stored empty; and text is stored in NFC | Rules tightened on input rather than shapes removed. Each refuses text that no reader should be shown, or that was being stored empty. No consumer can depend on the looser rules. Nothing in the frontend writes a post or a comment, and the profile form already sends `null` for a blank name and meets any other refusal with its own words. |
 
 ---
 
@@ -202,19 +203,45 @@ was edited.
 ### Body text
 
 The `body` of a post, a comment and a reply follows **one rule**, on create and
-on edit:
+on edit, applied in this order:
 
-- **It is trimmed first**, and what is left is what is measured and stored.
-  Trimming removes Unicode white space and line ends from both ends.
-- **At least 1 character.** A body of white space alone is refused with `422`
-  and *"… cannot be empty"*, so a body is never stored empty.
-- **At most 280 characters, where a character is a Unicode code point.** An
-  emoji counts once, not as its two UTF-16 units; a sequence that draws as one
-  symbol counts each code point in it. Past 280, the answer is `422` with
-  *"… must be at most 280 characters"*.
+1. **Normalised to NFC**, and **refused if it carries a direction control**,
+   as [Text safety](#text-safety) states.
+2. **Trimmed**, and what is left is what is measured and stored. Trimming
+   removes Unicode white space and line ends from both ends.
+3. **Not empty.** A body of white space alone, or of invisible characters
+   alone, is refused with `422` and *"… cannot be empty"*, so a body is never
+   stored empty.
+4. **At most 280 characters, where a character is a Unicode code point.** An
+   emoji counts once, not as its two UTF-16 units; a sequence that draws as one
+   symbol counts each code point in it. Past 280, the answer is `422` with
+   *"… must be at most 280 characters"*.
 
-A client counting what it sends — `Array.from(text.trim()).length` in
-JavaScript — counts what the server counts.
+A client counting what it sends — `Array.from(text.normalize("NFC").trim()).length`
+in JavaScript — counts what the server counts. **Normalising first matters:** a
+few letters split in two under NFC (U+0958 becomes two code points), so a count
+taken before normalising can accept a body the server refuses.
+
+### Text safety
+
+Text other readers see is made safe to show among their words: the `body` of
+a post, a comment and a reply, and a profile's `name` and `bio`. A `username`
+is not included; it keeps its own rule. The reasoning is
+[backend security](../backend/security.md#text-safety)'s.
+
+- **Stored in NFC.** What is stored and returned is the composed form, so
+  `e` followed by a combining acute accent comes back as `é`. Rows written
+  before this rule are left as they were.
+- **Direction controls are refused:** the embeddings, overrides and isolates,
+  U+202A–U+202E and U+2066–U+2069. The answer is `422` with one message for
+  the field, *"<Field> cannot contain text-direction control characters"*
+  (for example *"Tweet body cannot contain …"*). **The character never appears
+  in the response.** The direction marks U+200E, U+200F and U+061C are
+  accepted.
+- **Invisible text is empty text.** Text made only of Unicode white space and
+  default-ignorable characters — zero-width spaces and joiners, the direction
+  marks, variation selectors — counts as empty. What empty means is the
+  field's: a body and a name are refused, a bio is cleared.
 
 ### TweetMediaEmbed
 
@@ -1069,7 +1096,7 @@ comments at both levels.
 
 ### `PATCH /users/me` — Update own profile
 
-**Auth:** Required. Updates any subset of `username`, `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). `name` follows the same three-way rule as the avatar: **omitted = unchanged, `null` = clear, a string = set** (`name` is never derived from `username`). Changing `username` **renames the handle**: the old handle is reserved (see below), the new one becomes current, and because the session is keyed on the immutable `id` (never the handle), the **same access token keeps working with no re-login or refresh** — the response is the authoritative new identity. Returns the updated self profile (the same shape as `GET /users/me`, including `email` and `emailVerification`).
+**Auth:** Required. Updates any subset of `username`, `name`, `bio`, `avatar` — **atomically** (all requested changes commit together or none do). `name` follows the same three-way rule as the avatar: **omitted = unchanged, `null` = clear, a string = set** (`name` is never derived from `username`). **`name` and `bio` are text other readers see**, so both follow [Text safety](#text-safety). Their lengths are counted in UTF-16 units **before trimming**, on the normalised text: at most 50 for `name` and 160 for `bio`. **A name must have something in it:** `""`, white space alone and invisible characters alone are refused with *"Name is required"*, and a name is cleared with `null`. **A bio is cleared with `""`**, and white space or invisible characters alone become `""`; a bio **refuses `null`**. Changing `username` **renames the handle**: the old handle is reserved (see below), the new one becomes current, and because the session is keyed on the immutable `id` (never the handle), the **same access token keeps working with no re-login or refresh** — the response is the authoritative new identity. Returns the updated self profile (the same shape as `GET /users/me`, including `email` and `emailVerification`).
 
 ```jsonc
 // Request — any subset; at least one field. Avatar is full-replacement:
