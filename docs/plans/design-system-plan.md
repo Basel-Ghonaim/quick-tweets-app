@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-25
+> **Last Updated:** 2026-09-26
 > **Parent Issue:** [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792)
 > **Supersedes:** —
 
@@ -54,7 +54,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 ### 2.3 · Changes to existing parts
 
 - **Icons:** the additions the designs use, and mirroring in right to left where the meaning has a direction. A filled "liked" is not a second glyph — the design fills the shared one from the consumer.
-- **Textarea:** hosts a character count. The limit is passed in and never known to the Design System.
+- **Textarea:** no change. The designs place the character count in the composer's own toolbar, a sibling of the field rather than something it hosts, so the count is the consumer's composition and the limit never reaches this layer at all.
 - **Input:** no change. The approved designs draw the search field on the stock filled variant and override the component nowhere, so the pill the extension log named was never settled.
 - **Navigation drawn as an action:** the designs draw an anchor carrying a button's appearance, so it is a button that navigates rather than a link that looks like one (§4).
 
