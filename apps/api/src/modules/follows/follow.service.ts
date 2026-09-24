@@ -194,4 +194,15 @@ export const createFollowService = (
 
     return { data, meta };
   },
+
+  // ─── Suggestions (bounded, not paged) ───────────────────────────────
+
+  getSuggestions: async (readerId, { limit, exclude }) => {
+    // An exclude that names nobody excludes nobody: the page it came from may be a 404.
+    const excludedId = exclude === undefined ? undefined : ((await repo.findUserIdByUsername(exclude)) ?? undefined);
+
+    const rows = await repo.findSuggestions({ readerId, excludedId, limit });
+
+    return { data: await toItems(resolution, rows, readerId) };
+  },
 });

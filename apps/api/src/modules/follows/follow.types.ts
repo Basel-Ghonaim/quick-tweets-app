@@ -48,6 +48,15 @@ export interface FollowUserRow extends AuthorRow {
   bio: string;
 }
 
+/** Who suggestions are for, who they must leave out, and how many to return. */
+export interface SuggestionQuery {
+  /** The signed-in reader; absent for a guest. */
+  readerId?: number;
+  /** The person whose profile is being viewed, already resolved. */
+  excludedId?: number;
+  limit: number;
+}
+
 /** Follow record with the related user data for list queries.
  *  Each query only includes one side (follower OR following). */
 export interface FollowWithUser {
@@ -85,6 +94,9 @@ export interface IFollowRepository {
 
   /** Get users that a user is following (cursor-paginated). */
   getFollowing(userId: number, params: CursorParams): Promise<FollowWithUser[]>;
+
+  /** Accounts to suggest, best first: never the reader, anyone they follow, or `excludedId`. */
+  findSuggestions(query: SuggestionQuery): Promise<FollowUserRow[]>;
 }
 
 // ─── Service Interface ───────────────────────────────────────────────────────
@@ -118,4 +130,10 @@ export interface IFollowService {
     params: CursorParams,
     readerId?: number,
   ): Promise<{ data: FollowUserItem[]; meta: CursorMeta }>;
+
+  /** `readerId` is absent for a guest, who gets the most-followed. Not paged. */
+  getSuggestions(
+    readerId: number | undefined,
+    params: { limit: number; exclude?: string },
+  ): Promise<{ data: FollowUserItem[] }>;
 }

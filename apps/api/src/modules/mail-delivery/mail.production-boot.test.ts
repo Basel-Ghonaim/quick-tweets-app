@@ -11,7 +11,7 @@
  * out of the import. That is the criterion (ADR 0015 Decision 3).
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const ENV = { ...process.env };
 
@@ -26,6 +26,14 @@ const importCompositionUnder = async (env: Record<string, string | undefined>) =
   process.env = { ...ENV, ...env } as NodeJS.ProcessEnv;
   return import("./index.js");
 };
+
+// The first import in a worker loads nodemailer and the database client, far slower than any
+// later one; paid here, it cannot time out the first case on a busy machine.
+beforeAll(async () => {
+  await importCompositionUnder({ NODE_ENV: "development", MAIL_MODE: undefined });
+  process.env = { ...ENV };
+  vi.resetModules();
+}, 30_000);
 
 afterEach(() => {
   process.env = { ...ENV };

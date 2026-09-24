@@ -113,6 +113,24 @@ the graph it asserts against is deliberately **asymmetric** — B follows A and 
 does not follow back — so the two directions can be told apart. A mutual pair
 would pass whichever way the fields were wired.
 
+### Folder 18 — suggested accounts
+
+Self-isolated, and needs no pgAdmin. Each run registers **five** accounts, which
+is half the sign-in limiter's budget of ten per fifteen minutes. Two runs in a
+row on one API process spend it all, and a third answers `429` on `Register`.
+Restart the API between runs.
+
+```bash
+npm run verify:suggestions -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+**Two traps, found while writing it:**
+
+- `data` is one of the Postman sandbox's own names, so a test script that
+  declares `const data` fails with a `SyntaxError` before asserting anything.
+  The other folders use `d`, and this one uses `rows`.
+- Following someone answers **`200`**, not `201`.
+
 ### Folder 17 — the edit limit
 
 Self-isolated, and needs no pgAdmin. Each run registers two new accounts, so it

@@ -20,6 +20,7 @@ import { authGuard } from "../../middleware/authGuard.js";
 import { optionalAuth } from "../../middleware/optionalAuth.js";
 import { createFollowController } from "./follow.controller.js";
 import { cursorQuerySchema } from "../../shared/validators/index.js";
+import { suggestionsQuerySchema } from "./follow.validator.js";
 
 const controller = createFollowController();
 
@@ -29,6 +30,10 @@ export const followRoutes = Router();
 
 followRoutes.post("/:username", authGuard, controller.follow);
 followRoutes.delete("/:username", authGuard, controller.unfollow);
+
+// ─── Suggestions (optionalAuth: a guest gets the most-followed) ──────────────
+
+followRoutes.get("/suggestions", optionalAuth, validate(suggestionsQuerySchema, "query"), controller.getSuggestions);
 
 // ─── List Routes (optionalAuth for each row's follow state) ──────────────────
 
