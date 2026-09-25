@@ -241,6 +241,7 @@ model Tweet {
 
   // Indexes
   @@index([authorId])
+  @@index([createdAt]) // trending counts the posts written in the last week
   @@map("tweets")
 }
 
