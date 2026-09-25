@@ -41,7 +41,7 @@ const makeWorld = () => {
     findByAuthor: async () => [],
     findAuthorIdByUsername: async () => null,
     findById: async () => null,
-    create: async (authorId, body, client) => {
+    create: async (authorId, body, hashtags, client) => {
       calls.create.push(client);
       return rawTweet(1, stored.get(1) ?? []) as never;
     },

@@ -41,6 +41,7 @@ import type { CursorParams, CursorMeta, LikeState } from "../../shared/types/ind
 import { avatarReferencesOf, isPrismaError } from "../../shared/utils/index.js";
 import { toTweetResponse } from "./tweet.mapper.js";
 import { resolveFollowState, followStateOf } from "../../shared/social/index.js";
+import { hashtagsOf } from "../../shared/hashtags/index.js";
 
 // ─── Media port ──────────────────────────────────────────────────────────────
 
@@ -162,6 +163,10 @@ const asAttachFailure = (err: unknown): unknown =>
  */
 const textChanged = (submitted: string | undefined, stored: string): { editedAt?: Date } =>
   submitted !== undefined && submitted !== stored ? { editedAt: new Date() } : {};
+
+/** A submitted body as the fields it writes: the text, and the hashtags that follow it. */
+const textFields = (body: string | undefined) =>
+  body === undefined ? {} : { body, hashtags: hashtagsOf(body) };
 
 /**
  * Liking something that is not there is a `404`, exactly as reading it is. The
@@ -294,8 +299,10 @@ export const createTweetService = (
     body: string,
     mediaTokens: string[] = [],
   ): Promise<TweetResponse> => {
+    // The body arrives normalised, so its hashtags are the ones a reader will see linked.
+    const hashtags = hashtagsOf(body);
     if (mediaTokens.length === 0) {
-      return toResponse(media, await repo.create(authorId, body));
+      return toResponse(media, await repo.create(authorId, body, hashtags));
     }
 
     // The tweet, its media rows, and Media's record of those references all
@@ -303,7 +310,7 @@ export const createTweetService = (
     // media nothing accounts for, or leak objects nothing will reclaim.
     try {
       const tweet = await runInTransaction(async (tx) => {
-        const created = await repo.create(authorId, body, tx);
+        const created = await repo.create(authorId, body, hashtags, tx);
         const refs = await authorizeRefs(media, mediaTokens, authorId, tx);
         await repo.replaceMediaRefs(created.id, refs, tx);
         for (const ref of refs) {
@@ -353,7 +360,7 @@ export const createTweetService = (
 
     // 4. Body-only edits leave media untouched and need no transaction.
     if (data.media === undefined) {
-      return toResponse(media, await repo.update(id, { body: data.body, ...edited }, userId));
+      return toResponse(media, await repo.update(id, { ...textFields(data.body), ...edited }, userId));
     }
 
     // 5. Full replacement: the submitted array *is* the tweet's media. The body
@@ -365,7 +372,7 @@ export const createTweetService = (
         const after = await authorizeRefs(media, mediaTokens, userId, tx);
         await repo.replaceMediaRefs(id, after, tx);
         await coordinateRefChange(media, id, before, after, tx);
-        return repo.update(id, { body: data.body, ...edited }, userId, tx);
+        return repo.update(id, { ...textFields(data.body), ...edited }, userId, tx);
       });
       return toResponse(media, updated);
     } catch (err) {

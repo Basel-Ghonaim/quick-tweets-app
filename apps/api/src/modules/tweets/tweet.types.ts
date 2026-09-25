@@ -14,6 +14,7 @@
 import type { DbClient } from "../../shared/database/index.js";
 import type { AuthorEmbed, CursorParams, CursorMeta, LikeState } from "../../shared/types/index.js";
 import type { FollowState } from "../../shared/social/index.js";
+import type { Hashtag } from "../../shared/hashtags/index.js";
 import type { AuthorRow } from "../../shared/utils/index.js";
 
 /**
@@ -118,11 +119,18 @@ export interface ITweetRepository {
 
   findById(id: number, userId?: number): Promise<TweetWithRelations | null>;
 
-  create(authorId: number, body: string, client?: DbClient): Promise<TweetWithRelations>;
+  /** Writes the post and its hashtags together. */
+  create(
+    authorId: number,
+    body: string,
+    hashtags: Hashtag[],
+    client?: DbClient,
+  ): Promise<TweetWithRelations>;
 
   update(
     id: number,
-    data: { body?: string; editedAt?: Date },
+    /** `hashtags`, when present, replaces the post's hashtags in the same write. */
+    data: { body?: string; editedAt?: Date; hashtags?: Hashtag[] },
     userId?: number,
     client?: DbClient,
   ): Promise<TweetWithRelations>;

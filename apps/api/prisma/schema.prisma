@@ -237,10 +237,30 @@ model Tweet {
   comments Comment[]
   likes    Like[]
   media    TweetMedia[]
+  hashtags TweetHashtag[]
 
   // Indexes
   @@index([authorId])
   @@map("tweets")
+}
+
+// ─── TweetHashtag ────────────────────────────────────────────────────────────
+// A hashtag a post carries: the key hashtags are compared by, and how the post
+// first spelled it. One row per post and key, so counting rows counts posts.
+// Cascades with the post, since it holds no media reference.
+
+model TweetHashtag {
+  id       Int    @id @default(autoincrement())
+  tweetId  Int    @map("tweet_id")
+  key      String // not VarChar(280): folding case can lengthen a tag threefold
+  spelling String @db.VarChar(280)
+
+  // Relations
+  tweet Tweet @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+
+  // Constraints & Indexes
+  @@unique([tweetId, key])
+  @@map("tweet_hashtags")
 }
 
 // ─── TweetMedia ──────────────────────────────────────────────────────────────
