@@ -2,6 +2,7 @@ import { forwardRef, type ElementType } from "react";
 import styles from "./Link.module.css";
 import type { LinkPlacement, LinkProps, LinkUnderline } from "./Link.types";
 import { classNames, customProperties } from "../../shared";
+import { navigatingElement } from "../navigationElement";
 
 /** Targets that reuse the current browsing context, so no opener is exposed. */
 const KEEPS_CONTEXT = new Set(["_self", "_parent", "_top"]);
@@ -24,7 +25,6 @@ const UNDERLINE: Record<LinkUnderline, string> = {
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
   (
     {
-      as,
       placement = "in-text",
       underline,
       tone = "accent",
@@ -37,7 +37,9 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref,
   ) => {
-    const Element = (as ?? "a") as ElementType;
+    // Taken from the seam rather than from a prop: one place decides what a
+    // destination is, so two components cannot disagree about it.
+    const Element = navigatingElement() as ElementType;
 
     // `noopener` is the layer's guarantee; `noreferrer` stays the caller's,
     // against the convention of forcing both -- a referrer stance is a product's.

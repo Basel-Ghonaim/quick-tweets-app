@@ -1,9 +1,12 @@
-import { forwardRef } from "react";
+import { forwardRef, type ElementType } from "react";
 import styles from "./Button.module.css";
 import type { ButtonProps } from "./Button.types";
 import { classNames, customProperties } from "../../shared";
 import { Spinner } from "../../feedback/Spinner";
+import { navigatingElement } from "../../navigation/navigationElement";
 
+// The action is the common arm, so its element types the ref; a destination
+// takes the same ref and is the narrower case.
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
@@ -11,18 +14,29 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       variant = "contained",
       color = "primary",
       size = "medium",
-      isLoading = false,
       fullWidth = false,
       leftIcon,
       rightIcon,
-      loadingText,
       className,
       style,
-      disabled,
-      ...props
+      ...rest
     },
     ref,
   ) => {
+    const { href, isLoading = false, loadingText, disabled, ...props } =
+      rest as Partial<{
+        href: string;
+        isLoading: boolean;
+        loadingText: string;
+        disabled: boolean;
+      }> &
+        Record<string, unknown>;
+
+    // A destination renders with whatever the application registered; an action
+    // is a button. The appearance below does not know which it got.
+    const navigates = href !== undefined;
+    const Element = (navigates ? navigatingElement() : "button") as ElementType;
+
     const dynamicStyles = customProperties(
       {
         "--button-bg": `var(--role-fill-${color})`,
@@ -38,12 +52,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     );
 
     return (
-      <button
+      <Element
         ref={ref}
+        href={href}
         // Defaulted because a button in a form submits it otherwise, and a
         // submit is a decision the caller makes rather than one it inherits.
-        // Its sibling has defaulted this since it was built.
-        type="button"
+        // A destination submits nothing, so it carries no type at all.
+        type={navigates ? undefined : "button"}
         className={classNames(
           styles.root,
           styles[`variant-${variant}`],
@@ -57,7 +72,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         // so it takes the native attribute rather than a prop the caller also
         // controls -- and `aria-busy` says which of the two it is, which
         // `disabled` alone cannot.
-        disabled={disabled || isLoading}
+        disabled={navigates ? undefined : disabled || isLoading}
         aria-busy={isLoading || undefined}
         {...props}
       >
@@ -71,7 +86,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {!isLoading && rightIcon && (
           <span className={styles.icon}>{rightIcon}</span>
         )}
-      </button>
+      </Element>
     );
   },
 );

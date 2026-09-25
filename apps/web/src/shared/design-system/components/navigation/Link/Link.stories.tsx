@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { forwardRef, type ComponentProps } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Link } from "./Link";
+import { setupNavigation } from "../navigationElement";
 import { Typography } from "../../display/Typography";
 import type { LinkUnderline } from "./Link.types";
 
@@ -146,14 +147,40 @@ export const AWrappedLinkKeepsItsFocusRing: Story = {
   },
 };
 
-/** The boundary itself: the layer renders whatever the caller hands it. */
-export const ACallerSuppliesTheNavigatingElement: Story = {
-  args: { as: Adapter },
+/**
+ * Unregistered, the layer still renders a destination — which is what lets every
+ * story in this file exist, and every test outside the application.
+ */
+export const WithoutTheSeamItIsStillAnAnchor: Story = {
   play: async ({ canvasElement }) => {
     const link = within(canvasElement).getByRole("link", { name: "the feed" });
 
-    await expect(link).toHaveAttribute("data-adapter");
-    await expect(link).toHaveAttribute("href", "/feed");
+    await expect(link.tagName).toBe("A");
+    await expect(link).not.toHaveAttribute("data-adapter");
+  },
+};
+
+/**
+ * Registered, it renders what the application handed in. The prop that used to
+ * carry this is gone: one place decides what a destination is, so two
+ * components cannot disagree about it.
+ */
+export const TheSeamDecidesWhatADestinationIs: Story = {
+  render: (args) => {
+    // Read when the link renders, so it is set before that and not after.
+    setupNavigation(Adapter);
+    return <Link {...args} />;
+  },
+  play: async ({ canvasElement }) => {
+    try {
+      const link = within(canvasElement).getByRole("link", { name: "the feed" });
+
+      await expect(link).toHaveAttribute("data-adapter");
+      await expect(link).toHaveAttribute("href", "/feed");
+    } finally {
+      // Module state outlives a story; the next one would inherit it.
+      setupNavigation("a");
+    }
   },
 };
 

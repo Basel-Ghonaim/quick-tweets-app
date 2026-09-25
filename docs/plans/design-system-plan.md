@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-26
+> **Last Updated:** 2026-09-27
 > **Parent Issue:** [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792)
 > **Supersedes:** —
 
@@ -47,7 +47,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 - **Skeleton:** placeholder shapes while content loads.
 - **Menu:** anchored to what opens it, with ordinary, checked and dangerous items, and correct placement in both directions.
 - **Dialog:** a modal dialog, an alert dialog for confirmations, and a full-screen form for phones. It can host a confirmation above itself.
-- **Tabs:** tabs that can also be navigation, where each tab is its own address.
+- **Tabs:** navigation, where each tab is its own address. The designs draw no other form — nothing uses the tablist role — so a form that switches panels in place stays owed until one is drawn.
 - **Toast:** a brief, polite confirmation, optionally with an action, placed above the page and clear of the phone's bottom bar.
 - **Tooltip:** names for icon-only controls on the collapsed navigation. **Deferred until it is drawn:** the approved designs name it in a comment and draw it nowhere, and §5 keeps parts for undesigned surfaces out. It stays owed.
 
@@ -192,10 +192,16 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 
 - **Settled.** **The artboards outrank the extension log.** Three of its entries have now proved wrong in the same direction — an avatar size it omitted, a filled glyph it invented, and a pill nothing draws — so a part is built from what the design renders, never from what the log says is needed. A **filled form is the consumer's**, not a second glyph: the design fills one heart from its own rule, which outranks the attribute the icon carries. A **ramp is as long as the design makes it**, and this layer owns the colour while the meaning, its per-theme resolution and the wash beneath it stay the product's. The shared class helper now sits where all three peers reach it, so the next icon composes its class rather than hand-rolling one.
 - **Amended.** §2.3 — `Input` needs no change, and navigation-drawn-as-an-action is a button that navigates rather than a link that looks like one, which §4 already said and §2.3 contradicted.
-- **Recorded.** No finding. [Finding 0016](../architecture/findings/open/0016-class-name-helper-is-not-reachable-by-its-peers.md) is closed by the move rather than recorded again, and the withdrawn pill is marked in the design's own extension log so it is not proposed a second time.
+- **Recorded.** No finding. [Finding 0016](../architecture/findings/resolved/0016-class-name-helper-is-not-reachable-by-its-peers.md) is closed by the move rather than recorded again, and the withdrawn pill is marked in the design's own extension log so it is not proposed a second time.
 
 **Skeleton and Progress.** [#828](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/828) · [#830](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/830).
 
 - **Settled.** **An indicator says nothing of its own.** A placeholder, a bar and a ring are all silent and `aria-hidden`, because what is loading and whether it matters is known only to the surface that composes them — the Spinner's rule, now the rule for everything of its kind. **Past its maximum, a fraction draws as done rather than as more:** overrunning is real, it is the consumer's to word, and a circle cannot mean more than once round. **Geometry gets a module and unit tests of its own**, since a dasharray plausible at half way is exactly what a rendered story samples and passes. And `Progress` is grounded by **adoption rather than by the platform** — a ring cannot be the `progress` element, so the element's semantics do not admit it and the committed vocabulary does.
 - **Amended.** §2.3 — `Textarea` needs no change: the designs place the character count in the composer's own toolbar, so the limit never reaches this layer. The fourth extension-log divergence, and the second Work Item running to the rule that the artboards outrank the log.
 - **Recorded.** No finding. Two guarantees were unproven until a mutation said so — a removed `aria-hidden` raises no accessibility violation, and a quarter arc drawn from three o'clock is as long as one drawn from the top — so both are asserted directly rather than inferred.
+
+**Navigation becomes a seam — Tabs and an action that navigates.** [#833](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/833) · [#834](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/834).
+
+- **Settled.** **The layer is handed its navigating element once**, by the composition root, rather than taking it from each caller — the inversion the [frontend architecture](../frontend/architecture.md) named a trigger for, arriving. Closure holds because the element is handed in and never reached for. **Unregistered it falls back to a plain anchor**, and that fallback is not a convenience: it is what lets every story and test in this layer render outside the application, without which the layer would have no proof of itself. **A refusal beats an omission** — a destination refuses `disabled`, `type` and a busy state through a discriminated union, because each would be a quiet lie rather than a harmless extra. And **an address is not a control**: tabs are a labelled landmark of links whose current one says `page`, with which one that is left to the caller, since comparing a destination with a location is exactly the knowledge this layer does not have.
+- **Amended.** §2.2 — a tab is an address, and the panel-swapping form stays owed until a design draws one. [`frontend/architecture.md`](../frontend/architecture.md) → v3.3 records the conversion as applied; it is the only Contract this track has changed.
+- **Recorded.** No new finding, and one closed: [Finding 0016](../architecture/findings/resolved/0016-class-name-helper-is-not-reachable-by-its-peers.md) was resolved by construction in the vocabulary Work Item and left open afterwards, which a closure review of this plan caught. One guarantee here was also unproven until a mutation said so: `carrySearchParams` had its own tests, but nothing checked that `RouteLink` still used it, and `RouteLink` is a file this Work Item changed.

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { expect, userEvent, within } from "storybook/test";
 import { PlusIcon } from "../../../icons";
 import { Button } from "./Button";
-import type { ButtonVariant } from "./Button.types";
+import type { ButtonActionProps, ButtonVariant } from "./Button.types";
 import {
   CONTROL_SIZES,
   ROLES,
@@ -36,6 +36,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The action's own arm. A union collapses under `Partial`, so a story setting
+ *  a prop only an action has has to say which arm it is on. */
+type ActionStory = StoryObj<Meta<ButtonActionProps>>;
+
+/** Spread by the stories that are on that arm, so the arm is not re-derived
+ *  from a union every time one of them reads it. */
+const ACTION: ButtonActionProps = {
+  children: "Button",
+  variant: "contained",
+  color: "primary",
+  size: "medium",
+};
+
 const VARIANTS: ButtonVariant[] = ["contained", "outlined", "ghost"];
 // Availability is two independent flags, so the matrix enumerates their
 // combinations rather than the positions of a single enum.
@@ -65,12 +78,12 @@ export const Ghost: Story = {
 };
 
 // --- Availability
-export const Loading: Story = {
-  args: { ...Default.args, isLoading: true, loadingText: "Submitting..." },
+export const Loading: ActionStory = {
+  args: { ...ACTION, isLoading: true, loadingText: "Submitting..." },
 };
 
-export const Disabled: Story = {
-  args: { ...Default.args, disabled: true },
+export const Disabled: ActionStory = {
+  args: { ...ACTION, disabled: true },
 };
 
 // Every variant in every availability combination — the surface the a11y check
@@ -174,8 +187,8 @@ export const SpinnerInheritsFromHost: Story = {
 };
 
 /** Loading is two facts, and `disabled` can only carry one of them. */
-export const LoadingIsAnnounced: Story = {
-  args: { ...Default.args, isLoading: true, loadingText: "Submitting..." },
+export const LoadingIsAnnounced: ActionStory = {
+  args: { ...ACTION, isLoading: true, loadingText: "Submitting..." },
   play: async ({ canvasElement }) => {
     const button = canvasElement.querySelector("button")!;
     await expect(button).toHaveAttribute("aria-busy", "true");
@@ -231,5 +244,38 @@ export const AButtonsNameIsItsTextAlone: Story = {
     // can still have it announced, which an ancestor `aria-hidden` would
     // remove irrecoverably.
     await expect(glyph.parentElement).not.toHaveAttribute("aria-hidden");
+  },
+};
+
+/**
+ * Navigation drawn as an action. The designs put this appearance on an anchor
+ * in fifteen places — a button that navigates, rather than a link wearing a
+ * button's clothes — so the element changes and nothing else does.
+ */
+export const ADestinationWearsTheSameAppearance: Story = {
+  render: () => (
+    <div style={{ display: "flex", gap: "0.75rem" }}>
+      <Button href="/sign-in">Sign in</Button>
+      <Button href="/sign-up" variant="outlined">
+        Create account
+      </Button>
+      <Button>Post</Button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const signIn = within(canvasElement).getByRole("link", { name: "Sign in" });
+    const post = within(canvasElement).getByRole("button", { name: "Post" });
+
+    // A destination is a link to everything that reads the page, not a button
+    // that happens to move: the role is the whole of the difference.
+    await expect(signIn.tagName).toBe("A");
+    await expect(signIn).toHaveAttribute("href", "/sign-in");
+    await expect(signIn).not.toHaveAttribute("type");
+
+    await expect(post.tagName).toBe("BUTTON");
+    await expect(post).toHaveAttribute("type", "button");
+
+    // And it is the same appearance: one class list, one set of tokens.
+    await expect(signIn.className).toBe(post.className);
   },
 };
