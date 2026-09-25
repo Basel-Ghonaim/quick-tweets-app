@@ -106,19 +106,22 @@ export const createTweetRepository = (
 
   // ── Create ──
 
-  create: (authorId, body, client: DbClient = db) =>
+  create: (authorId, body, hashtags, client: DbClient = db) =>
     client.tweet.create({
-      data: { authorId, body },
+      data: { authorId, body, hashtags: { createMany: { data: hashtags } } },
       // No userId — isLiked is always false on a newly created tweet
       include: buildTweetInclude(),
     }),
 
   // ── Update ──
 
-  update: (id, data, userId?, client: DbClient = db) =>
+  update: (id, { hashtags, ...fields }, userId?, client: DbClient = db) =>
     client.tweet.update({
       where: { id },
-      data,
+      data: {
+        ...fields,
+        ...(hashtags ? { hashtags: { deleteMany: {}, createMany: { data: hashtags } } } : {}),
+      },
       include: buildTweetInclude(userId),
     }),
 

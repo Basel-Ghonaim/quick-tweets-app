@@ -113,6 +113,20 @@ the graph it asserts against is deliberately **asymmetric** — B follows A and 
 does not follow back — so the two directions can be told apart. A mutual pair
 would pass whichever way the fields were wired.
 
+### Folder 19 — trending
+
+Self-isolated, and needs no pgAdmin. Each run registers **one** account.
+
+```bash
+npm run verify:trending -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+**The list is shared with every post written this week**, so the folder looks
+only for hashtags named for its own run, and deletes its posts at the end. A run
+stopped midway leaves them counted for seven days. At equal counts the most recent
+hashtag comes first, so a new run still finds its own while at most three such
+runs are left; past that, delete the stranded posts by hand.
+
 ### Folder 18 — suggested accounts
 
 Self-isolated, and needs no pgAdmin. Each run registers **five** accounts, which

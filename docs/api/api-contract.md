@@ -95,6 +95,8 @@ GET    /api/v1/follows/:username/followers
 GET    /api/v1/follows/:username/following
 GET    /api/v1/follows/suggestions
 
+GET    /api/v1/trends
+
 GET    /api/v1/onboarding/journey                       (authenticated)
 POST   /api/v1/onboarding/journey/advance               (authenticated)
 
@@ -244,6 +246,39 @@ is not included; it keeps its own rule. The reasoning is
   marks, variation selectors — counts as empty. What empty means is the
   field's: a body and a name are refused, a bio is cleared.
 
+### Hashtags
+
+A hashtag follows **one rule**, for the client that links it and for the
+server that counts it and, with search, finds it.
+
+- **What one is.** `#` followed by one or more letters, marks, digits and
+  underscores, in any script. It never starts straight after a letter, a digit
+  or an underscore, and nothing inside a web address is one. So `#2026` and
+  `#_` are hashtags, `abc#tag` holds none, and neither does
+  `https://example.com/#top`. In JavaScript, a client finds exactly what the
+  server finds by scanning with the pattern below and taking its second
+  group. The web-address branch comes first, so it takes the `#` inside an
+  address:
+
+  ```js
+  /(https?:\/\/[^\s]+)|((?<![\p{L}\p{N}_])#[\p{L}\p{M}\p{N}_]+)/gu
+  ```
+
+- **Read on the stored text.** The server finds a post's hashtags in its body
+  as stored, which is NFC ([Text safety](#text-safety)). Normalising can move
+  where a hashtag begins, so a client links the text it received, not the
+  text it sent.
+- **When two are the same.** They match once each is normalised: NFC; every
+  nonspacing mark in the Arabic block (U+0600–U+06FF) and tatweel (U+0640)
+  removed; آ أ إ ٱ read as ا; and case folded. **ة and ه, ى and ي, ؤ and و,
+  ئ and ي stay distinct**, and accents outside Arabic count, so `#café` is not
+  `#cafe`. A hashtag with nothing left once its marks and tatweel are removed
+  is never counted.
+- **Which text carries them.** A post's hashtags are known from when it is
+  written, and follow its text when it is edited. A post written before this
+  rule shipped carries none. Comments and replies are linked by the client
+  and never counted.
+
 ### TweetMediaEmbed
 
 Embedded in tweet responses as an **ordered** array — the array order *is* the display order.
@@ -350,7 +385,7 @@ Every limiter below is **per IP**, over a fixed window, and answers with `type: 
 | Refresh | `/auth/refresh` | 30 req / 15 min | "Too many refresh requests. Please wait a few minutes before continuing." |
 | Verification issue | `POST /channel-verification/challenges` | **10 req / 15 min** | "Too many verification requests. Please wait 15 minutes before trying again." |
 | Verification confirm | `POST /channel-verification/challenges/confirm` | **10 req / 15 min** | "Too many confirmation attempts. Please wait 15 minutes before trying again." |
-| API | `/tweets`, `/comments`, `/users`, `/follows`, `/onboarding`, `POST /media`, and `GET /channel-verification/challenges/current` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
+| API | `/tweets`, `/comments`, `/users`, `/follows`, `/trends`, `/onboarding`, `POST /media`, and `GET /channel-verification/challenges/current` | 100 req / 15 min | "You have made too many requests. Please slow down and try again in a few minutes." |
 | Edit (per account) | `PATCH /tweets/:id` | **10 req / 1 hour, per account** | "You have edited posts too often. Please wait and try again later." |
 | Reset request | `POST /auth/password-reset` **and** `POST /auth/password-reset/resend` | **10 req / 15 min, shared** | "Too many password reset requests. Please wait 15 minutes before trying again." |
 | Reset confirm | `POST /auth/password-reset/confirm` | **10 req / 15 min** | "Too many attempts. Please wait 15 minutes before trying again." |
@@ -1294,6 +1329,39 @@ comments at both levels.
 - **The same order on every request:** at equal rank, **more followers first, then the newest account**.
 - **Rows are the follower lists' own shape**, carrying [FollowState](#followstate), and follow state is resolved once for the whole list, as it is for those lists.
 - The path is under `/follows`, not `/users`: `suggestions` is a legal username, and `GET /users/:username` would lose that person's profile to it.
+
+---
+
+## Trends
+
+### `GET /trends` — What is trending
+
+**Auth:** None. A guest and a signed-in reader get the same list.
+**Query params:** none.
+
+```jsonc
+// Response 200 — no meta: the list holds at most five and is not paged
+{
+  "success": true,
+  "data": [
+    { "tag": "#WebDev", "tweetsCount": 12 },
+    { "tag": "#القراءة", "tweetsCount": 4 }
+  ]
+}
+```
+
+- **What is counted:** the [hashtags](#hashtags) of posts written in the **last
+  seven days**, each post once however often it repeats one. Comments and
+  replies do not count.
+- **What trends:** a hashtag **at least two** posts used. **At most five**,
+  the most-used first, and an empty array when none qualifies.
+- **The same order on every request.** At equal counts, the hashtag used most
+  recently comes first, and a fixed order of its characters settles the rest.
+- **`tag`** is the spelling most of its posts used, the more recent where two
+  were used as often, with its `#`. So it is already a search for that hashtag.
+- **`tweetsCount`** is how many posts used it in the window.
+- Under the general limiter ([Rate Limiting](#rate-limiting)). The endpoint is
+  new, so the change is additive: no `v2` and no pre-release exception.
 
 ---
 

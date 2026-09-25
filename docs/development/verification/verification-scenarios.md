@@ -347,6 +347,30 @@ no longer describe executable behavior and are retired rather than rewritten her
 | SUG-05 | — | A **guest** asks | 200; three rows, both flags false on every row | — | — | `noauth` |
 | SUG-06 | — | Ask with `limit=21` | 422; `limit` named | — | — | Bounded, not paged |
 
+## 7h · Trending ([#835](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/835))
+
+> **What the folder proves:**
+> - A hashtag trends from **two posts**, each post counted **once**, and shows
+>   **the spelling most posts used**.
+> - A hashtag in **one post**, in a **comment**, or **inside a web address**
+>   does not trend.
+> - An **edit** to a post's text, and **deleting** the post, take its count
+>   away.
+> - A **guest** reads it, and a signed-in reader gets the same list.
+>
+> Folder 19 is **self-isolated**: one new account, hashtags named for the run,
+> and its own posts deleted at the end. The seven-day window's edges are not
+> here: a post cannot be backdated over HTTP, so the integration lane owns them.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| TRD-01 | Setup: P1 `#Hot…`, P2 `#hot…`, P3 `#Hot… #HOT…`, P4 and P5 `#Pair…`, P6 `#Solo…` with a comment `#Solo…`, P7 `https://example.com/#Solo…` | A **guest** asks | 200; no `meta`; at most five rows of `{ tag, tweetsCount }`, each tag with its `#`, each count at least 2; `RateLimit-Policy` carries `q=100; w=900` | — | — | `noauth`; the general limiter |
+| TRD-02 | Setup | A guest asks | Hot: `#Hot…`, **3**; Pair: 2, after Hot | — | — | P3 writes Hot twice and counts once; two posts spelled it `Hot` |
+| TRD-03 | Setup | A guest asks | Solo absent | — | — | One post; a comment; a web address |
+| TRD-04 | TRD-01 | The account asks | 200; the same list as TRD-01 | — | — | No per-reader state |
+| TRD-05 | Setup | P5's text is edited to hold no hashtag; a guest asks | Pair absent | — | — | One post left |
+| TRD-06 | TRD-05 | P1 is deleted; a guest asks | Hot: **2** | — | Every remaining post deleted; Hot and Pair then absent | The count goes with the post |
+
 ## 8 · Username rename & locator stability (WI-F)
 
 > Editable username via **History + Reservation + Redirect**. Renaming a handle
@@ -641,6 +665,23 @@ All 0 failures.
   before asserting.
 - The follow setup expected `201` where following answers `200`.
 - Consecutive runs spent the sign-in limiter's budget.
+
+## Verification run — Trending (2026-09-25)
+
+**Run against `feat/835-trending`, on the backend worktree's own port (`4001`)
+and database (`quicktweets_w2`). All of TRD-01…TRD-06 passed.** Newman, folder
+19: **24 requests / 27 assertions, 0 failures**, and nothing of the run left
+trending once it deleted its posts.
+
+**Re-run as regression**, restarting the API between batches for the sign-in
+limiter:
+- folders 18 (**28**), 17 (**23**), 16 (**32**), 15 (**25**), 14 (**19**), 13
+  (**25**) and 12.1 (**24**);
+- folders 00, 01, 02, 04, 05, 06, 07, 08 and 09, together, with per-run users
+  (**101 requests / 177 assertions**). Every folder that writes a post now
+  stores its hashtags too.
+
+All 0 failures.
 
 ---
 

@@ -24,6 +24,7 @@ import { tweetRoutes } from "./modules/tweets/tweet.routes.js";
 import { commentRoutes } from "./modules/comments/comment.routes.js";
 import { userRoutes } from "./modules/users/user.routes.js";
 import { followRoutes } from "./modules/follows/follow.routes.js";
+import { trendRoutes } from "./modules/trends/trend.routes.js";
 import { mediaRoutes } from "./modules/media/media.routes.js";
 import { channelVerificationRoutes } from "./modules/channel-verification/channelVerification.routes.js";
 import {
@@ -82,6 +83,7 @@ app.use("/api/v1/tweets", apiLimiter, tweetRoutes);
 app.use("/api/v1/comments", apiLimiter, commentRoutes);
 app.use("/api/v1/users", apiLimiter, userRoutes);
 app.use("/api/v1/follows", apiLimiter, followRoutes);
+app.use("/api/v1/trends", apiLimiter, trendRoutes);
 // Media manages its own limits per route (like auth): the strict mint limiter
 // on /grants, the general limiter on ingest — no blanket prefix limiter.
 app.use("/api/v1/media", mediaRoutes);

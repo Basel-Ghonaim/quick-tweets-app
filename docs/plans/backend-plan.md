@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-24
+> **Last Updated:** 2026-09-25
 > **Parent Issue:** [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791)
 > **Supersedes:** —
 
@@ -79,10 +79,15 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 - **Trending:** a short list of current terms, each with how many posts mention it. Guests can see it too.
   - A term is **a hashtag**. Plain words and phrases do not trend.
   - Counted over **the last 7 days**, by **distinct posts**, and ranked by that count. Comments and replies do not count.
+  - A post counts **from when it was written**. Editing its text changes which hashtags it carries, never when it counts.
   - A hashtag appears once **at least 2 posts** used it. The list holds **at most 5**, and is empty when none qualifies.
+  - **The same order on every request.** Where two hashtags have as many posts, **the one used most recently** comes first, and a fixed order of their characters settles the rest.
 - **Hashtags** mean the same thing everywhere: the text that links them, the search that finds them and the trend that counts them all follow **one shared rule**, in any script.
+  - **The rule is the approved design's.** A hashtag is `#` followed by letters, marks, digits and underscores. It never starts straight after a letter, a digit or an underscore, and never inside a web address. So `#2026` is a hashtag, and `https://example.com/#top` holds none.
   - Two hashtags are the same when they match **ignoring case**, after the text is normalised (§2.7), with the Arabic alef forms (أ إ آ ٱ) read as ا, and diacritics and tatweel ignored. **ة and ه, and ى and ي, stay distinct.**
-  - Where one hashtag is written several ways, **the spelling used most** in the window is the one shown.
+  - **The diacritics ignored are Arabic's:** the harakat and the other Arabic marks. Accents in other scripts count, so `#café` is not `#cafe`. A hashtag with nothing left once they and tatweel are ignored is never counted.
+  - Where one hashtag is written several ways, **the spelling used most** in the window is the one shown: the spelling the most posts used, and the more recent where two are used equally.
+  - **Known from when a post is written, with no backfill.** Posts written before this shipped carry no hashtags: the data is test data, and `v1` has no released consumer.
 - **Mentions** follow the username rule, so a mention links exactly what could be a username. They are **not checked against real accounts**: an unknown name simply leads to a profile that is not found, which is what these designs need and all they need.
 
 ### 2.6 · Images
@@ -252,3 +257,9 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 - **Settled.** **`GET /follows/suggestions`**, under `/follows` because `suggestions` is a legal username and `GET /users/:username` would have lost that profile to it. **One SQL ordering** serves the whole list: people the reader's follows follow, ranked by how many of them do, then the most-followed, with ties going to more followers and then the newest account. The reader, anyone they follow, and the viewed profile are never in it, the last by current or former handle. A guest gets the most-followed and asks for no follow state. It is **bounded, not paged** (3 by default, up to 20), and its rows are the follower lists' own shape.
 - **Amended.** §2.4, by the correction this branch carried first: how two equally ranked accounts are ordered, which with few follows decides most of what a reader sees.
 - **Recorded.** No finding. A test in `mail-delivery` timed out intermittently: its first case paid for a cold import against Vitest's 5 s default, and did so on `main` as well. At the owner's instruction it was fixed here, in a dedicated commit that warms the import once. That fix is outside this Work Item's scope and changes no behaviour. The harness gained three lessons, now in its runbook: the Postman sandbox reserves `data`; following answers `200`; and folder 18 spends half the sign-in budget.
+
+**Trending, and what a hashtag is.** [#835](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/835) · [#836](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/836).
+
+- **Settled.** **`GET /trends`**: at most five hashtags from two posts up, counted over the week, open to anyone. The server now reads hashtags by **the approved design's own pattern**, a web address included, and compares them by **one key**. It lives in `shared/hashtags/` because Search queries it next. Each post's hashtags are **stored with it** in `tweet_hashtags`, one row per post and key, written in the same call as the post and cascading with it: the rule cannot run in SQL on this database, whose case mapping is not the rule's. **The week is bound from the application's clock and never from `now()`**, since `created_at` holds UTC without a zone and the session reads `now()` in another; over two hours, `now()` counted 0 posts where a bound time counted 31.
+- **Amended.** §2.5, by the correction this branch carried first: the diacritics ignored are Arabic's, the rule is the design's, ties go to the most recent use, a post counts from when it was written, and nothing is backfilled.
+- **Recorded.** No finding. The reclamation oracle's hand-kept model list already lacked eight of the schema's models and now lacks a ninth; it is noted in the pull request, not acted on. The schema engine spawned this time, so both migrations are Prisma's own output, applied by `migrate deploy`.

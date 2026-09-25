@@ -217,6 +217,29 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## Trending
+
+Folder **19 · Trending** exercises what is trending
+([#835](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/835)).
+**Self-isolated**, runs whole from the command line (`npm run verify:trending`),
+no pgAdmin. See scenarios **TRD-01…TRD-06**.
+
+It writes seven posts of its own, with hashtags named for the run so no other
+data can be confused with them, and deletes them at the end.
+
+**Its guarantees:**
+
+- a hashtag trends from **two posts**, each counted once, and shows **the
+  spelling most posts used**;
+- a hashtag in **one post**, in a **comment**, or **inside a web address** does
+  not trend;
+- editing the text, or deleting the post, **takes the count away**;
+- a **guest** reads the list, and a signed-in reader gets the same one.
+
+The seven-day window, the ranking's tie-breaks and the limit of five are the
+integration lane's: a post cannot be backdated over HTTP, and the list is shared
+with every other post.
+
 ## Suggested accounts
 
 Folder **18 · Suggested accounts** exercises "Who to follow"

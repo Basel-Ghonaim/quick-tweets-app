@@ -3,8 +3,8 @@
 > **Status:** Active.
 > **Authority:** The canonical source for the project's **domain vocabulary** — the product terms used across the code and documentation. Mechanism, process, and governance terms are owned by their documents and linked here, never redefined.
 > **Scope:** What the project's core nouns mean. A vocabulary reference, not a specification.
-> **Version:** 1.0
-> **Last Updated:** 2026-09-17
+> **Version:** 1.1
+> **Last Updated:** 2026-09-25
 > **Owner:** Basel Ghonaim
 
 ## Domain vocabulary
@@ -21,6 +21,8 @@
 | **Profile** | A user's public page: their identity together with aggregate counts (tweets, likes received, followers, following). |
 | **Author** | The user who created a tweet or comment, surfaced as a lightweight snapshot (id, username, name, profile image). |
 | **Session** | An authenticated period of access for one device, established at login and renewable without re-entering credentials. |
+| **Hashtag** | A word marked with `#` in a tweet's text, such as `#القراءة` or `#WebDev`, in any script. Two hashtags written differently can be the same one: case, and some Arabic spelling variation, do not tell them apart. What makes a hashtag, and when two are the same, is the [API contract](../api/api-contract.md#hashtags)'s. |
+| **Trend** | A hashtag many tweets used in the last week: one of the few the product shows as what is being talked about now, with how many tweets used it. |
 | **Guest** | An unauthenticated visitor. A guest may read public content but has no user-relative state. |
 
 ## Terms owned elsewhere
