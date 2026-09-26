@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-25
+> **Last Updated:** 2026-09-26
 > **Parent Issue:** [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791)
 > **Supersedes:** —
 
@@ -74,8 +74,11 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 
 - **Search:** find posts, including by hashtag, in **Arabic and English** alike.
   - **Posts only**, **newest first**. Guests can search too.
-  - A query that begins with `#` finds **that hashtag exactly**.
+  - A query that begins with `#` finds **that hashtag exactly**, and must be **one hashtag and nothing else**: a query that is not is refused, rather than partly ignored.
   - Any other query matches **whole words, and longer words that begin with one**, on the database's built-in text search, with no extension and no stemming. So `كتاب` finds `كتابة` but not `الكتاب`: the cost of a search that needs no extension.
+  - **Every word must match**, so each word a reader adds narrows what they find.
+  - **Words follow the hashtags' Arabic letter rule:** the alef forms read as ا, diacritics and tatweel ignored, ة/ه and ى/ي kept apart. Arabic and English alike means `احمد` finds `أحمد`.
+  - **A query is at most 100 characters**, and an empty one is refused. A query with no word in it, only punctuation or emoji, finds nothing rather than being refused.
 - **Trending:** a short list of current terms, each with how many posts mention it. Guests can see it too.
   - A term is **a hashtag**. Plain words and phrases do not trend.
   - Counted over **the last 7 days**, by **distinct posts**, and ranked by that count. Comments and replies do not count.
