@@ -22,6 +22,7 @@
     "verify:edited": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"14 · Edited marker\"",
     "verify:follows": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"07 · Follows\"",
     "verify:likes": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"13 · Comment likes\"",
+    "verify:search": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"20 · Search\"",
     "verify:suggestions": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"18 · Suggested accounts\"",
     "verify:text-safety": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"16 · Text safety\"",
     "verify:trending": "npx -y newman@6.2.2 run docs/development/verification/quick-tweets-verification.postman_collection.json -e docs/development/verification/environment.local.json --folder \"19 · Trending\"",

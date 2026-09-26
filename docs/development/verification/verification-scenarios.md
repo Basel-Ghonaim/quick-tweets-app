@@ -371,6 +371,32 @@ no longer describe executable behavior and are retired rather than rewritten her
 | TRD-05 | Setup | P5's text is edited to hold no hashtag; a guest asks | Pair absent | — | — | One post left |
 | TRD-06 | TRD-05 | P1 is deleted; a guest asks | Hot: **2** | — | Every remaining post deleted; Hot and Pair then absent | The count goes with the post |
 
+## 7i · Search ([#838](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/838))
+
+> **What the folder proves:**
+> - A word finds **itself and longer words beginning with it**, newest first,
+>   and **every word must match**.
+> - **The alef forms read as one letter.**
+> - A hashtag finds its posts **however each spelled it**.
+> - A **comment** is never found, and the **pages** walk every match once.
+> - A **guest** searches; a signed-in reader gets the same posts with their own
+>   state.
+> - Four queries are **refused**.
+>
+> Folder 20 is **self-isolated**: one new account, a word and a hashtag named for
+> the run, and its own posts deleted at the end.
+
+| ID | Preconditions | Action | Expected API Result | Expected DB State | Cleanup | Result / Notes |
+|----|---------------|--------|---------------------|-------------------|---------|----------------|
+| SRC-01 | Setup: S1 `… Reading the guide`, S2 `… read it`, S3 `… قال أحمد`, S4 `… coffee and code`, S5 `#Srch…Tag`, S6 `#srch…tag`; a comment on S4 | A **guest** searches the run's word and `read` | 200; **S2 then S1**; the feed's meta, `hasMore: false` | — | — | `noauth`; a longer word beginning with it |
+| SRC-02 | Setup | Search the word and `احمد` | S3 | — | — | Plain alef finds hamza alef |
+| SRC-03 | Setup | Search the word, `code` and `coffee`; then `code` and `tea` | S4; then nothing | — | — | Every word must match |
+| SRC-04 | Setup | Search `#SRCH…TAG` | **S6 then S5** | — | — | By key, whatever the spelling |
+| SRC-05 | Setup | Search the word and `commentonly` | nothing | — | — | Comments are not searched |
+| SRC-06 | Setup | Search the word, four to a page; then from `nextCursor` | S6, S5, S4, S3 with `hasMore: true`; then S2, S1 with `hasMore: false` | — | — | S5 and S6 match too: a hashtag's letters are a word |
+| SRC-07 | Setup | The account searches as in SRC-01 | the same posts; `isLiked` and the author's follow state on each | — | — | Optional auth |
+| SRC-08 | — | Search with `q=`; with 101 characters; with `#Srch…Tag tips`; with `author` as well | **422** each, the reason under `q` | — | Every post deleted | The four refusals |
+
 ## 8 · Username rename & locator stability (WI-F)
 
 > Editable username via **History + Reservation + Redirect**. Renaming a handle
@@ -680,6 +706,22 @@ limiter:
 - folders 00, 01, 02, 04, 05, 06, 07, 08 and 09, together, with per-run users
   (**101 requests / 177 assertions**). Every folder that writes a post now
   stores its hashtags too.
+
+All 0 failures.
+
+## Verification run — Search (2026-09-26)
+
+**Run against `feat/838-search`, on the backend worktree's own port (`4001`)
+and database (`quicktweets_w2`). All of SRC-01…SRC-08 passed.** Newman, folder
+20: **27 requests / 38 assertions, 0 failures**.
+
+**Re-run as regression**, restarting the API between batches for the sign-in
+limiter:
+- folders 19 (**27**), 18 (**28**), 17 (**23**), 16 (**32**), 15 (**25**), 14
+  (**19**), 13 (**25**) and 12.1 (**24**);
+- folders 00, 01, 02, 04, 05, 06, 07, 08 and 09, together, with per-run users
+  (**101 requests / 177 assertions**). Folders 04 and 07 read `GET /tweets`,
+  which a search now shares.
 
 All 0 failures.
 
