@@ -242,6 +242,8 @@ model Tweet {
   // Indexes
   @@index([authorId])
   @@index([createdAt]) // trending counts the posts written in the last week
+  // Search reads words through search_text() and a GIN index on it, both raw SQL in
+  // the tweet_search_index migration: Prisma cannot express either, and leaves them be.
   @@map("tweets")
 }
 
@@ -261,6 +263,7 @@ model TweetHashtag {
 
   // Constraints & Indexes
   @@unique([tweetId, key])
+  @@index([key, tweetId]) // a hashtag search: the posts carrying one key
   @@map("tweet_hashtags")
 }
 

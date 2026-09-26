@@ -217,6 +217,32 @@ nothing they held is left behind.
 > Folder 12 needs no reset, but folder **05** still does once folder 09 has run —
 > see the runbook's [note on re-registering](verification-runbook.md#folder-01-cannot-re-register-once-folder-09-has-run-test-only-friction).
 
+## Search
+
+Folder **20 · Search** exercises search
+([#838](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/838)).
+**Self-isolated**, runs whole from the command line (`npm run verify:search`),
+no pgAdmin. See scenarios **SRC-01…SRC-08**.
+
+It writes six posts of its own around a word and a hashtag named for the run,
+so no other post can match, and deletes them at the end.
+
+**Its guarantees:**
+
+- a word finds **itself and longer words beginning with it**, newest first, and
+  **every word must match**;
+- **the alef forms read as one letter**, so `احمد` finds `أحمد`;
+- a hashtag finds its posts **however each spelled it**;
+- a **comment** is never found;
+- the **pages** walk every match once;
+- a **guest** searches, and a signed-in reader gets the same posts with their
+  own state;
+- an empty query, one over 100 characters, a `#` query that is not one hashtag,
+  and a search that names an author are **refused**.
+
+Harakat, tatweel, a post stored before NFC, and whether the index is used are
+the integration lane's.
+
 ## Trending
 
 Folder **19 · Trending** exercises what is trending

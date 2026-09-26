@@ -39,6 +39,8 @@ const makeWorld = () => {
   const repo: ITweetRepository = {
     findMany: async () => [],
     findByAuthor: async () => [],
+    findByHashtag: async () => [],
+    findByWords: async () => [],
     findAuthorIdByUsername: async () => null,
     findById: async () => null,
     create: async (authorId, body, hashtags, client) => {

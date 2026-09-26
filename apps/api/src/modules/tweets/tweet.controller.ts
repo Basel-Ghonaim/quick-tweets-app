@@ -2,7 +2,7 @@
  * Tweet controller — HTTP request handling for tweet endpoints.
  *
  * Purpose:
- * - getFeed: parse query params → call service → return paginated tweets
+ * - getFeed: parse query params → call service (feed, an author's posts, or a search) → return paginated tweets
  * - getById: parse :id → call service → return single tweet
  * - create: parse body + userId → call service → return 201
  * - update: parse :id + body + userId → call service → return updated tweet
@@ -44,11 +44,14 @@ export const createTweetController = (
    */
   getFeed: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { cursor, limit, author } = req.query as unknown as { cursor?: number; limit: number; author?: string };
-      
-      const result = author
-        ? await service.getByAuthorUsername(author, { cursor, limit }, req.userId)
-        : await service.getFeed({ cursor, limit }, req.userId);
+      const { cursor, limit, author, q } = req.query as unknown as { cursor?: number; limit: number; author?: string; q?: string };
+
+      const result =
+        q !== undefined
+          ? await service.search(q, { cursor, limit }, req.userId)
+          : author
+            ? await service.getByAuthorUsername(author, { cursor, limit }, req.userId)
+            : await service.getFeed({ cursor, limit }, req.userId);
 
       sendSuccess(res, result.data, 200, { ...result.meta });
     } catch (err) {

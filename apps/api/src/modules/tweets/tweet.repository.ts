@@ -91,6 +91,42 @@ export const createTweetRepository = (
     });
   },
 
+  // ── Search ──
+
+  findByHashtag: async (key: string, params: CursorParams, userId?: number) => {
+    const { cursor, limit } = params;
+
+    return db.tweet.findMany({
+      where: { hashtags: { some: { key } } },
+      take: limit + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      orderBy: { id: "desc" },
+      include: buildTweetInclude(userId),
+    });
+  },
+
+  // The page is chosen in SQL, where the index is, then read in the feed's shape.
+  // Each lexeme is quoted and made a prefix, so nothing a reader types is tsquery syntax.
+  findByWords: async (query: string, params: CursorParams, userId?: number) => {
+    const { cursor, limit } = params;
+    const page = await db.$queryRaw<{ id: number }[]>`
+      SELECT t.id
+        FROM tweets t
+       WHERE to_tsvector('simple', search_text(t.body)) @@ (
+               SELECT string_agg('''' || replace(lexeme, '''', '''''') || ''':*', ' & ')::tsquery
+                 FROM unnest(to_tsvector('simple', search_text(${query}))))
+         AND (${cursor ?? null}::int IS NULL OR t.id < ${cursor ?? null}::int)
+       ORDER BY t.id DESC
+       LIMIT ${limit + 1}::int`;
+    if (page.length === 0) return [];
+
+    return db.tweet.findMany({
+      where: { id: { in: page.map((row) => row.id) } },
+      orderBy: { id: "desc" },
+      include: buildTweetInclude(userId),
+    });
+  },
+
   // Alias-aware via the single shared resolver: a former handle resolves to the
   // current author, so historical `?author=` links keep working.
   findAuthorIdByUsername: async (username: string) =>

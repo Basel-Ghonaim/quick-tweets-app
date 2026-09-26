@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hashtagKey, hashtagsOf } from "./hashtags";
+import { hashtagKey, hashtagsOf, soleHashtag } from "./hashtags";
 
 // Marks and joiners are built from their code points, so none sits in this file unseen.
 const cp = (...points: number[]) => String.fromCodePoint(...points);
@@ -53,6 +53,25 @@ describe("hashtagsOf — where a hashtag begins and ends", () => {
 
     expect(spellingsOf(written)).toEqual(["tag"]);
     expect(spellingsOf(written.normalize("NFC"))).toEqual([]);
+  });
+});
+
+describe("soleHashtag — a text that is one hashtag and nothing else", () => {
+  it("gives the spelling of a text that is exactly one hashtag, in any script", () => {
+    expect(soleHashtag("#WebDev")).toBe("WebDev");
+    expect(soleHashtag("#القراءة")).toBe("القراءة");
+  });
+
+  it("gives nothing for a hashtag with more beside it", () => {
+    for (const text of ["#WebDev tips", "#one #two", "tips #WebDev", "#WebDev!", " #WebDev"]) {
+      expect(soleHashtag(text)).toBeNull();
+    }
+  });
+
+  it("gives nothing for a # the rule does not make a hashtag", () => {
+    for (const text of ["#", "#!", "##", "https://example.com/#top"]) {
+      expect(soleHashtag(text)).toBeNull();
+    }
   });
 });
 

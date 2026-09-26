@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-25
+> **Last Updated:** 2026-09-26
 > **Parent Issue:** [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791)
 > **Supersedes:** —
 
@@ -74,8 +74,11 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** rely on
 
 - **Search:** find posts, including by hashtag, in **Arabic and English** alike.
   - **Posts only**, **newest first**. Guests can search too.
-  - A query that begins with `#` finds **that hashtag exactly**.
+  - A query that begins with `#` finds **that hashtag exactly**, and must be **one hashtag and nothing else**: a query that is not is refused, rather than partly ignored.
   - Any other query matches **whole words, and longer words that begin with one**, on the database's built-in text search, with no extension and no stemming. So `كتاب` finds `كتابة` but not `الكتاب`: the cost of a search that needs no extension.
+  - **Every word must match**, so each word a reader adds narrows what they find.
+  - **Words follow the hashtags' Arabic letter rule:** the alef forms read as ا, diacritics and tatweel ignored, ة/ه and ى/ي kept apart. Arabic and English alike means `احمد` finds `أحمد`.
+  - **A query is at most 100 characters**, and an empty one is refused. A query with no word in it, only punctuation or emoji, finds nothing rather than being refused.
 - **Trending:** a short list of current terms, each with how many posts mention it. Guests can see it too.
   - A term is **a hashtag**. Plain words and phrases do not trend.
   - Counted over **the last 7 days**, by **distinct posts**, and ranked by that count. Comments and replies do not count.
@@ -263,3 +266,9 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 - **Settled.** **`GET /trends`**: at most five hashtags from two posts up, counted over the week, open to anyone. The server now reads hashtags by **the approved design's own pattern**, a web address included, and compares them by **one key**. It lives in `shared/hashtags/` because Search queries it next. Each post's hashtags are **stored with it** in `tweet_hashtags`, one row per post and key, written in the same call as the post and cascading with it: the rule cannot run in SQL on this database, whose case mapping is not the rule's. **The week is bound from the application's clock and never from `now()`**, since `created_at` holds UTC without a zone and the session reads `now()` in another; over two hours, `now()` counted 0 posts where a bound time counted 31.
 - **Amended.** §2.5, by the correction this branch carried first: the diacritics ignored are Arabic's, the rule is the design's, ties go to the most recent use, a post counts from when it was written, and nothing is backfilled.
 - **Recorded.** No finding. The reclamation oracle's hand-kept model list already lacked eight of the schema's models and now lacks a ninth; it is noted in the pull request, not acted on. The schema engine spawned this time, so both migrations are Prisma's own output, applied by `migrate deploy`.
+
+**Search: posts by word or by hashtag.** [#838](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/838) · [#839](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/839).
+
+- **Settled.** **`GET /tweets?q=`**, a third reading of the feed beside `author`: posts newest first, cursor-paged, open to anyone. A query that is one hashtag finds its posts by the key #835 founded; any other finds posts holding each word or a longer one beginning with it, through **`search_text()`**, a SQL function that holds the hashtags' Arabic letter rule so a **GIN index** can. The rule sits in the database rather than in a stored column, so every post is covered at once and nothing is kept twice; **the price is the rule stated twice**, which an integration test holds to one answer across the Arabic block. Prisma can express neither the function nor the index, and leaves both alone.
+- **Amended.** §2.5, by the correction this branch carried first: every word must match, words follow the Arabic letter rule, a `#` query is one hashtag and nothing else, and a query is bounded.
+- **Recorded.** No finding and no Issue. Case and word boundaries in words are the database's, and differ from the hashtag key's for `İ`, `ß` and final sigma; the contract says so rather than a record. The parity test runs in the integration lane, so CI cannot see the two rules drift, which the migration and the data model both name.

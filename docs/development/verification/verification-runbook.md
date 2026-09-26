@@ -113,6 +113,18 @@ the graph it asserts against is deliberately **asymmetric** — B follows A and 
 does not follow back — so the two directions can be told apart. A mutual pair
 would pass whichever way the fields were wired.
 
+### Folder 20 — search
+
+Self-isolated, and needs no pgAdmin. Each run registers **one** account.
+
+```bash
+npm run verify:search -- --env-var baseUrl=http://localhost:4001/api/v1
+```
+
+**Every query is encoded once, in the folder's pre-request script**, so an
+Arabic word, a space and a `#` reach the server as written. A `#` left
+unencoded in a URL starts its fragment, and the server never sees the query.
+
 ### Folder 19 — trending
 
 Self-isolated, and needs no pgAdmin. Each run registers **one** account.
