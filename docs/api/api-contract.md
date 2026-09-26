@@ -70,6 +70,7 @@ GET    /api/v1/auth/password-reset/session  (unauthenticated)
 
 GET    /api/v1/tweets
 GET    /api/v1/tweets?author=:username
+GET    /api/v1/tweets?q=:query
 GET    /api/v1/tweets/:id
 POST   /api/v1/tweets
 PATCH  /api/v1/tweets/:id
@@ -249,7 +250,7 @@ is not included; it keeps its own rule. The reasoning is
 ### Hashtags
 
 A hashtag follows **one rule**, for the client that links it and for the
-server that counts it and, with search, finds it.
+server that counts it and [searches](#get-tweetsqquery--search-cursor-paginated) for it.
 
 - **What one is.** `#` followed by one or more letters, marks, digits and
   underscores, in any script. It never starts straight after a letter, a digit
@@ -307,7 +308,7 @@ interface CursorPaginationMeta {
 
 **Query params:** `?cursor=<id>&limit=10`
 
-**Used by:** `GET /tweets`, `GET /tweets?author=username`, `GET /comments?tweetId=X`, `GET /comments?parentId=X`, `GET /follows/:username/followers`, `GET /follows/:username/following`
+**Used by:** `GET /tweets`, `GET /tweets?author=username`, `GET /tweets?q=query`, `GET /comments?tweetId=X`, `GET /comments?parentId=X`, `GET /follows/:username/followers`, `GET /follows/:username/following`
 
 ### OffsetPaginationMeta
 
@@ -603,6 +604,47 @@ action — set later via `PATCH /users/me` after uploading under `POST /media`.
 - Filtered subset of the global feed — same tweet shape
 - `isLiked` requires optional auth
 - `author` accepts a current **or** a former handle: a former handle resolves transparently to the same author (no redirect on this non-profile locator). Returns `404` only if the handle was never assigned.
+
+---
+
+### `GET /tweets?q=:query` — Search (cursor-paginated)
+
+**Auth:** Optional — a signed-in reader gets `isLiked` and each author's follow state; a guest searches all the same
+**Query params:** `?q=coffee&cursor=<id>&limit=10`
+
+```jsonc
+// Response 200 — same shape and meta as GET /tweets; an empty data array when nothing matches
+
+// Response 422 — the query is refused, and says why under `q`
+{ "success": false, "error": { "type": "validation", "message": "Validation failed", "errors": { "q": ["A search that begins with # is one hashtag and nothing else"] } } }
+```
+
+- **Posts only, newest first.** Comments and replies are never searched, and there
+  is no ranking by relevance.
+- **A query that begins with `#` finds that [hashtag](#hashtags)**, whatever
+  spelling each post used, and must be **one hashtag and nothing else**. So
+  `#WebDev` and `#webdev` find the same posts, and `#WebDev tips` is refused.
+  A post carries its hashtags from when it was written.
+- **Any other query finds posts holding each of its words, or a longer word
+  that begins with one.** Every word must match. `read` finds *reading*;
+  `reading` does not find *read*; `كتاب` finds `كتابة` but not `الكتاب`. It
+  is PostgreSQL's built-in text search, with no extension and no stemming.
+  - **Words follow the hashtags' Arabic letter rule**: the alef forms read as
+    ا, and the Arabic marks and tatweel are ignored. So `احمد` finds `أحمد`.
+    ة and ه, ى and ي, and the hamza letters stay apart.
+  - **Case is the database's**, and there it differs from hashtags: Latin,
+    Greek and Cyrillic ignore case, but `İ` is not read as `i`, and `ß` is not
+    `ss`.
+  - **What counts as a word is the database's too.** A `#` or an `@` is not
+    part of one, so `webdev` also finds `#WebDev`; `_` splits a word, so
+    `web_dev` is `web` and `dev`; emoji are not words.
+- **The query is trimmed and normalised to NFC.** An empty query, one longer
+  than **100 characters** (code points), and a query with `author` beside it
+  are each `422`. A query with no word in it, only punctuation or emoji,
+  finds nothing: `200` with an empty array.
+- Under the general limiter ([Rate Limiting](#rate-limiting)). A new query
+  parameter is additive, so the change needs no `v2` and no pre-release
+  exception.
 
 ---
 
