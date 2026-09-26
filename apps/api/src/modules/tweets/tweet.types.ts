@@ -117,6 +117,12 @@ export interface ITweetRepository {
     userId?: number,
   ): Promise<TweetWithRelations[]>;
 
+  /** Posts carrying the hashtag with this key, newest first, fetching limit+1. */
+  findByHashtag(key: string, params: CursorParams, userId?: number): Promise<TweetWithRelations[]>;
+
+  /** Posts holding each word of the query, or a longer word beginning with it, newest first, fetching limit+1. */
+  findByWords(query: string, params: CursorParams, userId?: number): Promise<TweetWithRelations[]>;
+
   findById(id: number, userId?: number): Promise<TweetWithRelations | null>;
 
   /** Writes the post and its hashtags together. */
@@ -183,6 +189,12 @@ export interface ITweetService {
 
   getByAuthorUsername(
     username: string,
+    params: CursorParams,
+    userId?: number,
+  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }>;
+
+  search(
+    query: string,
     params: CursorParams,
     userId?: number,
   ): Promise<{ data: TweetResponse[]; meta: CursorMeta }>;

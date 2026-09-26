@@ -37,6 +37,12 @@ export const hashtagKey = (tag: string): string =>
       .join(""),
   ).normalize("NFC");
 
+/** The spelling, when the text is one hashtag and nothing else by the same rule; null otherwise. */
+export const soleHashtag = (text: string): string | null => {
+  const matches = [...text.matchAll(SEGMENTS)];
+  return matches.length === 1 && matches[0]![2] === text ? text.slice(1) : null;
+};
+
 /**
  * The hashtags in a text, once each by key, in the order they first appear and as first spelled.
  * Read the text as stored: normalising can move where a hashtag begins.

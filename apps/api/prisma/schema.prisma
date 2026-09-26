@@ -263,6 +263,7 @@ model TweetHashtag {
 
   // Constraints & Indexes
   @@unique([tweetId, key])
+  @@index([key, tweetId]) // a hashtag search: the posts carrying one key
   @@map("tweet_hashtags")
 }
 

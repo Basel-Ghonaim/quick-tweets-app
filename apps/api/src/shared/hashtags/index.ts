@@ -1,1 +1,1 @@
-export { hashtagKey, hashtagsOf, type Hashtag } from "./hashtags.js";
+export { hashtagKey, hashtagsOf, soleHashtag, type Hashtag } from "./hashtags.js";

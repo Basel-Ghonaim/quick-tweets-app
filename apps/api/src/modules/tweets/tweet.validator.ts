@@ -15,6 +15,7 @@
 import { z } from "zod";
 import { bodyTextField } from "../../shared/validation/index.js";
 import { cursorQuerySchema } from "../../shared/validators/index.js";
+import { soleHashtag } from "../../shared/hashtags/index.js";
 import { MAX_TWEET_MEDIA } from "./tweet.types.js";
 
 // ─── Media references ────────────────────────────────────────────────────────
@@ -35,9 +36,26 @@ const mediaTokensSchema = z
 
 // ─── Feed Query ──────────────────────────────────────────────────────────────
 
-export const feedQuerySchema = cursorQuerySchema.extend({
-  author: z.string().trim().optional(),
-});
+const MAX_QUERY_CHARACTERS = 100;
+
+// A search: normalised as posts are stored, so it compares like with like. A character is a code point.
+const searchQuery = z
+  .string()
+  .normalize("NFC")
+  .trim()
+  .min(1, "Search query cannot be empty")
+  .refine((q) => Array.from(q).length <= MAX_QUERY_CHARACTERS, `Search query must be at most ${MAX_QUERY_CHARACTERS} characters`)
+  .refine((q) => !q.startsWith("#") || soleHashtag(q) !== null, "A search that begins with # is one hashtag and nothing else");
+
+export const feedQuerySchema = cursorQuerySchema
+  .extend({
+    author: z.string().trim().optional(),
+    q: searchQuery.optional(),
+  })
+  .refine((query) => !(query.q !== undefined && query.author), {
+    message: "Search all posts or one author's, not both",
+    path: ["q"],
+  });
 
 // ─── Create Tweet ────────────────────────────────────────────────────────────
 

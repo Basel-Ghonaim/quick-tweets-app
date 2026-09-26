@@ -41,7 +41,7 @@ import type { CursorParams, CursorMeta, LikeState } from "../../shared/types/ind
 import { avatarReferencesOf, isPrismaError } from "../../shared/utils/index.js";
 import { toTweetResponse } from "./tweet.mapper.js";
 import { resolveFollowState, followStateOf } from "../../shared/social/index.js";
-import { hashtagsOf } from "../../shared/hashtags/index.js";
+import { hashtagKey, hashtagsOf, soleHashtag } from "../../shared/hashtags/index.js";
 
 // ─── Media port ──────────────────────────────────────────────────────────────
 
@@ -263,6 +263,42 @@ export const createTweetService = (
     const { limit } = params;
 
     const tweets = await repo.findByAuthor(authorId, params, userId);
+
+    const hasMore = tweets.length > limit;
+    const sliced = hasMore ? tweets.slice(0, limit) : tweets;
+
+    const lastItem = sliced[sliced.length - 1];
+    const meta: CursorMeta = {
+      nextCursor: hasMore && lastItem ? String(lastItem.id) : null,
+      limit,
+      hasMore,
+    };
+
+    return {
+      data: await toResponses(media, sliced, userId),
+      meta,
+    };
+  },
+
+  // ─── Search (cursor-paginated) ──────────────────────────────────────
+
+  search: async (
+    query: string,
+    params: CursorParams,
+    userId?: number,
+  ): Promise<{ data: TweetResponse[]; meta: CursorMeta }> => {
+    const { limit } = params;
+
+    // A query the validator let through with a leading # is one hashtag, found by its key.
+    // A tag with nothing left once normalised is never stored, so nothing carries it.
+    const tag = soleHashtag(query);
+    const key = tag === null ? null : hashtagKey(tag);
+    const tweets =
+      key === null
+        ? await repo.findByWords(query, params, userId)
+        : key === ""
+          ? []
+          : await repo.findByHashtag(key, params, userId);
 
     const hasMore = tweets.length > limit;
     const sliced = hasMore ? tweets.slice(0, limit) : tweets;
