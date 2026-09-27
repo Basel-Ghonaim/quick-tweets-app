@@ -85,7 +85,7 @@ This convention is new, and its **first entry found its placement rule wrong**: 
 | [mail-delivery.md](historical/mail-delivery.md) | Execution | Historical | [#598](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/598) |
 | [password-reset.md](historical/password-reset.md) | Execution | Historical | [#632](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/632) |
 | [media-implementation.md](media-implementation.md) | Execution | Active | [#305](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/305) |
-| [backend-plan.md](backend-plan.md) | Execution | Historical | [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791) |
+| [backend-plan.md](historical/backend-plan.md) | Execution | Historical | [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791) |
 | [design-system-plan.md](design-system-plan.md) | Execution | Active | [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792) |
 | [shared-platform-plan.md](shared-platform-plan.md) | Execution | Active | [#793](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/793) |
 | [frontend-features-plan.md](frontend-features-plan.md) | Execution | Active | [#794](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/794) |

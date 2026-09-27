@@ -43,7 +43,7 @@ The names below are working names. Each feature's final boundary is decided in E
 
 - **Read:** the feed, a single post, and a person's posts, each loaded progressively where it is a list.
 - **Write:**
-  - create a post with text and images. Images carry no description, because the backend does not support one ([Backend plan](backend-plan.md) §2.6);
+  - create a post with text and images. Images carry no description, because the backend does not support one ([Backend plan](historical/backend-plan.md) §2.6);
   - edit your own post, text and images alike;
   - delete your own post.
 - **Act:**
@@ -94,7 +94,7 @@ The names below are working names. Each feature's final boundary is decided in E
 
 A feature is ready to build when its dependencies are in place. The tracks deliver in parallel, so this table decides when each can start.
 
-| Feature | [Backend plan](backend-plan.md) | [Design System plan](design-system-plan.md) | [Shared Platform plan](shared-platform-plan.md) |
+| Feature | [Backend plan](historical/backend-plan.md) | [Design System plan](design-system-plan.md) | [Shared Platform plan](shared-platform-plan.md) |
 |---|---|---|---|
 | **Posts** | §2.1 Posts, §2.2 Likes, §2.6 Images, §2.7 Text; the existing feed and single post (§3) | Menu, Dialog, Skeleton, Avatar, Toast, icons, character count (§2.2, §2.3) | Data, Media, Formats, Shared rules, Presentation, Interaction (§2.1–§2.6) |
 | **Comments and replies** | §2.3 Comments and replies, §2.2 Likes, §2.6 Images, §2.7 Text | Menu, Dialog, Skeleton, Avatar, Toast, character count | Data, Media, Formats, Shared rules, Presentation, Interaction |
@@ -161,7 +161,7 @@ Read the architecture before starting. Read the others when the question they an
 
 | Plan | What it holds | Read when |
 |---|---|---|
-| [Backend plan](backend-plan.md) | The capabilities the server will provide. | Before a feature relies on one. |
+| [Backend plan](historical/backend-plan.md) | The capabilities the server will provide. | Before a feature relies on one. |
 | [Design System plan](design-system-plan.md) | The presentation parts that will exist. | Before composing an interface. |
 | [Shared Platform plan](shared-platform-plan.md) | The data layer, media, formats, shared rules, shared presentation and interaction. | Before building anything more than one feature needs. |
 

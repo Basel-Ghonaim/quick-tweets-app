@@ -3,7 +3,7 @@
 > **Status:** Open
 > **Date:** 2026-09-24
 > **Affected areas:** [API contract](../../../api/api-contract.md#post-tweets--create-tweet) (`POST /tweets`, the `media` field); `apps/api/src/modules/media/media.ownership.ts` (`authorizeAttachMany`)
-> **Reported by:** Worker 2 (surfaced while weighing image descriptions for the [backend plan](../../../plans/backend-plan.md), [#816](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/816))
+> **Reported by:** Worker 2 (surfaced while weighing image descriptions for the [backend plan](../../../plans/historical/backend-plan.md), [#816](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/816))
 
 ## Observation
 
