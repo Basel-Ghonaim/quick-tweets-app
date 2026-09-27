@@ -88,6 +88,8 @@ This states what the product is committed to and nothing more. How an interface 
 
 Direct messaging, notifications, bookmarks, lists, and any form of moderation or administration. Their absence is the answer to whether they are part of the product: they are not, and building for them would be ungrounded.
 
+**Nor is a description on a posted image.** The product does not support image descriptions, whatever a design draws for one: a posted image carries none, and nothing is built to write or show one.
+
 ## Where to go next
 
 - **The HTTP surface** — endpoints, payloads, errors, pagination: the [API contract](../api/api-contract.md).
