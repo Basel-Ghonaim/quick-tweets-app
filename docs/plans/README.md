@@ -58,7 +58,7 @@ A new plan is drafted outside the tracked tree — under `.project/`, or whereve
 
 ## The execution log
 
-A plan **may** carry an execution log as its last section — the one section a worker appends to while the track runs. It exists so that the plan, read on its own, tells a newcomer what the track has settled, without the plan becoming a second tracker.
+A plan **may** carry an execution log as its last section while it is `Active` — the one section a worker appends to while the track runs. It exists so that the plan, read on its own, tells a newcomer what the track has settled, without the plan becoming a second tracker.
 
 - **An entry is written in its Work Item's own branch**, as the **last commit before the branch merges** — never in a branch, a Work Item or a pull request of its own. That is *Updating a Plan* applied to the log, and the two rules must agree: a plan is never updated in a branch of its own, and requiring the entry only *after* the merge left no branch to write it in. An entry rides the work it describes.
 - **Last, not first**, and the difference is what each one is. A plan *correction* is the **first** commit of the branch that revealed it, before implementation — it changes what the branch is built against. A log entry is the **last**, because it records what the branch did.
@@ -68,9 +68,11 @@ A plan **may** carry an execution log as its last section — the one section a 
 - **It carries no live status.** Nothing is in progress, next, blocked or scheduled here, and acceptance criteria are not restated: that is the tracker's, and the plan links it rather than mirroring it ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3).
 - **The plan's other sections change only by amendment**, per *Updating a Plan*, and the entry names the amendment in one line.
 - **A pointer near the top of the plan names the log's section** — a pointer only, never a position marker, which would be the same fact kept in two places.
-- **At `Historical`,** the log is what Reconciliation is written from.
+- **At `Historical`,** the log is what Reconciliation is written from, and Reconciliation follows it as the plan's last section. The log keeps its number, so every citation of it stays valid.
 
-This convention is new, and its **first entry found its placement rule wrong**: as originally written it required an entry only once the pull request had merged, which no branch could satisfy — by then the branch is gone, and writing it anywhere else is the plan-only branch *Updating a Plan* forbids. The wording above is the correction. The convention is reviewed again when the first track carrying a log reaches `Historical`.
+This convention is new, and its **first entry found its placement rule wrong**: as originally written it required an entry only once the pull request had merged, which no branch could satisfy — by then the branch is gone, and writing it anywhere else is the plan-only branch *Updating a Plan* forbids. The wording above is the correction.
+
+**It was reviewed when the first track carrying a log reached `Historical`** ([#840](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/840), the Backend plan), and stands as written. All eleven of that plan's entries were written as their branch's last commit, once the pull request existed. That held through fixups folded into earlier commits and through a commit outside a Work Item's scope, and no entry had to change after its merge. Its entries ran longer than three to six lines, in what they settled; that is a matter for the entries, not the rule.
 
 ## Plan Index
 
