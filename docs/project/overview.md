@@ -4,8 +4,8 @@
 > **Class:** **Description** for current implementation status; **Commitment** for committed product scope ([Documentation Strategy §3](../architecture/documentation-strategy.md)). Each section says which it is.
 > **Authority:** The authoritative source for the **product's scope** — both what exists today and what the product is committed to. It does not describe *how* the system is built (see the architecture and platform documents) or the API surface (see the [API contract](../api/api-contract.md)).
 > **Scope:** What quick-tweets is, which capabilities exist today, and which the product is committed to. Mechanisms, endpoints, and per-feature internals live in their owning documents and are linked, never restated.
-> **Version:** 1.11
-> **Last Updated:** 2026-09-23
+> **Version:** 1.12
+> **Last Updated:** 2026-09-27
 > **Owner:** Basel Ghonaim
 
 ## What quick-tweets is
@@ -26,13 +26,17 @@ The **backend exposes the full product surface; the frontend currently implement
 | Capability | Backend | Frontend |
 |---|---|---|
 | [**Authentication**](../features/authentication.md) — register, login, logout, logout-all, token refresh (JWT access token + HttpOnly refresh cookie; auth rate limiting) | Implemented | Implemented (sign-in · sign-up · the post-registration [journey](../features/journey.md): [profile](../features/profile.md) completion and email verification · account [recovery](../features/recovery.md)) |
-| **Tweets** — global feed and author timelines (cursor-paginated), single tweet, create, edit own, delete own | Implemented | Not yet |
-| **Likes** — toggle a like on a tweet | Implemented | Not yet |
-| **Comments** — list per tweet (offset-paginated), create, edit own, delete own | Implemented | Not yet |
+| **Tweets** — global feed and author timelines (cursor-paginated), single tweet, create, edit own (marked as edited when its text changes, and limited per account), delete own | Implemented | Not yet |
+| **Likes** — set and clear a like on a tweet, a comment or a reply | Implemented | Not yet |
+| **Comments** — a two-level thread under a tweet, comments and their replies, each list cursor-paginated; create, edit own, delete own, a comment's replies going with it | Implemented | Not yet |
 | **User profiles** — public profile with tweet / like / follower / following counts, and reading and editing one's own | Implemented | Editing one's own name, bio and picture, inside the post-registration journey ([profile](../features/profile.md)); the public profile not yet |
-| **Follows** — follow and unfollow, follower and following lists | Implemented | Not yet |
+| **Follows** — follow and unfollow, follower and following lists, whether the reader follows each person and is followed back, and suggested accounts to follow | Implemented | Not yet |
+| **Discovery** — searching posts by word or by hashtag, and the hashtags trending this week | Implemented | Not yet |
+| **Email verification** — proving control of the account's email with a one-time code | Implemented | Implemented, inside the post-registration journey |
+| **Account recovery** — setting a new password with a one-time code sent by email | Implemented | Implemented ([recovery](../features/recovery.md)) |
+| **Onboarding journey** — which post-registration step a new account has reached | Implemented | Implemented ([journey](../features/journey.md)) |
 
-The data model behind these capabilities — `User`, `RefreshToken`, `Tweet`, `Comment`, `Like`, `Follow` — is owned by the Prisma schema, [`apps/api/prisma/schema.prisma`](../../apps/api/prisma/schema.prisma).
+The data model behind these capabilities is owned by the Prisma schema, [`apps/api/prisma/schema.prisma`](../../apps/api/prisma/schema.prisma), and the reasons for its relationships and indexes by the [data model](../architecture/data-model.md).
 
 **The web interface reads in English and in Arabic,** right to left in Arabic. The language follows the reader's browser until they choose one, and how it is resolved and chosen is [localisation](../frontend/localisation.md)'s. Text the server writes, including its mail, is English.
 
