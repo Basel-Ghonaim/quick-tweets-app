@@ -1,11 +1,12 @@
 # Backend — Capability Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-26
+> **Last Updated:** 2026-09-27
 > **Parent Issue:** [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791)
 > **Supersedes:** —
+> **Archived (completed, 2026-09-27):** every §2 capability is delivered, by eleven Work Items. The durable facts now live with their owners: the [API contract](../api/api-contract.md), the [data model](../architecture/data-model.md), [backend security](../backend/security.md), the [glossary](../project/glossary.md) and the [project overview](../project/overview.md). What the track recorded is named in §8.
 
 **Start here.** New to the project: [CLAUDE.md](../../CLAUDE.md), then the [agent onboarding guide](../development/agent-onboarding.md). This track is worked under the [Engineering Execution Standard](../development/engineering-execution-standard.md) — nothing in this plan replaces it. §6 holds every reference; §7 records what each Work Item settled.
 
@@ -272,3 +273,31 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 - **Settled.** **`GET /tweets?q=`**, a third reading of the feed beside `author`: posts newest first, cursor-paged, open to anyone. A query that is one hashtag finds its posts by the key #835 founded; any other finds posts holding each word or a longer one beginning with it, through **`search_text()`**, a SQL function that holds the hashtags' Arabic letter rule so a **GIN index** can. The rule sits in the database rather than in a stored column, so every post is covered at once and nothing is kept twice; **the price is the rule stated twice**, which an integration test holds to one answer across the Arabic block. Prisma can express neither the function nor the index, and leaves both alone.
 - **Amended.** §2.5, by the correction this branch carried first: every word must match, words follow the Arabic letter rule, a `#` query is one hashtag and nothing else, and a query is bounded.
 - **Recorded.** No finding and no Issue. Case and word boundaries in words are the database's, and differ from the hashtag key's for `İ`, `ß` and final sigma; the contract says so rather than a record. The parity test runs in the integration lane, so CI cannot see the two rules drift, which the migration and the data model both name.
+
+## 8 · Reconciliation — where the durable knowledge landed
+
+*Written at archival, from the log above. Every rule this plan settled now lives with an owner that outlives it, which is what lets the plan be archived rather than kept alive as the only place a fact is written down. Each line points; none restates.*
+
+**Where each capability's rules landed:**
+
+- **§2.1 · Posts.** The "Edited" marker: the contract's ["Edited"](../api/api-contract.md#edited--editedat). The edit limit: the contract's [Rate Limiting](../api/api-contract.md#rate-limiting) and backend security's [rate limiting](../backend/security.md#rate-limiting). A post's author and a Follow button: the contract's [FollowState](../api/api-contract.md#followstate).
+- **§2.2 · Likes.** The contract's [set and clear](../api/api-contract.md#put-tweetsidlike--like-a-tweet) and its [comment likes](../api/api-contract.md#put-commentsidlike--like-a-comment); the [data model](../architecture/data-model.md#cascade-behaviour)'s comment likes; the [glossary](../project/glossary.md)'s *Like*.
+- **§2.3 · Comments and replies.** The contract's [Comments](../api/api-contract.md#comments); the [data model](../architecture/data-model.md#cascade-behaviour)'s two levels, the reply's own tweet and the coordinated deletion; the [glossary](../project/glossary.md)'s *Comment*.
+- **§2.4 · Following and people.** The contract's [FollowState](../api/api-contract.md#followstate) and [suggested accounts](../api/api-contract.md#get-followssuggestions--suggested-accounts-who-to-follow).
+- **§2.5 · Discovery.** The contract's [Hashtags](../api/api-contract.md#hashtags), [Trends](../api/api-contract.md#trends) and [search](../api/api-contract.md#get-tweetsqquery--search-cursor-paginated); the [data model](../architecture/data-model.md#indexing)'s hashtags, creation-time index and word index; the [glossary](../project/glossary.md)'s *Hashtag* and *Trend*. **Mentions** built nothing on the server: the mention rule is the [Shared Platform plan](shared-platform-plan.md)'s to state and build.
+- **§2.6 · Images.** The [overview](../project/overview.md#what-is-not-committed): image descriptions are not committed.
+- **§2.7 · Text.** The contract's [Body text](../api/api-contract.md#body-text) and [Text safety](../api/api-contract.md#text-safety), and backend security's [text safety](../backend/security.md#text-safety).
+- **§4's six decisions** were each written into the §2 subsection they bind, so they landed where that subsection did.
+- **§5's exclusions:** Settings is [#796](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/796); repost's undecided meaning is the [overview](../project/overview.md)'s; the search results page and the Likes tab are the [Frontend Features](frontend-features-plan.md) and [Pages](pages-plan.md) plans'; image descriptions are the overview's refusal above; trends of words and searching people or comments are ruled out by the contract's [Trends](../api/api-contract.md#trends) and [search](../api/api-contract.md#get-tweetsqquery--search-cursor-paginated).
+- **No ADR was created or edited**, and no plan decision was reversed.
+
+**Findings.** None is this plan's to close.
+- [Finding 0038](../architecture/findings/open/0038-offset-pagination-has-no-endpoint-left.md) was opened by the comment thread, and waits on the owner's decision.
+- [Finding 0041](../architecture/findings/open/0041-the-contract-promises-single-attachment-that-nothing-enforces.md) was opened by the decisions Work Item, and waits likewise.
+- [Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)'s clearing-forms gap was closed by text safety; the finding stays open for the rest.
+
+**Issues.** The track raised [#801](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/801) and [#802](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/802), fixed by the character rule, and [#819](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/819), fixed by text safety, which also closed [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775), recorded before the track began. Two stay open, neither this track's to do: [#829](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/829), the web recognising `edit_rate_limit`, for the Shared Platform track; and [#837](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/837), the reclamation oracle's model tap, for the verification harness.
+
+**Residues, named rather than absorbed.**
+- **Reported, and not reproduced.** An earlier session reported that `passwordReset.service.test.ts` and two `config/env` unit tests time out under synthetic CPU load. With twenty-four busy loops on twelve cores, all 934 unit tests passed, so there was nothing to record in an Issue.
+- **The working analysis §6 names is local and untracked.** What a Work Item relied on from it was written into that Work Item's Issue, which is where it stays reviewable.
