@@ -54,3 +54,23 @@ describe("the full-screen form's actions", () => {
     expect(dialog.variant).toBe("fullscreen");
   });
 });
+
+describe("the task form", () => {
+  test("takes a dismissal", () => {
+    const dialog: DialogProps = {
+      ...base,
+      variant: "task",
+      onDismiss: () => {},
+      dismissLabel: "Close",
+    };
+
+    expect(dialog.variant).toBe("task");
+  });
+
+  test("draws no actions of its own", () => {
+    // @ts-expect-error its work carries the actions; the frame draws none.
+    const dialog: DialogProps = { ...base, variant: "task", actions: "Post" };
+
+    expect(dialog.variant).toBe("task");
+  });
+});

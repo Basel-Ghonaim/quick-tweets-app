@@ -2,6 +2,9 @@
   /* Sized and placed by the dialog itself; the top layer holds it above
      everything, so no stacking token reaches this surface. */
   margin: auto;
+  /* Pinned: a drawn width is the frame's whole width, and the layer does not own
+     the document that would otherwise decide what the width includes. */
+  box-sizing: border-box;
   padding: var(--space-5);
   border: var(--border-width-thin) solid var(--border-default);
   border-radius: var(--border-radius-xl);
@@ -34,6 +37,13 @@
   inline-size: min(400px, calc(100vw - 32px));
 }
 
+/* The width the composer has in the feed, so the work reads the same in both. */
+.task {
+  inline-size: min(600px, calc(100vw - 32px));
+  padding: 0;
+  gap: 0;
+}
+
 .fullscreen {
   inline-size: 100vw;
   max-inline-size: 100vw;
@@ -63,6 +73,11 @@
   flex-shrink: 0;
   min-block-size: 56px;
   border-block-end: var(--border-width-thin) solid var(--border-default);
+}
+
+.task .bar {
+  gap: var(--space-2);
+  padding-inline: var(--space-2) var(--space-5);
 }
 
 .fullscreen .bar {

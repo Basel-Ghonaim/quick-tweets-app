@@ -48,7 +48,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
 
     // A bar leads with its way out, as a screen leads with its back control;
     // a card ends with it. The form decides, so two dialogs of one form agree.
-    const bar = variant === "fullscreen";
+    const bar = variant === "task" || variant === "fullscreen";
 
     const heading = (
       <h2 id={titleId} className={styles.title}>
@@ -56,7 +56,8 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
       </h2>
     );
 
-    const dismissal = !onDismiss ? null : bar ? (
+    // Only the phone's bar has the room to say it in words.
+    const dismissal = !onDismiss ? null : variant === "fullscreen" ? (
       <Button variant="ghost" color="secondary" onClick={onDismiss}>
         {dismissLabel}
       </Button>

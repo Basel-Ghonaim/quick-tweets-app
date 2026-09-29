@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 
 /**
  * `alert` interrupts to ask something that cannot wait, and is announced as such.
- * `fullscreen` is the form a phone gives a dialog that is really a page of work.
+ * `task` is a page of work on a desktop; `fullscreen` is the form a phone gives it.
  */
-export type DialogVariant = "modal" | "alert" | "fullscreen";
+export type DialogVariant = "modal" | "alert" | "task" | "fullscreen";
 
 interface DialogBase {
   /** The page owns when a dialog is open; this layer owns what that looks like. */
@@ -41,6 +41,13 @@ interface ActionInTheBar {
   actionsLayout?: never;
 }
 
+/** Its work carries its own actions, so the frame draws none. */
+interface NoActions {
+  action?: never;
+  actions?: never;
+  actionsLayout?: never;
+}
+
 /** The head's way out reports rather than closes: leaving may first need a
  *  question only the page can ask. It cannot exist without its word. */
 type Dismissal =
@@ -54,5 +61,6 @@ export type DialogProps = DialogBase &
     | ({ variant?: "modal" } & ActionsBelow & Dismissal)
     // A question that cannot wait is left by answering it.
     | ({ variant: "alert" } & ActionsBelow & NoDismissal)
+    | ({ variant: "task" } & NoActions & Dismissal)
     | ({ variant: "fullscreen" } & ActionInTheBar & Dismissal)
   );

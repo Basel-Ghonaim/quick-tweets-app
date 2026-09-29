@@ -125,6 +125,57 @@ export const FullScreen: Story = {
   args: { variant: "fullscreen", title: "New post" },
 };
 
+/** A page of work on a desktop: a bar with the way out leading, and no row of actions. */
+export const Task: Story = {
+  args: {
+    variant: "task",
+    title: "New post",
+    description: undefined,
+    dismissLabel: "Close",
+    onDismiss: fn(),
+    children: <p>What is new?</p>,
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = canvasElement.querySelector("dialog")!;
+    const title = dialog.querySelector("h2")!;
+    const dismiss = dialog.querySelector("button")!;
+    const bar = title.parentElement!;
+
+    await expect(dialog).toHaveAccessibleName("New post");
+    await expect(dismiss).toHaveAccessibleName("Close");
+
+    // A bar leads with its way out, where a card ends with it.
+    await expect(comesFirst(dismiss, title)).toBe(true);
+    await expect(getComputedStyle(title).font).toBe(
+      fontOf(dialog, "--type-heading-medium"),
+    );
+
+    await expect(getComputedStyle(dialog).paddingBlockStart).toBe("0px");
+    await expect(
+      parseFloat(getComputedStyle(bar).borderBlockEndWidth),
+    ).toBeGreaterThan(0);
+  },
+};
+
+/** Each form's width is its own; none of them is the caller's to choose. */
+export const EachFormTakesItsWidth: Story = {
+  render: () => (
+    <>
+      <Dialog open onClose={() => {}} title="Reply" />
+      <Dialog open onClose={() => {}} title="Delete post?" variant="alert" />
+      <Dialog open onClose={() => {}} title="New post" variant="task" />
+      <Dialog open onClose={() => {}} title="New post" variant="fullscreen" />
+    </>
+  ),
+  play: async ({ canvasElement }) => {
+    const widths = [...canvasElement.querySelectorAll("dialog")].map(
+      (dialog) => dialog.getBoundingClientRect().width,
+    );
+
+    await expect(widths).toEqual([560, 400, 600, window.innerWidth]);
+  },
+};
+
 /** The phone's form: its head is a bar holding the way out, the title and one action. */
 export const FullScreenWithItsBar: Story = {
   args: {
