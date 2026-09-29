@@ -17,6 +17,8 @@
     var(--font-family-base-arabic);
   --type-body-large: 400 var(--font-size-base) / var(--line-height-loose)
     var(--font-family-base-arabic);
+  --type-body-xlarge: 400 var(--font-size-md) / var(--line-height-loose)
+    var(--font-family-base-arabic);
 
   --type-heading-small: 600 var(--font-size-md) / var(--line-height-relaxed)
     var(--font-family-heading-arabic);
