@@ -89,6 +89,24 @@ export const WithAnAction: Story = {
   },
 };
 
+/** The action reads as a label beside the report, not as more of it. */
+export const TheActionIsALabel: Story = {
+  args: {
+    action: (
+      <Link href="#" placement="standalone" underline="always">
+        View
+      </Link>
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const action = canvasElement.querySelector("a")!;
+
+    await expect(getComputedStyle(action).font).toBe(
+      resolved("font", "--type-label-medium"),
+    );
+  },
+};
+
 export const Dismissible: Story = {
   args: { onDismiss: fn(), dismissLabel: "Dismiss" },
   play: async ({ args, canvasElement }) => {
