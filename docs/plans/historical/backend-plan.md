@@ -1,13 +1,14 @@
 # Backend — Capability Plan
 
-> **Status:** Active
+> **Status:** Historical
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-26
+> **Last Updated:** 2026-09-27
 > **Parent Issue:** [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791)
 > **Supersedes:** —
+> **Archived (completed, 2026-09-27):** every §2 capability is delivered, by eleven Work Items. The durable facts now live with their owners: the [API contract](../../api/api-contract.md), the [data model](../../architecture/data-model.md), [backend security](../../backend/security.md), the [glossary](../../project/glossary.md) and the [project overview](../../project/overview.md). What the track recorded is named in §8.
 
-**Start here.** New to the project: [CLAUDE.md](../../CLAUDE.md), then the [agent onboarding guide](../development/agent-onboarding.md). This track is worked under the [Engineering Execution Standard](../development/engineering-execution-standard.md) — nothing in this plan replaces it. §6 holds every reference; §7 records what each Work Item settled.
+**Start here.** New to the project: [CLAUDE.md](../../../CLAUDE.md), then the [agent onboarding guide](../../development/agent-onboarding.md). This track is worked under the [Engineering Execution Standard](../../development/engineering-execution-standard.md) — nothing in this plan replaces it. §6 holds every reference; §7 records what each Work Item settled.
 
 ---
 
@@ -16,15 +17,15 @@
 The approved designs for the **Feed**, **Tweet details** and **Profile** rely on behaviour the backend must provide. This plan states those needs as **capabilities the frontend can consume**. It does not decide how they are built.
 
 - **What this plan owns:** what must exist, and the product rules that behaviour must honour.
-- **Who works it:** Worker 2 — the worker whose working tree is the linked one this project calls the **backend worktree** ([setup](../development/setup.md#working-in-a-linked-worktree), which names it and its own database and port). Backend work stays out of the main tree.
+- **Who works it:** Worker 2 — the worker whose working tree is the linked one this project calls the **backend worktree** ([setup](../../development/setup.md#working-in-a-linked-worktree), which names it and its own database and port). Backend work stays out of the main tree.
 - **What it leaves to the worker:** how each capability is designed and built, how the work is split into Work Items, and in what order. These are settled with the owner in Execution Preparation.
-- **What stays the same:** the existing engineering rules. Every change to the API's behaviour is published in the [API contract](../api/api-contract.md) in the same pull request, so the frontend builds against what has merged.
+- **What stays the same:** the existing engineering rules. Every change to the API's behaviour is published in the [API contract](../../api/api-contract.md) in the same pull request, so the frontend builds against what has merged.
 
 **From this plan to merged work.** A capability below is not a Work Item. The route is the Execution Standard's:
 
 1. **Execution Preparation** with the owner: agree the task, decide what one Work Item is, and write its contract — scope and acceptance criteria — into an **Issue** (§3 and §8 there). The detailed analysis in §6 is an input to this step, not a substitute for it.
-2. **One branch per Work Item**, cut from the latest `main`, in the **backend worktree** (§4, §5). A linked tree cannot check out the branch the main tree holds, so branch the way [setup](../development/setup.md#branching-from-main-inside-a-linked-worktree) shows.
-3. **Atomic Conventional Commits**, and the documentation a change obligates lands in the **same pull request** ([Documentation Strategy](../architecture/documentation-strategy.md) §10).
+2. **One branch per Work Item**, cut from the latest `main`, in the **backend worktree** (§4, §5). A linked tree cannot check out the branch the main tree holds, so branch the way [setup](../../development/setup.md#branching-from-main-inside-a-linked-worktree) shows.
+3. **Atomic Conventional Commits**, and the documentation a change obligates lands in the **same pull request** ([Documentation Strategy](../../architecture/documentation-strategy.md) §10).
 4. **A pull request** carrying its evidence: what was run, what was not, and the base it was rebased onto (§8).
 5. **Human review and merge.** The worker never merges, and never decides an architectural question alone — those are proposed and escalated (§9, §10).
 6. **When it merges,** the Work Item gets its entry in §7.
@@ -173,18 +174,18 @@ Read the architecture and the contracts before starting. Read the others when th
 
 | Document | What it answers | Read when |
 |---|---|---|
-| [System overview](../architecture/system-overview.md) | How the two applications fit together, and a request's lifecycle. | First read. |
-| [API contract](../api/api-contract.md) | Every endpoint, payload, error and pagination shape the frontend consumes. **It changes in the same pull request as the code.** | Any capability that changes behaviour on the wire. |
-| [Data model](../architecture/data-model.md) | The entities, their relationships, indexes and deletion rules. | Any capability that changes stored data. |
-| [Backend conventions](../backend/conventions.md) | How a module is built on this tier. | Before writing anything. |
-| [Setup](../development/setup.md) | Running the two applications, the database, and **working in a linked worktree**: its own environment, its own database and port, and how to branch from `main` inside it. | Before the first branch, and whenever the environment misbehaves. |
-| [Backend security](../backend/security.md) | Rate limiting, tokens and abuse control. | The edit limit, and anything a stranger can reach. |
-| [Media](../backend/media.md) and [ADR 0005](../architecture/decisions/0005-media-file-upload-architecture.md) | How an image is uploaded, referenced and served, and why a reference is never dropped silently. | Image descriptions, and any deletion that touches media. |
-| [Glossary](../project/glossary.md) | What the product's nouns mean. **Comment** ("a reply to a tweet") and **Like** ("on a tweet") both narrow the product this track widens, so both change with it. | Naming anything a reader will see. |
-| [Documentation Strategy](../architecture/documentation-strategy.md) | One owner per fact, and which documents a change obligates (§10). | Every Work Item. |
-| [Testing topology](../development/testing-topology.md) and [ADR 0020](../architecture/decisions/0020-proof-has-a-home-testing-topology.md) | Which lane proves what: answers, not answerers. | Deciding where a capability is proven. |
-| [ADR 0013](../architecture/decisions/0013-applications-and-cross-tier-packages.md) | Applications, and the cross-tier packages layer. | Rules the frontend must state the same way (§2.4, §2.7). |
-| [Project overview](../project/overview.md) | The product's surfaces, capabilities and committed scope. | Checking that a capability is part of the product. |
+| [System overview](../../architecture/system-overview.md) | How the two applications fit together, and a request's lifecycle. | First read. |
+| [API contract](../../api/api-contract.md) | Every endpoint, payload, error and pagination shape the frontend consumes. **It changes in the same pull request as the code.** | Any capability that changes behaviour on the wire. |
+| [Data model](../../architecture/data-model.md) | The entities, their relationships, indexes and deletion rules. | Any capability that changes stored data. |
+| [Backend conventions](../../backend/conventions.md) | How a module is built on this tier. | Before writing anything. |
+| [Setup](../../development/setup.md) | Running the two applications, the database, and **working in a linked worktree**: its own environment, its own database and port, and how to branch from `main` inside it. | Before the first branch, and whenever the environment misbehaves. |
+| [Backend security](../../backend/security.md) | Rate limiting, tokens and abuse control. | The edit limit, and anything a stranger can reach. |
+| [Media](../../backend/media.md) and [ADR 0005](../../architecture/decisions/0005-media-file-upload-architecture.md) | How an image is uploaded, referenced and served, and why a reference is never dropped silently. | Image descriptions, and any deletion that touches media. |
+| [Glossary](../../project/glossary.md) | What the product's nouns mean. **Comment** ("a reply to a tweet") and **Like** ("on a tweet") both narrow the product this track widens, so both change with it. | Naming anything a reader will see. |
+| [Documentation Strategy](../../architecture/documentation-strategy.md) | One owner per fact, and which documents a change obligates (§10). | Every Work Item. |
+| [Testing topology](../../development/testing-topology.md) and [ADR 0020](../../architecture/decisions/0020-proof-has-a-home-testing-topology.md) | Which lane proves what: answers, not answerers. | Deciding where a capability is proven. |
+| [ADR 0013](../../architecture/decisions/0013-applications-and-cross-tier-packages.md) | Applications, and the cross-tier packages layer. | Rules the frontend must state the same way (§2.4, §2.7). |
+| [Project overview](../../project/overview.md) | The product's surfaces, capabilities and committed scope. | Checking that a capability is part of the product. |
 
 ### The approved design
 
@@ -198,26 +199,26 @@ Read the architecture and the contracts before starting. Read the others when th
 | Source | What it holds | Read when |
 |---|---|---|
 | [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791) | This track's parent Issue: its place in the sequence, and its Work Items. | Starting, and whenever the tracker is the question. |
-| [Frontend Features plan](frontend-features-plan.md) and [Shared Platform plan](shared-platform-plan.md) | Who consumes these capabilities, and what they expect of them. | Before changing a shape the frontend reads. |
-| [Design System plan](design-system-plan.md) and [Pages plan](pages-plan.md) | The rest of the effort. | Context. |
+| [Frontend Features plan](../frontend-features-plan.md) and [Shared Platform plan](../shared-platform-plan.md) | Who consumes these capabilities, and what they expect of them. | Before changing a shape the frontend reads. |
+| [Design System plan](../design-system-plan.md) and [Pages plan](../pages-plan.md) | The rest of the effort. | Context. |
 
 ---
 
 ## 7 · Execution log
 
-One entry per Work Item, newest last: its Issue and pull request, what it settled, which sections of this plan it amended, and what it recorded. No status lives here — that is the tracker's ([ADR 0006](../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3). **When and where an entry is written** is the [plans README](README.md)'s, which owns this convention.
+One entry per Work Item, newest last: its Issue and pull request, what it settled, which sections of this plan it amended, and what it recorded. No status lives here — that is the tracker's ([ADR 0006](../../architecture/decisions/0006-execution-plans-home-and-lifecycle.md) Decision 3). **When and where an entry is written** is the [plans README](../README.md)'s, which owns this convention.
 
 **The comment thread — two levels, cursor pagination, cascading deletion.** [#799](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/799) · [#803](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/803).
 
 - **Settled.** A comment may answer another comment, and the thread stops at two: a parent that is itself a reply is refused rather than re-pointed, so the server never moves a row the caller did not name. A reply is reached through its parent (`?parentId=`) and excluded from the thread list, and **both lists cursor on `id`**. **A reply keeps its `tweetId`** — the invariant that lets a post's comment count cover both levels with no second query. The parent link is **not** a database cascade, for the reason the comment-to-tweet link is not: deletion is coordinated in the application so no media reference is dropped silently. Comments took the shared cursor default, so they no longer carry a pagination default of their own.
 - **Amended.** None. §2.3 states what must exist and still does; delivery is the tracker's.
-- **Recorded.** [Finding 0038](../architecture/findings/open/0038-offset-pagination-has-no-endpoint-left.md) — moving the thread to a cursor left offset pagination with no endpoint anywhere, and whether the convention survives its last reader is not this Work Item's to decide. [#801](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/801) and [#802](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/802), the two text defects §2.7 and §4 will have to settle together.
+- **Recorded.** [Finding 0038](../../architecture/findings/open/0038-offset-pagination-has-no-endpoint-left.md) — moving the thread to a cursor left offset pagination with no endpoint anywhere, and whether the convention survives its last reader is not this Work Item's to decide. [#801](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/801) and [#802](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/802), the two text defects §2.7 and §4 will have to settle together.
 
 **Likes on comments and replies, and liking made repeat-safe.** [#805](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/805) · [#807](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/807).
 
 - **Settled.** Liking is **set and cleared, never toggled**, and the guarantee lives in the verb rather than in a payload a client might omit: repeating either call is a no-op, so a double press or a retry cannot reverse what the reader meant. Neither call reads before it writes — the unique pair decides the outcome, so the expected conflict *is* the answer. A comment's likes are their own table, cascading from both sides, which is where a like differs from a comment: it holds no media reference, so nothing outlives the row. **The count is public and the state is personal**, which is why comment reads take an optional reader and a guest reads the same number and always `false`. Comments are the second likeable thing and a shared mechanism was still declined; only the wire shape is stated once.
 - **Amended.** None. §2.2 states what must exist and still does.
-- **Recorded.** No finding. The one defect found was in the verification harness rather than the product — the collection carries a bearer at its root, so four scenarios whose subject was being unauthenticated inherited a token and passed for the wrong reason; they are fixed and the trap is written into the [runbook](../development/verification/verification-runbook.md). `ICommentRepository.findById` was also found to have no callers, and was left alone rather than removed.
+- **Recorded.** No finding. The one defect found was in the verification harness rather than the product — the collection carries a bearer at its root, so four scenarios whose subject was being unauthenticated inherited a token and passed for the wrong reason; they are fixed and the trap is written into the [runbook](../../development/verification/verification-runbook.md). `ICommentRepository.findById` was also found to have no callers, and was left alone rather than removed.
 
 **Follow state wherever a Follow button appears.** [#810](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/810) · [#811](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/811).
 
@@ -235,7 +236,7 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 
 - **Settled.** All six product decisions, which is what every remaining capability waited on, and #775's open questions with them. The character is a **code point** counted after trimming. The edit limit is **per account**, with its own error type. A trend is a **hashtag**. Search covers **posts, newest first**. Suggestions come from **the people your follows follow**. **Image descriptions are not supported.** This Work Item built nothing: it records where each answer binds, so no capability's preparation has to decide it again.
 - **Amended.** §2.1, §2.4, §2.5, §2.6 and §2.7 received the answers, **§4 now holds none**, and §5 gained what they exclude. §2.6 kept its number, because the sibling plans cite §2.6 and §2.7 by number. The Frontend Features and Shared Platform plans each lost the one line that promised a description.
-- **Recorded.** [Finding 0041](../architecture/findings/open/0041-the-contract-promises-single-attachment-that-nothing-enforces.md): the contract says a media token must not already be attached elsewhere, and nothing enforces it. A run against the worktree's API attached one object to two tweets, and the ledger kept each use apart. Whether the contract or the check changes is the owner's decision.
+- **Recorded.** [Finding 0041](../../architecture/findings/open/0041-the-contract-promises-single-attachment-that-nothing-enforces.md): the contract says a media token must not already be attached elsewhere, and nothing enforces it. A run against the worktree's API attached one object to two tweets, and the ledger kept each use apart. Whether the contract or the check changes is the owner's decision.
 
 **One character rule, counted after trimming.** [#818](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/818) · [#821](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/821).
 
@@ -247,7 +248,7 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 
 - **Settled.** Text other readers see is **stored in NFC**. A **direction control is refused** with one message that never repeats it. Text made only of **invisible characters counts as empty**, which each field interprets in its own terms: a body and a name are refused, and a bio is cleared. It is **one shared step**, and each field keeps its own rules for emptiness and length. A name's and a bio's lengths still count UTF-16 units before trimming, now **on the normalised text**, which is the one length change the step required. **#819 was fixed in the same Work Item** because making the name safe runs through its broken check; it still has a commit of its own.
 - **Amended.** §2.7, by the correction this branch carried as its first commit: the definition of invisible, a bio cleared rather than refused, a name of white space refused, and how a name's and a bio's lengths are measured. Each was settled in this Work Item's preparation.
-- **Recorded.** [Finding 0036](../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)'s clearing-forms gap is **closed**, and the finding stays open for the rest. One lesson was about the tools rather than the product: a `\u` escape typed into a file's content arrives as the raw character, so the first draft of this branch held real bidi controls in its source. They were caught before review, while the mutation proofs were being set up, and every one is now an escape.
+- **Recorded.** [Finding 0036](../../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)'s clearing-forms gap is **closed**, and the finding stays open for the rest. One lesson was about the tools rather than the product: a `\u` escape typed into a file's content arrives as the raw character, so the first draft of this branch held real bidi controls in its source. They were caught before review, while the mutation proofs were being set up, and every one is now an escape.
 
 **Ten post edits an hour, per account.** [#826](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/826) · [#827](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/827).
 
@@ -272,3 +273,33 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 - **Settled.** **`GET /tweets?q=`**, a third reading of the feed beside `author`: posts newest first, cursor-paged, open to anyone. A query that is one hashtag finds its posts by the key #835 founded; any other finds posts holding each word or a longer one beginning with it, through **`search_text()`**, a SQL function that holds the hashtags' Arabic letter rule so a **GIN index** can. The rule sits in the database rather than in a stored column, so every post is covered at once and nothing is kept twice; **the price is the rule stated twice**, which an integration test holds to one answer across the Arabic block. Prisma can express neither the function nor the index, and leaves both alone.
 - **Amended.** §2.5, by the correction this branch carried first: every word must match, words follow the Arabic letter rule, a `#` query is one hashtag and nothing else, and a query is bounded.
 - **Recorded.** No finding and no Issue. Case and word boundaries in words are the database's, and differ from the hashtag key's for `İ`, `ß` and final sigma; the contract says so rather than a record. The parity test runs in the integration lane, so CI cannot see the two rules drift, which the migration and the data model both name.
+
+## 8 · Reconciliation — where the durable knowledge landed
+
+*Written at archival, from the log above. Every rule this plan settled now lives with an owner that outlives it, which is what lets the plan be archived rather than kept alive as the only place a fact is written down. Each line points; none restates.*
+
+**Where each capability's rules landed:**
+
+- **§2.1 · Posts.** The "Edited" marker: the contract's ["Edited"](../../api/api-contract.md#edited--editedat). The edit limit: the contract's [Rate Limiting](../../api/api-contract.md#rate-limiting) and backend security's [rate limiting](../../backend/security.md#rate-limiting). A post's author and a Follow button: the contract's [FollowState](../../api/api-contract.md#followstate).
+- **§2.2 · Likes.** The contract's [set and clear](../../api/api-contract.md#put-tweetsidlike--like-a-tweet) and its [comment likes](../../api/api-contract.md#put-commentsidlike--like-a-comment); the [data model](../../architecture/data-model.md#cascade-behaviour)'s comment likes; the [glossary](../../project/glossary.md)'s *Like*.
+- **§2.3 · Comments and replies.** The contract's [Comments](../../api/api-contract.md#comments); the [data model](../../architecture/data-model.md#cascade-behaviour)'s two levels, the reply's own tweet and the coordinated deletion; the [glossary](../../project/glossary.md)'s *Comment*.
+- **§2.4 · Following and people.** The contract's [FollowState](../../api/api-contract.md#followstate) and [suggested accounts](../../api/api-contract.md#get-followssuggestions--suggested-accounts-who-to-follow).
+- **§2.5 · Discovery.** The contract's [Hashtags](../../api/api-contract.md#hashtags), [Trends](../../api/api-contract.md#trends) and [search](../../api/api-contract.md#get-tweetsqquery--search-cursor-paginated); the [data model](../../architecture/data-model.md#indexing)'s hashtags, creation-time index and word index; the [glossary](../../project/glossary.md)'s *Hashtag* and *Trend*. **Mentions** built nothing on the server: the mention rule is the [Shared Platform plan](../shared-platform-plan.md)'s to state and build.
+- **§2.6 · Images.** The [overview](../../project/overview.md#what-is-not-committed): image descriptions are not committed.
+- **§2.7 · Text.** The contract's [Body text](../../api/api-contract.md#body-text) and [Text safety](../../api/api-contract.md#text-safety), and backend security's [text safety](../../backend/security.md#text-safety).
+- **§4's six decisions** were each written into the §2 subsection they bind, so they landed where that subsection did.
+- **§5's exclusions:** Settings is [#796](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/796); repost's undecided meaning is the [overview](../../project/overview.md)'s; the search results page and the Likes tab are the [Frontend Features](../frontend-features-plan.md) and [Pages](../pages-plan.md) plans'; image descriptions are the overview's refusal above; trends of words and searching people or comments are ruled out by the contract's [Trends](../../api/api-contract.md#trends) and [search](../../api/api-contract.md#get-tweetsqquery--search-cursor-paginated).
+- **No ADR was created or edited**, and no plan decision was reversed.
+
+**Findings.** None is this plan's to close.
+- [Finding 0038](../../architecture/findings/open/0038-offset-pagination-has-no-endpoint-left.md) was opened by the comment thread, and waits on the owner's decision.
+- [Finding 0041](../../architecture/findings/open/0041-the-contract-promises-single-attachment-that-nothing-enforces.md) was opened by the decisions Work Item, and waits likewise.
+- [Finding 0036](../../architecture/findings/open/0036-documentation-the-feature-split-found-missing.md)'s clearing-forms gap was closed by text safety; the finding stays open for the rest.
+
+**Issues.** The track raised [#801](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/801) and [#802](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/802), fixed by the character rule, and [#819](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/819), fixed by text safety, which also closed [#775](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/775), recorded before the track began. Two stay open, neither this track's to do: [#829](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/829), the web recognising `edit_rate_limit`, for the Shared Platform track; and [#837](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/837), the reclamation oracle's model tap, for the verification harness.
+
+**Residues, named rather than absorbed.**
+- **Reported, and not reproduced.** An earlier session reported that `passwordReset.service.test.ts` and two `config/env` unit tests time out under synthetic CPU load. With twenty-four busy loops on twelve cores, all 934 unit tests passed, so there was nothing to record in an Issue.
+- **The working analysis §6 names is local and untracked.** What a Work Item relied on from it was written into that Work Item's Issue, which is where it stays reviewable.
+
+**How this plan was closed.** It was reconciled and archived in a branch of its own ([#840](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/840) · [#841](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/841)), by the owner's instruction, as the Arabic and RTL plan was. That is the one departure from the [plans README](../README.md)'s rule that a plan is never updated in a branch of its own. The log closes with Search's entry; this paragraph, not a twelfth entry, records the closing. [#791](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/791) is closed by the owner once this merges.

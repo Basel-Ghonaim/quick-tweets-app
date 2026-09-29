@@ -89,7 +89,7 @@ A surface grows as its parts arrive. It does not wait for every feature.
 | [Frontend Features plan](frontend-features-plan.md) | Every product capability a surface shows: posts, comments, following, profiles and discovery (§2). |
 | [Design System plan](design-system-plan.md) | The presentation parts the frame and overlays use, such as Dialog, Menu, Tabs, Toast, Avatar and Skeleton, plus the stacking order and responsive widths (§2). |
 | [Shared Platform plan](shared-platform-plan.md) | The session and preferences for the frame, the guest-intent and feedback mechanisms, and the words (§2). |
-| [Backend plan](backend-plan.md) | Nothing directly. Pages never reach the server, so they receive backend capabilities through features. |
+| [Backend plan](historical/backend-plan.md) | Nothing directly. Pages never reach the server, so they receive backend capabilities through features. |
 
 **The frame can come before the features:** navigation, sidebar layout, the phone's frame and the account menu need only the Design System and the platform. Each surface's content then arrives feature by feature.
 
@@ -155,7 +155,7 @@ Read the architecture before starting. Read the others when the question they an
 | [Frontend Features plan](frontend-features-plan.md) | The features the pages compose. | Before composing a surface. |
 | [Design System plan](design-system-plan.md) | The presentation parts that will exist. | Building the frame and overlays. |
 | [Shared Platform plan](shared-platform-plan.md) | Session, preferences, guest intents, feedback and words. | Anything more than one surface needs. |
-| [Backend plan](backend-plan.md) | What the server will provide, reached only through features. | Understanding what a surface can show. |
+| [Backend plan](historical/backend-plan.md) | What the server will provide, reached only through features. | Understanding what a surface can show. |
 
 ### Approved decisions and designs
 

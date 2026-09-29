@@ -43,7 +43,7 @@ Several features behind the **Feed**, **Tweet details** and **Profile** need the
 ### 2.2 · Media
 
 - **Uploading and showing images for any feature:** the composer, the reply box and the profile alike. This includes progress, failure, retry and refusal.
-- A posted image carries **no description**, because the backend does not support one ([Backend plan](backend-plan.md) §2.6).
+- A posted image carries **no description**, because the backend does not support one ([Backend plan](historical/backend-plan.md) §2.6).
 
 ### 2.3 · Language and formats
 
@@ -156,7 +156,7 @@ Sources marked *local* are working material in `.project/`, outside the reposito
 | [Approved designs](https://claude.ai/artifact/LFz7oGKfFJbRNumTZzBAtY) (Claude Design canvas) | The **Feed**, **Tweet details**, **Profile** and **Shared pieces** pages (all approved). Each carries an **ownership board**: the zone the design expects to own each part. That is a starting point for §4, not a decision. **Feed · v2** is still under review: until it is approved, the approved Feed governs. | Building any capability that shows something. |
 | Feed design brief (local: `.project/feed-design/design-brief.md`) and Profile and Tweet details brief (local: `.project/feed-design/profile-tweet-details-brief.md`) | The approved product and design decisions, with who approved each. | When a behaviour needs its reason. |
 | Feed implementation analysis (local: `.project/feed-design/feed-implementation-analysis.md`), §2 | The first inventory of shared needs, and the options for product presentation. | Starting the track, and settling §4. It predates the Tweet details and Profile designs, which add text with links, the image viewer, toasts and guest intents. |
-| [Backend plan](backend-plan.md) and [Design System plan](design-system-plan.md) | What the backend will provide and what the Design System will provide. | Before relying on either. |
+| [Backend plan](historical/backend-plan.md) and [Design System plan](design-system-plan.md) | What the backend will provide and what the Design System will provide. | Before relying on either. |
 
 ---
 
