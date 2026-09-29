@@ -272,6 +272,35 @@ export const TheDismissalAsksThePage: Story = {
   },
 };
 
+/** A page that is not ready to let go: Escape asks it, and asking is all. */
+export const EscapeAsksWhenThePageDecides: Story = {
+  args: { dismissLabel: "Close", onDismiss: fn() },
+  play: async ({ args, canvasElement }) => {
+    const dialog = canvasElement.querySelector("dialog")!;
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+
+    await userEvent.keyboard("{Escape}");
+
+    await expect(args.onDismiss).toHaveBeenCalledOnce();
+    await expect(dialog.open).toBe(true);
+  },
+};
+
+/** A close request the platform raises itself, such as a phone's back gesture. */
+export const AnyOtherCloseRequestAsksToo: Story = {
+  args: { dismissLabel: "Close", onDismiss: fn() },
+  play: async ({ args, canvasElement }) => {
+    const dialog = canvasElement.querySelector("dialog")!;
+    const request = new Event("cancel", { cancelable: true });
+
+    dialog.dispatchEvent(request);
+
+    await expect(request.defaultPrevented).toBe(true);
+    await expect(args.onDismiss).toHaveBeenCalledOnce();
+    await expect(dialog.open).toBe(true);
+  },
+};
+
 export const FocusComesBackAfterAnAction: Story = {
   render: () => <Opened />,
   play: async ({ canvasElement }) => {

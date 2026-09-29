@@ -81,9 +81,23 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         className={classNames(styles.root, styles[variant])}
         onClose={onClose}
         onKeyDown={(event) => {
+          if (event.key !== "Escape") return;
+          // Where leaving is the page's to decide, Escape asks the same question
+          // the control asks; prevented, the key sends the platform no close request.
+          if (onDismiss) {
+            event.preventDefault();
+            onDismiss();
+            return;
+          }
           // Closed here as well as by the platform, for the reason Menu states:
           // the platform's own dismissal answers real input only.
-          if (event.key === "Escape") element.current?.close();
+          element.current?.close();
+        }}
+        onCancel={(event) => {
+          // Any other close request the platform raises — a phone's back gesture.
+          if (!onDismiss) return;
+          event.preventDefault();
+          onDismiss();
         }}
       >
         {bar ? (
