@@ -27,6 +27,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** What a token resolves to here, read through a probe rather than restated. */
+const resolved = (property: "color" | "font" | "blockSize", token: string) => {
+  const probe = document.createElement("span");
+  probe.style.display = "block";
+  probe.style[property] = `var(${token})`;
+  document.body.append(probe);
+  const value = getComputedStyle(probe)[property];
+  probe.remove();
+  return value;
+};
+
 export const Default: Story = {};
 
 export const ItWaitsItsTurn: Story = {
@@ -88,6 +99,35 @@ export const Dismissible: Story = {
     await userEvent.click(dismiss);
     // The layer reports the intent; whether the toast goes is the page's.
     await expect(args.onDismiss).toHaveBeenCalledOnce();
+  },
+};
+
+/** The control that closes it speaks more quietly than the report itself. */
+export const TheDismissalIsQuieterThanTheMessage: Story = {
+  args: { onDismiss: fn(), dismissLabel: "Dismiss" },
+  play: async ({ canvasElement }) => {
+    const dismiss = canvasElement.querySelector("button")!;
+
+    await expect(getComputedStyle(dismiss).color).toBe(
+      resolved("color", "--text-secondary"),
+    );
+  },
+};
+
+/** Held off the foot of the page by the distance the designs draw on a desktop. */
+export const TheRegionSitsAtItsInset: Story = {
+  render: () => (
+    <ToastRegion data-testid="region">
+      <Toast color="success" icon={<CheckIcon />}>
+        Your post was sent.
+      </Toast>
+    </ToastRegion>
+  ),
+  play: async ({ canvasElement }) => {
+    const region = canvasElement.querySelector('[data-testid="region"]')!;
+    const gap = window.innerHeight - region.getBoundingClientRect().bottom;
+
+    await expect(`${gap}px`).toBe(resolved("blockSize", "--space-8"));
   },
 };
 

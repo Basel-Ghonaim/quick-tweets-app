@@ -30,13 +30,15 @@ export const Toast = forwardRef<HTMLDivElement, ToastProps>(
       <span className={styles.message}>{props.children}</span>
       {action}
       {onDismiss ? (
-        <IconButton
-          variant="ghost"
-          shape="circle"
-          icon={<XIcon />}
-          aria-label={dismissLabel}
-          onClick={onDismiss}
-        />
+        <span className={styles.dismiss}>
+          <IconButton
+            variant="ghost"
+            shape="circle"
+            icon={<XIcon />}
+            aria-label={dismissLabel}
+            onClick={onDismiss}
+          />
+        </span>
       ) : null}
     </div>
   ),

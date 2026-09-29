@@ -26,11 +26,18 @@
   min-inline-size: 0;
 }
 
+/* Quieter than the message it closes. Set as the colour the control inherits,
+   since a ghost control takes its foreground from its surroundings. */
+.dismiss {
+  display: inline-flex;
+  color: var(--text-secondary);
+}
+
 .region {
   position: fixed;
   /* Held off the block-end edge by a distance the page can raise, so a surface
      with its own bar underneath clears it without this layer knowing it exists. */
-  inset-block-end: var(--toast-region-inset, var(--space-5));
+  inset-block-end: var(--toast-region-inset, var(--space-8));
   inset-inline: 0;
   z-index: var(--layer-toast);
   display: flex;
