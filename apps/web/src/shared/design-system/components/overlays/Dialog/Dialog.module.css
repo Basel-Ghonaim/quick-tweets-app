@@ -39,6 +39,8 @@
   max-inline-size: 100vw;
   block-size: 100vh;
   max-block-size: 100vh;
+  padding: 0;
+  gap: 0;
   border: 0;
   border-radius: 0;
 }
@@ -53,6 +55,25 @@
   flex: 1;
   margin: 0;
   font: var(--type-heading-medium);
+}
+
+/* A head that runs edge to edge, ruled off from what it heads. Its height is
+   this component's own geometry, as a control's box is. */
+.bar {
+  flex-shrink: 0;
+  min-block-size: 56px;
+  border-block-end: var(--border-width-thin) solid var(--border-default);
+}
+
+.fullscreen .bar {
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-inline: var(--space-2) var(--space-4);
+}
+
+.fullscreen .title {
+  font: var(--type-heading-small);
+  text-align: center;
 }
 
 .description {

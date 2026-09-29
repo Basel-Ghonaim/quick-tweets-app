@@ -33,6 +33,16 @@ const comesFirst = (a: Element, b: Element) => {
     : first.left < second.left;
 };
 
+/** What a text style resolves to here, read from the token rather than restated. */
+const fontOf = (host: Element, token: string) => {
+  const probe = document.createElement("span");
+  probe.style.font = `var(${token})`;
+  host.append(probe);
+  const font = getComputedStyle(probe).font;
+  probe.remove();
+  return font;
+};
+
 const targetFloor = () =>
   parseFloat(
     getComputedStyle(document.documentElement).getPropertyValue(
@@ -113,6 +123,49 @@ export const Alert: Story = {
 
 export const FullScreen: Story = {
   args: { variant: "fullscreen", title: "New post" },
+};
+
+/** The phone's form: its head is a bar holding the way out, the title and one action. */
+export const FullScreenWithItsBar: Story = {
+  args: {
+    variant: "fullscreen",
+    title: "New post",
+    description: undefined,
+    dismissLabel: "Cancel",
+    onDismiss: fn(),
+    action: <Button>Post</Button>,
+  },
+  play: async ({ args, canvasElement }) => {
+    const dialog = canvasElement.querySelector("dialog")!;
+    const title = dialog.querySelector("h2")!;
+    const [cancel, post] = [...dialog.querySelectorAll("button")];
+    const bar = title.parentElement!;
+
+    await expect(dialog).toHaveAccessibleName("New post");
+    await expect(cancel).toHaveTextContent("Cancel");
+    await expect(post).toHaveAccessibleName("Post");
+
+    // The way out leads and the action closes the line, in the page's direction.
+    await expect(comesFirst(cancel, title)).toBe(true);
+    await expect(comesFirst(title, post)).toBe(true);
+
+    await expect(getComputedStyle(title).textAlign).toBe("center");
+    await expect(getComputedStyle(title).font).toBe(
+      fontOf(dialog, "--type-heading-small"),
+    );
+
+    // Edge to edge and ruled off: the frame gives the bar no inset of its own.
+    await expect(bar.getBoundingClientRect().width).toBe(
+      dialog.getBoundingClientRect().width,
+    );
+    await expect(getComputedStyle(dialog).paddingBlockStart).toBe("0px");
+    await expect(
+      parseFloat(getComputedStyle(bar).borderBlockEndWidth),
+    ).toBeGreaterThan(0);
+
+    await userEvent.click(cancel);
+    await expect(args.onDismiss).toHaveBeenCalledOnce();
+  },
 };
 
 export const StackedActions: Story = {

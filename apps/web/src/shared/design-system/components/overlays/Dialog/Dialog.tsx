@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from "react
 import styles from "./Dialog.module.css";
 import type { DialogProps } from "./Dialog.types";
 import { classNames } from "../../shared";
+import { Button } from "../../controls/Button";
 import { IconButton } from "../../controls/IconButton";
 import { XIcon } from "../../../icons";
 
@@ -19,6 +20,7 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
       description,
       actions,
       actionsLayout = "inline",
+      action,
       variant = "modal",
       onDismiss,
       dismissLabel,
@@ -44,6 +46,31 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
       if (!open && dialog.open) dialog.close();
     }, [open]);
 
+    // A bar leads with its way out, as a screen leads with its back control;
+    // a card ends with it. The form decides, so two dialogs of one form agree.
+    const bar = variant === "fullscreen";
+
+    const heading = (
+      <h2 id={titleId} className={styles.title}>
+        {title}
+      </h2>
+    );
+
+    const dismissal = !onDismiss ? null : bar ? (
+      <Button variant="ghost" color="secondary" onClick={onDismiss}>
+        {dismissLabel}
+      </Button>
+    ) : (
+      <IconButton
+        variant="ghost"
+        shape="circle"
+        size="large"
+        icon={<XIcon />}
+        aria-label={dismissLabel}
+        onClick={onDismiss}
+      />
+    );
+
     return (
       <dialog
         ref={element}
@@ -58,21 +85,18 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
           if (event.key === "Escape") element.current?.close();
         }}
       >
-        <div className={styles.head}>
-          <h2 id={titleId} className={styles.title}>
-            {title}
-          </h2>
-          {onDismiss ? (
-            <IconButton
-              variant="ghost"
-              shape="circle"
-              size="large"
-              icon={<XIcon />}
-              aria-label={dismissLabel}
-              onClick={onDismiss}
-            />
-          ) : null}
-        </div>
+        {bar ? (
+          <div className={classNames(styles.head, styles.bar)}>
+            {dismissal}
+            {heading}
+            {action}
+          </div>
+        ) : (
+          <div className={styles.head}>
+            {heading}
+            {dismissal}
+          </div>
+        )}
         {description ? (
           <p id={descriptionId} className={styles.description}>
             {description}

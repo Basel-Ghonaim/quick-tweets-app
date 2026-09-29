@@ -39,3 +39,18 @@ describe("the dismissal", () => {
     expect(dialog.variant).toBe("alert");
   });
 });
+
+describe("the full-screen form's actions", () => {
+  test("sit in its bar, one of them", () => {
+    const dialog: DialogProps = { ...base, variant: "fullscreen", action: "Post" };
+
+    expect(dialog.variant).toBe("fullscreen");
+  });
+
+  test("have no row beneath it", () => {
+    // @ts-expect-error the bar is where its action goes; nothing is drawn below.
+    const dialog: DialogProps = { ...base, variant: "fullscreen", actions: "Post" };
+
+    expect(dialog.variant).toBe("fullscreen");
+  });
+});

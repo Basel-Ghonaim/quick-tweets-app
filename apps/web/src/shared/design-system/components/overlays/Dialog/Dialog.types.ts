@@ -20,6 +20,10 @@ interface DialogBase {
   /** Rendered under the heading, and announced with it where present. */
   description?: string;
 
+  children?: ReactNode;
+}
+
+interface ActionsBelow {
   /** The controls that resolve it. */
   actions?: ReactNode;
 
@@ -27,7 +31,14 @@ interface DialogBase {
    *  decides, because no width this layer can see tells it which. */
   actionsLayout?: "inline" | "stack";
 
-  children?: ReactNode;
+  action?: never;
+}
+
+/** A bar has room for one action beside the way out, and no row beneath it. */
+interface ActionInTheBar {
+  action?: ReactNode;
+  actions?: never;
+  actionsLayout?: never;
 }
 
 /** The head's way out reports rather than closes: leaving may first need a
@@ -40,8 +51,8 @@ type NoDismissal = { onDismiss?: never; dismissLabel?: never };
 
 export type DialogProps = DialogBase &
   (
-    | ({ variant?: "modal" } & Dismissal)
+    | ({ variant?: "modal" } & ActionsBelow & Dismissal)
     // A question that cannot wait is left by answering it.
-    | ({ variant: "alert" } & NoDismissal)
-    | ({ variant: "fullscreen" } & NoDismissal)
+    | ({ variant: "alert" } & ActionsBelow & NoDismissal)
+    | ({ variant: "fullscreen" } & ActionInTheBar & Dismissal)
   );
