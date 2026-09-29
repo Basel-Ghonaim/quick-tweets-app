@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
-import { CheckIcon, RefreshIcon, TrashIcon } from "../../../icons";
+import { AlertCircleIcon, AlertTriangleIcon, CheckIcon } from "../../../icons";
 import { Link } from "../../navigation/Link";
 import { ROLES } from "../../../foundations";
 import { Toast, ToastRegion } from "./Toast";
@@ -58,10 +58,10 @@ export const TheRoleColoursTheGlyph: Story = {
       <Toast color="success" icon={<CheckIcon />}>
         Your post was sent.
       </Toast>
-      <Toast color="error" icon={<TrashIcon />}>
+      <Toast color="error" icon={<AlertCircleIcon />}>
         That did not go through.
       </Toast>
-      <Toast color="warning" icon={<RefreshIcon />}>
+      <Toast color="warning" icon={<AlertTriangleIcon />}>
         You are doing that too fast.
       </Toast>
     </div>
