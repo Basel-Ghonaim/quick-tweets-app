@@ -10,6 +10,7 @@ export type TypographyTitleVariant =
   | "heading-small";
 
 export type TypographyTextVariant =
+  | "body-xlarge"
   | "body-large"
   | "body-medium"
   | "body-small"

@@ -28,6 +28,8 @@
     var(--font-family-base);
   --type-body-large: 400 var(--font-size-base) / var(--line-height-base)
     var(--font-family-base);
+  --type-body-xlarge: 400 var(--font-size-md) / var(--line-height-base)
+    var(--font-family-base);
 
   /* Heading and display carry the heading family; label and body carry the base
      one. The leading tightens as the size grows, because the same ratio that

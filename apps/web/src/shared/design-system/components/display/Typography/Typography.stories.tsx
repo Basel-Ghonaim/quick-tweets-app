@@ -16,6 +16,7 @@ const TITLES: TypographyTitleVariant[] = [
 
 const ALL: TypographyVariant[] = [
   ...TITLES,
+  "body-xlarge",
   "body-large",
   "body-medium",
   "body-small",
@@ -286,5 +287,47 @@ export const TheDocumentLanguageChoosesTheScript: Story = {
         : ["Montserrat", "Noto Sans Arabic", "sans-serif"],
     );
     await expect(leadingOf(pick("body"))).toBeCloseTo(arabic ? 1.8 : 1.5, 2);
+  },
+};
+
+/** The largest body style is still body: one step up in size, and the body role's face and
+ *  leading in each script, not a heading's. */
+export const BodyExtraLargeResolvesInEachScript: Story = {
+  args: { children: "Body extra large" },
+  render: () => (
+    <div>
+      <Typography variant="body-xlarge" data-case="document">
+        The quick brown fox jumps over the lazy dog
+      </Typography>
+      <div lang="ar">
+        <Typography variant="body-xlarge" data-case="arabic">
+          {ARABIC_LINE}
+        </Typography>
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const pick = (name: string) =>
+      canvasElement.querySelector<HTMLElement>(`[data-case="${name}"]`)!;
+    const arabic = document.documentElement.lang === "ar";
+
+    for (const name of ["document", "arabic"]) {
+      await expect(getComputedStyle(pick(name)).fontSize).toBe("18px");
+      await expect(getComputedStyle(pick(name)).fontWeight).toBe("400");
+    }
+
+    await expect(familiesOf(pick("document"))).toEqual(
+      arabic
+        ? ["Noto Sans Arabic", "Montserrat", "sans-serif"]
+        : ["Montserrat", "Noto Sans Arabic", "sans-serif"],
+    );
+    await expect(leadingOf(pick("document"))).toBeCloseTo(arabic ? 1.8 : 1.5, 2);
+
+    await expect(familiesOf(pick("arabic"))).toEqual([
+      "Noto Sans Arabic",
+      "Montserrat",
+      "sans-serif",
+    ]);
+    await expect(leadingOf(pick("arabic"))).toBeCloseTo(1.8, 2);
   },
 };
