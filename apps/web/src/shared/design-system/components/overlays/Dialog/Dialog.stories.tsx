@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, userEvent, waitFor } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { Button } from "../../controls/Button";
 import { THEMES, THEME_ATTRIBUTE } from "../../../foundations";
 import { Dialog } from "./Dialog";
@@ -25,34 +25,65 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** Which of two boxes comes first in the page's reading direction. */
+const comesFirst = (a: Element, b: Element) => {
+  const [first, second] = [a.getBoundingClientRect(), b.getBoundingClientRect()];
+  return getComputedStyle(document.documentElement).direction === "rtl"
+    ? first.right > second.right
+    : first.left < second.left;
+};
+
+const targetFloor = () =>
+  parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(
+      "--control-target-min",
+    ),
+  );
+
 /** Opened from a control, so what focus does on the way in and out is real. */
 const Opened = ({
-  variant = "modal" as const,
   withConfirmation = false,
+  onDismissed,
+}: {
+  withConfirmation?: boolean;
+  onDismissed?: () => void;
 }) => {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
+  const dialog = {
+    open,
+    onClose: () => setOpen(false),
+    title: "Delete post",
+    description: "This cannot be undone.",
+    actions: (
+      <>
+        <Button data-testid="cancel" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+        <Button data-testid="confirm" onClick={() => setConfirming(true)}>
+          Delete
+        </Button>
+      </>
+    ),
+  };
+
   return (
     <>
       <Button onClick={() => setOpen(true)}>Open</Button>
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Delete post"
-        description="This cannot be undone."
-        variant={variant}
-        actions={
-          <>
-            <Button data-testid="cancel" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button data-testid="confirm" onClick={() => setConfirming(true)}>
-              Delete
-            </Button>
-          </>
-        }
-      />
+      {onDismissed ? (
+        <Dialog
+          {...dialog}
+          dismissLabel="Close"
+          // The page decides to let it go; the layer only asked.
+          onDismiss={() => {
+            onDismissed();
+            setOpen(false);
+          }}
+        />
+      ) : (
+        <Dialog {...dialog} />
+      )}
       {withConfirmation ? (
         <Dialog
           open={confirming}
@@ -93,6 +124,62 @@ export const StackedActions: Story = {
         <Button>Delete</Button>
       </>
     ),
+  },
+};
+
+/** The reply dialog's head: the title, then the control that asks to leave it. */
+export const WithADismissal: Story = {
+  args: { dismissLabel: "Close", onDismiss: fn() },
+  play: async ({ canvasElement }) => {
+    const dialog = canvasElement.querySelector("dialog")!;
+    const title = dialog.querySelector("h2")!;
+    const dismiss = dialog.querySelector<HTMLButtonElement>("h2 ~ button")!;
+
+    // Named by the caller's word, or it is a glyph nobody can ask for.
+    await expect(dismiss).toHaveAccessibleName("Close");
+
+    // A card's head closes at its end, whichever way the page reads.
+    await expect(comesFirst(title, dismiss)).toBe(true);
+
+    const box = dismiss.getBoundingClientRect();
+    await expect(box.width).toBeGreaterThanOrEqual(targetFloor());
+    await expect(box.height).toBeGreaterThanOrEqual(targetFloor());
+
+    dismiss.focus();
+    await expect(document.activeElement).toBe(dismiss);
+  },
+};
+
+export const TheDismissalAsksThePage: Story = {
+  args: { onDismiss: fn(), dismissLabel: "Close" },
+  render: (args) => <Opened onDismissed={args.onDismiss} />,
+  play: async ({ args, canvasElement }) => {
+    const trigger = canvasElement.querySelector("button")!;
+    await userEvent.click(trigger);
+    const dialog = canvasElement.querySelector("dialog")!;
+    await waitFor(() => expect(dialog.open).toBe(true));
+
+    await userEvent.click(dialog.querySelector("h2 ~ button")!);
+
+    // Reported once; the page answered by closing it.
+    await expect(args.onDismiss).toHaveBeenCalledOnce();
+    await waitFor(() => expect(dialog.open).toBe(false));
+    await expect(document.activeElement).toBe(trigger);
+  },
+};
+
+export const FocusComesBackAfterAnAction: Story = {
+  render: () => <Opened />,
+  play: async ({ canvasElement }) => {
+    const trigger = canvasElement.querySelector("button")!;
+    await userEvent.click(trigger);
+    const dialog = canvasElement.querySelector("dialog")!;
+    await waitFor(() => expect(dialog.open).toBe(true));
+
+    await userEvent.click(canvasElement.querySelector('[data-testid="cancel"]')!);
+
+    await waitFor(() => expect(dialog.open).toBe(false));
+    await expect(document.activeElement).toBe(trigger);
   },
 };
 

@@ -1,0 +1,41 @@
+import { describe, expect, test } from "vitest";
+import type { DialogProps } from "./Dialog.types";
+
+/**
+ * The half of the contract a rendered story cannot reach: what each form
+ * refuses, proved by writing what must not compile.
+ */
+
+const base = { open: true, onClose: () => {}, title: "Reply" };
+
+describe("the dismissal", () => {
+  test("arrives with its word", () => {
+    const dialog: DialogProps = {
+      ...base,
+      onDismiss: () => {},
+      dismissLabel: "Close",
+    };
+
+    expect(dialog.dismissLabel).toBe("Close");
+  });
+
+  test("cannot exist without its word", () => {
+    // @ts-expect-error a control nobody can name. If this directive ever
+    // reports as unused, the pair has come apart.
+    const dialog: DialogProps = { ...base, onDismiss: () => {} };
+
+    expect(dialog.title).toBe("Reply");
+  });
+
+  test("is refused by an alert, which is left by answering it", () => {
+    // @ts-expect-error no alert is drawn with a way out but its answers.
+    const dialog: DialogProps = {
+      ...base,
+      variant: "alert",
+      onDismiss: () => {},
+      dismissLabel: "Close",
+    };
+
+    expect(dialog.variant).toBe("alert");
+  });
+});

@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
  */
 export type DialogVariant = "modal" | "alert" | "fullscreen";
 
-export interface DialogProps {
+interface DialogBase {
   /** The page owns when a dialog is open; this layer owns what that looks like. */
   open: boolean;
 
@@ -27,7 +27,21 @@ export interface DialogProps {
    *  decides, because no width this layer can see tells it which. */
   actionsLayout?: "inline" | "stack";
 
-  variant?: DialogVariant;
-
   children?: ReactNode;
 }
+
+/** The head's way out reports rather than closes: leaving may first need a
+ *  question only the page can ask. It cannot exist without its word. */
+type Dismissal =
+  | { onDismiss: () => void; dismissLabel: string }
+  | { onDismiss?: never; dismissLabel?: never };
+
+type NoDismissal = { onDismiss?: never; dismissLabel?: never };
+
+export type DialogProps = DialogBase &
+  (
+    | ({ variant?: "modal" } & Dismissal)
+    // A question that cannot wait is left by answering it.
+    | ({ variant: "alert" } & NoDismissal)
+    | ({ variant: "fullscreen" } & NoDismissal)
+  );

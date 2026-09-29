@@ -2,6 +2,8 @@ import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from "react
 import styles from "./Dialog.module.css";
 import type { DialogProps } from "./Dialog.types";
 import { classNames } from "../../shared";
+import { IconButton } from "../../controls/IconButton";
+import { XIcon } from "../../../icons";
 
 /**
  * A dialog in the browser's top layer. `showModal` carries the parts that are
@@ -18,6 +20,8 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
       actions,
       actionsLayout = "inline",
       variant = "modal",
+      onDismiss,
+      dismissLabel,
       children,
     },
     ref,
@@ -58,6 +62,16 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
           <h2 id={titleId} className={styles.title}>
             {title}
           </h2>
+          {onDismiss ? (
+            <IconButton
+              variant="ghost"
+              shape="circle"
+              size="large"
+              icon={<XIcon />}
+              aria-label={dismissLabel}
+              onClick={onDismiss}
+            />
+          ) : null}
         </div>
         {description ? (
           <p id={descriptionId} className={styles.description}>
