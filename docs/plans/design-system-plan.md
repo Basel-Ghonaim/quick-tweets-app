@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-27
+> **Last Updated:** 2026-09-29
 > **Parent Issue:** [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792)
 > **Supersedes:** —
 
@@ -40,6 +40,7 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 - **Elevation roles** for what is raised: menus, dialogs, the floating action and toasts. The shadow primitives exist; what each raised thing uses does not.
 - **Responsive widths** a page can rely on: phone, tablet and desktop.
 - **The palette colour** the product uses for "liked". The Design System owns only the colour; what it *means* belongs to the product.
+- **A larger body role** for the post a page is built around: the Tweet details design draws it a step above the largest body text, in both scripts. This list had omitted it, although the extension log and the artboards both carry it.
 
 ### 2.2 · Components to add
 
