@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
-import { CheckIcon, RefreshIcon, TrashIcon } from "../../../icons";
+import { AlertCircleIcon, AlertTriangleIcon, CheckIcon } from "../../../icons";
 import { Link } from "../../navigation/Link";
 import { ROLES } from "../../../foundations";
 import { Toast, ToastRegion } from "./Toast";
@@ -27,6 +27,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** What a token resolves to here, read through a probe rather than restated. */
+const resolved = (property: "color" | "font" | "blockSize", token: string) => {
+  const probe = document.createElement("span");
+  probe.style.display = "block";
+  probe.style[property] = `var(${token})`;
+  document.body.append(probe);
+  const value = getComputedStyle(probe)[property];
+  probe.remove();
+  return value;
+};
+
 export const Default: Story = {};
 
 export const ItWaitsItsTurn: Story = {
@@ -47,10 +58,10 @@ export const TheRoleColoursTheGlyph: Story = {
       <Toast color="success" icon={<CheckIcon />}>
         Your post was sent.
       </Toast>
-      <Toast color="error" icon={<TrashIcon />}>
+      <Toast color="error" icon={<AlertCircleIcon />}>
         That did not go through.
       </Toast>
-      <Toast color="warning" icon={<RefreshIcon />}>
+      <Toast color="warning" icon={<AlertTriangleIcon />}>
         You are doing that too fast.
       </Toast>
     </div>
@@ -78,6 +89,24 @@ export const WithAnAction: Story = {
   },
 };
 
+/** The action reads as a label beside the report, not as more of it. */
+export const TheActionIsALabel: Story = {
+  args: {
+    action: (
+      <Link href="#" placement="standalone" underline="always">
+        View
+      </Link>
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const action = canvasElement.querySelector("a")!;
+
+    await expect(getComputedStyle(action).font).toBe(
+      resolved("font", "--type-label-medium"),
+    );
+  },
+};
+
 export const Dismissible: Story = {
   args: { onDismiss: fn(), dismissLabel: "Dismiss" },
   play: async ({ args, canvasElement }) => {
@@ -88,6 +117,35 @@ export const Dismissible: Story = {
     await userEvent.click(dismiss);
     // The layer reports the intent; whether the toast goes is the page's.
     await expect(args.onDismiss).toHaveBeenCalledOnce();
+  },
+};
+
+/** The control that closes it speaks more quietly than the report itself. */
+export const TheDismissalIsQuieterThanTheMessage: Story = {
+  args: { onDismiss: fn(), dismissLabel: "Dismiss" },
+  play: async ({ canvasElement }) => {
+    const dismiss = canvasElement.querySelector("button")!;
+
+    await expect(getComputedStyle(dismiss).color).toBe(
+      resolved("color", "--text-secondary"),
+    );
+  },
+};
+
+/** Held off the foot of the page by the distance the designs draw on a desktop. */
+export const TheRegionSitsAtItsInset: Story = {
+  render: () => (
+    <ToastRegion data-testid="region">
+      <Toast color="success" icon={<CheckIcon />}>
+        Your post was sent.
+      </Toast>
+    </ToastRegion>
+  ),
+  play: async ({ canvasElement }) => {
+    const region = canvasElement.querySelector('[data-testid="region"]')!;
+    const gap = window.innerHeight - region.getBoundingClientRect().bottom;
+
+    await expect(`${gap}px`).toBe(resolved("blockSize", "--space-8"));
   },
 };
 

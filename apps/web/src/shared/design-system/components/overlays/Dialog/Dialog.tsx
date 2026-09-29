@@ -2,6 +2,9 @@ import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from "react
 import styles from "./Dialog.module.css";
 import type { DialogProps } from "./Dialog.types";
 import { classNames } from "../../shared";
+import { Button } from "../../controls/Button";
+import { IconButton } from "../../controls/IconButton";
+import { XIcon } from "../../../icons";
 
 /**
  * A dialog in the browser's top layer. `showModal` carries the parts that are
@@ -17,7 +20,10 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
       description,
       actions,
       actionsLayout = "inline",
+      action,
       variant = "modal",
+      onDismiss,
+      dismissLabel,
       children,
     },
     ref,
@@ -40,6 +46,32 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
       if (!open && dialog.open) dialog.close();
     }, [open]);
 
+    // A bar leads with its way out, as a screen leads with its back control;
+    // a card ends with it. The form decides, so two dialogs of one form agree.
+    const bar = variant === "task" || variant === "fullscreen";
+
+    const heading = (
+      <h2 id={titleId} className={styles.title}>
+        {title}
+      </h2>
+    );
+
+    // Only the phone's bar has the room to say it in words.
+    const dismissal = !onDismiss ? null : variant === "fullscreen" ? (
+      <Button variant="ghost" color="secondary" onClick={onDismiss}>
+        {dismissLabel}
+      </Button>
+    ) : (
+      <IconButton
+        variant="ghost"
+        shape="circle"
+        size="large"
+        icon={<XIcon />}
+        aria-label={dismissLabel}
+        onClick={onDismiss}
+      />
+    );
+
     return (
       <dialog
         ref={element}
@@ -49,16 +81,37 @@ export const Dialog = forwardRef<HTMLDialogElement, DialogProps>(
         className={classNames(styles.root, styles[variant])}
         onClose={onClose}
         onKeyDown={(event) => {
+          if (event.key !== "Escape") return;
+          // Where leaving is the page's to decide, Escape asks the same question
+          // the control asks; prevented, the key sends the platform no close request.
+          if (onDismiss) {
+            event.preventDefault();
+            onDismiss();
+            return;
+          }
           // Closed here as well as by the platform, for the reason Menu states:
           // the platform's own dismissal answers real input only.
-          if (event.key === "Escape") element.current?.close();
+          element.current?.close();
+        }}
+        onCancel={(event) => {
+          // Any other close request the platform raises — a phone's back gesture.
+          if (!onDismiss) return;
+          event.preventDefault();
+          onDismiss();
         }}
       >
-        <div className={styles.head}>
-          <h2 id={titleId} className={styles.title}>
-            {title}
-          </h2>
-        </div>
+        {bar ? (
+          <div className={classNames(styles.head, styles.bar)}>
+            {dismissal}
+            {heading}
+            {action}
+          </div>
+        ) : (
+          <div className={styles.head}>
+            {heading}
+            {dismissal}
+          </div>
+        )}
         {description ? (
           <p id={descriptionId} className={styles.description}>
             {description}

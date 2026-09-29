@@ -47,10 +47,12 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 - **Avatar:** a picture in a circle with a fallback, at the sizes the designs use, from small rows to the profile header.
 - **Skeleton:** placeholder shapes while content loads.
 - **Menu:** anchored to what opens it, with ordinary, checked and dangerous items, and correct placement in both directions.
-- **Dialog:** a modal dialog, an alert dialog for confirmations, and a full-screen form for phones. It can host a confirmation above itself.
+- **Dialog:** a modal dialog, an alert dialog for confirmations, a desktop form for a page of work, and a full-screen form for phones — each with the head the designs draw: a dismissal worded by the caller, and on the phone form a bar carrying it, the title and one action. It can host a confirmation above itself.
 - **Tabs:** navigation, where each tab is its own address. The designs draw no other form — nothing uses the tablist role — so a form that switches panels in place stays owed until one is drawn.
-- **Toast:** a brief, polite confirmation, optionally with an action, placed above the page and clear of the phone's bottom bar.
+- **Toast:** a brief, polite confirmation, optionally with an action and a dismiss control, placed above the page at the inset the designs draw and clear of the phone's bottom bar.
 - **Tooltip:** names for icon-only controls on the collapsed navigation. **Deferred until it is drawn:** the approved designs name it in a comment and draw it nowhere, and §5 keeps parts for undesigned surfaces out. It stays owed.
+
+*Corrected.* [#812](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/812) built Dialog and Toast without these: the head's dismissal, the phone form's bar, the desktop form, and the toast's inset, dismiss tone and action type were departures from the approved designs that no Work Item had settled, and neither extension log records them. Its entry in §7 — *"§2.2 states what must exist and still does"* — read as complete when it was not.
 
 ### 2.3 · Changes to existing parts
 
@@ -212,3 +214,9 @@ One entry per Work Item, newest last: its Issue and pull request, what it settle
 - **Settled.** **A text style is named for its size, not its purpose**: the post a page is built around is a product concept, so the role is `body-xlarge` and the ramp stays a ramp whose length the design settles. It is **body, not display** — weight, face and leading all follow the body pattern in each script, one step up — and a **text variant**, so it claims no heading. The class is looked up by name and compiles without its rule, so only a rendered story proves it.
 - **Amended.** §2.1 — the role, which the plan had omitted although the extension log and the artboards both carry it: the first correction where the two agree and the plan is what missed it.
 - **Recorded.** No finding. The artboards also draw the interim message's title at weight 600 and the message at a size `MessageRegion` does not use; both are reported for the Alert work rather than recorded here.
+
+**Dialog and Toast as drawn.** [#843](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/843) · [#845](https://github.com/Basel-Ghonaim/quick-tweets-app/pull/845).
+
+- **Settled.** **The way out reports; the page closes it.** The designs raise a Discard confirmation from the head's own control, so leaving is the page's decision, and Escape asks the same question the control asks. **The head's form places it** — the end of a card, the start of a bar — and never a caller. **A width is the whole frame, and the form's:** the modal, alert, `task` and full-screen forms each carry their own, and measuring them found the frame 42px wider than drawn wherever the document did not size boxes by their border. The drawn top offsets disagree with each other and were **brought back** to a centred dialog; the guest prompt's 440 frame is not the layer's. A toast sits 32px off the foot of the page, its dismissal speaks more quietly than its message, and its action reads as a label.
+- **Amended.** §2.2 — Dialog and Toast owed the forms the designs draw, which #812 built without settling and which **neither extension log recorded**.
+- **Recorded.** [Finding 0043](../architecture/findings/open/0043-the-dialog-does-not-extend-its-element.md) — the dialog's props do not extend its element, and redeclare `title`. Which Escape guarantees were observed in the browser and which were modelled is stated in the pull request, against [Finding 0040](../architecture/findings/open/0040-the-browser-lane-certifies-less-than-it-is-cited-for.md).
