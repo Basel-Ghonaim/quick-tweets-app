@@ -47,10 +47,12 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 - **Avatar:** a picture in a circle with a fallback, at the sizes the designs use, from small rows to the profile header.
 - **Skeleton:** placeholder shapes while content loads.
 - **Menu:** anchored to what opens it, with ordinary, checked and dangerous items, and correct placement in both directions.
-- **Dialog:** a modal dialog, an alert dialog for confirmations, and a full-screen form for phones. It can host a confirmation above itself.
+- **Dialog:** a modal dialog, an alert dialog for confirmations, a desktop form for a page of work, and a full-screen form for phones — each with the head the designs draw: a dismissal worded by the caller, and on the phone form a bar carrying it, the title and one action. It can host a confirmation above itself.
 - **Tabs:** navigation, where each tab is its own address. The designs draw no other form — nothing uses the tablist role — so a form that switches panels in place stays owed until one is drawn.
-- **Toast:** a brief, polite confirmation, optionally with an action, placed above the page and clear of the phone's bottom bar.
+- **Toast:** a brief, polite confirmation, optionally with an action and a dismiss control, placed above the page at the inset the designs draw and clear of the phone's bottom bar.
 - **Tooltip:** names for icon-only controls on the collapsed navigation. **Deferred until it is drawn:** the approved designs name it in a comment and draw it nowhere, and §5 keeps parts for undesigned surfaces out. It stays owed.
+
+*Corrected.* [#812](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/812) built Dialog and Toast without these: the head's dismissal, the phone form's bar, the desktop form, and the toast's inset, dismiss tone and action type were departures from the approved designs that no Work Item had settled, and neither extension log records them. Its entry in §7 — *"§2.2 states what must exist and still does"* — read as complete when it was not.
 
 ### 2.3 · Changes to existing parts
 
