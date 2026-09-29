@@ -22,6 +22,10 @@
   font: var(--type-heading-small);
 }
 
+.variant-body-xlarge {
+  font: var(--type-body-xlarge);
+}
+
 .variant-body-large {
   font: var(--type-body-large);
 }
