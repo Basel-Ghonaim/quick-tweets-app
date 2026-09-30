@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, within } from "storybook/test";
 import { Input } from "./Input";
+import { SearchIcon, XIcon } from "../../../icons";
 import {
   CONTROL_SIZES,
   ROLES,
@@ -20,6 +21,7 @@ const meta = {
   tags: ["autodocs"],
   argTypes: {
     variant: { control: "select", options: ["outlined", "filled", "underlined"] },
+    shape: { control: "radio", options: ["rounded", "pill"] },
     color: { control: "select", options: [...ROLES] },
     size: { control: "radio", options: CONTROL_SIZES },
     isInvalid: { control: "boolean" },
@@ -271,5 +273,136 @@ export const AnEmptyFieldReadsAsThePageDoes: Story = {
   play: async ({ canvasElement }) => {
     const page = getComputedStyle(document.documentElement).direction;
     await expect(directionOf(canvasElement, "empty")).toBe(page);
+  },
+};
+
+/** The search field the designs draw: filled, at the medium size, fully rounded. */
+export const Pill: Story = {
+  args: {
+    label: "Search",
+    placeholder: "Search Quick Tweets",
+    type: "search",
+    variant: "filled",
+    shape: "pill",
+    prefix: <SearchIcon />,
+  },
+};
+
+const fullRadius = () =>
+  getComputedStyle(document.documentElement).getPropertyValue("--border-radius-full").trim();
+
+const controlOf = (canvasElement: HTMLElement, name: string) =>
+  canvasElement.querySelector<HTMLElement>(`[data-case="${name}"]`)!.parentElement!;
+
+/** Both variants that draw a boundary take the pill, and it is the token's radius, not a lookalike. */
+export const ThePillRoundsItsWholeBoundary: Story = {
+  args: Pill.args,
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      <Input label="Filled" variant="filled" shape="pill" data-case="filled" />
+      <Input label="Outlined" variant="outlined" shape="pill" data-case="outlined" />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    await expect(fullRadius()).not.toBe("");
+
+    for (const name of ["filled", "outlined"])
+      await expect(getComputedStyle(controlOf(canvasElement, name)).borderRadius).toBe(
+        fullRadius(),
+      );
+  },
+};
+
+/**
+ * The ring is drawn on the boundary itself, so it takes whatever radius that boundary has.
+ * Compared with the resting radius rather than the token, so a pill that lost its radius fails elsewhere.
+ */
+export const ThePillsFocusFollowsItsRadius: Story = {
+  args: Pill.args,
+  play: async ({ canvasElement }) => {
+    const input = canvasElement.querySelector("input")!;
+    const control = input.parentElement!;
+    const resting = getComputedStyle(control).borderRadius;
+
+    await expect(getComputedStyle(control).outlineStyle).toBe("none");
+    await userEvent.tab();
+    await expect(input).toHaveFocus();
+
+    const focused = getComputedStyle(control);
+    await expect(focused.outlineStyle).toBe("solid");
+    await expect(focused.borderRadius).toBe(resting);
+  },
+};
+
+type Box = { left: number; right: number; top: number; bottom: number };
+
+/** Whether a box lies inside a rounded rectangle, which the control clips its children to. */
+const liesInside = (box: Box, shape: Box, radius: number) => {
+  const r = Math.min(radius, (shape.bottom - shape.top) / 2, (shape.right - shape.left) / 2);
+  const corners = [
+    [box.left, box.top], [box.right, box.top], [box.left, box.bottom], [box.right, box.bottom],
+  ];
+  return corners.every(([x, y]) => {
+    if (x < shape.left - 0.5 || x > shape.right + 0.5 || y < shape.top - 0.5 || y > shape.bottom + 0.5)
+      return false;
+    const cx = Math.min(Math.max(x, shape.left + r), shape.right - r);
+    const cy = Math.min(Math.max(y, shape.top + r), shape.bottom - r);
+    return Math.hypot(x - cx, y - cy) <= r + 0.5;
+  });
+};
+
+/**
+ * A pill's ends are round, and the control clips what it holds, so an affordance near an end
+ * could be cut. Each one is measured against the rounded shape, at the edge the reading direction gives it.
+ */
+export const ThePillKeepsItsAdornmentsInside: Story = {
+  args: Pill.args,
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", inlineSize: 320 }}>
+      <Input
+        label="Search"
+        variant="filled"
+        shape="pill"
+        prefix={<SearchIcon />}
+        suffix={<XIcon />}
+        data-case="adorned"
+      />
+      <Input
+        label="Password"
+        type="password"
+        revealLabel="Show password"
+        variant="outlined"
+        shape="pill"
+        isLoading
+        data-case="owned"
+      />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const rtl = getComputedStyle(document.documentElement).direction === "rtl";
+
+    for (const name of ["adorned", "owned"]) {
+      const input = canvasElement.querySelector<HTMLElement>(`[data-case="${name}"]`)!;
+      const control = input.parentElement!;
+      const shape = control.getBoundingClientRect();
+      const radius = parseFloat(getComputedStyle(control).borderTopLeftRadius);
+      const field = input.getBoundingClientRect();
+
+      const adornments = [...control.children].filter((child) => child !== input);
+      const affordances = adornments.flatMap((slot) => [...slot.children]);
+      await expect(affordances.length).toBeGreaterThanOrEqual(2);
+
+      for (const affordance of affordances)
+        await expect(liesInside(affordance.getBoundingClientRect(), shape, radius)).toBe(true);
+
+      // Before the words is the reading direction's start, after them its end.
+      for (const slot of adornments) {
+        const box = slot.getBoundingClientRect();
+        const before = slot.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING;
+        const atStart = rtl ? box.left >= field.right - 0.5 : box.right <= field.left + 0.5;
+        const atEnd = rtl ? box.right <= field.left + 0.5 : box.left >= field.right - 0.5;
+        await expect(before ? atStart : atEnd).toBe(true);
+      }
+    }
   },
 };
