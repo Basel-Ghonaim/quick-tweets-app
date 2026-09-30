@@ -33,6 +33,12 @@
   transform: rotate(-90deg);
 }
 
+/* Anticlockwise when the page reads right to left, as the designs draw it. The flip is
+   about the axis through the top, so the fill still starts there. */
+.ringBox:dir(rtl) {
+  transform: rotate(-90deg) scaleY(-1);
+}
+
 .track {
   fill: none;
   stroke: var(--border-default);
