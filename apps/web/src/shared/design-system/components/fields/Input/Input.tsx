@@ -14,6 +14,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
       variant = "outlined",
+      shape = "rounded",
       color = "primary",
       size = "medium",
       isInvalid = false,
@@ -73,6 +74,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         className={classNames(
           styles.root,
           styles[`variant-${variant}`],
+          styles[`shape-${shape}`],
           styles[`size-${size}`],
           fullWidth && styles.fullWidth,
           isInvalid && styles.isInvalid,

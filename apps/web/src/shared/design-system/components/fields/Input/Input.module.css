@@ -88,6 +88,11 @@
     border-color var(--motion-interactive);
 }
 
+/* Before the underlined rule, so a boundary that variant does not draw is never rounded. */
+.shape-pill .control {
+  border-radius: var(--border-radius-full);
+}
+
 .variant-outlined .control {
   background-color: transparent;
   border-color: var(--control-border);
@@ -110,6 +115,11 @@
 .variant-filled .control {
   background-color: var(--surface-subtle);
   border-color: transparent;
+}
+
+/* The field's surface is the control's; an input drawing its own would cover it. */
+.variant-filled .input {
+  background: transparent;
 }
 
 .variant-filled .control:has(> :focus-visible) {

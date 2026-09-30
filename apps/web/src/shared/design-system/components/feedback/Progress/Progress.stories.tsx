@@ -110,6 +110,37 @@ export const TheRingFillsFromTheTop: Story = {
   },
 };
 
+/**
+ * Where the arc lies, not how long it is: a quarter filled clockwise and one filled anticlockwise
+ * are the same length. Read from points along the drawn fill, placed on the page.
+ */
+export const TheRingFollowsTheReadingDirection: Story = {
+  args: { shape: "ring", value: 70, max: 280 },
+  play: async ({ canvasElement }) => {
+    const box = canvasElement.querySelector<SVGSVGElement>("svg")!;
+    const fill = box.querySelectorAll<SVGCircleElement>("circle")[1];
+    const frame = box.getBoundingClientRect();
+    const centre = { x: frame.left + frame.width / 2, y: frame.top + frame.height / 2 };
+
+    const onPage = (length: number) => {
+      const { x, y } = fill.getPointAtLength(length);
+      const point = new DOMPoint(x, y).matrixTransform(fill.getScreenCTM()!);
+      return { x: point.x - centre.x, y: point.y - centre.y };
+    };
+
+    const start = onPage(0);
+    await expect(start.x).toBeCloseTo(0, 1);
+    await expect(start.y).toBeLessThan(0);
+
+    const arc = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((tenth) => onPage((drawn(fill) * tenth) / 10));
+    await expect(arc.every(({ y }) => y < 0)).toBe(true);
+
+    // The direction the ring itself is in, which is what its rule matches.
+    const rtl = getComputedStyle(box).direction === "rtl";
+    await expect(arc.every(({ x }) => (rtl ? x < 0 : x > 0))).toBe(true);
+  },
+};
+
 export const TheBarTracksTheFraction: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
