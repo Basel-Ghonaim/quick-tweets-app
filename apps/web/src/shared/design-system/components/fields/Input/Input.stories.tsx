@@ -406,3 +406,23 @@ export const ThePillKeepsItsAdornmentsInside: Story = {
     }
   },
 };
+
+/** The field's surface is the control's, in every theme, and the input inside it draws none. */
+export const AFilledFieldShowsItsOwnSurface: Story = {
+  args: { ...Default.args, variant: "filled", defaultValue: "Typed words" },
+  play: async ({ canvasElement }) => {
+    const previous = document.documentElement.getAttribute(THEME_ATTRIBUTE);
+
+    for (const theme of THEMES) {
+      document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
+
+      const input = canvasElement.querySelector("input")!;
+      await expect(getComputedStyle(input).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+      await expect(getComputedStyle(input.parentElement!).backgroundColor).not.toBe(
+        "rgba(0, 0, 0, 0)",
+      );
+    }
+
+    if (previous) document.documentElement.setAttribute(THEME_ATTRIBUTE, previous);
+  },
+};

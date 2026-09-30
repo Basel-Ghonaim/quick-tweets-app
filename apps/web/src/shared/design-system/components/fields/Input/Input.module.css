@@ -117,6 +117,11 @@
   border-color: transparent;
 }
 
+/* The field's surface is the control's; an input drawing its own would cover it. */
+.variant-filled .input {
+  background: transparent;
+}
+
 .variant-filled .control:has(> :focus-visible) {
   background-color: transparent;
   border-color: var(--input-border-focus);
