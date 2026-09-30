@@ -3,12 +3,14 @@ import type { FieldProps, NativeProps } from "../../shared";
 
 export type InputVariant = "outlined" | "filled" | "underlined";
 
+/** Kept local: IconButton's `rounded` names the same radius, but the two are separate components. */
+export type InputShape = "rounded" | "pill";
+
 /**
  * A Field whose control is an Adorned Control: the affordances flanking it are
  * composed here, so a caller supplies a node per side and never a layout.
  */
 interface InputBaseProps extends Omit<NativeProps<"input">, "type">, FieldProps {
-  variant?: InputVariant;
   fullWidth?: boolean;
   /** Rendered before the control on the inline axis. */
   prefix?: ReactNode;
@@ -29,4 +31,16 @@ interface OtherInputProps extends InputBaseProps {
   revealLabel?: never;
 }
 
-export type InputProps = PasswordInputProps | OtherInputProps;
+interface BoundedInputProps {
+  variant?: "outlined" | "filled";
+  shape?: InputShape;
+}
+
+/** An underline is not a boundary, so there is nothing for a shape to round. */
+interface UnderlinedInputProps {
+  variant: "underlined";
+  shape?: never;
+}
+
+export type InputProps = (PasswordInputProps | OtherInputProps) &
+  (BoundedInputProps | UnderlinedInputProps);

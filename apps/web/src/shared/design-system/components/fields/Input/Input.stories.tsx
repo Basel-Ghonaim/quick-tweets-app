@@ -46,7 +46,8 @@ export const Filled: Story = {
 };
 
 export const Underlined: Story = {
-  args: { ...Default.args, variant: "underlined" },
+  // The spread's type admits a shape, which an underlined field refuses.
+  args: { ...Default.args, variant: "underlined", shape: undefined },
 };
 
 export const WithHelperText: Story = {

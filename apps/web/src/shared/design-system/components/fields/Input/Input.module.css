@@ -88,6 +88,11 @@
     border-color var(--motion-interactive);
 }
 
+/* Before the underlined rule, so a boundary that variant does not draw is never rounded. */
+.shape-pill .control {
+  border-radius: var(--border-radius-full);
+}
+
 .variant-outlined .control {
   background-color: transparent;
   border-color: var(--control-border);
