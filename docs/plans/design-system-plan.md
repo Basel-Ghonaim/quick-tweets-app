@@ -3,7 +3,7 @@
 > **Status:** Active
 > **Type:** Execution
 > **Owner:** Basel Ghonaim
-> **Last Updated:** 2026-09-29
+> **Last Updated:** 2026-09-30
 > **Parent Issue:** [#792](https://github.com/Basel-Ghonaim/quick-tweets-app/issues/792)
 > **Supersedes:** —
 
@@ -58,7 +58,8 @@ The approved designs for the **Feed**, **Tweet details** and **Profile** need pr
 
 - **Icons:** the additions the designs use, and mirroring in right to left where the meaning has a direction. A filled "liked" is not a second glyph — the design fills the shared one from the consumer.
 - **Textarea:** no change. The designs place the character count in the composer's own toolbar, a sibling of the field rather than something it hosts, so the count is the consumer's composition and the limit never reaches this layer at all.
-- **Input:** no change. The approved designs draw the search field on the stock filled variant and override the component nowhere, so the pill the extension log named was never settled.
+- **Input:** a pill shape, on the filled and outlined variants, for the search field the designs draw at the medium size. A filled field shows its own surface: the input inside it draws none of its own.
+- **Progress:** the ring follows the reading direction. It starts at the top in both, and fills clockwise from left to right and anticlockwise from right to left.
 - **Navigation drawn as an action:** the designs draw an anchor carrying a button's appearance, so it is a button that navigates rather than a link that looks like one (§4).
 
 ### 2.4 · Qualities every addition keeps
